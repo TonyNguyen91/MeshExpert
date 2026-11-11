@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MrT Decimate Mesh</title>
+<style>
+  :root {
+    --bg: #14181d; --panel: #1c2229; --panel2: #232b34; --line: #323c48;
+    --text: #dfe6ee; --muted: #8b98a8; --accent: #f0a030; --bad: #ff6b5e; --ok: #5fd08a;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { -webkit-user-select: none; user-select: none; background: var(--bg); color: var(--text); font: 13px/1.4 "Segoe UI", Tahoma, Arial, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+  #top { display: flex; align-items: center; gap: 5px; padding: 5px 10px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  #top h1 { font-size: 15px; margin: 0 8px 0 0; white-space: nowrap; }
+  #top h1 span { color: var(--accent); }
+  #top .sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
+  #top label { display: flex; gap: 4px; align-items: center; cursor: pointer; white-space: nowrap; }
+  #top .grow { flex: 1; }
+  #wrap { flex: 1; display: flex; min-height: 0; }
+  #left { width: 372px; min-width: 372px; overflow-y: auto; background: var(--panel); border-right: 1px solid var(--line); padding: 8px; }
+  #right { width: 318px; min-width: 318px; overflow-y: auto; background: var(--panel); border-left: 1px solid var(--line); padding: 8px; }
+  #main { flex: 1; position: relative; min-width: 0; }
+  #gl, #ov { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #ov { pointer-events: none; }
+  details, .sec { border: 1px solid var(--line); border-radius: 6px; margin: 0 0 8px; background: var(--panel2); }
+  summary, .sec > .hd { padding: 6px 10px; color: var(--accent); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; user-select: none; }
+  summary { cursor: pointer; }
+  details > div.c, .sec > div.c { padding: 2px 9px 9px; }
+  .row { display: flex; align-items: center; gap: 6px; margin: 5px 0; }
+  .row label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .row .lbl { flex: 1; color: var(--muted); }
+  .grow { flex: 1; }
+  input[type=number], input[type=text], select { width: 96px; background: #11151a; color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 3px 5px; font: inherit; }
+  input.s { width: 60px; }
+  input:disabled, select:disabled { opacity: .45; }
+  input[type=checkbox], input[type=radio], input[type=range] { accent-color: var(--accent); margin: 0; }
+  input[type=range] { flex: 1; min-width: 0; }
+  input[type=color] { width: 44px; height: 24px; padding: 0; border: 1px solid var(--line); background: none; border-radius: 4px; }
+  .unit { color: var(--muted); font-size: 11px; min-width: 20px; }
+  button { background: #2c3642; color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 4px 9px; font: inherit; cursor: pointer; white-space: nowrap; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .4; cursor: default; }
+  button.primary { background: var(--accent); color: #1a1205; border-color: var(--accent); font-weight: 600; }
+  button.on { background: var(--accent); color: #1a1205; border-color: var(--accent); }
+  .btns { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+  #drop { border: 1.5px dashed var(--line); border-radius: 6px; padding: 7px 8px; text-align: center; color: var(--muted); cursor: pointer; margin-bottom: 8px; }
+  #drop.over { border-color: var(--accent); color: var(--text); background: #2a2415; }
+  #drop b { color: var(--text); }
+  .box { margin-top: 6px; padding: 6px 7px; border: 1px solid var(--line); border-radius: 4px; background: #11151a; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .box b { color: var(--ok); }
+  .box .bad { color: var(--bad); }
+  .box .pair { cursor: pointer; padding: 1px 3px; border-radius: 3px; color: var(--text); }
+  .box .pair:hover { background: #2c3642; }
+  .box .pair.sel { background: #5a2326; }
+  .list { max-height: 300px; overflow-y: auto; border: 1px solid var(--line); border-radius: 4px; background: #11151a; }
+  .brow { display: grid; grid-template-columns: 18px 18px 13px 1fr 62px 66px; align-items: center; gap: 6px; padding: 3px 7px; border-bottom: 1px solid #1d242c; cursor: pointer; }
+  .brow.hd { cursor: default; color: var(--muted); font-size: 11px; position: sticky; top: 0; background: #171c22; z-index: 1; }
+  .brow.sel { background: #4a3410; }
+  .brow .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brow .num { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 11.5px; white-space: nowrap; }
+  .item { display: flex; align-items: center; gap: 7px; padding: 3px 7px; border-bottom: 1px solid #1d242c; }
+  .item .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item .x { color: var(--muted); padding: 0 4px; border: 0; background: none; }
+  .empty { padding: 6px 8px; color: var(--muted); }
+  .chip { width: 12px; height: 12px; border-radius: 3px; flex: none; display: inline-block; }
+  .note { color: var(--muted); font-size: 11.5px; margin-top: 5px; }
+  #tools { position: absolute; left: 10px; top: 10px; display: flex; gap: 4px; flex-wrap: wrap; background: rgba(20,24,29,.85); border: 1px solid var(--line); border-radius: 6px; padding: 5px; max-width: calc(100% - 120px); }
+  #tools .sep { width: 1px; background: var(--line); margin: 0 3px; }
+  input, textarea { -webkit-user-select: text; user-select: text; }
+  #tpop { position: absolute; left: 10px; top: 54px; display: none; background: rgba(20,24,29,.92); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+  #tpop .row { margin: 3px 0; }
+  #tpop input.s { width: 64px; }
+  #cubeWrap { position: absolute; right: 16px; top: 14px; width: 70px; height: 70px; perspective: 600px; }
+  #cube { position: absolute; left: 10px; top: 10px; width: 50px; height: 50px; transform-style: preserve-3d; }
+  #cube div { position: absolute; width: 50px; height: 50px; background: rgba(60,72,88,.95); border: 1px solid #8b98a8; color: #dfe6ee; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; cursor: pointer; backface-visibility: hidden; user-select: none; }
+  #cube div:hover { background: var(--accent); color: #1a1205; }
+  #info { position: absolute; right: 12px; bottom: 30px; width: 312px; background: rgba(8,11,15,.58); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; padding: 8px 10px; color: #fff; }
+  #info .hd { font-weight: 600; margin-bottom: 4px; }
+  #info table { width: 100%; border-collapse: collapse; }
+  #info td { padding: 1px 0; vertical-align: top; color: #fff; }
+  #info td:first-child { color: rgba(255,255,255,.72); padding-right: 8px; }
+  #info td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  #info .row .lbl { color: rgba(255,255,255,.72); }
+  #info select, #info input { background: rgba(0,0,0,.45); color: #fff; border-color: rgba(255,255,255,.25); }
+  #hud { position: absolute; left: 12px; bottom: 8px; color: var(--muted); font-size: 11.5px; pointer-events: none; max-width: calc(100% - 340px); }
+  #status { position: absolute; left: 50%; transform: translateX(-50%); bottom: 50px; background: rgba(20,24,29,.92); border: 1px solid var(--line); border-radius: 5px; padding: 4px 10px; display: none; pointer-events: none; white-space: nowrap; }
+  #busy { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(10,13,16,.55); z-index: 5; }
+  #busy .bx { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; width: 300px; }
+  #bar { height: 6px; background: #11151a; border-radius: 3px; overflow: hidden; margin-top: 10px; }
+  #bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .15s; }
+  #msg { color: var(--bad); }
+  #ctx { position: fixed; display: none; z-index: 20; min-width: 190px; background: #1f262e; border: 1px solid var(--line); border-radius: 6px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+  #ctx div { padding: 4px 10px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+  #ctx div:hover { background: var(--accent); color: #1a1205; }
+  #ctx hr { border: 0; border-top: 1px solid var(--line); margin: 3px 0; }
+  .grad { height: 10px; border-radius: 3px; background: linear-gradient(to right, #2850ff, #28d2ff, #3cdc6e, #ffe628, #ff3232); margin: 4px 0 1px; }
+  .gradl { display: flex; justify-content: space-between; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="top">
+  <h1><span>MrT</span> Decimate Mesh</h1>
+  <button id="bOpen" data-en="Open file / session">Mở file / phiên</button>
+  <button id="bSaveSes" data-en="Save session (.mrtl)">Lưu phiên (.mrtl)</button>
+  <button id="bClear" data-en="Clear all">Xóa hết</button>
+  <span class="sep"></span>
+  <button id="bUndo" title="Ctrl+Z" data-en="↶ Undo">↶ Lùi</button>
+  <button id="bRedo" title="Ctrl+Y" data-en="↷ Redo">↷ Tiến</button>
+  <span class="sep"></span>
+  <button id="bHome" data-en="⟲ Import position" data-en-title="Put the ticked bodies back where they were when imported" title="Đưa các body đang tick về vị trí lúc import">⟲ Vị trí lúc import</button>
+  <span class="sep"></span>
+  <label><input type="checkbox" id="cWire" checked> <span data-en="Edges">Cạnh lưới</span></label>
+  <label><input type="checkbox" id="cAxes" checked> <span data-en="XYZ axes">Hệ trục XYZ</span></label>
+  <label><input type="checkbox" id="cInfo" checked> <span data-en="Info">Thông tin</span></label>
+  <label><input type="checkbox" id="cZoomInv"> <span data-en="Invert zoom">Đảo chiều zoom</span></label>
+  <button id="bShot" data-en="📷 Copy image" data-en-title="Copy a picture of the 3D view to the clipboard" title="Chép ảnh màn hình 3D vào clipboard">📷 Chép ảnh</button>
+  <button id="bFit" title="F">Fit</button>
+  <button id="bIso" title="Shift+7">Iso</button>
+  <span id="msg"></span>
+  <span class="grow"></span>
+  <button id="bVi" class="on">Việt</button><button id="bEn">EN</button>
+</div>
+
+<div id="wrap">
+<div id="left">
+  <div id="drop" data-en="Drop files here or <b>click to browse</b> (.stl, .obj, .mrtl)">Kéo thả nhiều file vào đây hoặc <b>bấm để chọn</b> (.stl, .obj, .mrtl)</div>
+  <input type="file" id="file" accept=".stl,.obj,.mrtl" multiple hidden>
+
+  <div class="sec"><div class="hd" data-en="Bodies">Danh sách body</div><div class="c">
+    <div class="list" id="bodyList"></div>
+    <div class="btns">
+      <button id="bSelAll" data-en="Tick all">Chọn tất cả</button>
+      <button id="bSelNone" data-en="Untick all">Bỏ chọn tất cả</button>
+      <button id="bSelInv" data-en="Invert">Đảo chọn</button>
+    </div>
+    <div class="btns">
+      <button id="bShowAll" data-en="Show all">Hiện tất cả</button>
+      <button id="bHideSel" data-en="Hide ticked">Ẩn body tick</button>
+      <button id="bIsolate" data-en="Show only ticked">Chỉ hiện body tick</button>
+    </div>
+    <div class="btns">
+      <button id="bDup" title="Ctrl+C, Ctrl+V" data-en="Duplicate">Nhân bản</button>
+      <button id="bDel" title="Delete" data-en="Delete">Xóa</button>
+      <button class="primary" id="bStl" data-en="Download ticked STL">Tải STL body tick</button>
+    </div>
+    <div class="btns">
+      <button id="bZip" data-en="Download all (.zip)">Tải tất cả (.zip)</button>
+      <button id="bMerge" data-en="Download as 1 STL">Tải gộp 1 STL</button>
+    </div>
+    <div class="note" data-en="Tick = highlighted (orange). Click a body in 3D or a row to tick only that one; Ctrl+click adds. Right-click for the tool menu. Double-click a name to rename.">Tick = highlight (màu cam). Bấm vào body trên 3D hoặc một dòng để chỉ tick body đó; Ctrl+bấm để tick thêm. Chuột phải để mở menu công cụ. Nhấp đúp tên để đổi tên.</div>
+  </div></div>
+
+  <div class="sec"><div class="hd">Decimate</div><div class="c">
+    <div class="row">
+      <label><input type="radio" name="mode" value="chordal" checked> Chordal Deviation</label>
+      <label><input type="radio" name="mode" value="edge"> Edge Length</label>
+    </div>
+    <div class="row"><label class="grow"><input type="checkbox" id="cMax"> <span id="lMax">Maximum</span></label>
+      <input type="number" id="vMax" value="0.1" min="0" step="0.01" disabled><span class="unit">mm</span></div>
+    <div class="row"><label class="grow"><input type="checkbox" id="cPct" checked> <span data-en="Target Percentage (kept)">Target Percentage (giữ lại)</span></label>
+      <input type="number" id="vPct" value="50" min="0.1" max="100" step="1"><span class="unit">%</span></div>
+    <div class="row"><span class="lbl">Target Triangle Count</span><input type="number" id="vCnt" value="0" min="4" step="100"><span class="unit"></span></div>
+    <div class="row"><span class="lbl">Current Triangle Count</span><input type="number" id="vCur" value="0" disabled><span class="unit"></span></div>
+    <div class="row"><label class="grow"><input type="checkbox" id="cFree"> Free Edge Tolerance</label>
+      <input type="number" id="vFree" value="0" min="0" step="0.01" disabled><span class="unit">mm</span></div>
+    <div class="btns"><button class="primary" id="bApply">Apply</button><button id="bReset" data-en="Back to original mesh">Về mesh gốc</button></div>
+    <div class="box" id="result" data-en="Applies only to the ticked bodies.">Chỉ áp dụng cho các body đang tick.</div>
+  </div></div>
+</div>
+
+<div id="main">
+  <canvas id="gl"></canvas>
+  <canvas id="ov"></canvas>
+  <div id="tools">
+    <button data-tool="select" class="on" title="Esc" data-en="Select">Chọn</button>
+    <button data-tool="move" data-en="Move">Di chuyển</button>
+    <button data-tool="rotate" data-en="Rotate">Xoay</button>
+    <button data-tool="scale" data-en="Scale">Tỉ lệ</button>
+    <span class="sep"></span>
+    <button data-tool="dist" data-en="Distance">Đo khoảng cách</button>
+    <button data-tool="angle" data-en="Angle">Đo góc</button>
+    <button data-tool="radius" data-en="Radius">Đo bán kính</button>
+    <button data-tool="thick" data-en="Wall thickness">Đo bề dày</button>
+  </div>
+  <div id="tpop">
+    <div id="tpMove" class="row"><span data-en="Move">Di chuyển</span> X <input type="number" id="mvX" class="s" value="0"> Y <input type="number" id="mvY" class="s" value="0"> Z <input type="number" id="mvZ" class="s" value="0"> <span class="unit">mm</span><button id="bMove" class="primary" data-en="Apply">Áp dụng</button></div>
+    <div id="tpRot" class="row"><span data-en="Rotate about">Xoay quanh</span>
+      <select id="rotAx" style="width:50px"><option value="0">X</option><option value="1">Y</option><option value="2" selected>Z</option></select>
+      <input type="number" id="rotA" class="s" value="90"> <span class="unit">°</span><button id="bRot" class="primary" data-en="Apply">Áp dụng</button></div>
+    <div id="tpScale" class="row"><span data-en="Scale">Tỉ lệ</span> X <input type="number" id="scX" class="s" value="1" step="0.1"> Y <input type="number" id="scY" class="s" value="1" step="0.1"> Z <input type="number" id="scZ" class="s" value="1" step="0.1">
+      <label><input type="checkbox" id="scUni" checked> <span data-en="Uniform">Đồng đều</span></label><button id="bScale" class="primary" data-en="Apply">Áp dụng</button></div>
+    <div id="tpPivot" class="row"><span class="lbl" data-en="About">Tâm</span>
+      <select id="pivot" style="width:140px"><option value="c" data-en="Selection centre">Tâm vùng chọn</option><option value="o" data-en="World origin">Gốc tọa độ</option></select></div>
+  </div>
+  <div id="cubeWrap"><div id="cube">
+    <div data-v="front" style="transform:rotateX(-90deg) translateZ(25px)">Front</div>
+    <div data-v="back" style="transform:rotateX(90deg) rotateZ(180deg) translateZ(25px)">Back</div>
+    <div data-v="top" style="transform:translateZ(25px)">Top</div>
+    <div data-v="bottom" style="transform:rotateX(180deg) translateZ(25px)">Bottom</div>
+    <div data-v="right" style="transform:rotateY(90deg) rotateZ(-90deg) translateZ(25px)">Right</div>
+    <div data-v="left" style="transform:rotateY(-90deg) rotateZ(90deg) translateZ(25px)">Left</div>
+  </div></div>
+  <div id="info">
+    <div class="hd" data-en="Information and material">Thông tin và vật liệu</div>
+    <table id="infoTbl"></table>
+    <div class="row"><span class="lbl" data-en="Material">Vật liệu</span><select id="mat" style="width:150px"></select></div>
+    <div class="row"><span class="lbl" data-en="Density">Khối lượng riêng</span><input type="number" id="dens" class="s" step="0.01" min="0" value="0"><span class="unit" style="color:#fff">g/cm³</span></div>
+  </div>
+  <div id="status"></div>
+  <div id="hud" data-en="Right-drag: rotate · Middle-drag or Ctrl + right-drag: pan · Wheel: zoom at cursor · Left click: tick · Left-drag: box select · Right click: menu · F: fit · Shift+1…7: standard views">Chuột phải kéo: xoay · Chuột giữa hoặc Ctrl + chuột phải kéo: dời · Lăn chuột: zoom tại con trỏ · Chuột trái: tick chọn · Kéo chuột trái: quét ô chọn · Chuột phải: menu · F: fit · Shift+1…7: hướng nhìn chuẩn</div>
+  <div id="busy"><div class="bx"><div id="busyText">...</div><div id="bar"><i></i></div></div></div>
+</div>
+
+<div id="right">
+  <details open><summary data-en="Display">Hiển thị</summary><div class="c">
+    <div class="row"><span class="lbl" data-en="Colour">Màu</span><input type="color" id="col" value="#92aac8"></div>
+    <div class="row"><span class="lbl" data-en="Opacity">Độ đục</span><input type="range" id="opa" min="5" max="100" value="100"><span class="unit" id="opaV">100%</span></div>
+    <div class="note" data-en="Applies to the ticked bodies. A ticked body is drawn orange; untick it to see its own colour.">Áp dụng cho các body đang tick. Body đang tick được vẽ màu cam; bỏ tick để thấy màu riêng.</div>
+  </div></details>
+
+  <details open><summary data-en="Split / merge bodies">Tách / gộp body</summary><div class="c">
+    <div class="row"><span class="lbl" data-en="Ignore pieces smaller than">Bỏ qua mảnh nhỏ hơn</span><input type="number" id="vMin" class="s" value="1" min="1" step="1"><span class="unit" data-en="tris">tam giác</span></div>
+    <div class="row"><label><input type="checkbox" id="cKeep" checked> <span data-en="Group small pieces into one body">Gom các mảnh nhỏ thành 1 body riêng</span></label></div>
+    <div class="btns"><button class="primary" id="bSplit" data-en="Split">Tách body</button><button id="bJoin" data-en="Merge ticked bodies">Gộp body tick</button></div>
+    <div class="box" id="splitRes" data-en="Splits disconnected mesh pieces of the ticked bodies into separate bodies.">Tách các mảnh lưới rời nhau của body đang tick thành từng body.</div>
+  </div></details>
+
+  <details><summary>Explode</summary><div class="c">
+    <div class="row"><span class="lbl" data-en="Spread">Độ tách xa</span><input type="range" id="expl" min="0" max="300" value="0"><span class="unit" id="explV">0%</span></div>
+    <div class="note" data-en="Display only: real positions and downloads are unchanged.">Chỉ là cách hiển thị, không đổi vị trí thật của body khi tải về.</div>
+  </div></details>
+
+  <details><summary data-en="Section">Mặt cắt (section)</summary><div class="c">
+    <div class="row"><label><input type="checkbox" id="secOn"> <span data-en="Enable">Bật mặt cắt</span></label><span class="grow"></span><label><input type="checkbox" id="secFlip"> <span data-en="Flip side">Đảo phía</span></label></div>
+    <div class="row"><span class="lbl" data-en="Plane normal">Pháp tuyến mặt cắt</span>
+      <select id="secAx" style="width:150px"><option value="x" data-en="X axis">Trục X</option><option value="y" data-en="Y axis">Trục Y</option><option value="z" selected data-en="Z axis">Trục Z</option><option value="view" data-en="Current view direction">Hướng nhìn hiện tại</option><option value="pick" data-en="Face picked on mesh">Mặt chọn trên mesh</option></select></div>
+    <div class="row"><span class="lbl" data-en="Position">Vị trí</span><input type="range" id="secPos" min="0" max="1000" value="500"><span class="unit" id="secV" style="min-width:58px;text-align:right">-</span></div>
+    <div class="btns"><button id="bSecPick" data-en="Pick a face on the mesh">Chọn mặt trên mesh</button></div>
+  </div></details>
+
+  <details><summary data-en="Tooling analysis (undercut)">Tooling analysis (undercut)</summary><div class="c">
+    <div class="row"><span class="lbl" data-en="Pull direction">Hướng mở khuôn</span>
+      <select id="ucAx" style="width:150px"><option value="z" selected data-en="Z axis">Trục Z</option><option value="x" data-en="X axis">Trục X</option><option value="y" data-en="Y axis">Trục Y</option><option value="view" data-en="Current view direction">Hướng nhìn hiện tại</option><option value="custom" data-en="Custom vector">Vector tùy chọn</option></select></div>
+    <div class="row" id="ucVecRow" style="display:none"><span class="lbl">Vector X Y Z</span><input type="number" id="ucX" class="s" value="0"><input type="number" id="ucY" class="s" value="0"><input type="number" id="ucZ" class="s" value="1"></div>
+    <div class="row"><span class="lbl" data-en="Minimum draft angle">Góc thoát khuôn tối thiểu</span><input type="number" id="ucDraft" class="s" value="1" min="0" max="45" step="0.5"><span class="unit">°</span></div>
+    <div class="row"><span class="lbl" data-en="Colour brightness">Độ sáng màu</span><input type="range" id="ucBright" min="50" max="220" value="130"><span class="unit" id="ucBrightV">130%</span></div>
+    <div class="btns"><button class="primary" id="bUc" data-en="Analyse">Phân tích</button><button id="bUcClr" data-en="Clear colours">Xóa màu phân tích</button></div>
+    <div class="box" id="ucRes"></div>
+  </div></details>
+
+  <details><summary data-en="Collision check">Kiểm tra va chạm</summary><div class="c">
+    <div class="btns"><button class="primary" id="bCol" data-en="Check">Kiểm tra</button><button id="bColClr" data-en="Clear colours">Xóa tô màu</button></div>
+    <div class="box" id="colRes" data-en="Checks the ticked bodies (2 or more), otherwise every visible body. Click a pair in the list to highlight its intersecting triangles.">Kiểm tra giữa các body đang tick (từ 2 body), nếu không thì mọi body đang hiện. Bấm vào một cặp trong danh sách để tô vùng giao nhau của cặp đó.</div>
+  </div></details>
+
+  <details><summary data-en="Compare meshes">So sánh mesh</summary><div class="c">
+    <div class="note" style="margin-top:0" data-en="Tick exactly 2 bodies: the first one ticked is the reference, the second is moved onto it. Two side-by-side views open; click at least 3 matching points on each, in the same order. Align by points is the rough manual fit; Auto align then computes the best fit starting from your points.">Tick đúng 2 body: body tick trước là tham chiếu, body tick sau sẽ được căn vào. Màn hình chia 2 cửa sổ song song; bấm ít nhất 3 điểm tương ứng trên mỗi body, theo cùng thứ tự. "Căn theo điểm" là căn thô theo điểm bấm; "Căn chỉnh tự động" tính tiếp từ các điểm đó để 2 mesh khớp nhất.</div>
+    <div class="btns">
+      <button class="primary" id="bCmpStart" data-en="Start">Bắt đầu</button>
+      <button id="bCmpUndo" data-en="Remove last point">Xóa điểm cuối</button>
+      <button id="bCmpAlign" data-en="Align by points">Căn theo điểm</button>
+    </div>
+    <div class="btns">
+      <button class="primary" id="bCmpIcp" data-en="Auto align (best fit)">Căn chỉnh tự động (khớp nhất)</button>
+      <button id="bCmpDev" data-en="Deviation only">Chỉ tính sai lệch</button>
+    </div>
+    <div class="btns">
+      <button id="bCmpView" data-en="Side by side ⇄ overlaid">Song song ⇄ chồng</button>
+      <button id="bCmpShot" data-en="📷 Copy image">📷 Chép ảnh</button>
+      <button id="bCmpEnd" data-en="Finish">Kết thúc</button>
+    </div>
+    <div class="row"><span class="lbl" data-en="Colour scale ± (0 = auto)">Thang màu ± (0 = tự động)</span><input type="number" id="cmpRange" class="s" value="0" min="0" step="0.1"><span class="unit">mm</span></div>
+    <div class="box" id="cmpRes" data-en="Not comparing.">Chưa so sánh.</div>
+  </div></details>
+
+  <details open><summary data-en="Measurements">Kết quả đo</summary><div class="c">
+    <div class="list" id="measList"></div>
+    <div class="btns"><button id="bMeasClr" data-en="Clear all measurements">Xóa hết phép đo</button></div>
+  </div></details>
+</div>
+</div>
+<div id="ctx"></div>
