@@ -12,7 +12,14 @@
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
   body { -webkit-user-select: none; user-select: none; background: var(--bg); color: var(--text); font: 13px/1.4 "Segoe UI", Tahoma, Arial, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
-  #top { display: flex; align-items: center; gap: 5px; padding: 5px 10px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  #top { padding: 3px 10px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  #top .trow { display: flex; align-items: center; gap: 5px; padding: 2px 0; flex-wrap: wrap; }
+  #top #dispRow { border-top: 1px solid var(--line); margin-top: 2px; padding-top: 4px; gap: 9px; }
+  #top .tlbl { color: var(--accent); font-weight: 600; text-transform: uppercase; font-size: 11.5px; letter-spacing: .04em; margin-right: 4px; }
+  #top input[type=range] { width: 110px; }
+  #top input[type=color] { width: 34px; height: 22px; padding: 0; border: 1px solid var(--line); background: none; }
+  #top .unit { color: var(--muted); min-width: 36px; }
+  .redtxt { color: #ff5a4f; font-weight: 600; }
   #top h1 { font-size: 15px; margin: 0 8px 0 0; white-space: nowrap; }
   #top h1 span { color: var(--accent); }
   #top .sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
@@ -51,6 +58,7 @@
   .box { margin-top: 6px; padding: 6px 7px; border: 1px solid var(--line); border-radius: 4px; background: #11151a; color: var(--muted); font-variant-numeric: tabular-nums; }
   .box b { color: var(--ok); }
   .box .bad { color: var(--bad); }
+  .box .good { color: #5fd08a; }
   .box .pair { cursor: pointer; padding: 1px 3px; border-radius: 3px; color: var(--text); }
   .box .pair:hover { background: #2c3642; }
   .box .pair.sel { background: #5a2326; }
@@ -102,6 +110,7 @@
 </head>
 <body>
 <div id="top">
+ <div class="trow">
   <h1><span>MrT</span> Decimate Mesh</h1>
   <button id="bOpen" data-en="Open file / session">Mở file / phiên</button>
   <button id="bSaveSes" data-en="Save session (.mrtl)">Lưu phiên (.mrtl)</button>
@@ -111,17 +120,25 @@
   <button id="bRedo" title="Ctrl+Y" data-en="↷ Redo">↷ Tiến</button>
   <span class="sep"></span>
   <button id="bHome" data-en="⟲ Import position" data-en-title="Put the ticked bodies back where they were when imported" title="Đưa các body đang tick về vị trí lúc import">⟲ Vị trí lúc import</button>
-  <span class="sep"></span>
-  <label><input type="checkbox" id="cWire" checked> <span data-en="Edges">Cạnh lưới</span></label>
-  <label><input type="checkbox" id="cAxes" checked> <span data-en="XYZ axes">Hệ trục XYZ</span></label>
-  <label><input type="checkbox" id="cInfo" checked> <span data-en="Info">Thông tin</span></label>
-  <label><input type="checkbox" id="cZoomInv"> <span data-en="Invert zoom">Đảo chiều zoom</span></label>
-  <button id="bShot" data-en="📷 Copy image" data-en-title="Copy a picture of the 3D view to the clipboard" title="Chép ảnh màn hình 3D vào clipboard">📷 Chép ảnh</button>
-  <button id="bFit" title="F">Fit</button>
-  <button id="bIso" title="Shift+7">Iso</button>
   <span id="msg"></span>
   <span class="grow"></span>
   <button id="bVi" class="on">Việt</button><button id="bEn">EN</button>
+ </div>
+ <div class="trow" id="dispRow">
+  <span class="tlbl" data-en="Display">Hiển thị</span>
+  <label data-en-title="Colour of the ticked bodies. A ticked body is drawn orange; untick it to see its own colour." title="Màu của các body đang tick. Body đang tick được vẽ màu cam; bỏ tick để thấy màu riêng."><span data-en="Colour">Màu</span><input type="color" id="col" value="#92aac8"></label>
+  <label data-en-title="Opacity of the ticked bodies" title="Độ đục của các body đang tick"><span data-en="Opacity">Độ đục</span><input type="range" id="opa" min="5" max="100" value="100"><span class="unit" id="opaV">100%</span></label>
+  <span class="sep"></span>
+  <label><input type="checkbox" id="cWire" checked> <span data-en="Edges">Cạnh lưới</span></label>
+  <label data-en-title="Draw the open borders of every mesh in bright red" title="Vẽ viền hở của mọi mesh bằng màu đỏ sáng"><input type="checkbox" id="cHoles" checked> <span class="redtxt" data-en="Open borders">Viền hở</span></label>
+  <label><input type="checkbox" id="cAxes" checked> <span data-en="XYZ axes">Hệ trục XYZ</span></label>
+  <label><input type="checkbox" id="cInfo" checked> <span data-en="Info">Thông tin</span></label>
+  <label><input type="checkbox" id="cZoomInv"> <span data-en="Invert zoom">Đảo chiều zoom</span></label>
+  <span class="sep"></span>
+  <button id="bShot" data-en="📷 Copy image" data-en-title="Copy a picture of the 3D view to the clipboard" title="Chép ảnh màn hình 3D vào clipboard">📷 Chép ảnh</button>
+  <button id="bFit" title="F">Fit</button>
+  <button id="bIso" title="Shift+7">Iso</button>
+ </div>
 </div>
 
 <div id="wrap">
@@ -215,22 +232,27 @@
 </div>
 
 <div id="right">
-  <details open><summary data-en="Display">Hiển thị</summary><div class="c">
-    <div class="row"><span class="lbl" data-en="Colour">Màu</span><input type="color" id="col" value="#92aac8"></div>
-    <div class="row"><span class="lbl" data-en="Opacity">Độ đục</span><input type="range" id="opa" min="5" max="100" value="100"><span class="unit" id="opaV">100%</span></div>
-    <div class="note" data-en="Applies to the ticked bodies. A ticked body is drawn orange; untick it to see its own colour.">Áp dụng cho các body đang tick. Body đang tick được vẽ màu cam; bỏ tick để thấy màu riêng.</div>
-  </div></details>
-
   <details open><summary data-en="Split / merge bodies">Tách / gộp body</summary><div class="c">
     <div class="row"><span class="lbl" data-en="Ignore pieces smaller than">Bỏ qua mảnh nhỏ hơn</span><input type="number" id="vMin" class="s" value="1" min="1" step="1"><span class="unit" data-en="tris">tam giác</span></div>
     <div class="row"><label><input type="checkbox" id="cKeep" checked> <span data-en="Group small pieces into one body">Gom các mảnh nhỏ thành 1 body riêng</span></label></div>
-    <div class="btns"><button class="primary" id="bSplit" data-en="Split">Tách body</button><button id="bJoin" data-en="Merge ticked bodies">Gộp body tick</button></div>
+    <div class="btns"><button id="bSplit" data-en="Split">Tách body</button><button id="bJoin" data-en="Merge ticked bodies">Gộp body tick</button></div>
     <div class="row" style="margin-top:9px"><span class="lbl" data-en="Split option (gentle → strong)">Phương án tách (nhẹ → mạnh)</span><span class="unit" id="splitLvV">1/10</span></div>
     <div class="row"><input type="range" id="splitLv" min="1" max="10" step="1" value="1"></div>
     <div class="note" id="splitLvName" style="margin-top:0"></div>
     <div class="btns"><button id="bSplitPrev" data-en="◀ Previous option">◀ Phương án trước</button><button id="bSplitNext" data-en="Next option ▶">Phương án kế ▶</button></div>
     <div class="box" id="splitRes" data-en="Split separates the loose pieces of the ticked bodies. Not what you wanted? Press Next option ▶ (or drag the slider) for a stronger split, ◀ to go back.">"Tách body" tự tách các mảnh rời của body đang tick. Chưa đúng ý thì bấm "Phương án kế ▶" (hoặc kéo thanh trượt) để tách mạnh hơn, "◀" để quay lại.</div>
     <div class="note" data-en="From option 4 on, the surface is also cut along creases, so those pieces are open along the cut. With options 4 and up, pieces smaller than the number above are merged into their neighbour.">Từ phương án 4, bề mặt còn bị cắt theo nếp gấp nên các mảnh sẽ hở tại đường cắt. Với phương án 4 trở lên, mảnh nhỏ hơn số tam giác ở trên được nhập vào mảnh bên cạnh.</div>
+  </div></details>
+
+  <details open><summary data-en="Repair open meshes">Vá lưới hở</summary><div class="c">
+    <div class="box" id="holeInfo"></div>
+    <div class="row" style="margin-top:8px"><span class="lbl" data-en="Patch quality (basic → advanced)">Kiểu vá (cơ bản → nâng cao)</span><span class="unit" id="holeLvV">2/3</span></div>
+    <div class="row"><input type="range" id="holeLv" min="1" max="3" step="1" value="2"></div>
+    <div class="note" id="holeLvName" style="margin-top:0"></div>
+    <div class="row"><span class="lbl" data-en="Only holes with a rim up to">Chỉ vá lỗ có chu vi tới</span><input type="number" id="holeMax" value="0" min="0" step="1"><span class="unit">mm</span></div>
+    <div class="row"><span class="lbl" data-en="First stitch gaps up to">Khâu khe hở trước, tới</span><input type="number" id="holeStitch" value="0" min="0" step="0.01"><span class="unit">mm</span></div>
+    <div class="btns"><button id="bFill" data-en="Fill holes">Vá lỗ</button></div>
+    <div class="box" id="holeRes" data-en="Open borders are drawn bright red. Tick a body and press Fill holes. Rim limit 0 = every hole; stitch 0 = off.">Viền hở được vẽ màu đỏ sáng. Tick body rồi bấm "Vá lỗ". Chu vi 0 = vá mọi lỗ; khâu 0 = không khâu.</div>
   </div></details>
 
   <details><summary>Explode</summary><div class="c">

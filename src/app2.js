@@ -13,6 +13,7 @@
     if (cmd === 'parse') return c.parse(p.name, p.buffer);
     if (cmd === 'decimate') return c.decimate(p.mesh, p.opt, prog);
     if (cmd === 'split') return c.splitAdv(p.mesh, p.opt);
+    if (cmd === 'fill') return c.fillHoles(p.mesh, p.opt);
     if (cmd === 'undercut') return c.undercut(p.mesh, p.dir, p.minDraft, prog);
     if (cmd === 'collide') return c.collide(p.a, p.b);
     if (cmd === 'deviation') return c.deviation(p.b, p.a, prog);
@@ -117,7 +118,7 @@
     bodies: [], sel: new Set(), tool: 'select', explode: 0,
     sec: { on: false, flip: false, axis: 'z', n: [0, 0, 1], s: 0.5, d: 0, min: -1, max: 1, nView: [0, 0, 1], nPick: [0, 0, 1] },
     measures: [], tmp: [], clip: [], giz: null, colorSeq: 0, idSeq: 1, cmp: null, col: null, spl: null,
-    show: { box: false, com: false }, hov: null, hovCom: null, viewPivot: null
+    show: { box: false, com: false }, hov: null, hovCom: null, hovEnt: null, viewPivot: null
   };
   let dirty = true, busy = false, W = 1, H = 1;
   const MATS = [['', '(chưa gán)', '(none)', 0], ['ABS', 'ABS', 'ABS', 1.05], ['PP', 'PP', 'PP', 0.905], ['HIPS', 'HIPS', 'HIPS', 1.05], ['PC', 'PC', 'PC', 1.20],
@@ -157,6 +158,7 @@
     for (const b of S.bodies) if (b.geo === g) return;
     gl.deleteVertexArray(g.gl.vao); gl.deleteVertexArray(g.gl.vaoL);
     gl.deleteBuffer(g.gl.pos); gl.deleteBuffer(g.gl.idx); if (g.gl.line) gl.deleteBuffer(g.gl.line);
+    if (g.holes && g.holes.vao) { gl.deleteVertexArray(g.holes.vao); gl.deleteBuffer(g.holes.buf); g.holes.vao = null; g.holes.buf = null; }
     g.gl = null;
   }
   function freeAna(b) {
@@ -303,7 +305,7 @@
       'void main(){vec3 w=(uM*vec4(aPos,1.0)).xyz;vec3 v=uR*(w-uT);vW=w;vV=v;vC=aCol;gl_Position=vec4(v.x*uS.x,v.y*uS.y,v.z*uS.z,1.0);}';
     const fs = '#version 300 es\nprecision highp float;in vec3 vV;in vec3 vW;in vec3 vC;uniform vec4 uColor;uniform int uMode;uniform float uSel;uniform float uBright;uniform vec4 uClip;uniform float uClipOn;out vec4 o;' +
       'void main(){if(uClipOn>0.5&&dot(uClip.xyz,vW)>uClip.w)discard;' +
-      'if(uMode==1){o=vec4(0.03,0.05,0.08,uColor.a);return;}' +
+      'if(uMode==1){o=vec4(0.03,0.05,0.08,uColor.a);return;}if(uMode==3){o=uColor;return;}' +
       'vec3 base=uMode==2?vC:(uSel>0.5?vec3(1.0,0.55,0.06):uColor.rgb);' +
       'if(uClipOn>0.5&&!gl_FrontFacing){o=vec4(base*0.45+vec3(0.16,0.03,0.03),uColor.a);return;}' +
       'vec3 n=normalize(cross(dFdx(vV),dFdy(vV)));' +
@@ -342,6 +344,27 @@
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, o.line); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, Ln, gl.STATIC_DRAW);
     gl.bindVertexArray(null);
+  }
+  // open borders of a geometry: edge list, number of holes, GL buffer for drawing them
+  function holesOf(g) {
+    if (g.holes) return g.holes;
+    const L = core.borderLoops(g.positions, g.indices), E = core.borderEdges(g.positions, g.indices);
+    return (g.holes = { E: E, edges: E.length / 2, loops: L.loops.length, vao: null, buf: null });
+  }
+  function drawBorders(b) {
+    const h = holesOf(b.geo);
+    if (!h.edges) return;
+    const o = ensureGL(b.geo);
+    if (!h.vao) {
+      h.vao = gl.createVertexArray(); h.buf = gl.createBuffer();
+      gl.bindVertexArray(h.vao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, o.pos);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, h.buf); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, h.E, gl.STATIC_DRAW);
+    }
+    gl.uniformMatrix4fv(U.uM, false, dispMatrix(b));
+    gl.uniform1i(U.uMode, 3); gl.uniform4f(U.uColor, 1, 0.12, 0.1, 1);
+    gl.bindVertexArray(h.vao); gl.drawElements(gl.LINES, h.E.length, gl.UNSIGNED_INT, 0);
   }
   // Colour map on a body. colorOf(t, vi, out) fills out[0..2] for vertex vi of triangle t.
   function setAna(b, colorOf) {
@@ -468,6 +491,7 @@
       gl.uniform1i(U.uMode, 1); gl.uniform4f(U.uColor, 0, 0, 0, alpha < 1 ? alpha * 0.5 : 1);
       gl.bindVertexArray(g.vaoL); gl.drawElements(gl.LINES, g.nLine, gl.UNSIGNED_INT, 0);
     }
+    if (!plain && $('cHoles').checked) drawBorders(b);
   }
   function setCamUniforms() {
     const R = cam.R;
@@ -677,6 +701,22 @@
     }
     drawTriad(44, H - 70);
     const tick = selBodies();
+    if ($('cHoles').checked) {                               // open borders again, thick, when there are few enough to afford it
+      let ne = 0;
+      for (const b of S.bodies) if (b.visible) ne += holesOf(b.geo).edges;
+      if (ne && ne <= 5000) {
+        ctx.strokeStyle = '#ff2a1f'; ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.beginPath();
+        for (const b of S.bodies) {
+          if (!b.visible) continue;
+          const h = holesOf(b.geo), P = b.geo.positions, m = dispMatrix(b);
+          for (let i = 0; i < h.E.length; i += 2) {
+            const a = 3 * h.E[i], c = 3 * h.E[i + 1], q = project(M.point(m, [P[a], P[a + 1], P[a + 2]])), r = project(M.point(m, [P[c], P[c + 1], P[c + 2]]));
+            ctx.moveTo(q[0], q[1]); ctx.lineTo(r[0], r[1]);
+          }
+        }
+        ctx.stroke(); ctx.lineCap = 'butt';
+      }
+    }
     if (S.show.box && tick.length) drawBBox(tick);
     // measurements
     const MC = '#5fe0ff';
@@ -685,6 +725,10 @@
       if (m.type === 'dist' || m.type === 'thick') {
         line2(q[0], q[1], m.type === 'thick' ? '#ffcf5a' : MC, 2);
         label((q[0][0] + q[1][0]) / 2, (q[0][1] + q[1][1]) / 2, lb, m.type === 'thick' ? '#ffcf5a' : null);
+      } else if (m.type === 'len') {
+        poly2(q, MC, 3); const k = q.length >> 1; label(q[k][0], q[k][1], lb);
+        dot2(q[0], '#ffffff', 3); dot2(q[q.length - 1], '#ffffff', 3);
+        continue;
       } else if (m.type === 'angle') {
         line2(q[1], q[0], MC, 2); line2(q[1], q[2], MC, 2); label(q[1][0], q[1][1], lb);
       } else if (m.type === 'radius') {
@@ -701,6 +745,12 @@
       for (const p of q) dot2(p, '#ffffff', 3);
     }
     for (const p of S.tmp) dot2(project(p), '#ffcf5a', 4.5);
+    if (S.hovEnt) {                                          // what a click would take, in the measuring tools
+      const e = S.hovEnt, HC = '#ffe14a';
+      for (const pl of e.lines || []) poly2(pl.map(project), HC, e.kind === 'edge' ? 4.5 : 2.5);
+      if (e.kind === 'point') { const q = project(e.p); dot2(q, '#14181d', 8); dot2(q, HC, 6); }
+      if (e.text) { const q = project(e.at); tag(q[0], q[1] - 20, e.text, '#ffffff', HC); }
+    }
     for (const m of comMarkers()) {
       const q = project(m.p);
       drawCom(q, m.all ? 10 : 7.5, S.hovCom === m.p || (S.hovCom && V.len(V.sub(S.hovCom, m.p)) < 1e-9));
@@ -795,6 +845,127 @@
     for (let r = 3; !h && r <= 6; r += 3) for (let k = 0; k < 8 && !h; k++) h = pick(px + r * Math.cos(k * 0.7854), py + r * Math.sin(k * 0.7854), only);
     return h;
   }
+  // planes, cylinders, spheres, edges and corners of a body, in world coordinates
+  function featOf(b) {
+    const key = b.matrix.join();
+    if (b.feat && b.feat.key === key && b.feat.geo === b.geo) return b.feat.f;
+    const f = core.features(worldMesh(b));
+    b.feat = { key: key, geo: b.geo, f: f };
+    return f;
+  }
+  // The thing under the cursor that a measuring tool would take: a corner, an edge, a recognised face, or a free point.
+  function entityAt(h, px, py, freeOnly) {
+    const b = h.body, off = S.cmp ? [0, 0, 0] : b.off, mv = function (p) { return V.add(p, off); };
+    const free = { kind: 'point', p: snapPoint(h, px, py), at: h.point, free: true };
+    if (freeOnly) return free;
+    const f = featOf(b), R = f.regions[f.reg[h.tri]];
+    if (!R) return free;
+    const chains = R.chains.map(function (i) { return f.chains[i]; });
+    // an edge or corner that lies well behind the surface under the cursor is hidden by it: not a candidate
+    const w = viewer(), depth = V.dot(h.point, w) - 30 * 2 * cam.zoom / H;
+    let best = null, bd = 11;
+    for (const c of chains) {
+      if (c.closed) continue;
+      for (const p of [c.pts[0], c.pts[c.pts.length - 1]]) { const wp = mv(p), q = project(wp), d = Math.hypot(q[0] - px, q[1] - py); if (d < bd && V.dot(wp, w) > depth) { bd = d; best = wp; } }
+    }
+    if (best) return { kind: 'point', p: best, at: best, text: L('Đỉnh', 'Corner') };
+    let ec = null, ed = 8;
+    for (const c of chains) {
+      let p0 = mv(c.pts[0]), prev = project(p0);
+      for (let i = 1; i < c.pts.length; i++) {
+        const p1 = mv(c.pts[i]), q = project(p1), ax = q[0] - prev[0], ay = q[1] - prev[1], l2 = ax * ax + ay * ay;
+        const t = l2 > 1e-9 ? Math.max(0, Math.min(1, ((px - prev[0]) * ax + (py - prev[1]) * ay) / l2)) : 0, d = Math.hypot(px - prev[0] - t * ax, py - prev[1] - t * ay);
+        if (d < ed && V.dot(V.add(p0, V.mul(V.sub(p1, p0), t)), w) > depth) { ed = d; ec = c; }
+        p0 = p1; prev = q;
+      }
+    }
+    if (ec) {
+      const pts = ec.pts.map(mv);
+      return { kind: 'edge', sub: ec.type, pts: pts, len: ec.len, r: ec.r, c: ec.c ? mv(ec.c) : null, n: ec.n, dir: ec.dir, p: pts[0], at: h.point, lines: [pts],
+        text: ec.type === 'line' ? L('Cạnh thẳng ', 'Straight edge ') + f2(ec.len) + ' mm' : ec.type === 'arc' ? (ec.closed ? L('Đường tròn R ', 'Circle R ') : L('Cung R ', 'Arc R ')) + f2(ec.r) : L('Cạnh cong ', 'Curved edge ') + f2(ec.len) + ' mm' };
+    }
+    const lines = chains.map(function (c) { return c.pts.map(mv); });
+    if (R.type === 'plane') return { kind: 'plane', n: R.n, p: h.point, at: h.point, lines: lines, text: L('Mặt phẳng', 'Plane') };
+    if (R.type === 'cyl') return { kind: 'cyl', c: mv(R.c), dir: R.axis, r: R.r, p: h.point, at: h.point, lines: lines, text: L('Mặt trụ R ', 'Cylinder R ') + f2(R.r) };
+    if (R.type === 'sphere') return { kind: 'sphere', c: mv(R.c), r: R.r, p: h.point, at: h.point, lines: lines, text: L('Mặt cầu R ', 'Sphere R ') + f2(R.r) };
+    return free;
+  }
+  // reduce what was picked to a point, a line or a plane
+  function entGeo(e) {
+    if (e.kind === 'plane') return { t: 'plane', p: e.p, n: e.n };
+    if (e.kind === 'cyl') return { t: 'line', p: e.c, d: e.dir };
+    if (e.kind === 'sphere') return { t: 'point', p: e.c };
+    if (e.kind === 'edge') return e.sub === 'line' ? { t: 'line', p: e.pts[0], d: e.dir } : e.sub === 'arc' ? { t: 'point', p: e.c } : { t: 'point', p: e.at };
+    return { t: 'point', p: e.p };
+  }
+  const footLine = function (p, l) { return V.add(l.p, V.mul(l.d, V.dot(V.sub(p, l.p), l.d))); };
+  const footPlane = function (p, pl) { return V.sub(p, V.mul(pl.n, V.dot(V.sub(p, pl.p), pl.n))); };
+  // shortest connection between two picked things: [A, B], or null when they cross
+  function entDist(a, b) {
+    if (a.t === 'point' && b.t === 'point') return [a.p, b.p];
+    if (a.t === 'point') return [a.p, b.t === 'line' ? footLine(a.p, b) : footPlane(a.p, b)];
+    if (b.t === 'point') return [a.t === 'line' ? footLine(b.p, a) : footPlane(b.p, a), b.p];
+    if (a.t === 'line' && b.t === 'line') {
+      const w = V.sub(a.p, b.p), k = V.dot(a.d, b.d), den = 1 - k * k;
+      if (den < 1e-6) return [a.p, footLine(a.p, b)];
+      const s = (k * V.dot(b.d, w) - V.dot(a.d, w)) / den, t = (V.dot(b.d, w) - k * V.dot(a.d, w)) / den;
+      return [V.add(a.p, V.mul(a.d, s)), V.add(b.p, V.mul(b.d, t))];
+    }
+    if (a.t === 'plane' && b.t === 'plane') return Math.abs(V.dot(a.n, b.n)) > 0.99985 ? [a.p, footPlane(a.p, b)] : null;
+    const ln = a.t === 'line' ? a : b, pl = a.t === 'line' ? b : a;
+    if (Math.abs(V.dot(ln.d, pl.n)) > 0.0175) return null;
+    return a.t === 'line' ? [ln.p, footPlane(ln.p, pl)] : [footPlane(ln.p, pl), ln.p];
+  }
+  // angle between two lines / planes, drawn as two legs from where the second one was picked
+  function entAngle(a, b, at) {
+    let u, w;
+    if (a.t === 'line' && b.t === 'line') { u = a.d; w = V.dot(a.d, b.d) < 0 ? V.mul(b.d, -1) : b.d; }
+    else if (a.t === 'plane' && b.t === 'plane') {
+      const ax = V.cross(a.n, b.n);
+      if (V.len(ax) < 1e-6) { flash(L('Hai mặt phẳng song song: góc 0°', 'The two planes are parallel: 0°')); return; }
+      u = V.norm(V.cross(ax, a.n)); w = V.norm(V.cross(ax, b.n)); if (V.dot(u, w) < 0) w = V.mul(w, -1);
+    } else {
+      const ln = a.t === 'line' ? a : b, pl = a.t === 'line' ? b : a, k = V.dot(ln.d, pl.n);
+      u = k < 0 ? V.mul(ln.d, -1) : ln.d;
+      const pr = V.sub(u, V.mul(pl.n, Math.abs(k)));
+      w = V.len(pr) < 1e-6 ? V.norm(V.cross(pl.n, Math.abs(pl.n[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0])) : V.norm(pr);
+    }
+    const s = mainCam.radius * 0.18;
+    addMeasure('angle', [V.add(at, V.mul(u, s)), at, V.add(at, V.mul(w, s))]);
+  }
+  function pushMeasure(m) { if (!S.cmp) pushUndo(); S.measures.push(m); updateMeasList(); dirty = true; }
+  // one click on an entity in a measuring tool
+  function measurePick(t, e) {
+    const g = entGeo(e), n = S.tmp.length, mark = function () { const p = (e.kind === 'edge' || e.kind === 'plane' || e.kind === 'cyl' || e.kind === 'sphere' ? e.at : e.p).slice(); p.g = g; S.tmp.push(p); dirty = true; };
+    if (t === 'radius') {
+      if (!n && e.kind === 'edge' && e.sub === 'arc') return pushMeasure({ type: 'radius', pts: [e.pts[0]], c: e.c, n: e.n, r: e.r });
+      if (!n && e.kind === 'cyl') { const c = footLine(e.at, { p: e.c, d: e.dir }); return pushMeasure({ type: 'radius', pts: [V.add(c, V.mul(V.norm(V.sub(e.at, c)), e.r))], c: c, n: e.dir, r: e.r }); }
+      if (!n && e.kind === 'sphere') { const rd = V.norm(V.sub(e.at, e.c)), nn = V.norm(V.cross(rd, Math.abs(rd[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0])); return pushMeasure({ type: 'radius', pts: [V.add(e.c, V.mul(rd, e.r))], c: e.c, n: nn, r: e.r }); }
+      S.tmp.push((e.kind === 'point' ? e.p : e.at).slice()); dirty = true;
+      if (S.tmp.length === 3) { addMeasure('radius', S.tmp); S.tmp = []; }
+      return;
+    }
+    if (t === 'dist') {
+      if (!n && e.kind === 'edge') return pushMeasure({ type: 'len', pts: e.pts, v: e.len, sub: e.sub, r: e.r });   // an edge alone: its length
+      mark();
+      if (S.tmp.length < 2) return;
+      const a = S.tmp[0].g, b = S.tmp[1].g, d = entDist(a, b);
+      S.tmp = [];
+      if (d) return addMeasure('dist', d);
+      flash(L('Hai đối tượng cắt nhau (khoảng cách 0): hiện góc giữa chúng', 'The two cross each other (distance 0): showing the angle between them'));
+      return entAngle(a, b, e.at);
+    }
+    // angle: two lines / planes, or three points
+    const dirPick = g.t !== 'point', first = n ? S.tmp[0].g : null;
+    if (first && first.t !== 'point') {
+      if (!dirPick) { flash(L('Hãy bấm thêm một mặt phẳng, cạnh thẳng hoặc mặt trụ', 'Now click a plane, a straight edge or a cylinder')); return; }
+      S.tmp = [];
+      return entAngle(first, g, e.at);
+    }
+    if (!n && dirPick) { mark(); flash(L('Bấm mặt phẳng / cạnh thẳng thứ hai', 'Click the second plane / straight edge'), true); return; }
+    S.tmp.push((e.kind === 'point' ? e.p : e.at).slice()); dirty = true;
+    if (S.tmp.length === 3) { addMeasure('angle', S.tmp); S.tmp = []; }
+  }
   function snapPoint(h, px, py) {
     let bestD = 10, p = h.point;
     for (const v of h.verts) { const s = project(v), d = Math.hypot(s[0] - px, s[1] - py); if (d < bestD) { bestD = d; p = v; } }
@@ -824,9 +995,9 @@
       move: L('Kéo mũi tên X / Y / Z để di chuyển, chấm giữa để di chuyển tự do (giữ Shift: bước 1 mm), hoặc nhập số ở bảng nhỏ', 'Drag an X / Y / Z arrow to move, the centre dot to move freely (hold Shift: 1 mm steps), or type values in the small panel'),
       rotate: L('Kéo một mũi tên cong để xoay quanh trục cùng màu (giữ Shift: bước 1°), hoặc nhập số ở bảng nhỏ', 'Drag a curved arrow to rotate about the axis of the same colour (hold Shift: 1° steps), or type values in the small panel'),
       scale: L('Kéo tay nắm X / Y / Z để đổi tỉ lệ theo trục, chấm giữa để đổi đồng đều (giữ Shift: tỉ lệ nguyên), hoặc nhập số ở bảng nhỏ', 'Drag an X / Y / Z handle to scale along that axis, the centre dot to scale uniformly (hold Shift: whole factors), or type values in the small panel'),
-      dist: L('Bấm 2 điểm trên mesh', 'Click 2 points on the mesh'),
-      angle: L('Bấm 3 điểm: điểm thứ hai là đỉnh góc', 'Click 3 points: the second is the angle vertex'),
-      radius: L('Bấm 3 điểm trên cùng một cung tròn', 'Click 3 points on the same arc'),
+      dist: L('Bấm 1 cạnh để lấy chiều dài, hoặc bấm 2 đối tượng (đỉnh, mặt phẳng, mặt trụ = trục, điểm) để đo khoảng cách. Giữ Alt để lấy điểm tự do', 'Click one edge for its length, or two things (corner, plane, cylinder = its axis, point) for the distance. Hold Alt for a free point'),
+      angle: L('Bấm 2 mặt phẳng / cạnh thẳng, hoặc 3 điểm (điểm thứ hai là đỉnh góc)', 'Click 2 planes / straight edges, or 3 points (the second is the vertex)'),
+      radius: L('Bấm 1 cung tròn, mặt trụ hoặc mặt cầu; hoặc 3 điểm trên cùng một cung', 'Click one arc, cylinder or sphere; or 3 points on the same arc'),
       thick: L('Bấm vào một điểm trên mesh để đo bề dày tại đó', 'Click a point on the mesh to measure the wall thickness there'),
       secpick: L('Bấm vào một mặt trên mesh để lấy làm mặt cắt', 'Click a face on the mesh to use it as the section plane')
     }[t] || '';
@@ -838,17 +1009,26 @@
     $('tpop').style.display = (t === 'move' || t === 'rotate' || t === 'scale') ? 'block' : 'none';
     $('tpMove').style.display = t === 'move' ? 'flex' : 'none'; $('tpRot').style.display = t === 'rotate' ? 'flex' : 'none';
     $('tpScale').style.display = t === 'scale' ? 'flex' : 'none'; $('tpPivot').style.display = t === 'rotate' || t === 'scale' ? 'flex' : 'none';
-    canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null;
+    canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null; S.hovEnt = null;
     if ((t === 'move' || t === 'rotate' || t === 'scale') && !S.sel.size) flash(L('Hãy tick chọn body trước', 'Tick a body first'));
     else flash(toolHint(t), !!toolHint(t));
     dirty = true;
   }
   function select(list, add) {
     if (!add) S.sel.clear();
+    if (!add && !list.length) S.spl = null;                  // unticking everything also ends the "next option" run of the last split
     for (const b of list) { if (add && S.sel.has(b)) S.sel.delete(b); else S.sel.add(b); }
     refresh();
   }
-  function refresh() { updateList(); updateInfo(); syncCounts(true); dirty = true; }
+  function refresh() {
+    updateList(); updateInfo(); syncCounts(true); updateHoleUI();
+    // Split is only lit while something is ticked; with nothing ticked and no split to continue, the option goes back to 1
+    $('bSplit').classList.toggle('primary', S.sel.size > 0);
+    const live = S.spl && S.spl.items.every(function (it) { return it.out.length && it.out.every(function (b) { return S.bodies.indexOf(b) >= 0; }); });
+    if (!S.sel.size && !live && splitLevel !== 1) { S.spl = null; splitLevel = 1; }
+    updateSplitUI();
+    dirty = true;
+  }
   const massTxt = function (g) { return g >= 1000 ? f2(g / 1000, 3) + ' kg' : f2(g) + ' g'; };
   function getStats(b) {
     if (!b.stats) { const wm = worldMesh(b); b.stats = core.stats(wm.positions, wm.indices); }
@@ -966,7 +1146,7 @@
     $('bVi').classList.toggle('on', lang === 'vi'); $('bEn').classList.toggle('on', lang === 'en');
     $('lMax').textContent = modeValue() === 'edge' ? L('Edge Length (tối thiểu)', 'Edge Length (minimum)') : 'Maximum';
     $('ucRes').innerHTML = ucLegend();
-    fillMats(); updateMeasList(); refresh(); updateCmpUI(); updateSplitUI();
+    fillMats(); updateMeasList(); refresh(); updateCmpUI(); updateSplitUI(); updateHoleUI();
     if (S.col) renderCollisions();
     flash('');
   }
@@ -1141,12 +1321,14 @@
   function hover(px, py) {
     cam = camAt(px);
     const h = gizmoActive() && S.giz ? hitGizmo(px, py) : null;
-    const t = S.tool, c = (t === 'dist' || t === 'angle' || t === 'radius') ? comAt(px, py) : null;
+    const t = S.tool, meas = t === 'dist' || t === 'angle' || t === 'radius', c = meas ? comAt(px, py) : null;
+    let ent = null;
+    if (meas && !c) { const hit = pickNear(px, py); if (hit) { ent = entityAt(hit, px, py, false); if (ent.free) ent = null; } }
     cam = mainCam;
-    if (h !== S.hov || c !== S.hovCom) { S.hov = h; S.hovCom = c; dirty = true; }
+    if (h !== S.hov || c !== S.hovCom || ent || S.hovEnt) { S.hov = h; S.hovCom = c; S.hovEnt = ent; dirty = true; }
     canvas.style.cursor = h !== null ? 'grab' : toolCursor();
   }
-  canvas.addEventListener('pointerleave', function () { if (!drag && (S.hov !== null || S.hovCom)) { S.hov = null; S.hovCom = null; dirty = true; } });
+  canvas.addEventListener('pointerleave', function () { if (!drag && (S.hov !== null || S.hovCom || S.hovEnt)) { S.hov = null; S.hovCom = null; S.hovEnt = null; dirty = true; } });
   canvas.addEventListener('pointermove', function (e) {
     const p = evPos(e);
     if (!drag) { hover(p[0], p[1]); return; }
@@ -1251,12 +1433,7 @@
     const t = S.tool;
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick' || t === 'secpick') {
       const cm = t === 'dist' || t === 'angle' || t === 'radius' ? comAt(px, py) : null;
-      if (cm) {                                               // a centre-of-mass mark is a point the measuring tools can take
-        S.tmp.push(cm.slice());
-        if (S.tmp.length === (t === 'dist' ? 2 : 3)) { addMeasure(t, S.tmp); S.tmp = []; }
-        dirty = true;
-        return;
-      }
+      if (cm) { measurePick(t, { kind: 'point', p: cm, at: cm }); return; }   // a centre-of-mass mark is a point like any other
       const h = pickNear(px, py);
       if (!h) { flash(L('Không trúng mesh nào', 'No mesh under the cursor')); return; }
       if (t === 'thick') { measureThickness(h); return; }
@@ -1268,9 +1445,7 @@
         $('secPos').value = Math.round(sc.s * 1000);
         updateSection(); setTool('select'); return;
       }
-      S.tmp.push(snapPoint(h, px, py));
-      if (S.tmp.length === (t === 'dist' ? 2 : 3)) { addMeasure(t, S.tmp); S.tmp = []; }
-      dirty = true;
+      measurePick(t, entityAt(h, px, py, e.altKey));
       return;
     }
     if (S.cmp) return;
@@ -1287,7 +1462,7 @@
     if (e.code === 'Space' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
       if (e.target.blur && (tag === 'button' || tag === 'input')) e.target.blur();
-      if (!S.cmp && !busy && S.sel.size) select([], false);
+      if (!S.cmp && !busy) select([], false);
       return;
     }
     if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
@@ -1317,7 +1492,7 @@
   document.querySelectorAll('#cube div').forEach(function (d) { d.addEventListener('click', function () { setView(d.dataset.v); }); });
   $('bFit').addEventListener('click', function () { sceneChanged(true); });
   $('bIso').addEventListener('click', function () { setView('iso'); });
-  ['cWire', 'cAxes'].forEach(function (id) { $(id).addEventListener('change', function () { dirty = true; }); });
+  ['cWire', 'cAxes', 'cHoles'].forEach(function (id) { $(id).addEventListener('change', function () { dirty = true; }); });
   $('cInfo').addEventListener('change', updateInfo);
   window.addEventListener('resize', function () { dirty = true; });
 
@@ -1447,13 +1622,14 @@
 
   // ================= measuring =================
   function measLabel(m) {
-    if (m.type === 'dist') return f2(m.v) + ' mm';
+    if (m.type === 'dist' || m.type === 'len') return f2(m.v) + ' mm';
     if (m.type === 'angle') return f2(m.v, 1) + '°';
     if (m.type === 'radius') return 'R ' + f2(m.r);
     return 't = ' + f2(m.v) + ' mm';
   }
   function measText(m) {
     if (m.type === 'dist') return L('Khoảng cách: ', 'Distance: ') + f2(m.v) + ' mm (ΔX ' + f2(m.d[0]) + ', ΔY ' + f2(m.d[1]) + ', ΔZ ' + f2(m.d[2]) + ')';
+    if (m.type === 'len') return L('Chiều dài cạnh: ', 'Edge length: ') + f2(m.v) + ' mm' + (m.sub === 'arc' ? ' (R ' + f2(m.r) + ')' : '');
     if (m.type === 'angle') return L('Góc: ', 'Angle: ') + f2(m.v) + '°';
     if (m.type === 'radius') return L('Bán kính: ', 'Radius: ') + f2(m.r) + ' mm (Ø ' + f2(2 * m.r) + ')';
     return L('Bề dày: ', 'Wall thickness: ') + f2(m.v) + ' mm';
@@ -1673,6 +1849,49 @@
     } catch (e) { showError(e); updateSplitUI(); }
     setBusy(false);
   }
+  const HOLE_LEVELS = [
+    ['Vá phẳng: nối viền lỗ bằng ít tam giác nhất', 'Flat patch: close the rim with as few triangles as possible'],
+    ['Vá và chia lưới đều theo cỡ tam giác xung quanh', 'Patch re-meshed to the size of the surrounding triangles'],
+    ['Vá, chia lưới và uốn miếng vá tiếp nối theo mặt cong xung quanh', 'Re-meshed patch, bent to continue the surface around the hole']
+  ];
+  function updateHoleUI() {
+    const lv = +$('holeLv').value, sel = selBodies();
+    $('holeLvV').textContent = lv + '/3'; $('holeLvName').textContent = L(HOLE_LEVELS[lv - 1][0], HOLE_LEVELS[lv - 1][1]);
+    let loops = 0, edges = 0, open = 0;
+    const list = sel.length ? sel : S.bodies;
+    for (const b of list) { const h = holesOf(b.geo); loops += h.loops; edges += h.edges; if (h.edges) open++; }
+    $('holeInfo').innerHTML = !S.bodies.length ? L('Chưa có mesh.', 'No mesh loaded.') :
+      (sel.length ? L('Body đang tick: ', 'Ticked bodies: ') : L('Tất cả body: ', 'All bodies: ')) +
+      (edges ? '<span class="bad">' + fmtN(open) + L(' body hở', ' open') + '</span> · ' + fmtN(loops) + L(' viền hở · ', ' open borders · ') + fmtN(edges) + L(' cạnh biên', ' border edges')
+        : '<span class="good">' + L('lưới kín, không có viền hở', 'closed, no open borders') + '</span>');
+    $('bFill').classList.toggle('primary', sel.some(function (b) { return holesOf(b.geo).edges > 0; }));
+  }
+  $('holeLv').addEventListener('input', updateHoleUI);
+  $('bFill').addEventListener('click', async function () {
+    if (blocked()) return;
+    const list = needSel().filter(function (b) { return holesOf(b.geo).edges > 0; });
+    if (!list.length) { if (S.sel.size) flash(L('Các body đang tick không có viền hở', 'The ticked bodies have no open borders')); return; }
+    showError(null); setBusy(true, L('Đang vá lưới...', 'Filling holes...'));
+    try {
+      pushUndo();
+      let filled = 0, skipped = 0, added = 0, stitched = 0, left = 0;
+      for (let i = 0; i < list.length; i++) {
+        const b = list[i], sc = Math.cbrt(Math.abs(M.det3(b.matrix))) || 1;
+        const r = await run('fill', { mesh: { positions: b.geo.positions, indices: b.geo.indices },
+          opt: { level: +$('holeLv').value, maxPerimeter: (+$('holeMax').value || 0) / sc, stitch: (+$('holeStitch').value || 0) / sc } });
+        filled += r.filled; skipped += r.skipped; added += r.added; stitched += r.stitched;
+        if (r.added || r.stitched) setGeo(b, makeGeo(r.positions, r.indices));
+        left += holesOf(b.geo).edges;
+        setProgress((i + 1) / list.length);
+      }
+      $('holeRes').innerHTML = L('Đã vá ', 'Filled ') + '<b>' + fmtN(filled) + '</b>' + L(' lỗ (+', ' holes (+') + fmtN(added) + L(' tam giác)', ' triangles)') +
+        (stitched ? L(' · khâu ', ' · stitched ') + fmtN(stitched) + L(' đỉnh', ' vertices') : '') +
+        (skipped ? L(' · bỏ qua ', ' · skipped ') + fmtN(skipped) + L(' lỗ lớn hơn giới hạn', ' holes over the limit') : '') + '<br>' +
+        (left ? '<span class="bad">' + L('Còn ', 'Still ') + fmtN(left) + L(' cạnh biên hở', ' open border edges') + '</span>' + L(' (viền không khép kín hoặc vượt giới hạn).', ' (borders that do not close, or over the limit).')
+          : '<span class="good">' + L('Các body đã kín.', 'The bodies are now closed.') + '</span>');
+    } catch (e) { showError(e); }
+    setBusy(false); geomChanged();
+  });
   $('bSplit').addEventListener('click', function () { splitRun('auto'); });
   $('bSplitNext').addEventListener('click', function () { splitRun('next'); });
   $('bSplitPrev').addEventListener('click', function () { splitRun('prev'); });
@@ -2042,7 +2261,7 @@
   function clearAll() {
     for (const b of S.bodies.slice()) removeBody(b);
     S.measures = []; S.tmp = []; S.clip = []; S.colorSeq = 0; S.col = null; S.spl = null;
-    resetBox('colRes'); resetBox('splitRes'); updateMeasList();
+    resetBox('colRes'); resetBox('splitRes'); resetBox('holeRes'); updateMeasList();
   }
   $('bSaveSes').addEventListener('click', function () { try { saveSession(); } catch (e) { showError(e); } });
   $('bOpen').addEventListener('click', function () { $('file').click(); });
@@ -2089,5 +2308,5 @@
 
   applyLang(); updateHistBtns(); sceneChanged(true);
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();
