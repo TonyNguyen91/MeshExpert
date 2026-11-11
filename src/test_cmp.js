@@ -1,4 +1,4 @@
-const fs=require('fs');const core=(new Function(fs.readFileSync('/home/claude/src/core.js','utf8')+';return MeshCore();'))();
+const fs=require('fs');const core=(new Function(fs.readFileSync(require('path').join(__dirname,'core.js'),'utf8')+';return MeshCore();'))();
 function sphere(sub,r,sx){const t=(1+Math.sqrt(5))/2;let V=[[-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],[0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],[t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]];
  let F=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
  for(let s=0;s<sub;s++){const m=new Map(),F2=[];const mid=(a,b)=>{const k=a<b?a+'_'+b:b+'_'+a;if(!m.has(k)){m.set(k,V.length);V.push([0,1,2].map(i=>(V[a][i]+V[b][i])/2));}return m.get(k);};for(const [a,b,c] of F){const ab=mid(a,b),bc=mid(b,c),ca=mid(c,a);F2.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]);}F=F2;}

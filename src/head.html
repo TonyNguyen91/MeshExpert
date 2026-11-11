@@ -224,7 +224,12 @@
     <div class="row"><span class="lbl" data-en="Ignore pieces smaller than">Bỏ qua mảnh nhỏ hơn</span><input type="number" id="vMin" class="s" value="1" min="1" step="1"><span class="unit" data-en="tris">tam giác</span></div>
     <div class="row"><label><input type="checkbox" id="cKeep" checked> <span data-en="Group small pieces into one body">Gom các mảnh nhỏ thành 1 body riêng</span></label></div>
     <div class="btns"><button class="primary" id="bSplit" data-en="Split">Tách body</button><button id="bJoin" data-en="Merge ticked bodies">Gộp body tick</button></div>
-    <div class="box" id="splitRes" data-en="Splits disconnected mesh pieces of the ticked bodies into separate bodies.">Tách các mảnh lưới rời nhau của body đang tick thành từng body.</div>
+    <div class="row" style="margin-top:9px"><span class="lbl" data-en="Split option (gentle → strong)">Phương án tách (nhẹ → mạnh)</span><span class="unit" id="splitLvV">1/10</span></div>
+    <div class="row"><input type="range" id="splitLv" min="1" max="10" step="1" value="1"></div>
+    <div class="note" id="splitLvName" style="margin-top:0"></div>
+    <div class="btns"><button id="bSplitPrev" data-en="◀ Previous option">◀ Phương án trước</button><button id="bSplitNext" data-en="Next option ▶">Phương án kế ▶</button></div>
+    <div class="box" id="splitRes" data-en="Split separates the loose pieces of the ticked bodies. Not what you wanted? Press Next option ▶ (or drag the slider) for a stronger split, ◀ to go back.">"Tách body" tự tách các mảnh rời của body đang tick. Chưa đúng ý thì bấm "Phương án kế ▶" (hoặc kéo thanh trượt) để tách mạnh hơn, "◀" để quay lại.</div>
+    <div class="note" data-en="From option 4 on, the surface is also cut along creases, so those pieces are open along the cut. With options 4 and up, pieces smaller than the number above are merged into their neighbour.">Từ phương án 4, bề mặt còn bị cắt theo nếp gấp nên các mảnh sẽ hở tại đường cắt. Với phương án 4 trở lên, mảnh nhỏ hơn số tam giác ở trên được nhập vào mảnh bên cạnh.</div>
   </div></details>
 
   <details><summary>Explode</summary><div class="c">

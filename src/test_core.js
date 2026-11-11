@@ -1,4 +1,4 @@
-const fs=require('fs');const core=(new Function(fs.readFileSync('/home/claude/src/core.js','utf8')+';return MeshCore();'))();
+const fs=require('fs');const core=(new Function(fs.readFileSync(require('path').join(__dirname,'core.js'),'utf8')+';return MeshCore();'))();
 function box(x0,y0,z0,x1,y1,z1){const v=[[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]];
  const f=[[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[2,3,7],[2,7,6],[1,2,6],[1,6,5],[3,0,4],[3,4,7]];const a=[];for(const t of f)for(const i of t)a.push(...v[i]);return a;}
 const mk=a=>core.weld(new Float32Array(a),null);

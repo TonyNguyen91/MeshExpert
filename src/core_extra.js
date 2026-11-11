@@ -474,5 +474,343 @@
     return { matrix: T, rms: rms };
   }
 
-  return { parse: parse, weld: weld, decimate: decimate, split: split, writeSTL: writeSTL, writeOBJ: writeOBJ, zipStore: zipStore,
+
+  // ---------- advanced split ----------
+  // opt.mode: 'vertex' (pieces sharing a vertex stay together), 'edge' (must share an edge),
+  //           'shell' (closed shells that only touch are separated), 'concave' / 'crease' (also cut where the
+  //           surface folds by opt.angle degrees or more; 'concave' cuts inward folds only).
+  function labelsToBodies(P, I, label, ncomp, opt) {
+    const nv = P.length / 3, nt = I.length / 3;
+    const counts = new Int32Array(ncomp);
+    for (let t = 0; t < nt; t++) counts[label[t]]++;
+    const order = new Array(ncomp);
+    for (let i = 0; i < ncomp; i++) order[i] = i;
+    order.sort(function (a, b) { return counts[b] - counts[a] || a - b; });
+    const minTris = Math.max(1, opt.minTris || 1);
+    const groupOf = new Int32Array(ncomp).fill(-1);
+    let ng = 0, small = 0, smallGroup = -1;
+    for (const c of order) if (counts[c] >= minTris) groupOf[c] = ng++;
+    for (const c of order) if (counts[c] < minTris) { small++; if (opt.keepSmall) { if (smallGroup < 0) smallGroup = ng++; groupOf[c] = smallGroup; } }
+    // triangles bucketed by group
+    const gStart = new Int32Array(ng + 1);
+    for (let t = 0; t < nt; t++) { const g = groupOf[label[t]]; if (g >= 0) gStart[g + 1]++; }
+    for (let g = 0; g < ng; g++) gStart[g + 1] += gStart[g];
+    const gTris = new Int32Array(gStart[ng]), cur = gStart.slice(0, ng);
+    for (let t = 0; t < nt; t++) { const g = groupOf[label[t]]; if (g >= 0) gTris[cur[g]++] = t; }
+    const seen = new Int32Array(nv).fill(-1), local = new Int32Array(nv);
+    const bodies = [];
+    for (let g = 0; g < ng; g++) {
+      let n = 0;
+      for (let k = gStart[g]; k < gStart[g + 1]; k++) {
+        const t = 3 * gTris[k];
+        for (let c = 0; c < 3; c++) { const v = I[t + c]; if (seen[v] !== g) { seen[v] = g; local[v] = n++; } }
+      }
+      const pos = new Float32Array(3 * n), idx = new Uint32Array(3 * (gStart[g + 1] - gStart[g]));
+      let o = 0;
+      for (let k = gStart[g]; k < gStart[g + 1]; k++) {
+        const t = 3 * gTris[k];
+        for (let c = 0; c < 3; c++) {
+          const v = I[t + c], l = local[v];
+          pos[3 * l] = P[3 * v]; pos[3 * l + 1] = P[3 * v + 1]; pos[3 * l + 2] = P[3 * v + 2];
+          idx[o++] = l;
+        }
+      }
+      bodies.push({ positions: pos, indices: idx, small: g === smallGroup });
+    }
+    return { bodies: bodies, totalComponents: ncomp, smallComponents: small };
+  }
+
+  // half-edge h = 3 * t + c runs from I[h] to the next corner of triangle t.
+  // Returns adj[h] = the half-edge on the other side of that edge (-1 on a border), pairing the faces of each
+  // shell correctly where more than two triangles meet on one edge.
+  function edgeAdjacency(P, I, nv, onGroup) {
+    const nh = I.length;
+    const nxt = function (h) { return h % 3 === 2 ? h - 2 : h + 1; };
+    const start = new Uint32Array(nv + 1);
+    for (let h = 0; h < nh; h++) { const a = I[h], b = I[nxt(h)]; if (a !== b) start[(a < b ? a : b) + 1]++; }
+    for (let v = 0; v < nv; v++) start[v + 1] += start[v];
+    const arr = new Uint32Array(start[nv]), cur = start.slice(0, nv);
+    for (let h = 0; h < nh; h++) { const a = I[h], b = I[nxt(h)]; if (a !== b) arr[cur[a < b ? a : b]++] = h; }
+    const hiOf = function (h) { const a = I[h], b = I[nxt(h)]; return a > b ? a : b; };
+    const adj = new Int32Array(nh).fill(-1);
+    let border = 0, multi = 0;
+    const pair = function (h1, h2) { adj[h1] = h2; adj[h2] = h1; };
+    function radial(s, e) {
+      const h0 = arr[s], lo = Math.min(I[h0], I[nxt(h0)]), hi = hiOf(h0);
+      const ax = P[3 * lo], ay = P[3 * lo + 1], az = P[3 * lo + 2];
+      let dx = P[3 * hi] - ax, dy = P[3 * hi + 1] - ay, dz = P[3 * hi + 2] - az;
+      const dl = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+      dx /= dl; dy /= dl; dz /= dl;
+      let ux = 0, uy = 0, uz = 0, vx = 0, vy = 0, vz = 0, have = false;
+      const items = [];
+      for (let k = s; k < e; k++) {
+        const h = arr[k], t = h - h % 3, p = I[t + (h % 3 + 2) % 3];
+        let wx = P[3 * p] - ax, wy = P[3 * p + 1] - ay, wz = P[3 * p + 2] - az;
+        const along = wx * dx + wy * dy + wz * dz;
+        wx -= along * dx; wy -= along * dy; wz -= along * dz;
+        const wl = Math.sqrt(wx * wx + wy * wy + wz * wz);
+        let th = 1e9;                                   // flat (zero-area) triangles go last
+        if (wl > 1e-12 * dl) {
+          if (!have) { have = true; ux = wx / wl; uy = wy / wl; uz = wz / wl; vx = dy * uz - dz * uy; vy = dz * ux - dx * uz; vz = dx * uy - dy * ux; }
+          th = Math.atan2(wx * vx + wy * vy + wz * vz, wx * ux + wy * uy + wz * uz);
+          if (th < 0) th += 2 * Math.PI;
+          if (th > 2 * Math.PI - 1e-3) th -= 2 * Math.PI;
+        }
+        // a triangle that runs lo -> hi has its solid side towards smaller angles (-1); the reverse, larger (+1)
+        items.push({ h: h, th: th, s: I[h] === lo ? -1 : 1 });
+      }
+      items.sort(function (x, y) { return x.th - y.th; });
+      const n = items.length;
+      for (let i = 0; i < n;) {                          // faces lying on top of each other: solid side decides the order
+        let j = i + 1;
+        while (j < n && items[j].th - items[i].th < 1e-3) j++;
+        if (j - i > 1) { const part = items.slice(i, j).sort(function (x, y) { return x.s - y.s; }); for (let k = i; k < j; k++) items[k] = part[k - i]; }
+        i = j;
+      }
+      const used = new Uint8Array(n);
+      for (let i = 0; i < n; i++) {
+        if (used[i] || items[i].s !== 1) continue;
+        const j = (i + 1) % n;
+        if (j !== i && !used[j] && items[j].s === -1) { pair(items[i].h, items[j].h); used[i] = used[j] = 1; }
+      }
+      let prev = -1;
+      for (let i = 0; i < n; i++) {
+        if (used[i]) continue;
+        if (prev < 0) prev = i; else { pair(items[prev].h, items[i].h); prev = -1; }
+      }
+    }
+    for (let v = 0; v < nv; v++) {
+      const s = start[v], e = start[v + 1], len = e - s;
+      if (len < 1) continue;
+      if (len > 48) arr.subarray(s, e).sort(function (x, y) { return hiOf(x) - hiOf(y); });
+      else for (let i = s + 1; i < e; i++) { const x = arr[i], kx = hiOf(x); let j = i - 1; while (j >= s && hiOf(arr[j]) > kx) { arr[j + 1] = arr[j]; j--; } arr[j + 1] = x; }
+      for (let i = s; i < e;) {
+        const k = hiOf(arr[i]);
+        let j = i + 1;
+        while (j < e && hiOf(arr[j]) === k) j++;
+        if (j - i === 1) border++;
+        else if (j - i === 2) pair(arr[i], arr[i + 1]);
+        else { multi++; if (onGroup) onGroup(arr, i, j); else radial(i, j); }
+        i = j;
+      }
+    }
+    return { adj: adj, border: border, multi: multi };
+  }
+
+  function splitAdv(mesh, opt) {
+    const P = mesh.positions, I = mesh.indices, nv = P.length / 3, nt = I.length / 3;
+    const mode = opt.mode || 'vertex';
+    const par = new Int32Array(nt);
+    for (let t = 0; t < nt; t++) par[t] = t;
+    const find = function (a) { while (par[a] !== a) { par[a] = par[par[a]]; a = par[a]; } return a; };
+    const union = function (a, b) { a = find(a); b = find(b); if (a !== b) par[b] = a; };
+    let adj = null, info = null;
+    const cuts = [];
+    if (mode === 'vertex') {
+      const first = new Int32Array(nv).fill(-1);
+      for (let h = 0; h < 3 * nt; h++) { const v = I[h], t = (h / 3) | 0; if (first[v] < 0) first[v] = t; else union(first[v], t); }
+    } else if (mode === 'edge') {
+      info = edgeAdjacency(P, I, nv, function (arr, i, j) { for (let k = i + 1; k < j; k++) union((arr[i] / 3) | 0, (arr[k] / 3) | 0); });
+      adj = info.adj;
+      for (let h = 0; h < 3 * nt; h++) if (adj[h] > h) union((h / 3) | 0, (adj[h] / 3) | 0);
+    } else {
+      info = edgeAdjacency(P, I, nv, null);
+      adj = info.adj;
+      if (mode === 'shell') {
+        for (let h = 0; h < 3 * nt; h++) if (adj[h] > h) union((h / 3) | 0, (adj[h] / 3) | 0);
+      } else {
+        // unit normals; a zero-area triangle borrows the normal of the neighbour on its longest edge
+        const N = new Float32Array(3 * nt), flat = [];
+        let vol6 = 0;
+        for (let t = 0; t < nt; t++) {
+          const a = 3 * I[3 * t], b = 3 * I[3 * t + 1], c = 3 * I[3 * t + 2];
+          const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], wx = P[c] - P[a], wy = P[c + 1] - P[a + 1], wz = P[c + 2] - P[a + 2];
+          const nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx, l = Math.sqrt(nx * nx + ny * ny + nz * nz);
+          vol6 += P[a] * nx + P[a + 1] * ny + P[a + 2] * nz;
+          const e2 = Math.max(ux * ux + uy * uy + uz * uz, wx * wx + wy * wy + wz * wz);
+          if (l > 1e-7 * e2 && l > 0) { N[3 * t] = nx / l; N[3 * t + 1] = ny / l; N[3 * t + 2] = nz / l; } else flat.push(t);
+        }
+        for (const t of flat) {
+          let best = -1, bl = -1;
+          for (let c = 0; c < 3; c++) {
+            const a = 3 * I[3 * t + c], b = 3 * I[3 * t + (c + 1) % 3], l = (P[a] - P[b]) * (P[a] - P[b]) + (P[a + 1] - P[b + 1]) * (P[a + 1] - P[b + 1]) + (P[a + 2] - P[b + 2]) * (P[a + 2] - P[b + 2]);
+            if (l > bl) { bl = l; best = c; }
+          }
+          const o = adj[3 * t + best];
+          if (o >= 0) { const u = 3 * ((o / 3) | 0), sg = I[o] !== I[3 * t + best] ? 1 : -1; N[3 * t] = sg * N[u]; N[3 * t + 1] = sg * N[u + 1]; N[3 * t + 2] = sg * N[u + 2]; }
+        }
+        // a closed mesh whose volume comes out negative is inside out: "concave" then means the opposite fold
+        const sense = info.border === 0 && vol6 < 0 ? -1 : 1;
+        const cosT = Math.cos((opt.angle || 60) * Math.PI / 180), concave = mode === 'concave';
+        for (let h = 0; h < 3 * nt; h++) {
+          const o = adj[h];
+          if (o <= h) continue;
+          const t1 = (h / 3) | 0, t2 = (o / 3) | 0;
+          if (t1 === t2) continue;
+          const a = 3 * t1, b = 3 * t2, sg = I[h] !== I[o] ? 1 : -1;
+          const n1x = N[a], n1y = N[a + 1], n1z = N[a + 2], n2x = sg * N[b], n2y = sg * N[b + 1], n2z = sg * N[b + 2];
+          let cut = false;
+          if ((n1x || n1y || n1z) && (n2x || n2y || n2z)) {
+            cut = n1x * n2x + n1y * n2y + n1z * n2z <= cosT;
+            if (cut && concave) {
+              const e = 3 * I[h], p = 3 * I[b + (o % 3 + 2) % 3], q = 3 * I[a + (h % 3 + 2) % 3];
+              const d = (P[p] - P[e]) * n1x + (P[p + 1] - P[e + 1]) * n1y + (P[p + 2] - P[e + 2]) * n1z +
+                (P[q] - P[e]) * n2x + (P[q + 1] - P[e + 1]) * n2y + (P[q + 2] - P[e + 2]) * n2z;
+              cut = sense * d > 0;
+            }
+          }
+          if (cut) cuts.push(h); else union(t1, t2);
+        }
+      }
+    }
+    // region ids
+    const label = new Int32Array(nt), idOf = new Int32Array(nt).fill(-1);
+    let nc = 0;
+    for (let t = 0; t < nt; t++) { const r = find(t); if (idOf[r] < 0) idOf[r] = nc++; label[t] = idOf[r]; }
+    let merged = 0, capped = false;
+    if (cuts.length && nc > 1) {
+      // per region: area, triangle count, and how long a border it shares with each neighbour
+      const area = new Float64Array(nc), tris = new Int32Array(nc);
+      const triArea = function (t) {
+        const a = 3 * I[3 * t], b = 3 * I[3 * t + 1], c = 3 * I[3 * t + 2];
+        const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], wx = P[c] - P[a], wy = P[c + 1] - P[a + 1], wz = P[c + 2] - P[a + 2];
+        const nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
+        return 0.5 * Math.sqrt(nx * nx + ny * ny + nz * nz);
+      };
+      let total = 0;
+      for (let t = 0; t < nt; t++) { const a = triArea(t); area[label[t]] += a; tris[label[t]]++; total += a; }
+      const shared = new Map();
+      for (const h of cuts) {
+        const c1 = label[(h / 3) | 0], c2 = label[(adj[h] / 3) | 0];
+        if (c1 === c2) continue;
+        const a = 3 * I[h], b = 3 * I[h % 3 === 2 ? h - 2 : h + 1];
+        const len = Math.sqrt((P[a] - P[b]) * (P[a] - P[b]) + (P[a + 1] - P[b + 1]) * (P[a + 1] - P[b + 1]) + (P[a + 2] - P[b + 2]) * (P[a + 2] - P[b + 2]));
+        const key = c1 < c2 ? c1 * nc + c2 : c2 * nc + c1;
+        shared.set(key, (shared.get(key) || 0) + len);
+      }
+      const nb = new Array(nc);
+      shared.forEach(function (len, key) {
+        const c2 = key % nc, c1 = (key - c2) / nc;
+        (nb[c1] || (nb[c1] = [])).push(c2, len); (nb[c2] || (nb[c2] = [])).push(c1, len);
+      });
+      const cp = new Int32Array(nc);
+      for (let c = 0; c < nc; c++) cp[c] = c;
+      const cfind = function (a) { while (cp[a] !== a) { cp[a] = cp[cp[a]]; a = cp[a]; } return a; };
+      const bestNeighbour = function (c, r) {
+        const list = nb[c];
+        if (!list) return -1;
+        const acc = new Map();
+        let best = -1, bl = 0;
+        for (let k = 0; k < list.length; k += 2) {
+          const ro = cfind(list[k]);
+          if (ro === r) continue;
+          const l = (acc.get(ro) || 0) + list[k + 1];
+          acc.set(ro, l);
+          if (l > bl) { bl = l; best = ro; }
+        }
+        return best;
+      };
+      const join = function (r, into) { cp[r] = into; area[into] += area[r]; tris[into] += tris[r]; merged++; };
+      const order = new Array(nc);
+      for (let c = 0; c < nc; c++) order[c] = c;
+      order.sort(function (x, y) { return area[x] - area[y]; });
+      // 1) specks: regions too small to be a part go to the neighbour they share the longest border with
+      const aMin = total * (opt.minAreaFrac === undefined ? 1e-4 : opt.minAreaFrac), tMin = Math.max(1, opt.minTris || 1);
+      for (let pass = 0; pass < 8; pass++) {
+        let changed = false;
+        for (const c of order) {
+          const r = cfind(c);
+          if (area[r] >= aMin && tris[r] >= tMin) continue;
+          const to = bestNeighbour(c, r);
+          if (to >= 0) { join(r, to); changed = true; }
+        }
+        if (!changed) break;
+      }
+      // 2) floors: a region that encloses no material once its open rim is closed (the bottom of a pocket, a dimple)
+      //    is not a part of its own; it goes back to its neighbour
+      if (mode === 'concave') {
+        let cx = 0, cy = 0, cz = 0;
+        for (let v = 0; v < nv; v++) { cx += P[3 * v]; cy += P[3 * v + 1]; cz += P[3 * v + 2]; }
+        cx /= nv || 1; cy /= nv || 1; cz /= nv || 1;
+        const root = new Int32Array(nt);
+        for (let t = 0; t < nt; t++) root[t] = cfind(label[t]);
+        const vol = new Float64Array(nc), rim = new Float64Array(4 * nc);
+        const sense = info.border === 0 ? (function () { let v6 = 0; for (let t = 0; t < nt; t++) { const a = 3 * I[3 * t], b = 3 * I[3 * t + 1], c = 3 * I[3 * t + 2]; v6 += (P[a] - cx) * ((P[b + 1] - cy) * (P[c + 2] - cz) - (P[b + 2] - cz) * (P[c + 1] - cy)) + (P[a + 1] - cy) * ((P[b + 2] - cz) * (P[c] - cx) - (P[b] - cx) * (P[c + 2] - cz)) + (P[a + 2] - cz) * ((P[b] - cx) * (P[c + 1] - cy) - (P[b + 1] - cy) * (P[c] - cx)); } return v6 < 0 ? -1 : 1; })() : 1;
+        const det = function (a, b, c) {
+          const ax = P[a] - cx, ay = P[a + 1] - cy, az = P[a + 2] - cz, bx = P[b] - cx, by = P[b + 1] - cy, bz = P[b + 2] - cz;
+          return ax * (by * c[2] - bz * c[1]) + ay * (bz * c[0] - bx * c[2]) + az * (bx * c[1] - by * c[0]);
+        };
+        for (let t = 0; t < nt; t++) {
+          const a = 3 * I[3 * t], b = 3 * I[3 * t + 1], c = 3 * I[3 * t + 2];
+          vol[root[t]] += det(a, b, [P[c] - cx, P[c + 1] - cy, P[c + 2] - cz]);
+        }
+        const onRim = function (h) { const o = adj[h]; return o < 0 || root[(o / 3) | 0] !== root[(h / 3) | 0]; };
+        for (let h = 0; h < 3 * nt; h++) {
+          if (!onRim(h)) continue;
+          const r = 4 * root[(h / 3) | 0], a = 3 * I[h], b = 3 * I[h % 3 === 2 ? h - 2 : h + 1];
+          const len = Math.sqrt((P[a] - P[b]) * (P[a] - P[b]) + (P[a + 1] - P[b + 1]) * (P[a + 1] - P[b + 1]) + (P[a + 2] - P[b + 2]) * (P[a + 2] - P[b + 2]));
+          rim[r] += len * (P[a] + P[b]) / 2; rim[r + 1] += len * (P[a + 1] + P[b + 1]) / 2; rim[r + 2] += len * (P[a + 2] + P[b + 2]) / 2; rim[r + 3] += len;
+        }
+        for (let h = 0; h < 3 * nt; h++) {
+          if (!onRim(h)) continue;
+          const rr = root[(h / 3) | 0], r = 4 * rr, a = 3 * I[h], b = 3 * I[h % 3 === 2 ? h - 2 : h + 1], w = rim[r + 3] || 1;
+          vol[rr] += det(b, a, [rim[r] / w - cx, rim[r + 1] / w - cy, rim[r + 2] / w - cz]);   // closing triangle (b, a, rim centre)
+        }
+        let biggest = -1;
+        for (let c = 0; c < nc; c++) if (cp[c] === c && (biggest < 0 || area[c] > area[biggest])) biggest = c;
+        const floors = [];
+        for (const c of order) {
+          const r = cfind(c);
+          if (r !== c || r === biggest) continue;
+          if (sense * vol[r] / 6 < 1e-3 * Math.pow(area[r], 1.5)) floors.push(r);
+        }
+        const members = new Array(nc);
+        for (let c = 0; c < nc; c++) { const r = cfind(c); (members[r] || (members[r] = [])).push(c); }
+        for (const r of floors) {
+          if (cfind(r) !== r) continue;
+          let best = -1, bl = 0;
+          const acc = new Map();
+          for (const c of members[r]) {
+            const list = nb[c];
+            if (!list) continue;
+            for (let k = 0; k < list.length; k += 2) {
+              const ro = cfind(list[k]);
+              if (ro === r) continue;
+              const l = (acc.get(ro) || 0) + list[k + 1];
+              acc.set(ro, l);
+              if (l > bl) { bl = l; best = ro; }
+            }
+          }
+          if (best >= 0) { for (const c of members[r]) members[best].push(c); join(r, best); }
+        }
+      }
+      // 3) never hand back a shattered surface: fold the smallest regions into their neighbours until at most maxParts remain
+      if (opt.maxParts) for (let pass = 0; pass < 12; pass++) {
+        const roots = [];
+        for (let c = 0; c < nc; c++) if (cp[c] === c) roots.push(c);
+        if (roots.length <= opt.maxParts) break;
+        roots.sort(function (x, y) { return area[x] - area[y]; });
+        const thr = area[roots[roots.length - opt.maxParts - 1]];
+        let changed = false;
+        for (const c of order) {
+          const r = cfind(c);
+          if (area[r] > thr) continue;
+          const to = bestNeighbour(c, r);
+          if (to >= 0) { join(r, to); changed = true; capped = true; }
+        }
+        if (!changed) break;
+      }
+      if (merged) {
+        const re = new Int32Array(nc).fill(-1);
+        let n2 = 0;
+        for (let t = 0; t < nt; t++) { const r = cfind(label[t]); if (re[r] < 0) re[r] = n2++; label[t] = re[r]; }
+        nc = n2;
+      }
+    }
+    const out = labelsToBodies(P, I, label, nc, opt);
+    out.border = info ? info.border : -1; out.multi = info ? info.multi : -1; out.cuts = cuts.length; out.merged = merged; out.capped = capped;
+    return out;
+  }
+
+  return { parse: parse, weld: weld, decimate: decimate, split: split, splitAdv: splitAdv, edgeAdjacency: edgeAdjacency, writeSTL: writeSTL, writeOBJ: writeOBJ, zipStore: zipStore,
     buildBVH: buildBVH, raycast: raycast, undercut: undercut, collide: collide, stats: stats, topology: topology, deviation: deviation, rigidFit: rigidFit, icp: icp };

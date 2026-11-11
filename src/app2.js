@@ -12,7 +12,7 @@
   function runCmd(c, cmd, p, prog) {
     if (cmd === 'parse') return c.parse(p.name, p.buffer);
     if (cmd === 'decimate') return c.decimate(p.mesh, p.opt, prog);
-    if (cmd === 'split') return c.split(p.mesh, p.opt);
+    if (cmd === 'split') return c.splitAdv(p.mesh, p.opt);
     if (cmd === 'undercut') return c.undercut(p.mesh, p.dir, p.minDraft, prog);
     if (cmd === 'collide') return c.collide(p.a, p.b);
     if (cmd === 'deviation') return c.deviation(p.b, p.a, prog);
@@ -116,7 +116,7 @@
   const S = {
     bodies: [], sel: new Set(), tool: 'select', explode: 0,
     sec: { on: false, flip: false, axis: 'z', n: [0, 0, 1], s: 0.5, d: 0, min: -1, max: 1, nView: [0, 0, 1], nPick: [0, 0, 1] },
-    measures: [], tmp: [], clip: [], giz: null, colorSeq: 0, idSeq: 1, cmp: null, col: null
+    measures: [], tmp: [], clip: [], giz: null, colorSeq: 0, idSeq: 1, cmp: null, col: null, spl: null
   };
   let dirty = true, busy = false, W = 1, H = 1;
   const MATS = [['', '(chưa gán)', '(none)', 0], ['ABS', 'ABS', 'ABS', 1.05], ['PP', 'PP', 'PP', 0.905], ['HIPS', 'HIPS', 'HIPS', 1.05], ['PC', 'PC', 'PC', 1.20],
@@ -772,7 +772,7 @@
     $('bVi').classList.toggle('on', lang === 'vi'); $('bEn').classList.toggle('on', lang === 'en');
     $('lMax').textContent = modeValue() === 'edge' ? L('Edge Length (tối thiểu)', 'Edge Length (minimum)') : 'Maximum';
     $('ucRes').innerHTML = ucLegend();
-    fillMats(); updateMeasList(); refresh(); updateCmpUI();
+    fillMats(); updateMeasList(); refresh(); updateCmpUI(); updateSplitUI();
     if (S.col) renderCollisions();
     flash('');
   }
@@ -1065,6 +1065,7 @@
       items.push([L('Xóa', 'Delete'), deleteSelected], null,
         ['Decimate…', function () { $('bApply').scrollIntoView({ block: 'center' }); flash(L('Đặt tham số Decimate ở khung bên trái rồi bấm Apply', 'Set the Decimate options on the left, then press Apply')); }],
         [L('Tách body', 'Split'), function () { $('bSplit').click(); }],
+        [L('Tách: phương án kế ▶', 'Split: next option ▶'), function () { $('bSplitNext').click(); }],
         [L('Gộp body tick', 'Merge ticked bodies'), joinSelected],
         [L('Phân tích undercut', 'Undercut analysis'), function () { $('bUc').click(); }]);
       if (n >= 2) items.push([L('Kiểm tra va chạm', 'Collision check'), function () { $('bCol').click(); }]);
@@ -1278,32 +1279,133 @@
   });
 
   // ================= split =================
-  $('bSplit').addEventListener('click', async function () {
-    if (blocked()) return;
-    const list = needSel();
-    if (!list.length) return;
-    showError(null); pushUndo(); setBusy(true, L('Đang tách body...', 'Splitting...'));
-    let comps = 0, made = 0, small = 0;
-    try {
-      for (let i = 0; i < list.length; i++) {
-        const b = list[i];
-        const r = await run('split', { mesh: { positions: b.geo.positions, indices: b.geo.indices }, opt: { minTris: +$('vMin').value || 1, keepSmall: $('cKeep').checked } });
-        comps += r.totalComponents; small += r.smallComponents;
-        setProgress((i + 1) / list.length);
-        if (r.bodies.length <= 1 && !r.smallComponents) { made++; continue; }
-        const at = S.bodies.indexOf(b), pad = String(r.bodies.length).length;
-        removeBody(b);
+  // Options from the gentlest to the most aggressive. "Split" starts at the first one; Next / Previous / the slider
+  // redo the same split with another option until the result is the wanted one.
+  const SPLIT_LEVELS = [
+    { mode: 'vertex', vi: 'Các mảnh rời nhau', en: 'Disconnected pieces' },
+    { mode: 'edge', vi: 'Tách cả chỗ chỉ chạm nhau tại 1 điểm', en: 'Also where parts only touch at a point' },
+    { mode: 'shell', vi: 'Tách cả chỗ chạm nhau theo cạnh hoặc mặt', en: 'Also where parts touch along an edge or a face' },
+    { mode: 'concave', angle: 70 }, { mode: 'concave', angle: 50 }, { mode: 'concave', angle: 35 }, { mode: 'concave', angle: 22 },
+    { mode: 'crease', angle: 60 }, { mode: 'crease', angle: 35 }, { mode: 'crease', angle: 20 }
+  ];
+  const SPLIT_TOPO = 3, SPLIT_MAX_PARTS = 200;
+  let splitLevel = 1;
+  function splitLevelName(i) {
+    const o = SPLIT_LEVELS[i - 1];
+    if (o.mode === 'concave') return L('Cắt thêm tại khe lõm gấp từ ', 'Also cut along concave creases of ') + o.angle + '°' + L(' trở lên (chỗ các phần dính liền nhau)', ' or more (where fused parts meet)');
+    if (o.mode === 'crease') return L('Cắt tại mọi cạnh gấp từ ', 'Cut along every sharp edge of ') + o.angle + '°' + L(' trở lên (tách thành từng mặt)', ' or more (one piece per face)');
+    return L(o.vi, o.en);
+  }
+  function updateSplitUI() {
+    $('splitLv').max = SPLIT_LEVELS.length; $('splitLv').value = splitLevel;
+    $('splitLvV').textContent = splitLevel + '/' + SPLIT_LEVELS.length;
+    $('splitLvName').textContent = splitLevelName(splitLevel);
+    $('bSplitPrev').disabled = splitLevel <= 1; $('bSplitNext').disabled = splitLevel >= SPLIT_LEVELS.length;
+  }
+  // what Next / Previous / the slider act on: the last split while its pieces are still there and nothing else is ticked,
+  // otherwise the ticked bodies
+  function splitTarget() {
+    const s = S.spl, sel = selBodies();
+    if (s && s.items.every(function (it) { return it.out.length && it.out.every(function (b) { return S.bodies.indexOf(b) >= 0; }); })) {
+      const same = sel.every(function (b) { return s.items.some(function (it) { return !it.cut && it.out[0] === b; }); });
+      if (!sel.length || same) return s.items;
+    }
+    if (!sel.length) { flash(L('Hãy tick chọn body trước', 'Tick a body first')); return null; }
+    return sel.map(function (b) {
+      return { src: { name: b.name, geo: b.geo, orig: b.orig, matrix: b.matrix.slice(), matrix0: b.matrix0.slice(), color: b.color.slice(), opacity: b.opacity, material: b.material, density: b.density }, out: [b], cut: false };
+    });
+  }
+  async function splitCompute(items, level, k, n) {
+    const o = SPLIT_LEVELS[level - 1], res = [];
+    let pieces = 0;
+    for (let i = 0; i < items.length; i++) {
+      const g = items[i].src.geo;
+      const r = await run('split', { mesh: { positions: g.positions, indices: g.indices },
+        opt: { mode: o.mode, angle: o.angle, minTris: +$('vMin').value || 1, keepSmall: $('cKeep').checked, maxParts: SPLIT_MAX_PARTS } });
+      r.cut = !(r.bodies.length <= 1 && !r.smallComponents);
+      pieces += r.cut ? r.bodies.length : 1;
+      res.push(r);
+      setProgress((k + (i + 1) / items.length) / n);
+    }
+    return { level: level, res: res, pieces: pieces };
+  }
+  function splitApply(items, c) {
+    const changes = items.some(function (it, i) { return it.cut || c.res[i].cut; });
+    if (changes) pushUndo();
+    items.forEach(function (it, i) {
+      const r = c.res[i], src = it.src;
+      if (!it.cut && !r.cut) return;                       // was whole, stays whole
+      const at = Math.max(0, S.bodies.indexOf(it.out[0]));
+      for (const b of it.out) removeBody(b);
+      it.out = [];
+      if (r.cut) {
+        const pad = Math.max(3, String(r.bodies.length).length);
         r.bodies.forEach(function (p, k) {
-          addBody(b.name + (p.small ? '_small' : '_' + String(k + 1).padStart(Math.max(3, pad), '0')), makeGeo(p.positions, p.indices),
-            { matrix: b.matrix, matrix0: b.matrix0, opacity: b.opacity, material: b.material, density: b.density, index: at + k });
-          made++;
+          it.out.push(addBody(src.name + (p.small ? '_small' : '_' + String(k + 1).padStart(pad, '0')), makeGeo(p.positions, p.indices),
+            { matrix: src.matrix, matrix0: src.matrix0, opacity: src.opacity, material: src.material, density: src.density, index: at + k }));
         });
+      } else {
+        const b = addBody(src.name, src.geo, { orig: src.orig, matrix: src.matrix, matrix0: src.matrix0, color: src.color, opacity: src.opacity, material: src.material, density: src.density, index: at });
+        it.out.push(b); S.sel.add(b);
       }
-      $('splitRes').innerHTML = L('Tìm thấy ', 'Found ') + fmtN(comps) + L(' mảnh rời → ', ' pieces → ') + '<b>' + fmtN(made) + '</b> body' +
-        (small ? ' (' + fmtN(small) + ($('cKeep').checked ? L(' mảnh nhỏ được gom', ' small pieces grouped') : L(' mảnh nhỏ bị bỏ', ' small pieces dropped')) + ')' : '');
-    } catch (e) { showError(e); }
-    setBusy(false); geomChanged();
-  });
+      it.cut = r.cut;
+    });
+    S.spl = { items: items };
+    splitLevel = c.level; updateSplitUI();
+    let small = 0, capped = false, comps = 0;
+    for (const r of c.res) { small += r.smallComponents; capped = capped || r.capped; comps += r.totalComponents; }
+    const head = L('Phương án ', 'Option ') + c.level + '/' + SPLIT_LEVELS.length + ' · ' + splitLevelName(c.level) + '<br>';
+    if (c.pieces === items.length && !small) {
+      $('splitRes').innerHTML = head + '<span class="bad">' + L('Không tách được mảnh nào.', 'Nothing to split.') + '</span>' +
+        (c.level < SPLIT_LEVELS.length ? L(' Bấm "Phương án kế ▶" để thử tách mạnh hơn.', ' Press "Next option ▶" to try a stronger split.') : '');
+    } else {
+      $('splitRes').innerHTML = head + fmtN(items.length) + ' body → <b>' + fmtN(c.pieces) + '</b> body' +
+        (small ? ' (' + fmtN(small) + ($('cKeep').checked ? L(' mảnh nhỏ được gom', ' small pieces grouped') : L(' mảnh nhỏ bị bỏ', ' small pieces dropped')) + ')' : '') +
+        (capped ? '<br>' + L('Bề mặt bị vụn quá nhiều nên các mảnh nhỏ nhất đã được nhập vào mảnh bên cạnh (tối đa ', 'The surface broke into too many pieces, so the smallest were merged into their neighbours (at most ') + SPLIT_MAX_PARTS + L(' mảnh).', ' pieces).') : '') +
+        '<br>' + L('Chưa đúng ý? Bấm "Phương án kế ▶" hoặc "◀ Phương án trước".', 'Not what you wanted? Press "Next option ▶" or "◀ Previous option".');
+    }
+    geomChanged();
+  }
+  // how: 'auto' = fresh split of the ticked bodies from option 1, 'next' / 'prev' = nearest option that gives another result,
+  // a number = exactly that option
+  async function splitRun(how) {
+    if (blocked()) return;
+    let items;
+    if (how === 'auto') {
+      const list = needSel();
+      if (!list.length) return;
+      S.spl = null; S.sel = new Set(list);
+      items = splitTarget();
+    } else items = splitTarget();
+    if (!items) { updateSplitUI(); return; }
+    const now = items.reduce(function (n, it) { return n + it.out.length; }, 0);
+    let levels = [];
+    if (how === 'auto') for (let l = 1; l <= SPLIT_TOPO; l++) levels.push(l);
+    else if (how === 'next') for (let l = splitLevel + 1; l <= SPLIT_LEVELS.length; l++) levels.push(l);
+    else if (how === 'prev') for (let l = splitLevel - 1; l >= 1; l--) levels.push(l);
+    else levels = [how];
+    if (!levels.length) { updateSplitUI(); return; }
+    showError(null); setBusy(true, L('Đang tách body...', 'Splitting...'));
+    try {
+      let c = null;
+      for (let k = 0; k < levels.length; k++) {
+        c = await splitCompute(items, levels[k], k, levels.length);
+        if (typeof how === 'number' || c.pieces !== now) break;
+        c = how === 'auto' ? c : null;                      // 'auto' keeps the last try even when nothing came apart
+      }
+      if (c) splitApply(items, c);
+      else {
+        flash(how === 'next' ? L('Không còn phương án nào cho kết quả khác', 'No further option gives a different result') : L('Không có phương án trước nào cho kết quả khác', 'No earlier option gives a different result'));
+        updateSplitUI();
+      }
+    } catch (e) { showError(e); updateSplitUI(); }
+    setBusy(false);
+  }
+  $('bSplit').addEventListener('click', function () { splitRun('auto'); });
+  $('bSplitNext').addEventListener('click', function () { splitRun('next'); });
+  $('bSplitPrev').addEventListener('click', function () { splitRun('prev'); });
+  $('splitLv').addEventListener('input', function () { $('splitLvV').textContent = this.value + '/' + SPLIT_LEVELS.length; $('splitLvName').textContent = splitLevelName(+this.value); });
+  $('splitLv').addEventListener('change', function () { const l = +this.value; if (l !== splitLevel || !S.spl) splitRun(l); });
 
   function concatMeshes(list) {
     let nv = 0, ni = 0;
@@ -1667,8 +1769,8 @@
   }
   function clearAll() {
     for (const b of S.bodies.slice()) removeBody(b);
-    S.measures = []; S.tmp = []; S.clip = []; S.colorSeq = 0; S.col = null;
-    resetBox('colRes'); updateMeasList();
+    S.measures = []; S.tmp = []; S.clip = []; S.colorSeq = 0; S.col = null; S.spl = null;
+    resetBox('colRes'); resetBox('splitRes'); updateMeasList();
   }
   $('bSaveSes').addEventListener('click', function () { try { saveSession(); } catch (e) { showError(e); } });
   $('bOpen').addEventListener('click', function () { $('file').click(); });
