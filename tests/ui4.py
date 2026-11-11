@@ -28,20 +28,17 @@ with sync_playwright() as p:
     # window L->R around whole of body 2 only
     dragbox([c2[0]-8,c2[1]-8],[c2[2]+8,c2[3]+8]); pg.wait_for_timeout(100); print('window around #2:',names())
     # window L->R covering only half of body 2 -> nothing
-    dragbox([c2[0]-8,c2[1]-8],[(c2[0]+c2[2])/2,c2[3]+8]); pg.wait_for_timeout(100); print('window half #2:',names())
+    pg.keyboard.press('Space'); dragbox([c2[0]-8,c2[1]-8],[(c2[0]+c2[2])/2,c2[3]+8]); pg.wait_for_timeout(100); print('window half #2:',names())
     # crossing R->L over half of body 2 -> selected
     dragbox([(c2[0]+c2[2])/2,c2[3]+8],[c2[0]-8,c2[1]-8]); pg.wait_for_timeout(100); print('crossing half #2:',names())
     # crossing tiny box inside a face of body 1
-    c1=bb[0]; x,y=scr([15,10,20]); dragbox([x+6,y+6],[x,y]); pg.wait_for_timeout(100); print('crossing inside face:',names())
+    pg.keyboard.press('Space'); c1=bb[0]; x,y=scr([15,10,20]); dragbox([x+6,y+6],[x,y]); pg.wait_for_timeout(100); print('crossing inside face:',names())
     # move tool + popup + shift snap
     pg.click('[data-tool=move]'); pg.wait_for_timeout(200); print('popup',pg.is_visible('#tpMove'),pg.is_visible('#tpRot'))
     g=pg.evaluate("(()=>{const g=__mrt.S.giz;const r=document.getElementById('gl').getBoundingClientRect();return {p:[g.p[0]+r.left,g.p[1]+r.top],e:g.ends.map(e=>[e[0]+r.left,e[1]+r.top])}})()")
     ex,ey=g['e'][0]; dx,dy=ex-g['p'][0],ey-g['p'][1]
     pg.keyboard.down('Shift'); pg.mouse.move(ex,ey); pg.mouse.down(); pg.mouse.move(ex+dx*0.37,ey+dy*0.37,steps=4); st=pg.inner_text('#status'); pg.mouse.up(); pg.keyboard.up('Shift'); print('shift move',st,'field',pg.input_value('#mvX'))
     pg.fill('#mvX','12.5'); pg.fill('#mvY','0'); pg.fill('#mvZ','0'); pg.press('#mvX','Enter'); print('typed move matrix x',pg.evaluate("[...__mrt.S.sel][0].matrix[12]"))
-    pg.click('[data-tool=rotate]'); pg.wait_for_timeout(200)
-    g=pg.evaluate("(()=>{const g=__mrt.S.giz;const r=document.getElementById('gl').getBoundingClientRect();return {p:[g.p[0]+r.left,g.p[1]+r.top],e:g.ends.map(e=>[e[0]+r.left,e[1]+r.top])}})()")
-    ex,ey=g['e'][2]; pg.keyboard.down('Shift'); pg.mouse.move(ex,ey); pg.mouse.down(); pg.mouse.move(ex+33,ey,steps=4); st=pg.inner_text('#status'); pg.mouse.up(); pg.keyboard.up('Shift'); print('shift rot',st)
     pg.click('[data-tool=scale]'); pg.wait_for_timeout(200)
     g=pg.evaluate("(()=>{const g=__mrt.S.giz;const r=document.getElementById('gl').getBoundingClientRect();return {p:[g.p[0]+r.left,g.p[1]+r.top],e:g.ends.map(e=>[e[0]+r.left,e[1]+r.top])}})()")
     ex,ey=g['e'][0]; dx,dy=ex-g['p'][0],ey-g['p'][1]
@@ -49,10 +46,10 @@ with sync_playwright() as p:
     pg.wait_for_timeout(200); pg.screenshot(path=S+'/m1.png'); pg.keyboard.press('Escape'); print('popup hidden',not pg.is_visible('#tpop'))
     # merge
     pg.click('#bSelAll'); pg.click('#bJoin'); print('merged',names(),'|',pg.inner_text('#splitRes')); pg.click('#bUndo'); print('undo merge',names())
-    pg.click(row(1)); pg.click(row(2),modifiers=['Control']); pg.click(row(1),button='right'); pg.click("#ctx div:has-text('Gộp body tick')"); print('merge via ctx',names())
+    pg.keyboard.press('Space'); pg.click(row(1)); pg.click(row(2)); pg.click(row(1),button='right'); pg.click("#ctx div:has-text('Gộp body tick')"); print('merge via ctx',names())
     # compare: auto align straight from points
     pg.click('#bClear'); pg.set_input_files('#file',[S+'/refA.stl',S+'/scanB.stl']); pg.wait_for_function("__mrt.S.bodies.length==2"); idle()
-    pg.click(row(1)); pg.click(row(2),modifiers=['Control']); pg.click('#bCmpStart'); pg.wait_for_timeout(300)
+    pg.keyboard.press('Space'); pg.click(row(1)); pg.click(row(2)); pg.click('#bCmpStart'); pg.wait_for_timeout(300)
     pg.click('#bCmpIcp'); print('icp without points ->',pg.inner_text('#status'))
     pg.evaluate("p=>{__mrt.S.cmp.pa=p.a.map((q,i)=>q.map(v=>v+(i%2?0.8:-0.6)));__mrt.S.cmp.pb=p.b;}",PTS)
     pg.click('#bCmpIcp'); pg.wait_for_timeout(500); idle(); pg.wait_for_timeout(800); idle(); print('auto align:',pg.inner_text('#cmpRes').replace('\n',' | '))

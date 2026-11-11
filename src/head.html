@@ -80,8 +80,9 @@
   #info .hd { font-weight: 600; margin-bottom: 4px; }
   #info table { width: 100%; border-collapse: collapse; }
   #info td { padding: 1px 0; vertical-align: top; color: #fff; }
-  #info td:first-child { color: rgba(255,255,255,.72); padding-right: 8px; }
+  #info td:first-child { color: rgba(255,255,255,.72); padding-right: 8px; white-space: nowrap; }
   #info td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  #info td label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
   #info .row .lbl { color: rgba(255,255,255,.72); }
   #info select, #info input { background: rgba(0,0,0,.45); color: #fff; border-color: rgba(255,255,255,.25); }
   #hud { position: absolute; left: 12px; bottom: 8px; color: var(--muted); font-size: 11.5px; pointer-events: none; max-width: calc(100% - 340px); }
@@ -149,7 +150,7 @@
       <button id="bZip" data-en="Download all (.zip)">Tải tất cả (.zip)</button>
       <button id="bMerge" data-en="Download as 1 STL">Tải gộp 1 STL</button>
     </div>
-    <div class="note" data-en="Tick = highlighted (orange). Click a body in 3D or a row to tick only that one; Ctrl+click adds. Right-click for the tool menu. Double-click a name to rename.">Tick = highlight (màu cam). Bấm vào body trên 3D hoặc một dòng để chỉ tick body đó; Ctrl+bấm để tick thêm. Chuột phải để mở menu công cụ. Nhấp đúp tên để đổi tên.</div>
+    <div class="note" data-en="Tick = highlighted (orange). Click bodies in 3D or rows one after another to tick them; click again to untick. Click empty space in the 3D view or press Space to untick everything. Right-click for the tool menu. Double-click a name to rename.">Tick = highlight (màu cam). Bấm lần lượt vào các body trên 3D hoặc các dòng để tick thêm; bấm lại để bỏ tick. Bấm vào khoảng trống trên màn hình 3D hoặc nhấn Space để bỏ chọn hết. Chuột phải để mở menu công cụ. Nhấp đúp tên để đổi tên.</div>
   </div></div>
 
   <div class="sec"><div class="hd">Decimate</div><div class="c">
@@ -209,7 +210,7 @@
     <div class="row"><span class="lbl" data-en="Density">Khối lượng riêng</span><input type="number" id="dens" class="s" step="0.01" min="0" value="0"><span class="unit" style="color:#fff">g/cm³</span></div>
   </div>
   <div id="status"></div>
-  <div id="hud" data-en="Right-drag: rotate · Middle-drag or Ctrl + right-drag: pan · Wheel: zoom at cursor · Left click: tick · Left-drag: box select · Right click: menu · F: fit · Shift+1…7: standard views">Chuột phải kéo: xoay · Chuột giữa hoặc Ctrl + chuột phải kéo: dời · Lăn chuột: zoom tại con trỏ · Chuột trái: tick chọn · Kéo chuột trái: quét ô chọn · Chuột phải: menu · F: fit · Shift+1…7: hướng nhìn chuẩn</div>
+  <div id="hud" data-en="Right-drag: rotate about the pressed point · Middle-drag: pan · Wheel: zoom · Left click: tick / untick · Space: untick all · Left-drag: box select · Right click: menu · F: fit · Shift+1…7: standard views">Chuột phải kéo: xoay quanh điểm bấm · Chuột giữa: dời · Lăn chuột: zoom · Chuột trái: tick / bỏ tick · Space: bỏ chọn hết · Kéo chuột trái: quét ô chọn · Chuột phải: menu · F: fit · Shift+1…7: hướng nhìn</div>
   <div id="busy"><div class="bx"><div id="busyText">...</div><div id="bar"><i></i></div></div></div>
 </div>
 

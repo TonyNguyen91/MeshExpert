@@ -218,7 +218,7 @@
 
   // ---------- mesh statistics ----------
   function stats(P, I) {
-    let area = 0, vol = 0;
+    let area = 0, vol = 0, sx = 0, sy = 0, sz = 0, px = 0, py = 0, pz = 0;
     const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
     for (let i = 0; i < P.length; i += 3) for (let k = 0; k < 3; k++) { const v = P[i + k]; if (v < mn[k]) mn[k] = v; if (v > mx[k]) mx[k] = v; }
     const ox = (mn[0] + mx[0]) / 2, oy = (mn[1] + mx[1]) / 2, oz = (mn[2] + mx[2]) / 2;
@@ -228,12 +228,22 @@
       const bx = P[b] - ox, by = P[b + 1] - oy, bz = P[b + 2] - oz;
       const cx = P[c] - ox, cy = P[c + 1] - oy, cz = P[c + 2] - oz;
       const nx = (by - ay) * (cz - az) - (bz - az) * (cy - ay), ny = (bz - az) * (cx - ax) - (bx - ax) * (cz - az), nz = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
-      area += Math.sqrt(nx * nx + ny * ny + nz * nz) / 2;
-      vol += (ax * (by * cz - bz * cy) + ay * (bz * cx - bx * cz) + az * (bx * cy - by * cx)) / 6;
+      const at = Math.sqrt(nx * nx + ny * ny + nz * nz) / 2;
+      const v = (ax * (by * cz - bz * cy) + ay * (bz * cx - bx * cz) + az * (bx * cy - by * cx)) / 6;
+      area += at; vol += v;
+      // centroid of the tetrahedron (box centre, a, b, c), and of the triangle
+      sx += v * (ax + bx + cx) / 4; sy += v * (ay + by + cy) / 4; sz += v * (az + bz + cz) / 4;
+      px += at * (ax + bx + cx) / 3; py += at * (ay + by + cy) / 3; pz += at * (az + bz + cz) / 3;
     }
-    return { area: area, volume: Math.abs(vol), min: mn, max: mx };
+    // centre of mass of the enclosed volume; a surface that encloses (almost) nothing falls back to the centre of its area
+    let cen = [ox, oy, oz], solid = area > 0 && Math.abs(vol) > 1e-9 * Math.pow(area, 1.5);
+    if (solid) {
+      cen = [ox + sx / vol, oy + sy / vol, oz + sz / vol];
+      for (let k = 0; k < 3; k++) if (!(cen[k] >= mn[k] && cen[k] <= mx[k])) solid = false;
+    }
+    if (!solid && area > 0) cen = [ox + px / area, oy + py / area, oz + pz / area];
+    return { area: area, volume: Math.abs(vol), min: mn, max: mx, centroid: cen, solid: solid };
   }
-  // Count boundary and non-manifold edges.
   function topology(I, nv) {
     const n = I.length, keys = new Float64Array(n);
     for (let t = 0; t < n; t += 3) {

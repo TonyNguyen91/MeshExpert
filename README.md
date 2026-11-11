@@ -10,7 +10,7 @@ Công cụ chỉnh sửa mesh STL/OBJ chạy offline trong trình duyệt. Mở 
 - `src/build.py` — ghép các file trên thành `index.html`: `python3 src/build.py`.
 - `src/test_core.js`, `src/test_cmp.js`, `src/test_split.js` — kiểm thử lõi bằng Node.js (chạy `build.py` trước).
 - `tests/ui*.py` — kiểm thử giao diện tự động bằng Playwright + Chrome.
-- `tests/make_split_meshes.js` — tạo các file STL mẫu cho `tests/ui5.py`.
+- `tests/make_split_meshes.js` — tạo các file STL mẫu cho `tests/ui5.py` và `tests/ui6.py`.
 
 ## Tách body: các phương án
 "Tách body" bắt đầu từ phương án 1; "Phương án kế ▶", "◀ Phương án trước" hoặc thanh trượt làm lại đúng lần tách đó với phương án khác.
@@ -23,3 +23,9 @@ Công cụ chỉnh sửa mesh STL/OBJ chạy offline trong trình duyệt. Mở 
 ## Ghi chú
 - `src/core.js` được sinh tự động khi chạy `build.py`.
 - `app.js` cũ đã được thay bằng `app2.js` và không còn dùng.
+
+## Thao tác trên màn hình 3D
+- Bấm lần lượt vào các body để tick thêm, bấm lại để bỏ tick; bấm khoảng trống hoặc nhấn Space để bỏ chọn hết.
+- Giữ chuột phải kéo: xoay hướng nhìn quanh đúng điểm vừa bấm trên mesh.
+- Công cụ Xoay: kéo mũi tên cong cùng màu với trục để xoay quanh trục đó; giữ Shift để xoay theo bước 1°.
+- Bảng "Thông tin": ô tick ở dòng "Kích thước bao" hiện hộp bao kèm 3 kích thước; ô tick ở dòng "Trọng tâm" hiện trọng tâm, các công cụ đo bắt được điểm này.
