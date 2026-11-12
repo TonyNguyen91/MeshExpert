@@ -1,3 +1,4 @@
+import os
 import sys,json
 from playwright.sync_api import sync_playwright
 S=sys.argv[1]; PTS=json.load(open(S+'/pts.json'))
@@ -8,7 +9,7 @@ with sync_playwright() as p:
     pg.on('console',lambda m: errs.append(m.type+': '+m.text) if m.type=='error' else None)
     pg.on('pageerror',lambda e: errs.append('PAGEERR '+str(e)))
     pg.on('dialog',lambda d: d.accept())
-    pg.goto('file:///home/claude/index.html')
+    pg.goto('file://'+os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','index.html')))
     def idle(): pg.wait_for_function("document.getElementById('busy').style.display!='flex'"); pg.wait_for_timeout(200)
     def names(): return pg.evaluate("__mrt.S.bodies.map(b=>b.name+':'+b.geo.indices.length/3+(b.visible?'':'(hid)')+(__mrt.S.sel.has(b)?'*':''))")
     def scr(pt): return pg.evaluate("p=>{const q=__mrt.project(p);const r=document.getElementById('gl').getBoundingClientRect();return [q[0]+r.left,q[1]+r.top]}",pt)

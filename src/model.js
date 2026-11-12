@@ -900,7 +900,7 @@
   }
   // ---------- keys ----------
   const SK_KEYS = { KeyL: 'line', KeyR: 'rect', KeyC: 'circle', KeyA: 'arc', KeyG: 'tarc', KeyP: 'point', KeyT: 'trim', KeyO: 'offset', KeyD: 'dim', KeyS: 'select' };
-  const SK_CKEYS = { KeyI: 'coinc', KeyH: 'h', KeyV: 'v', KeyE: 'eq', KeyB: 'par', KeyN: 'tan' };
+  const SK_CKEYS = { KeyI: 'coinc', KeyH: 'h', KeyV: 'v', KeyE: 'eq', KeyB: 'par' };
   function sketchKey(e, typing) {
     const sk = S.sk;
     if (e.key === 'Escape') { skDimEditEnd(false); if (sk.pts.length || sk.pend.length) { skFlush(); sk.pend = []; sk.dimPrev = null; sk.sel.clear(); } else if (sk.cmode) { sk.cmode = null; skSetTool('select'); } else if (sk.sel.size) sk.sel.clear(); else skSetTool('select'); dirty = true; return true; }
@@ -909,6 +909,7 @@
     if (e.key === 'Delete' || e.key === 'Backspace') { skDeleteSel(); return true; }
     if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); $('skUndo').click(); return true; }
     if (e.ctrlKey || e.metaKey || e.altKey) return false;
+    if (keymap.normal && comboOf(e) === keymap.normal) { normalView(); return true; }
     if (e.code === 'KeyQ') { skToggleCons(); return true; }
     if (!e.shiftKey && SK_KEYS[e.code]) { skSetTool(SK_KEYS[e.code]); return true; }
     if (!e.shiftKey && SK_CKEYS[e.code]) { skConsButton(SK_CKEYS[e.code]); return true; }

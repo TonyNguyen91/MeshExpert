@@ -241,7 +241,6 @@
     refresh();
   }
   function editSolid(b) { if (b.solid) openFeature(b.solid.type, b); }
-  $('bToMesh').addEventListener('click', solidToMesh);
   // a solid's base shape changed: rebuild it and replay its solid edits (fillet, shell...) on the new shape
   async function rebuildSolid(b, recipe, base) {
     let mesh = base, dropped = [];
@@ -692,7 +691,7 @@
   const CMDS = [['move', 'Di chuyển', 'Move', 'M'], ['rotate', 'Xoay', 'Rotate', 'R'], ['scale', 'Tỉ lệ', 'Scale', 'S'], ['sketch', 'Sketch', 'Sketch', 'Shift+S'],
     ['extrude', 'Extrude', 'Extrude', 'E'], ['revolve', 'Revolve', 'Revolve', 'Shift+R'], ['boolean', 'Boolean', 'Boolean', 'B'], ['fillet', 'Fillet', 'Fillet', 'Shift+F'],
     ['chamfer', 'Chamfer', 'Chamfer', 'Shift+C'], ['moveface', 'Move face', 'Move face', 'Shift+M'], ['replace', 'Replace face', 'Replace face', ''], ['shell', 'Shell', 'Shell', 'Shift+L'],
-    ['draft', 'Draft', 'Draft', 'Shift+D'], ['hide', 'Ẩn / hiện body, sketch đang chọn', 'Hide / show the selected bodies, sketch', 'Y']];
+    ['draft', 'Draft', 'Draft', 'Shift+D'], ['normal', 'Normal view (nhìn thẳng hướng gần nhất)', 'Normal view (nearest straight view)', 'N'], ['hide', 'Ẩn / hiện body, sketch đang chọn', 'Hide / show the selected bodies, sketch', 'Y']];
   let keymap = {};
   function loadKeys() {
     keymap = {}; for (const c of CMDS) keymap[c[0]] = c[3];
@@ -709,6 +708,7 @@
     else if (c === 'sketch') startSketchCmd();
     else if (c === 'extrude' || c === 'revolve') openFeature(c);
     else if (c === 'hide') toggleHide();
+    else if (c === 'normal') normalView();
     else openDlg(c);
   }
   function toggleHide() {
@@ -775,7 +775,40 @@
   }
   function modelHover(px, py) { if (S.od) return dlgHover(px, py); return false; }
   function tipKeys() {                                       // show the shortcuts in the button tooltips
-    const map = { move: '[data-tool=move]', rotate: '[data-tool=rotate]', scale: '[data-tool=scale]', sketch: '#bSketch', extrude: '#bExtrude', revolve: '#bRevolve' };
+    const map = { normal: '#bNormal', move: '[data-tool=move]', rotate: '[data-tool=rotate]', scale: '[data-tool=scale]', sketch: '#bSketch', extrude: '#bExtrude', revolve: '#bRevolve' };
     for (const c of CMDS) { const el = map[c[0]] ? document.querySelector(map[c[0]]) : $('b_' + c[0]); if (el && keymap[c[0]]) el.title = (el.title || '').replace(/ \[.*\]$/, '') + ' [' + keymap[c[0]] + ']'; }
   }
   tipKeys();
+
+  // ---------- Normal view: glide to the nearest straight view (or onto the sketch plane) ----------
+  let viewAnim = 0;
+  function normalView() {
+    const R = mainCam.R;
+    let T;
+    if (S.sk) { const f = S.sk.frame; T = [f.u[0], f.u[1], f.u[2], f.v[0], f.v[1], f.v[2], f.n[0], f.n[1], f.n[2]]; }
+    else {
+      const ax = function (v) { let k = 0; for (let i = 1; i < 3; i++) if (Math.abs(v[i]) > Math.abs(v[k])) k = i; const o = [0, 0, 0]; o[k] = v[k] < 0 ? -1 : 1; return o; };
+      const w = ax([R[6], R[7], R[8]]), u0 = [R[3], R[4], R[5]], u = ax(V.sub(u0, V.mul(w, V.dot(u0, w)))), r = V.cross(u, w);
+      T = r.concat(u, w);
+    }
+    const A = R.slice(), t0 = performance.now(), id = ++viewAnim;
+    (function step() {
+      if (id !== viewAnim) return;
+      const k = Math.min(1, (performance.now() - t0) / 260), e = k * k * (3 - 2 * k), M0 = A.map(function (a, i) { return a + (T[i] - a) * e; });
+      const r = V.norm(M0.slice(0, 3)); let u = M0.slice(3, 6); u = V.norm(V.sub(u, V.mul(r, V.dot(u, r))));
+      const w = V.cross(r, u);
+      mainCam.R = k >= 1 ? T.slice() : r.concat(u, w); dirty = true;
+      if (k < 1) requestAnimationFrame(step);
+    })();
+  }
+  $('bNormal').addEventListener('click', normalView);
+
+  // ---------- ribbon tabs ----------
+  function showTab(t) {
+    document.querySelectorAll('#rtabs .rtab').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === t); });
+    document.querySelectorAll('#ribbon .rpage').forEach(function (p) { p.classList.toggle('on', p.dataset.page === t); });
+    try { localStorage.setItem('mrt_tab', t); } catch (e) { /* not kept */ }
+    dirty = true;
+  }
+  document.querySelectorAll('#rtabs .rtab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
+  try { const t = localStorage.getItem('mrt_tab'); if (t === 'view' || t === 'modify') showTab(t); } catch (e) { /* default tab */ }

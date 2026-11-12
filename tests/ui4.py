@@ -1,3 +1,4 @@
+import os
 import sys,json
 from playwright.sync_api import sync_playwright
 S=sys.argv[1]; PTS=json.load(open(S+'/pts.json'))
@@ -11,14 +12,14 @@ with sync_playwright() as p:
     pg.on('console',lambda m: errs.append(m.type+': '+m.text) if m.type=='error' else None)
     pg.on('pageerror',lambda e: errs.append('PAGEERR '+str(e)))
     pg.on('dialog',lambda d: d.accept())
-    pg.goto('file:///home/claude/index.html')
+    pg.goto('file://'+os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','index.html')))
     def idle(): pg.wait_for_function("document.getElementById('busy').style.display!='flex'"); pg.wait_for_timeout(200)
     def names(): return pg.evaluate("__mrt.S.bodies.map(b=>b.name+':'+b.geo.indices.length/3+(b.visible?'':'(hid)')+(__mrt.S.sel.has(b)?'*':''))")
     def scr(pt): return pg.evaluate("p=>{const q=__mrt.project(p);const r=document.getElementById('gl').getBoundingClientRect();return [q[0]+r.left,q[1]+r.top]}",pt)
     def row(i): return f'#bodyList .brow:nth-child({i+1})'
     def dragbox(a,b_,**k):
         pg.mouse.move(*a); pg.mouse.down(); pg.mouse.move((a[0]+b_[0])/2,(a[1]+b_[1])/2,steps=3); pg.mouse.move(*b_,steps=3); pg.mouse.up()
-    pg.evaluate("document.querySelectorAll('details').forEach(d=>d.open=true)"); pg.uncheck('#cInfo')
+    pg.evaluate("document.querySelectorAll('details').forEach(d=>d.open=true)"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
     print('user-select',pg.evaluate("getComputedStyle(document.body).userSelect"))
     pg.set_input_files('#file',[S+'/cshape.stl',S+'/block.stl']); pg.wait_for_function("__mrt.S.bodies.length==2"); idle()
     pg.click(row(1)); pg.click('#bSplit'); idle(); pg.click('#bSelNone'); pg.keyboard.press('f'); pg.wait_for_timeout(200); print('bodies',names())

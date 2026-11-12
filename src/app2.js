@@ -431,6 +431,11 @@
     c.center = boxCenter(bb); c.radius = Math.max(1e-6, 0.5 * V.len(V.sub(bb.max, bb.min)));
     c.target = c.center.slice(); c.zoom = c.radius * 1.12 / Math.min(1, c.w / H);
   }
+  function rollView(a) {                                      // turn the picture about the viewing direction
+    const R = cam.R, c = Math.cos(a), s = Math.sin(a), r = [R[0], R[1], R[2]], u = [R[3], R[4], R[5]];
+    const r2 = V.add(V.mul(r, c), V.mul(u, s)), u2 = V.sub(V.mul(u, c), V.mul(r, s));
+    cam.R = [r2[0], r2[1], r2[2], u2[0], u2[1], u2[2], R[6], R[7], R[8]]; dirty = true;
+  }
   function setView(name) { cam.R = name === 'iso' ? isoView() : VIEWS[name].slice(); dirty = true; }
   function sceneChanged(fit) {
     const vis = visibleBodies();
@@ -694,7 +699,7 @@
     }
     // world axes at the origin
     if ($('cAxes').checked) {
-      const Ln = Math.max(cam.radius * 0.45, 1e-6), o = project([0, 0, 0]);
+      const Ln = Math.max(cam.radius * 0.225, 1e-6), o = project([0, 0, 0]);
       for (let i = 0; i < 3; i++) {
         const e = project(V.mul(AXES[i], Ln));
         line2(o, e, AXC[i], 2);
@@ -1028,6 +1033,10 @@
     updateList(); updateInfo(); syncCounts(true); updateHoleUI(); updateSketchList();
     // Split is only lit while something is ticked; with nothing ticked and no split to continue, the option goes back to 1
     $('bSplit').classList.toggle('primary', S.sel.size > 0);
+    // things that only work on ticked bodies stay plain (colour / opacity greyed out) until something is ticked
+    $('bStl').classList.toggle('primary', S.sel.size > 0); $('bApply').classList.toggle('primary', S.sel.size > 0);
+    $('col').disabled = $('opa').disabled = !S.sel.size;
+    $('col').closest('label').classList.toggle('off', !S.sel.size); $('opa').closest('label').classList.toggle('off', !S.sel.size);
     const live = S.spl && S.spl.items.every(function (it) { return it.out.length && it.out.every(function (b) { return S.bodies.indexOf(b) >= 0; }); });
     if (!S.sel.size && !live && splitLevel !== 1) { S.spl = null; splitLevel = 1; }
     updateSplitUI();
@@ -1502,6 +1511,13 @@
     if (e.code === 'Space' && (tag === 'button' || (tag === 'input' && ['checkbox', 'radio', 'range', 'color', 'button', 'file'].indexOf(e.target.type) >= 0))) e.preventDefault();
   });
   document.querySelectorAll('#tools [data-tool]').forEach(function (b) { b.addEventListener('click', function () { setTool(b.dataset.tool); }); });
+  document.querySelectorAll('#cubeWrap [data-va]').forEach(function (d) {
+    d.addEventListener('click', function () {
+      const a = 15 * Math.PI / 180, k = d.dataset.va;
+      if (k === 'u') rotateView(0, -a); else if (k === 'd') rotateView(0, a); else if (k === 'l') rotateView(-a, 0); else if (k === 'r') rotateView(a, 0);
+      else if (k === 'cl') rollView(-Math.PI / 2); else if (k === 'cr') rollView(Math.PI / 2); else setView('iso');
+    });
+  });
   document.querySelectorAll('#cube div').forEach(function (d) { d.addEventListener('click', function () { setView(d.dataset.v); }); });
   $('bFit').addEventListener('click', function () { sceneChanged(true); });
   $('bIso').addEventListener('click', function () { setView('iso'); });

@@ -2,6 +2,8 @@
 
 Công cụ chỉnh sửa mesh STL/OBJ chạy offline trong trình duyệt. Mở trực tiếp `index.html` (Chrome/Edge), không cần cài đặt.
 
+App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội bộ: mọi thư viện đều nằm sẵn trong `index.html`, và chính sách bảo mật (Content-Security-Policy) trong file chặn mọi kết nối mạng.
+
 ## Cấu trúc
 - `index.html` — file ứng dụng hoàn chỉnh (bản phát hành).
 - `src/head.html` — giao diện (HTML/CSS).

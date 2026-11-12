@@ -26,7 +26,7 @@ with sync_playwright() as p:
     def sk(expr): return pg.evaluate("(()=>{const m=__mrt.S.sk.m;return "+expr+"})()")
     def body(i): return pg.evaluate("i=>{const b=__mrt.S.bodies[i];if(!b)return null;const s=__mrt.core.stats(b.geo.positions,b.geo.indices),t=__mrt.core.topology(b.geo.indices,b.geo.positions.length/3);return {name:b.name,solid:!!b.solid,vol:s.volume,border:t.border,nm:t.nonManifold,min:s.min,max:s.max,vis:b.visible,feats:b.solid&&b.solid.feats?b.solid.feats.length:0}}",i)
     def row(i): return f'#bodyList .brow:nth-child({i+1})'
-    pg.evaluate("document.querySelectorAll('details').forEach(d=>d.open=true)"); pg.uncheck('#cInfo')
+    pg.evaluate("document.querySelectorAll('details').forEach(d=>d.open=true)"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
     # ===== sketch with constraints =====
     pg.click('#bSketch'); pg.click('#skplane [data-pl=top]'); pg.wait_for_timeout(200)
     pg.evaluate("(()=>{const c=__mrt.cam();c.zoom=75;c.target=[35,12,0];})()")
@@ -107,7 +107,7 @@ with sync_playwright() as p:
     ok('E opens Extrude on the selected sketch with a see-through preview',pg.is_visible('#fdlg') and pg.evaluate("__mrt.S.fd.sketchId===__mrt.S.sketches[0].id&&__mrt.S.ghosts.length===1"))
     opts=pg.evaluate("Array.from(document.getElementById('fSketch').options).map(o=>o.textContent)")
     ok('feature dialog lists the sketches',len(opts)==2,opts)
-    pg.fill('#fDepth','10'); pg.click('#bIso'); pg.wait_for_timeout(250); pg.screenshot(path=S+'/n3.png')
+    pg.fill('#fDepth','10'); pg.evaluate("document.getElementById('bIso').click()"); pg.wait_for_timeout(250); pg.screenshot(path=S+'/n3.png')
     pg.click('#fOk'); idle(); B=body(0)
     area=50*30-25*(1-math.pi/4)-math.pi*25*0  # hole area added below
     ok('extrude: closed solid',B and B['solid'] and B['border']==0 and B['nm']==0,B)
@@ -126,7 +126,7 @@ with sync_playwright() as p:
     pg.click('#skOk'); idle(); pg.wait_for_timeout(200); B=body(0)
     ok('changing the sketch dimension rebuilt the solid (+10 mm wide)',B and abs(B['max'][0]-B['min'][0]-60)<1e-3 and B['vol']>vol0+2900,B and [B['max'][0]-B['min'][0],B['vol']])
     # ===== solid edits =====
-    pg.click('#bFit'); pg.click('#bIso'); pg.wait_for_timeout(200)
+    pg.evaluate("document.getElementById('bFit').click()"); pg.evaluate("document.getElementById('bIso').click()"); pg.wait_for_timeout(200)
     def ptOn(p3): return scr(p3)
     pg.click(row(1)); pg.wait_for_timeout(50)
     pg.keyboard.press('Shift+F'); pg.wait_for_timeout(150)
@@ -164,7 +164,7 @@ with sync_playwright() as p:
     v1=body(0)['vol']; pg.click('#odOk'); idle(); B=body(0)
     tilt=pg.evaluate("(()=>{const b=__mrt.S.bodies[0],f=__mrt.core.features({positions:b.geo.positions,indices:b.geo.indices}),a=5*Math.PI/180;return f.regions.filter(r=>r.type==='plane'&&Math.abs(r.n[0]-Math.cos(a))<1e-3&&Math.abs(r.n[2]+Math.sin(a))<1e-3).map(r=>r.area)})()")
     ok('draft 5°: the side face now leans 5° (pull = bottom face normal)',B['border']==0 and len(tilt)==1 and tilt[0]>200,[tilt,v1-B['vol']])
-    pg.click('#bIso'); pg.wait_for_timeout(100)
+    pg.evaluate("document.getElementById('bIso').click()"); pg.wait_for_timeout(100)
     # shell, opening the bottom
     pg.click('#b_shell'); pg.wait_for_timeout(100)
     pg.evaluate("(()=>{const c=__mrt.cam();c.R=[1,0,0, 0,-1,0, 0,0,-1];})()"); pg.wait_for_timeout(100)
@@ -172,7 +172,7 @@ with sync_playwright() as p:
     pg.fill('#odV','1.5'); pg.dispatch_event('#odV','input'); pg.wait_for_timeout(700)
     v1=body(0)['vol']; pg.click('#odOk'); idle(); B=body(0)
     ok('shell 1.5 open at the bottom: much lighter, closed',B['border']==0 and B['nm']==0 and B['vol']<0.5*v1,[v1,B['vol']])
-    pg.click('#bIso'); pg.wait_for_timeout(150); pg.screenshot(path=S+'/n5.png')
+    pg.evaluate("document.getElementById('bIso').click()"); pg.wait_for_timeout(150); pg.screenshot(path=S+'/n5.png')
     ok('solid history has 5 edits',B['feats']==5,B['feats'])
     # change the sketch again: the history replays
     pg.dblclick('#sketchList .srow:nth-child(1)'); pg.wait_for_timeout(200)

@@ -25,7 +25,7 @@ with sync_playwright() as p:
     def info(): return pg.inner_text('#infoTbl').replace('\t',' ').replace('\n',' | ')
     def giz(): return pg.evaluate("(()=>{const g=__mrt.S.giz;if(!g)return null;const r=document.getElementById('gl').getBoundingClientRect();const f=q=>[q[0]+r.left,q[1]+r.top];return {p:f(g.p),ends:g.ends.map(f),arcs:g.arcs.map(a=>a.map(f)),pv:g.pv}})()")
     def mat(i=0): return pg.evaluate("i=>__mrt.S.bodies[i].matrix",i)
-    pg.evaluate("document.querySelectorAll('details').forEach(d=>d.open=true)"); pg.uncheck('#cInfo')   # the info panel covers part of the view
+    pg.evaluate("document.querySelectorAll('details').forEach(d=>d.open=true)"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")   # the info panel covers part of the view
     pg.set_input_files('#file',[S+'/one.stl',S+'/pair.stl']); pg.wait_for_function("__mrt.S.bodies.length==2"); idle()
     # 'one' is the box x 100..120, y 0..20, z 0..20; 'pair' is x 0..10, y 0..10, z 0..20
     A=scr([110,0,10]); B=scr([5,0,10]); o=off(); empty=[o[0]+o[2]-30,o[1]+o[3]/2-200]
@@ -38,7 +38,7 @@ with sync_playwright() as p:
     pg.click(row(1)); pg.click(row(2)); ok('rows add up too',sel()==['one','pair'],sel())
     pg.click(row(1)); ok('row again unticks',sel()==['pair'],sel())
     pg.keyboard.press('Space'); pg.wait_for_timeout(80); ok('Space unticks all',sel()==[],sel())
-    pg.click(row(1)); pg.click('#bFit'); n0=pg.evaluate("__mrt.S.bodies.length"); pg.keyboard.press('Space'); pg.wait_for_timeout(120)
+    pg.click(row(1)); pg.evaluate("document.getElementById('bFit').click()"); n0=pg.evaluate("__mrt.S.bodies.length"); pg.keyboard.press('Space'); pg.wait_for_timeout(120)
     ok('Space with a button focused only unticks (button not pressed again)',sel()==[] and pg.evaluate("__mrt.S.bodies.length")==n0)
     # box select adds to what is ticked
     pg.mouse.click(*A); a0=scr([0,0,0]); a1=scr([10,10,20])
@@ -48,7 +48,7 @@ with sync_playwright() as p:
     pg.keyboard.press('Space')
 
     # ---- bounding box and centre of mass ----
-    pg.check('#cInfo'); pg.mouse.click(*A); pg.wait_for_timeout(100)
+    pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==true){e.click()}})()"); pg.mouse.click(*A); pg.wait_for_timeout(100)
     ok('info shows the centre of mass of the box','110.00, 10.00, 10.00 mm' in info(),info())
     pg.check('#cShow_box'); pg.check('#cShow_com'); pg.wait_for_timeout(150); pg.screenshot(path=S+'/g1.png')
     ok('show flags set',pg.evaluate("__mrt.S.show.box&&__mrt.S.show.com"))
@@ -57,13 +57,15 @@ with sync_playwright() as p:
     ok('checkboxes keep their state when the selection changes',pg.is_checked('#cShow_box') and pg.is_checked('#cShow_com'))
     pg.screenshot(path=S+'/g2.png')
     # measure between the two centre-of-mass marks: |(110,10,10)-(5,5,10)|
+    pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked){e.click()}})()")
     pg.click('[data-tool=dist]'); ca=scr([110,10,10]); cb=scr([5,5,10])
     pg.mouse.move(ca[0]+3,ca[1]-2); pg.wait_for_timeout(60); pg.mouse.click(ca[0]+3,ca[1]-2); pg.mouse.click(cb[0]-2,cb[1]+3); pg.wait_for_timeout(120)
     d=pg.evaluate("__mrt.S.measures.length?__mrt.S.measures[__mrt.S.measures.length-1].v:-1")
     ok('distance tool snaps to the centre-of-mass marks',abs(d-math.hypot(105,5))<1e-4,d)
     ok('measuring does not change what is ticked',sel()==['one','pair'],sel())
     pg.keyboard.press('Escape'); pg.screenshot(path=S+'/g3.png')
-    pg.uncheck('#cShow_box'); pg.uncheck('#cShow_com'); pg.uncheck('#cInfo')
+    pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(!e.checked){e.click()}})()"); pg.wait_for_timeout(80)
+    pg.uncheck('#cShow_box'); pg.uncheck('#cShow_com'); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
 
     # ---- view rotation about the pressed point ----
     pg.keyboard.press('Space'); P=[120,0,20]; s0=scr(P)
@@ -79,7 +81,7 @@ with sync_playwright() as p:
     pg.keyboard.press('Escape'); pg.mouse.click(*empty)
 
     # ---- rotate gizmo ----
-    pg.keyboard.press('Shift+7'); pg.click('#bFit'); pg.wait_for_timeout(150)
+    pg.keyboard.press('Shift+7'); pg.evaluate("document.getElementById('bFit').click()"); pg.wait_for_timeout(150)
     pg.click(row(1)); pg.click('[data-tool=rotate]'); pg.wait_for_timeout(200); g=giz()
     ok('rotate gizmo has 3 curved arrows',g is not None and len(g['arcs'])==3 and len(g['arcs'][0])>8)
     def turn(axis,frm,to,shift=False,shot=None):
