@@ -684,6 +684,7 @@
     if (split) {
       const c = S.cmp;
       line2([W / 2, 0], [W / 2, H], '#f0a030', 2);
+      if (S.clean) return;                                 // picture for the clipboard: the two views and the divider only
       for (let i = 0; i < 2; i++) {
         cam = c.cams[i];
         ctx.save(); ctx.beginPath(); ctx.rect(cam.x, 0, cam.w, H); ctx.clip();
@@ -1008,14 +1009,16 @@
       angle: L('Bấm 2 mặt phẳng / cạnh thẳng, hoặc 3 điểm (điểm thứ hai là đỉnh góc)', 'Click 2 planes / straight edges, or 3 points (the second is the vertex)'),
       radius: L('Bấm 1 cung tròn, mặt trụ hoặc mặt cầu; hoặc 3 điểm trên cùng một cung', 'Click one arc, cylinder or sphere; or 3 points on the same arc'),
       thick: L('Bấm vào một điểm trên mesh để đo bề dày tại đó', 'Click a point on the mesh to measure the wall thickness there'),
-      secpick: L('Bấm vào một mặt trên mesh để lấy làm mặt cắt', 'Click a face on the mesh to use it as the section plane')
+      secpick: L('Bấm vào một mặt trên mesh để lấy làm mặt cắt', 'Click a face on the mesh to use it as the section plane'),
+      mate: L('Bấm mặt phẳng / mặt trụ / cạnh tròn trên body cần dời, rồi bấm mặt / trục đích trên body khác: mặt áp mặt, trục trùng trục', 'Click a flat face / cylinder / round edge on the body to move, then the target face / axis on another body: face to face, axis on axis')
     }[t] || '';
   }
   function setTool(t) {
     if (S.cmp && S.cmp.split) t = 'select';
     S.tool = t; S.tmp = [];
-    document.querySelectorAll('#tools [data-tool]').forEach(function (b) { b.classList.toggle('on', b.dataset.tool === t); });
-    $('tpop').style.display = (t === 'move' || t === 'rotate' || t === 'scale') ? 'block' : 'none';
+    document.querySelectorAll('[data-tool]').forEach(function (b) { b.classList.toggle('on', b.dataset.tool === t); });
+    $('tpop').style.display = (t === 'move' || t === 'rotate' || t === 'scale' || t === 'mate') ? 'block' : 'none';
+    $('tpMate').style.display = t === 'mate' ? 'flex' : 'none'; S.mate = null;
     $('tpMove').style.display = t === 'move' ? 'flex' : 'none'; $('tpRot').style.display = t === 'rotate' ? 'flex' : 'none';
     $('tpScale').style.display = t === 'scale' ? 'flex' : 'none'; $('tpPivot').style.display = t === 'rotate' || t === 'scale' ? 'flex' : 'none';
     canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null; S.hovEnt = null;
@@ -1183,6 +1186,63 @@
     for (const b of list) b.matrix = M.mul(A, b.matrix);
     commitTransform(list);
   }
+  // ---------- mate: face onto face, axis onto axis ----------
+  // what a click gives for mating: a plane {t:'plane', p, n} or an axis {t:'axis', p, d, ring}
+  function mateEnt(h, px, py) {
+    const e = entityAt(h, px, py, false);
+    if (e.kind === 'plane') return Object.assign({}, e, { mg: { t: 'plane', p: e.p, n: V.norm(e.n) }, body: h.body });
+    if (e.kind === 'cyl') return Object.assign({}, e, { mg: { t: 'axis', p: e.c, d: V.norm(e.dir) }, body: h.body, text: L('Trục mặt trụ R', 'Cylinder axis R') + f2(e.r) });
+    if (e.kind === 'edge' && e.sub === 'arc' && e.n) return Object.assign({}, e, { mg: { t: 'axis', p: e.c, d: V.norm(e.n), ring: true }, body: h.body, text: L('Trục cung R', 'Arc axis R') + f2(e.r) });
+    if (e.kind === 'edge' && e.sub === 'line') return Object.assign({}, e, { mg: { t: 'axis', p: e.pts[0], d: V.norm(e.dir) }, body: h.body });
+    return null;
+  }
+  function rotTo(a, b) {                                     // rotation taking direction a onto b
+    const ax = V.cross(a, b), s = V.len(ax), c = V.dot(a, b);
+    if (s < 1e-9) { if (c > 0) return M.ident(); const q = V.norm(V.cross(a, Math.abs(a[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0])); return M.rot(q, Math.PI); }
+    return M.rot(V.mul(ax, 1 / s), Math.atan2(s, c));
+  }
+  function mateMatrix(a, b, flip, gap) {
+    if (a.t === 'plane') {
+      const goal = flip ? b.n : V.mul(b.n, -1), R = M.about(a.p, rotTo(a.n, goal));
+      return M.mul(M.trans(V.mul(b.n, V.dot(V.sub(b.p, a.p), b.n) + gap)), R);
+    }
+    let goal = V.dot(a.d, b.d) >= 0 ? b.d : V.mul(b.d, -1);
+    if (flip) goal = V.mul(goal, -1);
+    const R = M.about(a.p, rotTo(a.d, goal)), w = V.sub(b.p, a.p);
+    const mv = a.ring && b.ring ? V.add(w, V.mul(goal, gap)) : V.sub(w, V.mul(goal, V.dot(w, goal)));   // two round edges: centre on centre
+    return M.mul(M.trans(mv), R);
+  }
+  function mateApply(m) {
+    const A = mateMatrix(m.a.mg, m.b.mg, m.flip, m.gap);
+    const list = S.bodies.filter(function (b) { return m.ids.indexOf(b.id) >= 0; });   // by id: undo rebuilds the body objects
+    pushUndo();
+    for (const b of list) b.matrix = M.mul(A, b.matrix);
+    commitTransform(list);
+  }
+  function mateClick(px, py) {
+    if (blocked()) return;
+    const h = pickNear(px, py), e = h ? mateEnt(h, px, py) : null;
+    if (!e) { flash(L('Hãy bấm vào mặt phẳng, mặt trụ hoặc cạnh tròn / thẳng', 'Click a flat face, a cylinder or a round / straight edge')); return; }
+    const st = S.mate;
+    if (!st || !st.a) {
+      S.mate = { a: e }; S.tmp = [e.at];
+      flash(L('Đã chọn ', 'Picked ') + (e.mg.t === 'plane' ? L('mặt', 'a face') : L('trục', 'an axis')) + L(' trên "', ' on "') + e.body.name + L('". Giờ bấm ', '". Now click the target ') + (e.mg.t === 'plane' ? L('mặt đích', 'face') : L('trục đích', 'axis')) + L(' trên body khác.', ' on another body.'), true);
+      dirty = true; return;
+    }
+    if (e.body === st.a.body) { flash(L('Đích phải nằm trên body khác', 'The target must be on another body')); return; }
+    if (e.mg.t !== st.a.mg.t) { flash(L('Phải ghép mặt với mặt, trục với trục', 'Mate a face with a face, an axis with an axis')); return; }
+    const list = S.sel.has(st.a.body) ? selBodies().filter(function (b) { return b !== e.body; }) : [st.a.body];
+    const m = { a: st.a, b: e, ids: list.map(function (b) { return b.id; }), flip: $('mtFlip').checked, gap: +$('mtOff').value || 0 };
+    mateApply(m);
+    S.mateLast = m; S.mate = null; S.tmp = [];
+    flash(L('Đã ghép. Bấm "Đảo lần ghép vừa rồi" nếu cần lật lại; chọn cặp tiếp theo nếu muốn.', 'Mated. Press "Flip the last mate" to turn it round; pick the next pair if you like.'), true);
+    dirty = true;
+  }
+  $('bMateFlip').addEventListener('click', function () {
+    const m = S.mateLast;
+    if (!m || blocked()) { flash(L('Chưa có lần ghép nào', 'Nothing has been mated yet')); return; }
+    undo(); m.flip = !m.flip; mateApply(m);
+  });
   $('bMove').addEventListener('click', function () { applyTransform(function () { return M.trans([+$('mvX').value || 0, +$('mvY').value || 0, +$('mvZ').value || 0]); }); });
   $('bRot').addEventListener('click', function () {
     applyTransform(function (list) { return M.about(pivotPoint(list), M.rot(AXES[+$('rotAx').value], (+$('rotA').value || 0) * Math.PI / 180)); });
@@ -1339,7 +1399,8 @@
     const h = gizmoActive() && S.giz ? hitGizmo(px, py) : null;
     const t = S.tool, meas = t === 'dist' || t === 'angle' || t === 'radius', c = meas ? comAt(px, py) : null;
     let ent = null;
-    if (meas && !c) { const hit = pickNear(px, py); if (hit) { ent = entityAt(hit, px, py, false); if (ent.free) ent = null; } }
+    if (t === 'mate') { const hit = pickNear(px, py); if (hit) { ent = mateEnt(hit, px, py); } }
+    else if (meas && !c) { const hit = pickNear(px, py); if (hit) { ent = entityAt(hit, px, py, false); if (ent.free) ent = null; } }
     cam = mainCam;
     if (h !== S.hov || c !== S.hovCom || ent || S.hovEnt) { S.hov = h; S.hovCom = c; S.hovEnt = ent; dirty = true; }
     canvas.style.cursor = h !== null ? 'grab' : toolCursor();
@@ -1452,6 +1513,7 @@
       return;
     }
     const t = S.tool;
+    if (t === 'mate') { mateClick(px, py); return; }
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick' || t === 'secpick') {
       const cm = t === 'dist' || t === 'angle' || t === 'radius' ? comAt(px, py) : null;
       if (cm) { measurePick(t, { kind: 'point', p: cm, at: cm }); return; }   // a centre-of-mass mark is a point like any other
@@ -1510,7 +1572,7 @@
     const tag = (e.target.tagName || '').toLowerCase();
     if (e.code === 'Space' && (tag === 'button' || (tag === 'input' && ['checkbox', 'radio', 'range', 'color', 'button', 'file'].indexOf(e.target.type) >= 0))) e.preventDefault();
   });
-  document.querySelectorAll('#tools [data-tool]').forEach(function (b) { b.addEventListener('click', function () { setTool(b.dataset.tool); }); });
+  document.querySelectorAll('[data-tool]').forEach(function (b) { b.addEventListener('click', function () { setTool(b.dataset.tool); }); });
   document.querySelectorAll('#cubeWrap [data-va]').forEach(function (d) {
     d.addEventListener('click', function () {
       const a = 15 * Math.PI / 180, k = d.dataset.va;
@@ -2173,7 +2235,8 @@
   });
   // picture of the 3D view (both windows when side by side) -> clipboard, or a PNG download if the clipboard is refused
   function shot() {
-    dirty = false; render();
+    S.clean = !!(S.cmp && S.cmp.split);
+    dirty = false; render(); S.clean = false;
     const dpr = window.devicePixelRatio || 1, c = document.createElement('canvas');
     c.width = canvas.width; c.height = canvas.height;
     const g = c.getContext('2d');
@@ -2198,6 +2261,7 @@
         navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(function () { flash(L('Đã chép ảnh vào clipboard, dán bằng Ctrl+V', 'Image copied to the clipboard, paste with Ctrl+V')); }, fallback);
       } catch (e) { fallback(); }
     }, 'image/png');
+    dirty = true;
   }
   $('bCmpShot').addEventListener('click', shot);
   $('bShot').addEventListener('click', shot);

@@ -24,3 +24,12 @@ function sphere(sub,rad){const t=(1+Math.sqrt(5))/2;let V=[[-1,t,0],[1,t,0],[-1,
 {const a=[],seg=48,prof=[[0,0],[8,0],[8,25],[0,25]];for(let i=0;i+1<prof.length;i++)for(let k=0;k<seg;k++){const p=(j,kk)=>{const t=2*Math.PI*(kk%seg)/seg;return[prof[j][0]*Math.cos(t),prof[j][0]*Math.sin(t),prof[j][1]];};const A=p(i,k),B=p(i,k+1),C=p(i+1,k+1),D=p(i+1,k);if(prof[i][0]>0)a.push(...A,...B,...C);if(prof[i+1][0]>0)a.push(...A,...C,...D);}
  fs.writeFileSync(S+'/cyl.stl',core.writeSTL(mk(a)));}
 console.log('written');
+
+// plate with a hole, a tilted peg and a box, for ui10.py (mate face to face / axis to axis)
+{const core2=core;const F={o:[0,0,0],u:[1,0,0],v:[0,1,0],n:[0,0,1]};
+const circ=(cx,cy,r,n,cw)=>{const l=[];for(let i=0;i<n;i++){const a=2*Math.PI*i/n*(cw?-1:1);l.push([cx+r*Math.cos(a),cy+r*Math.sin(a)])}return l};
+const plate=core2.extrudeSolid([{loops:[[[0,0],[40,0],[40,30],[0,30]],circ(20,15,5,48,true)]}],F,{z0:0,z1:10});
+const peg=core2.extrudeSolid([{loops:[circ(0,0,5,48)]}],{o:[80,40,5],u:[1,0,0],v:[0,0.8,0.6],n:[0,-0.6,0.8]},{z0:0,z1:30});
+const box=core2.extrudeSolid([{loops:[[[0,0],[20,0],[20,20],[0,20]]]}],{o:[-60,0,3],u:[0.8,0.6,0],v:[-0.6,0.8,0],n:[0,0,1]},{z0:0,z1:8});
+fs.writeFileSync(S+'/m_plate.stl',core2.writeSTL(plate));fs.writeFileSync(S+'/m_peg.stl',core2.writeSTL(peg));fs.writeFileSync(S+'/m_box.stl',core2.writeSTL(box));
+}
