@@ -28,7 +28,6 @@
   #top .grow { flex: 1; }
   #wrap { flex: 1; display: flex; min-height: 0; }
   #left { width: 280px; min-width: 280px; overflow-y: auto; background: var(--panel); border-right: 1px solid var(--line); padding: 8px; }
-  #right { width: 318px; min-width: 318px; overflow-y: auto; background: var(--panel); border-left: 1px solid var(--line); padding: 8px; }
   #main { flex: 1; position: relative; min-width: 0; }
   #gl, #ov { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #ov { pointer-events: none; }
@@ -179,6 +178,24 @@
   button.lb:disabled { opacity: .45; }
   #left input[type=number] { width: 70px; }
   #left .row .lbl, #left .row label.grow { font-size: 12px; }
+  #dock { position: absolute; right: 10px; top: 132px; width: 320px; max-height: calc(100% - 150px); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; z-index: 7; }
+  .pop { display: none; background: rgba(20,24,29,.97); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px 9px; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+  .pop.on { display: block; }
+  .pophd { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .pophd b { color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .pophd .grow { flex: 1; }
+  .popx { padding: 0 6px; height: 20px; }
+  button.popb.on { background: rgba(240,160,48,.16); border-color: var(--accent); color: var(--accent); }
+  .rgrp.rlast { margin-left: auto; border-right: none; border-left: 1px solid var(--line); }
+  label.mini { display: flex; align-items: center; gap: 4px; height: 21px; }
+  #top label.mini input[type=range] { width: 56px; }
+  #top label.mini input[type=color] { width: 22px; height: 18px; }
+  #top label.mini .unit { min-width: 30px; font-size: 11px; }
+  .tgrid { display: grid; grid-template-columns: repeat(2, 24px); grid-auto-rows: 22px; gap: 1px 3px; padding-top: 1px; }
+  label.tg { position: relative; display: flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 4px; cursor: pointer; opacity: .45; }
+  label.tg input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  label.tg:has(input:checked) { opacity: 1; background: #26303b; border-color: #3a4757; }
+  label.tg:hover { border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -205,9 +222,11 @@
    <div class="rgrp"><div class="rbody"><button id="bSketch" class="bb" title="Sketch: vẽ sketch trên một mặt phẳng" data-en-title="Sketch: draw on a plane"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.4" stroke-linejoin="round"><path d="M3 17l7 4 11-6-7-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M13 3l3 3-6 6-3.5.5.5-3.5z" fill="#f0a030" stroke="#ffd28a"/></svg><span>Sketch</span></button></div><div class="rtitle" data-en="Sketch">Sketch</div></div>
    <div class="rgrp"><div class="rbody"><div class="rcol"><button id="bExtrude" class="sb" title="Extrude: đùn biên dạng kín của sketch" data-en-title="Extrude: push closed sketch profiles out"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 16l6 3 10-5-6-3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 16V8l6 3v8M10 11l10-5v8M4 8l10-5 6 3" fill="none" stroke="#dfe6ee"/><path d="M15 12V3m-2 2l2-2 2 2" stroke="#f0a030" fill="none"/></svg><span>Extrude</span></button><button id="bRevolve" class="sb" title="Revolve: xoay biên dạng quanh trục" data-en-title="Revolve: turn profiles about an axis"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M7 2v20" stroke="#c58bff" stroke-dasharray="2 2"/><path d="M10 5h6v11h-6z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2.5 16.5a9.5 3.5 0 0 0 19 0" fill="none" stroke="#f0a030" stroke-width="1.8"/><path d="M21.5 16.5l-2.6-.4m2.6.4l.8-2.5" stroke="#f0a030" stroke-width="1.8" fill="none"/></svg><span>Revolve</span></button><button id="b_boolean" class="sb" title="Boolean: gộp / trừ / giao các body" data-en-title="Boolean: union / subtract / intersect"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><circle cx="9" cy="12" r="6" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="15" cy="12" r="6" fill="rgba(240,160,48,.55)" stroke="#ffd28a"/></svg><span>Boolean</span></button></div><div class="rcol"><button id="b_fillet" class="sb" title="Fillet: bo tròn cạnh" data-en-title="Fillet: round edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10a6 6 0 0 1 6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10a6 6 0 0 1 6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Fillet</span></button><button id="b_chamfer" class="sb" title="Chamfer: vát cạnh" data-en-title="Chamfer: bevel edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10l6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10l6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Chamfer</span></button><button id="b_shell" class="sb" title="Shell: làm rỗng khối thành vỏ" data-en-title="Shell: hollow out a solid"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M3 8l9-4 9 4v10l-9 4-9-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 9l6-2.7L18 9v7.5l-6 2.7-6-2.7z" fill="#14181d" stroke="#f0a030"/></svg><span>Shell</span></button></div><div class="rcol"><button id="b_draft" class="sb" title="Draft: nghiêng mặt để thoát khuôn" data-en-title="Draft: tilt faces for mould release"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M6 20l3-16h9v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 20l3-16" stroke="#f0a030" stroke-width="2.2"/><path d="M6 20V6" stroke="#dfe6ee" stroke-dasharray="2 2"/><path d="M6 10a4 4 0 0 1 1.9.3" stroke="#ffd28a" fill="none"/></svg><span>Draft</span></button></div></div><div class="rtitle" data-en="Feature">Feature</div></div>
    <div class="rgrp"><div class="rbody"><div class="rcol"><button id="b_moveface" class="sb" title="Move face: dời mặt phẳng / mặt trụ" data-en-title="Move face: move flat / cylindrical faces"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V11h12v9z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 11h12" stroke="#f0a030" stroke-width="2.2"/><path d="M10 9V3m-2 2l2-2 2 2" stroke="#f0a030" fill="none"/><path d="M4 7h12" stroke="#f0a030" stroke-dasharray="2 2"/></svg><span>Move face</span></button><button id="b_replace" class="sb" title="Replace face: đưa mặt về mặt phẳng của mặt khác" data-en-title="Replace face: put faces onto another face"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M3 20V13h10v7z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 13h10" stroke="#f0a030" stroke-width="2.2"/><path d="M14 6h7v14h-7z" fill="#5a6676" stroke="#b8c4d2"/><path d="M8 11V6h4m-2-2l2 2-2 2" stroke="#f0a030" fill="none"/></svg><span>Replace face</span></button></div></div><div class="rtitle" data-en="Synchronous Modeling">Synchronous Modeling</div></div>
-   <div class="rgrp"><div class="rbody"><div class="rcol"><label data-en-title="Colour of the ticked bodies. A ticked body is drawn orange; untick it to see its own colour." title="Màu của các body đang tick. Body đang tick được vẽ màu cam; bỏ tick để thấy màu riêng."><span data-en="Colour">Màu</span><input type="color" id="col" value="#92aac8"></label><label data-en-title="Opacity of the ticked bodies" title="Độ đục của các body đang tick"><span data-en="Opacity">Độ đục</span><input type="range" id="opa" min="5" max="100" value="100"><span class="unit" id="opaV">100%</span></label></div><div class="rcol"><label><input type="checkbox" id="cWire" checked> <span data-en="Edges">Cạnh lưới</span></label><label data-en-title="Draw the open borders of every mesh in bright red" title="Vẽ viền hở của mọi mesh bằng màu đỏ sáng"><input type="checkbox" id="cHoles" checked> <span class="redtxt" data-en="Open borders">Viền hở</span></label><label><input type="checkbox" id="cAxes" checked> <span data-en="XYZ axes">Hệ trục XYZ</span></label></div><div class="rcol"><label><input type="checkbox" id="cInfo" checked> <span data-en="Info">Thông tin</span></label><label><input type="checkbox" id="cZoomInv"> <span data-en="Invert zoom">Đảo chiều zoom</span></label></div></div><div class="rtitle" data-en="Display">Hiển thị</div></div>
+   <div class="rgrp"><div class="rbody"><div class="rcol"><label class="mini" data-en-title="Colour and opacity of the ticked bodies" title="Màu và độ đục của các body đang tick"><input type="color" id="col" value="#92aac8"><input type="range" id="opa" min="5" max="100" value="100"><span class="unit" id="opaV">100%</span></label><button class="sb popb" data-pop="explode" title="Tách xa các body để nhìn" data-en-title="Spread the bodies apart"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="6" height="6" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 3l4 4M21 3l-4 4M3 21l4-4M21 21l-4-4" stroke="#f0a030"/></svg><span data-en="Explode">Explode</span></button><button class="sb popb" data-pop="section" title="Mặt cắt (section)" data-en-title="Section view"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l8-4 8 4v8l-8 4-8-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2 12h20" stroke="#ff6b5e" stroke-width="2"/></svg><span data-en="Section">Mặt cắt</span></button></div><div class="tgrid"><label class="tg" title="Cạnh lưới" data-en-title="Edges"><input type="checkbox" id="cWire" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L12 4l9 16zM7.5 12h9M12 4v16" stroke="#9cc4ee"/></svg></label><label class="tg" title="Viền hở (đỏ)" data-en-title="Open borders (red)"><input type="checkbox" id="cHoles" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="12" r="5" fill="#14181d" stroke="#ff3b30" stroke-width="2"/></svg></label><label class="tg" title="Hệ trục XYZ" data-en-title="XYZ axes"><input type="checkbox" id="cAxes" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V5M5 19h14M5 19l9-6" stroke-width="2"/><path d="M5 19V5" stroke="#4f9bff" stroke-width="2"/><path d="M5 19h14" stroke="#ff5a52" stroke-width="2"/><path d="M5 19l9-6" stroke="#52d06a" stroke-width="2"/></svg></label><label class="tg" title="Bảng thông tin" data-en-title="Info panel"><input type="checkbox" id="cInfo" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke="#9cc4ee"/><path d="M12 11v6" stroke="#f0a030" stroke-width="2"/><circle cx="12" cy="7.5" r="1.2" fill="#f0a030"/></svg></label><label class="tg" title="Đảo chiều zoom" data-en-title="Invert zoom"><input type="checkbox" id="cZoomInv"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6" stroke="#9cc4ee"/><path d="M15 15l5 5" stroke="#9cc4ee" stroke-width="2"/><path d="M7 10h6M10 7l-3 3 3 3" stroke="#f0a030"/></svg></label></div></div><div class="rtitle" data-en="Display">Hiển thị</div></div>
    <div class="rgrp"><div class="rbody"><button id="bNormal" class="bb hl" title="Nhìn thẳng theo hướng chuẩn gần nhất (X / Y / Z)" data-en-title="Look straight along the nearest standard direction (X / Y / Z)"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.5"><rect x="4" y="6" width="16" height="13" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M12 1v9m-3-3l3 3 3-3" stroke="#f0a030" fill="none" stroke-width="2"/><circle cx="12" cy="12.5" r="1.6" fill="#f0a030"/></svg><span>Normal</span></button><div class="rcol"><button id="bFit" class="sb" title="Thu vừa màn hình" data-en-title="Fit the view"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" stroke="#9cc4ee"/><rect x="8" y="8" width="8" height="8" fill="#3d6fa8" stroke="#dfe6ee"/></svg><span>Fit</span></button><button id="bIso" class="sb" title="Hướng nhìn Iso" data-en-title="Isometric view"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.3" stroke-linejoin="round"><path d="M12 3l8 4.5-8 4.5-8-4.5z" fill="#5d8fc8" stroke="#dfe6ee"/><path d="M4 7.5V16l8 4.5V12z" fill="#3d6fa8" stroke="#dfe6ee"/><path d="M20 7.5V16l-8 4.5V12z" fill="#2c5486" stroke="#dfe6ee"/></svg><span>Iso</span></button></div></div><div class="rtitle" data-en="Orient">Hướng nhìn</div></div>
    <div class="rgrp"><div class="rbody"><button id="bShot" class="bb" title="Chép ảnh màn hình 3D vào clipboard" data-en-title="Copy a picture of the 3D view to the clipboard"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.5"><rect x="3" y="7" width="18" height="13" rx="2" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 7l1.5-3h5L16 7" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="13.5" r="4" fill="#14181d" stroke="#f0a030" stroke-width="1.8"/></svg><span data-en="Copy image">Chép ảnh</span></button></div><div class="rtitle" data-en="Capture">Chụp</div></div>
+   <div class="rgrp"><div class="rbody"><div class="rcol"><button class="sb popb" data-pop="undercut" title="Tooling analysis (undercut)" data-en-title="Tooling analysis (undercut)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20V9h12v11" stroke="#9cc4ee"/><path d="M6 9l6-5 6 5" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M9 14h3v6" stroke="#ff6b5e" stroke-width="2"/><path d="M12 2v3" stroke="#f0a030"/></svg><span data-en="Undercut">Undercut</span></button><button class="sb popb" data-pop="collide" title="Kiểm tra va chạm" data-en-title="Collision check"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="10" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="11" y="4" width="10" height="10" fill="rgba(240,160,48,.5)" stroke="#ffd28a"/><path d="M11 7h2v7h-2z" fill="#ff3b30"/></svg><span data-en="Collision">Va chạm</span></button><button class="sb popb" data-pop="compare" title="So sánh mesh" data-en-title="Compare meshes"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-8 6-8 9-4s6 4 9-4" stroke="#9cc4ee" stroke-width="1.8"/><path d="M3 19c3-8 6-8 9-4s6 4 9-4" stroke="#f0a030" stroke-width="1.8" stroke-dasharray="2 2"/></svg><span data-en="Compare">So sánh mesh</span></button></div></div><div class="rtitle" data-en="Analysis">Analysis</div></div>
+   <div class="rgrp rlast"><div class="rbody"><button class="bb popb" data-pop="split" title="Tách / gộp body" data-en-title="Split / merge bodies"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="8" height="14" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="13" y="5" width="8" height="14" fill="#5d8fc8" stroke="#9cc4ee"/><path d="M12 2v20" stroke="#f0a030" stroke-dasharray="2 2"/></svg><span data-en="Split / merge">Tách / gộp</span></button><button class="bb popb" data-pop="repair" title="Vá lưới hở" data-en-title="Repair open meshes"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M9 9h6v6H9z" fill="#14181d" stroke="#ff3b30"/><path d="M8 16l8-8" stroke="#f0a030" stroke-width="2"/></svg><span data-en="Repair">Vá lưới</span></button></div><div class="rtitle" data-en="Mesh">Mesh</div></div>
   </div>
  </div>
 </div>
@@ -244,6 +263,11 @@
 
   <div class="sec"><div class="hd" data-en="Sketches">Danh sách sketch</div><div class="c">
     <div class="list" id="sketchList"></div>
+  </div></div>
+
+  <div class="sec"><div class="hd" data-en="Measurements">Kết quả đo</div><div class="c">
+    <div class="list" id="measList"></div>
+    <div class="btns"><button id="bMeasClr" data-en="Clear all measurements">Xóa hết phép đo</button></div>
   </div></div>
 
   <div class="sec"><div class="hd">Decimate</div><div class="c">
@@ -370,6 +394,69 @@
     <div id="tpPivot" class="row"><span class="lbl" data-en="About">Tâm</span>
       <select id="pivot" style="width:140px"><option value="c" data-en="Selection centre">Tâm vùng chọn</option><option value="o" data-en="World origin">Gốc tọa độ</option></select></div>
   </div>
+  <div id="dock">
+   <div class="pop" id="pop_split"><div class="pophd"><b data-en="Split / merge bodies">Tách / gộp body</b><span class="grow"></span><button class="popx" data-pop="split">✕</button></div><div class="c">
+    <div class="row"><span class="lbl" data-en="Ignore pieces smaller than">Bỏ qua mảnh nhỏ hơn</span><input type="number" id="vMin" class="s" value="1" min="1" step="1"><span class="unit" data-en="tris">tam giác</span></div>
+    <div class="row"><label><input type="checkbox" id="cKeep" checked> <span data-en="Group small pieces into one body">Gom các mảnh nhỏ thành 1 body riêng</span></label></div>
+    <div class="btns"><button id="bSplit" data-en="Split">Tách body</button><button id="bJoin" data-en="Merge ticked bodies">Gộp body tick</button></div>
+    <div class="row" style="margin-top:9px"><span class="lbl" data-en="Split option (gentle → strong)">Phương án tách (nhẹ → mạnh)</span><span class="unit" id="splitLvV">1/10</span></div>
+    <div class="row"><input type="range" id="splitLv" min="1" max="10" step="1" value="1"></div>
+    <div class="note" id="splitLvName" style="margin-top:0"></div>
+    <div class="btns"><button id="bSplitPrev" data-en="◀ Previous option">◀ Phương án trước</button><button id="bSplitNext" data-en="Next option ▶">Phương án kế ▶</button></div>
+    <div class="box" id="splitRes" data-en="Split separates the loose pieces of the ticked bodies. Not what you wanted? Press Next option ▶ (or drag the slider) for a stronger split, ◀ to go back.">"Tách body" tự tách các mảnh rời của body đang tick. Chưa đúng ý thì bấm "Phương án kế ▶" (hoặc kéo thanh trượt) để tách mạnh hơn, "◀" để quay lại.</div>
+  </div></div>
+   <div class="pop" id="pop_repair"><div class="pophd"><b data-en="Repair open meshes">Vá lưới hở</b><span class="grow"></span><button class="popx" data-pop="repair">✕</button></div><div class="c">
+    <div class="box" id="holeInfo"></div>
+    <div class="row" style="margin-top:8px"><span class="lbl" data-en="Patch quality (basic → advanced)">Kiểu vá (cơ bản → nâng cao)</span><span class="unit" id="holeLvV">2/3</span></div>
+    <div class="row"><input type="range" id="holeLv" min="1" max="3" step="1" value="2"></div>
+    <div class="note" id="holeLvName" style="margin-top:0"></div>
+    <div class="row"><span class="lbl" data-en="Only holes with a rim up to">Chỉ vá lỗ có chu vi tới</span><input type="number" id="holeMax" value="0" min="0" step="1"><span class="unit">mm</span></div>
+    <div class="row"><span class="lbl" data-en="First stitch gaps up to">Khâu khe hở trước, tới</span><input type="number" id="holeStitch" value="0" min="0" step="0.01"><span class="unit">mm</span></div>
+    <div class="btns"><button id="bFill" data-en="Fill holes">Vá lỗ</button></div>
+    <div class="box" id="holeRes" data-en="Open borders are drawn bright red. Tick a body and press Fill holes. Rim limit 0 = every hole; stitch 0 = off.">Viền hở được vẽ màu đỏ sáng. Tick body rồi bấm "Vá lỗ". Chu vi 0 = vá mọi lỗ; khâu 0 = không khâu.</div>
+  </div></div>
+   <div class="pop" id="pop_explode"><div class="pophd"><b>Explode</b><span class="grow"></span><button class="popx" data-pop="explode">✕</button></div><div class="c">
+    <div class="row"><span class="lbl" data-en="Spread">Độ tách xa</span><input type="range" id="expl" min="0" max="300" value="0"><span class="unit" id="explV">0%</span></div>
+  </div></div>
+   <div class="pop" id="pop_section"><div class="pophd"><b data-en="Section">Mặt cắt (section)</b><span class="grow"></span><button class="popx" data-pop="section">✕</button></div><div class="c">
+    <div class="row"><label><input type="checkbox" id="secOn"> <span data-en="Enable">Bật mặt cắt</span></label><span class="grow"></span><label><input type="checkbox" id="secFlip"> <span data-en="Flip side">Đảo phía</span></label></div>
+    <div class="row"><span class="lbl" data-en="Plane normal">Pháp tuyến mặt cắt</span>
+      <select id="secAx" style="width:150px"><option value="x" data-en="X axis">Trục X</option><option value="y" data-en="Y axis">Trục Y</option><option value="z" selected data-en="Z axis">Trục Z</option><option value="view" data-en="Current view direction">Hướng nhìn hiện tại</option><option value="pick" data-en="Face picked on mesh">Mặt chọn trên mesh</option></select></div>
+    <div class="row"><span class="lbl" data-en="Position">Vị trí</span><input type="range" id="secPos" min="0" max="1000" value="500"><span class="unit" id="secV" style="min-width:58px;text-align:right">-</span></div>
+    <div class="btns"><button id="bSecPick" data-en="Pick a face on the mesh">Chọn mặt trên mesh</button></div>
+  </div></div>
+   <div class="pop" id="pop_undercut"><div class="pophd"><b data-en="Tooling analysis (undercut)">Tooling analysis (undercut)</b><span class="grow"></span><button class="popx" data-pop="undercut">✕</button></div><div class="c">
+    <div class="row"><span class="lbl" data-en="Pull direction">Hướng mở khuôn</span>
+      <select id="ucAx" style="width:150px"><option value="z" selected data-en="Z axis">Trục Z</option><option value="x" data-en="X axis">Trục X</option><option value="y" data-en="Y axis">Trục Y</option><option value="view" data-en="Current view direction">Hướng nhìn hiện tại</option><option value="custom" data-en="Custom vector">Vector tùy chọn</option></select></div>
+    <div class="row" id="ucVecRow" style="display:none"><span class="lbl">Vector X Y Z</span><input type="number" id="ucX" class="s" value="0"><input type="number" id="ucY" class="s" value="0"><input type="number" id="ucZ" class="s" value="1"></div>
+    <div class="row"><span class="lbl" data-en="Minimum draft angle">Góc thoát khuôn tối thiểu</span><input type="number" id="ucDraft" class="s" value="1" min="0" max="45" step="0.5"><span class="unit">°</span></div>
+    <div class="row"><span class="lbl" data-en="Colour brightness">Độ sáng màu</span><input type="range" id="ucBright" min="50" max="220" value="130"><span class="unit" id="ucBrightV">130%</span></div>
+    <div class="btns"><button class="primary" id="bUc" data-en="Analyse">Phân tích</button><button id="bUcClr" data-en="Clear colours">Xóa màu phân tích</button></div>
+    <div class="box" id="ucRes"></div>
+  </div></div>
+   <div class="pop" id="pop_collide"><div class="pophd"><b data-en="Collision check">Kiểm tra va chạm</b><span class="grow"></span><button class="popx" data-pop="collide">✕</button></div><div class="c">
+    <div class="btns"><button class="primary" id="bCol" data-en="Check">Kiểm tra</button><button id="bColClr" data-en="Clear colours">Xóa tô màu</button></div>
+    <div class="box" id="colRes" data-en="Checks the ticked bodies (2 or more), otherwise every visible body. Click a pair in the list to highlight its intersecting triangles.">Kiểm tra giữa các body đang tick (từ 2 body), nếu không thì mọi body đang hiện. Bấm vào một cặp trong danh sách để tô vùng giao nhau của cặp đó.</div>
+  </div></div>
+   <div class="pop" id="pop_compare"><div class="pophd"><b data-en="Compare meshes">So sánh mesh</b><span class="grow"></span><button class="popx" data-pop="compare">✕</button></div><div class="c">
+    <div class="btns">
+      <button class="primary" id="bCmpStart" data-en="Start">Bắt đầu</button>
+      <button id="bCmpUndo" data-en="Remove last point">Xóa điểm cuối</button>
+      <button id="bCmpAlign" data-en="Align by points">Căn theo điểm</button>
+    </div>
+    <div class="btns">
+      <button class="primary" id="bCmpIcp" data-en="Auto align (best fit)">Căn chỉnh tự động (khớp nhất)</button>
+      <button id="bCmpDev" data-en="Deviation only">Chỉ tính sai lệch</button>
+    </div>
+    <div class="btns">
+      <button id="bCmpView" data-en="Side by side ⇄ overlaid">Song song ⇄ chồng</button>
+      <button id="bCmpShot" data-en="📷 Copy image">📷 Chép ảnh</button>
+      <button id="bCmpEnd" data-en="Finish">Kết thúc</button>
+    </div>
+    <div class="row"><span class="lbl" data-en="Colour scale ± (0 = auto)">Thang màu ± (0 = tự động)</span><input type="number" id="cmpRange" class="s" value="0" min="0" step="0.1"><span class="unit">mm</span></div>
+    <div class="box" id="cmpRes" data-en="Not comparing.">Chưa so sánh.</div>
+  </div></div>
+  </div>
   <div id="cubeWrap">
     <div class="varr u" data-va="u" data-en-title="Rotate the view up 15°" title="Xoay góc nhìn lên 15°">▲</div>
     <div class="varr d" data-va="d" data-en-title="Rotate the view down 15°" title="Xoay góc nhìn xuống 15°">▼</div>
@@ -396,81 +483,7 @@
   <div id="busy"><div class="bx"><div id="busyText">...</div><div id="bar"><i></i></div></div></div>
 </div>
 
-<div id="right">
-  <details open><summary data-en="Split / merge bodies">Tách / gộp body</summary><div class="c">
-    <div class="row"><span class="lbl" data-en="Ignore pieces smaller than">Bỏ qua mảnh nhỏ hơn</span><input type="number" id="vMin" class="s" value="1" min="1" step="1"><span class="unit" data-en="tris">tam giác</span></div>
-    <div class="row"><label><input type="checkbox" id="cKeep" checked> <span data-en="Group small pieces into one body">Gom các mảnh nhỏ thành 1 body riêng</span></label></div>
-    <div class="btns"><button id="bSplit" data-en="Split">Tách body</button><button id="bJoin" data-en="Merge ticked bodies">Gộp body tick</button></div>
-    <div class="row" style="margin-top:9px"><span class="lbl" data-en="Split option (gentle → strong)">Phương án tách (nhẹ → mạnh)</span><span class="unit" id="splitLvV">1/10</span></div>
-    <div class="row"><input type="range" id="splitLv" min="1" max="10" step="1" value="1"></div>
-    <div class="note" id="splitLvName" style="margin-top:0"></div>
-    <div class="btns"><button id="bSplitPrev" data-en="◀ Previous option">◀ Phương án trước</button><button id="bSplitNext" data-en="Next option ▶">Phương án kế ▶</button></div>
-    <div class="box" id="splitRes" data-en="Split separates the loose pieces of the ticked bodies. Not what you wanted? Press Next option ▶ (or drag the slider) for a stronger split, ◀ to go back.">"Tách body" tự tách các mảnh rời của body đang tick. Chưa đúng ý thì bấm "Phương án kế ▶" (hoặc kéo thanh trượt) để tách mạnh hơn, "◀" để quay lại.</div>
-  </div></details>
 
-  <details open><summary data-en="Repair open meshes">Vá lưới hở</summary><div class="c">
-    <div class="box" id="holeInfo"></div>
-    <div class="row" style="margin-top:8px"><span class="lbl" data-en="Patch quality (basic → advanced)">Kiểu vá (cơ bản → nâng cao)</span><span class="unit" id="holeLvV">2/3</span></div>
-    <div class="row"><input type="range" id="holeLv" min="1" max="3" step="1" value="2"></div>
-    <div class="note" id="holeLvName" style="margin-top:0"></div>
-    <div class="row"><span class="lbl" data-en="Only holes with a rim up to">Chỉ vá lỗ có chu vi tới</span><input type="number" id="holeMax" value="0" min="0" step="1"><span class="unit">mm</span></div>
-    <div class="row"><span class="lbl" data-en="First stitch gaps up to">Khâu khe hở trước, tới</span><input type="number" id="holeStitch" value="0" min="0" step="0.01"><span class="unit">mm</span></div>
-    <div class="btns"><button id="bFill" data-en="Fill holes">Vá lỗ</button></div>
-    <div class="box" id="holeRes" data-en="Open borders are drawn bright red. Tick a body and press Fill holes. Rim limit 0 = every hole; stitch 0 = off.">Viền hở được vẽ màu đỏ sáng. Tick body rồi bấm "Vá lỗ". Chu vi 0 = vá mọi lỗ; khâu 0 = không khâu.</div>
-  </div></details>
-
-
-  <details><summary>Explode</summary><div class="c">
-    <div class="row"><span class="lbl" data-en="Spread">Độ tách xa</span><input type="range" id="expl" min="0" max="300" value="0"><span class="unit" id="explV">0%</span></div>
-  </div></details>
-
-  <details><summary data-en="Section">Mặt cắt (section)</summary><div class="c">
-    <div class="row"><label><input type="checkbox" id="secOn"> <span data-en="Enable">Bật mặt cắt</span></label><span class="grow"></span><label><input type="checkbox" id="secFlip"> <span data-en="Flip side">Đảo phía</span></label></div>
-    <div class="row"><span class="lbl" data-en="Plane normal">Pháp tuyến mặt cắt</span>
-      <select id="secAx" style="width:150px"><option value="x" data-en="X axis">Trục X</option><option value="y" data-en="Y axis">Trục Y</option><option value="z" selected data-en="Z axis">Trục Z</option><option value="view" data-en="Current view direction">Hướng nhìn hiện tại</option><option value="pick" data-en="Face picked on mesh">Mặt chọn trên mesh</option></select></div>
-    <div class="row"><span class="lbl" data-en="Position">Vị trí</span><input type="range" id="secPos" min="0" max="1000" value="500"><span class="unit" id="secV" style="min-width:58px;text-align:right">-</span></div>
-    <div class="btns"><button id="bSecPick" data-en="Pick a face on the mesh">Chọn mặt trên mesh</button></div>
-  </div></details>
-
-  <details><summary data-en="Tooling analysis (undercut)">Tooling analysis (undercut)</summary><div class="c">
-    <div class="row"><span class="lbl" data-en="Pull direction">Hướng mở khuôn</span>
-      <select id="ucAx" style="width:150px"><option value="z" selected data-en="Z axis">Trục Z</option><option value="x" data-en="X axis">Trục X</option><option value="y" data-en="Y axis">Trục Y</option><option value="view" data-en="Current view direction">Hướng nhìn hiện tại</option><option value="custom" data-en="Custom vector">Vector tùy chọn</option></select></div>
-    <div class="row" id="ucVecRow" style="display:none"><span class="lbl">Vector X Y Z</span><input type="number" id="ucX" class="s" value="0"><input type="number" id="ucY" class="s" value="0"><input type="number" id="ucZ" class="s" value="1"></div>
-    <div class="row"><span class="lbl" data-en="Minimum draft angle">Góc thoát khuôn tối thiểu</span><input type="number" id="ucDraft" class="s" value="1" min="0" max="45" step="0.5"><span class="unit">°</span></div>
-    <div class="row"><span class="lbl" data-en="Colour brightness">Độ sáng màu</span><input type="range" id="ucBright" min="50" max="220" value="130"><span class="unit" id="ucBrightV">130%</span></div>
-    <div class="btns"><button class="primary" id="bUc" data-en="Analyse">Phân tích</button><button id="bUcClr" data-en="Clear colours">Xóa màu phân tích</button></div>
-    <div class="box" id="ucRes"></div>
-  </div></details>
-
-  <details><summary data-en="Collision check">Kiểm tra va chạm</summary><div class="c">
-    <div class="btns"><button class="primary" id="bCol" data-en="Check">Kiểm tra</button><button id="bColClr" data-en="Clear colours">Xóa tô màu</button></div>
-    <div class="box" id="colRes" data-en="Checks the ticked bodies (2 or more), otherwise every visible body. Click a pair in the list to highlight its intersecting triangles.">Kiểm tra giữa các body đang tick (từ 2 body), nếu không thì mọi body đang hiện. Bấm vào một cặp trong danh sách để tô vùng giao nhau của cặp đó.</div>
-  </div></details>
-
-  <details><summary data-en="Compare meshes">So sánh mesh</summary><div class="c">
-    <div class="btns">
-      <button class="primary" id="bCmpStart" data-en="Start">Bắt đầu</button>
-      <button id="bCmpUndo" data-en="Remove last point">Xóa điểm cuối</button>
-      <button id="bCmpAlign" data-en="Align by points">Căn theo điểm</button>
-    </div>
-    <div class="btns">
-      <button class="primary" id="bCmpIcp" data-en="Auto align (best fit)">Căn chỉnh tự động (khớp nhất)</button>
-      <button id="bCmpDev" data-en="Deviation only">Chỉ tính sai lệch</button>
-    </div>
-    <div class="btns">
-      <button id="bCmpView" data-en="Side by side ⇄ overlaid">Song song ⇄ chồng</button>
-      <button id="bCmpShot" data-en="📷 Copy image">📷 Chép ảnh</button>
-      <button id="bCmpEnd" data-en="Finish">Kết thúc</button>
-    </div>
-    <div class="row"><span class="lbl" data-en="Colour scale ± (0 = auto)">Thang màu ± (0 = tự động)</span><input type="number" id="cmpRange" class="s" value="0" min="0" step="0.1"><span class="unit">mm</span></div>
-    <div class="box" id="cmpRes" data-en="Not comparing.">Chưa so sánh.</div>
-  </div></details>
-
-  <details open><summary data-en="Measurements">Kết quả đo</summary><div class="c">
-    <div class="list" id="measList"></div>
-    <div class="btns"><button id="bMeasClr" data-en="Clear all measurements">Xóa hết phép đo</button></div>
-  </div></details>
-</div>
 </div>
 <div id="ctx"></div>
 
@@ -4732,7 +4745,7 @@ const MANIFOLD_WASM_B64="AGFzbQEAAAABlwRFYAF/AGACf38AYAJ/fwF/YAN/f38AYAF/AX9gBH9
     // things that only work on ticked bodies stay plain (colour / opacity greyed out) until something is ticked
     $('bStl').classList.toggle('primary', S.sel.size > 0); $('bApply').classList.toggle('primary', S.sel.size > 0);
     $('col').disabled = $('opa').disabled = !S.sel.size;
-    $('col').closest('label').classList.toggle('off', !S.sel.size); $('opa').closest('label').classList.toggle('off', !S.sel.size);
+    $('col').closest('label').classList.toggle('off', !S.sel.size);
     const live = S.spl && S.spl.items.every(function (it) { return it.out.length && it.out.every(function (b) { return S.bodies.indexOf(b) >= 0; }); });
     if (!S.sel.size && !live && splitLevel !== 1) { S.spl = null; splitLevel = 1; }
     updateSplitUI();
@@ -5236,14 +5249,14 @@ const MANIFOLD_WASM_B64="AGFzbQEAAAABlwRFYAF/AGACf38AYAJ/fwF/YAN/f38AYAF/AX9gBH9
       if (n === 1) items.push([L('Đổi tên', 'Rename'), function () { renameBody(body); }]);
       items.push([L('Xóa', 'Delete'), deleteSelected], null,
         ['Decimate…', function () { $('bApply').scrollIntoView({ block: 'center' }); flash(L('Đặt tham số Decimate ở khung bên trái rồi bấm Apply', 'Set the Decimate options on the left, then press Apply')); }],
-        [L('Tách body', 'Split'), function () { $('bSplit').click(); }],
+        [L('Tách body', 'Split'), function () { openPop('split', true); $('bSplit').click(); }],
         ...(body.solid ? [[L('Sửa khối solid…', 'Edit solid…'), function () { editSolid(body); }], [L('Chuyển solid → mesh', 'Convert solid → mesh'), function () { solidToMesh(); }]] : []),
         ...(body.solid && body.solid.feats && body.solid.feats.length ? [[L('Bỏ lệnh cuối của khối: ', 'Undo the last solid edit: ') + body.solid.feats[body.solid.feats.length - 1].type, function () { dropLastFeat(body); }]] : []),
         [L('Fillet cạnh…', 'Fillet edges…'), function () { openDlg('fillet'); }], [L('Shell…', 'Shell…'), function () { openDlg('shell'); }], [L('Boolean…', 'Boolean…'), function () { openDlg('boolean'); }],
-        [L('Tách: phương án kế ▶', 'Split: next option ▶'), function () { $('bSplitNext').click(); }],
+        [L('Tách: phương án kế ▶', 'Split: next option ▶'), function () { openPop('split', true); $('bSplitNext').click(); }],
         [L('Gộp body tick', 'Merge ticked bodies'), joinSelected],
-        [L('Phân tích undercut', 'Undercut analysis'), function () { $('bUc').click(); }]);
-      if (n >= 2) items.push([L('Kiểm tra va chạm', 'Collision check'), function () { $('bCol').click(); }]);
+        [L('Phân tích undercut', 'Undercut analysis'), function () { openPop('undercut', true); $('bUc').click(); }]);
+      if (n >= 2) items.push([L('Kiểm tra va chạm', 'Collision check'), function () { openPop('collide', true); $('bCol').click(); }]);
       if (n === 2) items.push([L('So sánh 2 mesh', 'Compare the 2 meshes'), startCompare]);
       items.push(null, [L('Tải STL', 'Download STL'), function () { $('bStl').click(); }]);
     } else {
@@ -5796,7 +5809,7 @@ const MANIFOLD_WASM_B64="AGFzbQEAAAABlwRFYAF/AGACf38AYAJ/fwF/YAN/f38AYAF/AX9gBH9
     S.cmp = { a: sel[0], b: sel[1], pa: [], pb: [], split: true, vis: S.bodies.map(function (b) { return [b, b.visible]; }), cams: [mkCam(sel[0], 0), mkCam(sel[1], 1)], dev: null };
     for (const b of S.bodies) b.visible = b === sel[0] || b === sel[1];
     S.sel.clear();
-    $('bCmpStart').closest('details').open = true;
+    openPop('compare', true);
     sceneChanged(true); refresh(); updateCmpUI();
     flash(L('Bấm các điểm tương ứng trên 2 body theo cùng thứ tự (ít nhất 3 cặp), rồi bấm "Căn theo điểm"', 'Click matching points on both bodies in the same order (at least 3 pairs), then press "Align by points"'), true);
   }
@@ -7825,6 +7838,16 @@ const MANIFOLD_WASM_B64="AGFzbQEAAAABlwRFYAF/AGACf38AYAJ/fwF/YAN/f38AYAF/AX9gBH9
   }
   document.querySelectorAll('#rtabs .rtab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
   try { const t = localStorage.getItem('mrt_tab'); if (t === 'home') showTab(t); } catch (e) { /* default tab */ }
+
+  // ---------- floating panels opened from the ribbon (several may be open) ----------
+  function openPop(k, on) {
+    const el = $('pop_' + k); if (!el) return;
+    const show = on === undefined ? !el.classList.contains('on') : on;
+    el.classList.toggle('on', show);
+    document.querySelectorAll('.popb[data-pop="' + k + '"]').forEach(function (b) { b.classList.toggle('on', show); });
+    if (show) el.scrollIntoView({ block: 'nearest' });
+  }
+  document.querySelectorAll('[data-pop]').forEach(function (b) { b.addEventListener('click', function () { openPop(b.dataset.pop, b.classList.contains('popx') ? false : undefined); }); });
 
   applyLang(); updateHistBtns(); sceneChanged(true);
   requestAnimationFrame(frame);

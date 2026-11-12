@@ -812,3 +812,13 @@
   }
   document.querySelectorAll('#rtabs .rtab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
   try { const t = localStorage.getItem('mrt_tab'); if (t === 'home') showTab(t); } catch (e) { /* default tab */ }
+
+  // ---------- floating panels opened from the ribbon (several may be open) ----------
+  function openPop(k, on) {
+    const el = $('pop_' + k); if (!el) return;
+    const show = on === undefined ? !el.classList.contains('on') : on;
+    el.classList.toggle('on', show);
+    document.querySelectorAll('.popb[data-pop="' + k + '"]').forEach(function (b) { b.classList.toggle('on', show); });
+    if (show) el.scrollIntoView({ block: 'nearest' });
+  }
+  document.querySelectorAll('[data-pop]').forEach(function (b) { b.addEventListener('click', function () { openPop(b.dataset.pop, b.classList.contains('popx') ? false : undefined); }); });

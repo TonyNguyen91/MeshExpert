@@ -15,7 +15,7 @@ with sync_playwright() as p:
     def scr(pt): return pg.evaluate("p=>{const q=__mrt.project(p);const r=document.getElementById('gl').getBoundingClientRect();return [q[0]+r.left,q[1]+r.top]}",pt)
     def click3(pt,**k): x,y=scr(pt); pg.mouse.click(x,y,**k)
     def row(i): return f'#bodyList .brow:nth-child({i+1})'
-    pg.evaluate("document.querySelectorAll('details').forEach(d=>d.open=true)")
+    pg.evaluate("document.querySelectorAll('.pop').forEach(d=>d.classList.add('on'))")
     pg.set_input_files('#file',[S+'/hollow.stl',S+'/cshape.stl',S+'/block.stl']); pg.wait_for_function("__mrt.S.bodies.length==3"); idle()
     print('loaded',names())
     # zoom direction: wheel down (deltaY>0) should zoom OUT now

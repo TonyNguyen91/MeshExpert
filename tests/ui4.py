@@ -19,7 +19,7 @@ with sync_playwright() as p:
     def row(i): return f'#bodyList .brow:nth-child({i+1})'
     def dragbox(a,b_,**k):
         pg.mouse.move(*a); pg.mouse.down(); pg.mouse.move((a[0]+b_[0])/2,(a[1]+b_[1])/2,steps=3); pg.mouse.move(*b_,steps=3); pg.mouse.up()
-    pg.evaluate("document.querySelectorAll('details').forEach(d=>d.open=true)"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
+    pg.evaluate("document.querySelectorAll('.pop').forEach(d=>d.classList.add('on'))"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
     print('user-select',pg.evaluate("getComputedStyle(document.body).userSelect"))
     pg.set_input_files('#file',[S+'/cshape.stl',S+'/block.stl']); pg.wait_for_function("__mrt.S.bodies.length==2"); idle()
     pg.click(row(1)); pg.click('#bSplit'); idle(); pg.click('#bSelNone'); pg.keyboard.press('f'); pg.wait_for_timeout(200); print('bodies',names())

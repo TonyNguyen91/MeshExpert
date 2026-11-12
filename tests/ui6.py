@@ -25,7 +25,7 @@ with sync_playwright() as p:
     def info(): return pg.inner_text('#infoTbl').replace('\t',' ').replace('\n',' | ')
     def giz(): return pg.evaluate("(()=>{const g=__mrt.S.giz;if(!g)return null;const r=document.getElementById('gl').getBoundingClientRect();const f=q=>[q[0]+r.left,q[1]+r.top];return {p:f(g.p),ends:g.ends.map(f),arcs:g.arcs.map(a=>a.map(f)),pv:g.pv}})()")
     def mat(i=0): return pg.evaluate("i=>__mrt.S.bodies[i].matrix",i)
-    pg.evaluate("document.querySelectorAll('details').forEach(d=>d.open=true)"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")   # the info panel covers part of the view
+    pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")   # the info panel covers part of the view
     pg.set_input_files('#file',[S+'/one.stl',S+'/pair.stl']); pg.wait_for_function("__mrt.S.bodies.length==2"); idle()
     # 'one' is the box x 100..120, y 0..20, z 0..20; 'pair' is x 0..10, y 0..10, z 0..20
     A=scr([110,0,10]); B=scr([5,0,10]); o=off(); empty=[o[0]+o[2]-30,o[1]+o[3]/2-200]

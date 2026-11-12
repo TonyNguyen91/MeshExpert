@@ -1036,7 +1036,7 @@
     // things that only work on ticked bodies stay plain (colour / opacity greyed out) until something is ticked
     $('bStl').classList.toggle('primary', S.sel.size > 0); $('bApply').classList.toggle('primary', S.sel.size > 0);
     $('col').disabled = $('opa').disabled = !S.sel.size;
-    $('col').closest('label').classList.toggle('off', !S.sel.size); $('opa').closest('label').classList.toggle('off', !S.sel.size);
+    $('col').closest('label').classList.toggle('off', !S.sel.size);
     const live = S.spl && S.spl.items.every(function (it) { return it.out.length && it.out.every(function (b) { return S.bodies.indexOf(b) >= 0; }); });
     if (!S.sel.size && !live && splitLevel !== 1) { S.spl = null; splitLevel = 1; }
     updateSplitUI();
@@ -1540,14 +1540,14 @@
       if (n === 1) items.push([L('Đổi tên', 'Rename'), function () { renameBody(body); }]);
       items.push([L('Xóa', 'Delete'), deleteSelected], null,
         ['Decimate…', function () { $('bApply').scrollIntoView({ block: 'center' }); flash(L('Đặt tham số Decimate ở khung bên trái rồi bấm Apply', 'Set the Decimate options on the left, then press Apply')); }],
-        [L('Tách body', 'Split'), function () { $('bSplit').click(); }],
+        [L('Tách body', 'Split'), function () { openPop('split', true); $('bSplit').click(); }],
         ...(body.solid ? [[L('Sửa khối solid…', 'Edit solid…'), function () { editSolid(body); }], [L('Chuyển solid → mesh', 'Convert solid → mesh'), function () { solidToMesh(); }]] : []),
         ...(body.solid && body.solid.feats && body.solid.feats.length ? [[L('Bỏ lệnh cuối của khối: ', 'Undo the last solid edit: ') + body.solid.feats[body.solid.feats.length - 1].type, function () { dropLastFeat(body); }]] : []),
         [L('Fillet cạnh…', 'Fillet edges…'), function () { openDlg('fillet'); }], [L('Shell…', 'Shell…'), function () { openDlg('shell'); }], [L('Boolean…', 'Boolean…'), function () { openDlg('boolean'); }],
-        [L('Tách: phương án kế ▶', 'Split: next option ▶'), function () { $('bSplitNext').click(); }],
+        [L('Tách: phương án kế ▶', 'Split: next option ▶'), function () { openPop('split', true); $('bSplitNext').click(); }],
         [L('Gộp body tick', 'Merge ticked bodies'), joinSelected],
-        [L('Phân tích undercut', 'Undercut analysis'), function () { $('bUc').click(); }]);
-      if (n >= 2) items.push([L('Kiểm tra va chạm', 'Collision check'), function () { $('bCol').click(); }]);
+        [L('Phân tích undercut', 'Undercut analysis'), function () { openPop('undercut', true); $('bUc').click(); }]);
+      if (n >= 2) items.push([L('Kiểm tra va chạm', 'Collision check'), function () { openPop('collide', true); $('bCol').click(); }]);
       if (n === 2) items.push([L('So sánh 2 mesh', 'Compare the 2 meshes'), startCompare]);
       items.push(null, [L('Tải STL', 'Download STL'), function () { $('bStl').click(); }]);
     } else {
@@ -2100,7 +2100,7 @@
     S.cmp = { a: sel[0], b: sel[1], pa: [], pb: [], split: true, vis: S.bodies.map(function (b) { return [b, b.visible]; }), cams: [mkCam(sel[0], 0), mkCam(sel[1], 1)], dev: null };
     for (const b of S.bodies) b.visible = b === sel[0] || b === sel[1];
     S.sel.clear();
-    $('bCmpStart').closest('details').open = true;
+    openPop('compare', true);
     sceneChanged(true); refresh(); updateCmpUI();
     flash(L('Bấm các điểm tương ứng trên 2 body theo cùng thứ tự (ít nhất 3 cặp), rồi bấm "Căn theo điểm"', 'Click matching points on both bodies in the same order (at least 3 pairs), then press "Align by points"'), true);
   }

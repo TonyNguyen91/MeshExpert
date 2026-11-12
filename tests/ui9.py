@@ -26,7 +26,7 @@ with sync_playwright() as p:
     def sk(expr): return pg.evaluate("(()=>{const m=__mrt.S.sk.m;return "+expr+"})()")
     def body(i): return pg.evaluate("i=>{const b=__mrt.S.bodies[i];if(!b)return null;const s=__mrt.core.stats(b.geo.positions,b.geo.indices),t=__mrt.core.topology(b.geo.indices,b.geo.positions.length/3);return {name:b.name,solid:!!b.solid,vol:s.volume,border:t.border,nm:t.nonManifold,min:s.min,max:s.max,vis:b.visible,feats:b.solid&&b.solid.feats?b.solid.feats.length:0}}",i)
     def row(i): return f'#bodyList .brow:nth-child({i+1})'
-    pg.evaluate("document.querySelectorAll('details').forEach(d=>d.open=true)"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
+    pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
     # ===== sketch with constraints =====
     pg.click('#bSketch'); pg.click('#skplane [data-pl=top]'); pg.wait_for_timeout(200)
     pg.evaluate("(()=>{const c=__mrt.cam();c.zoom=75;c.target=[35,12,0];})()")
