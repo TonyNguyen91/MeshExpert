@@ -272,7 +272,7 @@
         return { id: b.id, name: b.name, geo: b.geo, orig: b.orig, matrix: b.matrix.slice(), matrix0: b.matrix0.slice(), color: b.color.slice(), opacity: b.opacity,
           visible: vis && vis.has(b) ? vis.get(b) : b.visible, material: b.material, density: b.density, solid: b.solid || null };
       }),
-      sel: selBodies().map(function (b) { return b.id; }), measures: JSON.parse(JSON.stringify(S.measures))
+      sel: selBodies().map(function (b) { return b.id; }), measures: JSON.parse(JSON.stringify(S.measures)), sketches: JSON.stringify(S.sketches), skSel: S.skSel
     };
   }
   function updateHistBtns() { $('bUndo').disabled = !hist.undo.length; $('bRedo').disabled = !hist.redo.length; }
@@ -288,6 +288,7 @@
     for (const b of old) releaseGeo(b.geo);
     S.sel = new Set(S.bodies.filter(function (b) { return s.sel.indexOf(b.id) >= 0; }));
     S.measures = JSON.parse(JSON.stringify(s.measures)); S.tmp = []; S.col = null;
+    if (s.sketches) { S.sketches = JSON.parse(s.sketches); S.skSel = s.skSel; }
     resetBox('colRes');
     updateExplode(); sceneChanged(false); updateMeasList(); refresh();
   }
@@ -534,7 +535,7 @@
         cam = mainCam;
         setCamUniforms();
         const opaque = [], trans = [];
-        for (const b of S.bodies) if (b.visible) (alphaOf(b) >= 0.999 ? opaque : trans).push(b);
+        for (const b of S.bodies) if (b.visible && !S.ghostHide.has(b)) (alphaOf(b) >= 0.999 ? opaque : trans).push(b);
         for (const b of opaque) drawBody(b, edges, false);
         if (trans.length) {
           const w = viewer();
@@ -543,6 +544,7 @@
           for (const b of trans) drawBody(b, edges, false);
           gl.depthMask(true); gl.disable(gl.BLEND);
         }
+        drawGhosts();
       }
       gl.bindVertexArray(null);
     }
@@ -745,7 +747,7 @@
       }
       for (const p of q) dot2(p, '#ffffff', 3);
     }
-    drawSketch();
+    drawSketch(); drawDlgSel();
     for (const p of S.tmp) dot2(project(p), '#ffcf5a', 4.5);
     if (S.hovEnt) {                                          // what a click would take, in the measuring tools
       const e = S.hovEnt, HC = '#ffe14a';
@@ -1018,12 +1020,12 @@
   }
   function select(list, add) {
     if (!add) S.sel.clear();
-    if (!add && !list.length) S.spl = null;                  // unticking everything also ends the "next option" run of the last split
+    if (!add && !list.length) { S.spl = null; if (S.skSel) { S.skSel = null; updateSketchList(); } }                  // unticking everything also ends the "next option" run of the last split
     for (const b of list) { if (add && S.sel.has(b)) S.sel.delete(b); else S.sel.add(b); }
     refresh();
   }
   function refresh() {
-    updateList(); updateInfo(); syncCounts(true); updateHoleUI(); if (typeof updateBoolUI === 'function') updateBoolUI();
+    updateList(); updateInfo(); syncCounts(true); updateHoleUI(); updateSketchList();
     // Split is only lit while something is ticked; with nothing ticked and no split to continue, the option goes back to 1
     $('bSplit').classList.toggle('primary', S.sel.size > 0);
     const live = S.spl && S.spl.items.every(function (it) { return it.out.length && it.out.every(function (b) { return S.bodies.indexOf(b) >= 0; }); });
@@ -1062,7 +1064,7 @@
       const ct = document.createElement('span'); ct.className = 'num'; ct.textContent = fmtN(b.geo.indices.length / 3);
       const ms = document.createElement('span'); ms.className = 'num'; ms.textContent = b.density > 0 ? massTxt(getStats(b).volume / 1000 * b.density) : '-';
       row.appendChild(cs); row.appendChild(cv); row.appendChild(chip); row.appendChild(nm); row.appendChild(ct); row.appendChild(ms);
-      row.addEventListener('click', function () { if (!blocked()) select([b], true); });
+      row.addEventListener('click', function () { if (blocked() || dlgPickBody(b)) return; select([b], true); });
       row.addEventListener('contextmenu', function (e) { e.preventDefault(); openMenu(e.clientX, e.clientY, b); });
       frag.appendChild(row);
     }
@@ -1148,7 +1150,7 @@
     $('bVi').classList.toggle('on', lang === 'vi'); $('bEn').classList.toggle('on', lang === 'en');
     $('lMax').textContent = modeValue() === 'edge' ? L('Edge Length (tối thiểu)', 'Edge Length (minimum)') : 'Maximum';
     $('ucRes').innerHTML = ucLegend();
-    fillMats(); updateMeasList(); refresh(); updateCmpUI(); updateSplitUI(); updateHoleUI(); if (typeof updateBoolUI === 'function') updateBoolUI();
+    fillMats(); updateMeasList(); refresh(); updateCmpUI(); updateSplitUI(); updateHoleUI(); updateSketchList(); tipKeys();
     if (S.col) renderCollisions();
     flash('');
   }
@@ -1315,7 +1317,7 @@
         if (S.tool === 'rotate') rotStart(drag, p[0], p[1]);
         canvas.style.cursor = 'grabbing';
       } else drag = { type: 'click', x0: p[0], y0: p[1], cam: cam };
-      if (S.sk) drag = { type: 'click', x0: p[0], y0: p[1], cam: cam };
+      if (S.sk) { drag = skDown(p[0], p[1]) || { type: 'click', x0: p[0], y0: p[1] }; drag.cam = cam; }
     }
     cam = mainCam;
   });
@@ -1324,6 +1326,7 @@
   function hover(px, py) {
     cam = camAt(px);
     if (S.sk) { skHover(px, py); cam = mainCam; return; }
+    if (S.od && modelHover(px, py)) { cam = mainCam; canvas.style.cursor = 'crosshair'; return; }
     const h = gizmoActive() && S.giz ? hitGizmo(px, py) : null;
     const t = S.tool, meas = t === 'dist' || t === 'angle' || t === 'radius', c = meas ? comAt(px, py) : null;
     let ent = null;
@@ -1347,6 +1350,7 @@
       cam.target = V.add(cam.target, V.add(V.mul(right(), -(p[0] - drag.x) * k), V.mul(up(), (p[1] - drag.y) * k)));
       drag.x = p[0]; drag.y = p[1]; dirty = true;
     } else if (drag.type === 'giz') gizmoDrag(drag, p[0], p[1], e.shiftKey);
+    else if (drag.type === 'sk') skDragMove(drag, p[0], p[1]);
     else if (drag.type === 'click' && !S.sk && S.tool !== 'skplane' && boxAllowed() && Math.hypot(p[0] - drag.x0, p[1] - drag.y0) >= 4) drag.type = 'box';
     if (drag.type === 'box') { S.box = { x0: drag.x0, y0: drag.y0, x1: p[0], y1: p[1] }; dirty = true; }
     syncCams(cam);
@@ -1358,6 +1362,7 @@
     const p = evPos(e), still = Math.hypot(p[0] - d.x0, p[1] - d.y0) < 4;
     cam = d.cam;
     if (S.viewPivot) { S.viewPivot = null; dirty = true; }
+    if (d.type === 'sk') { skDragEnd(d); cam = mainCam; hover(p[0], p[1]); return; }
     if (d.type === 'giz') { if (d.moved) { commitTransform(d.list); flash(toolHint(S.tool), true); } dirty = true; }
     else if (d.type === 'box') { S.box = null; cam = mainCam; boxSelect(d.x0, d.y0, p[0], p[1], true); }
     else if (d.type === 'click' && still) onClick(p[0], p[1], e);
@@ -1429,6 +1434,7 @@
   function onClick(px, py, e) {
     if (S.sk) { skClick(px, py, e); return; }
     if (S.tool === 'skplane') { skPickPlane(px, py); return; }
+    if (modelClick(px, py, e)) return;
     if (S.cmp && S.cmp.split) {
       const i = px < W / 2 ? 0 : 1, h = pickNear(px, py, [i ? S.cmp.b : S.cmp.a]);
       if (!h) { flash(L('Không trúng mesh', 'No mesh under the cursor')); return; }
@@ -1520,6 +1526,8 @@
         ['Decimate…', function () { $('bApply').scrollIntoView({ block: 'center' }); flash(L('Đặt tham số Decimate ở khung bên trái rồi bấm Apply', 'Set the Decimate options on the left, then press Apply')); }],
         [L('Tách body', 'Split'), function () { $('bSplit').click(); }],
         ...(body.solid ? [[L('Sửa khối solid…', 'Edit solid…'), function () { editSolid(body); }], [L('Chuyển solid → mesh', 'Convert solid → mesh'), function () { solidToMesh(); }]] : []),
+        ...(body.solid && body.solid.feats && body.solid.feats.length ? [[L('Bỏ lệnh cuối của khối: ', 'Undo the last solid edit: ') + body.solid.feats[body.solid.feats.length - 1].type, function () { dropLastFeat(body); }]] : []),
+        [L('Fillet cạnh…', 'Fillet edges…'), function () { openDlg('fillet'); }], [L('Shell…', 'Shell…'), function () { openDlg('shell'); }], [L('Boolean…', 'Boolean…'), function () { openDlg('boolean'); }],
         [L('Tách: phương án kế ▶', 'Split: next option ▶'), function () { $('bSplitNext').click(); }],
         [L('Gộp body tick', 'Merge ticked bodies'), joinSelected],
         [L('Phân tích undercut', 'Undercut analysis'), function () { $('bUc').click(); }]);
@@ -2220,7 +2228,7 @@
   // ================= session (.mrtl) =================
   function saveSession() {
     const vis = S.cmp ? new Map(S.cmp.vis) : null;
-    const meta = { app: 'MrT Decimate Mesh', format: 2, view: { R: mainCam.R, target: mainCam.target, zoom: mainCam.zoom }, explode: S.explode,
+    const meta = { app: 'MrT Decimate Mesh', format: 2, view: { R: mainCam.R, target: mainCam.target, zoom: mainCam.zoom }, explode: S.explode, sketches: S.sketches, skSeq: S.skSeq,
       section: { on: S.sec.on, flip: S.sec.flip, axis: S.sec.axis, s: S.sec.s, nView: S.sec.nView, nPick: S.sec.nPick }, measures: S.measures, bodies: [] };
     const blobs = [], geos = new Map();
     let off = 0;
@@ -2261,6 +2269,7 @@
     S.explode = meta.explode || 0; $('expl').value = Math.round(S.explode * 100); $('explV').textContent = $('expl').value + '%';
     if (meta.section) { Object.assign(S.sec, meta.section); $('secOn').checked = S.sec.on; $('secFlip').checked = S.sec.flip; $('secAx').value = S.sec.axis; $('secPos').value = Math.round(S.sec.s * 1000); }
     S.measures = (meta.measures || []).filter(function (m) { return m.v !== undefined || m.r !== undefined; });
+    S.sketches = meta.sketches || []; S.skSeq = meta.skSeq || S.sketches.length + 1;
     updateExplode(); sceneChanged(true);
     if (meta.view) { mainCam.R = meta.view.R; mainCam.target = meta.view.target; mainCam.zoom = meta.view.zoom; }
     hist.undo.length = 0; hist.redo.length = 0; updateHistBtns();
@@ -2268,7 +2277,7 @@
   }
   function clearAll() {
     for (const b of S.bodies.slice()) removeBody(b);
-    S.measures = []; S.tmp = []; S.clip = []; S.colorSeq = 0; S.col = null; S.spl = null;
+    S.measures = []; S.tmp = []; S.clip = []; S.colorSeq = 0; S.col = null; S.spl = null; S.sketches = []; S.skSel = null;
     resetBox('colRes'); resetBox('splitRes'); resetBox('holeRes'); updateMeasList();
   }
   $('bSaveSes').addEventListener('click', function () { try { saveSession(); } catch (e) { showError(e); } });

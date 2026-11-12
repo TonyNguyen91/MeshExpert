@@ -6,11 +6,13 @@ Công cụ chỉnh sửa mesh STL/OBJ chạy offline trong trình duyệt. Mở 
 - `index.html` — file ứng dụng hoàn chỉnh (bản phát hành).
 - `src/head.html` — giao diện (HTML/CSS).
 - `src/core_base.js`, `src/core_extra.js` — lõi xử lý mesh (đọc/ghi, decimate, tách body, undercut, va chạm, đo, ICP...).
+- `src/core_sketch.js` — mô hình sketch tham số (điểm dùng chung, ràng buộc, kích thước) và bộ giải ràng buộc.
+- `src/core_dress.js` — hình học cho các lệnh solid: dao cắt fillet / chamfer, dời / thay mặt, shell.
 - `src/app2.js` — logic giao diện và thao tác.
-- `src/model.js` — sketch, tạo khối solid (Extrude, Revolve) và Boolean; được chèn vào `app2.js` khi build.
+- `src/model.js` — môi trường sketch và danh sách sketch; `src/feat.js` — Extrude / Revolve, Boolean, các lệnh solid, phím tắt. Cả hai được chèn vào `app2.js` khi build.
 - `src/manifold_embed.js` — thư viện Manifold 3.5.4 (Apache 2.0, xem `src/MANIFOLD_LICENSE.txt`) nhúng sẵn, dùng cho Boolean.
 - `src/build.py` — ghép các file trên thành `index.html`: `python3 src/build.py`.
-- `src/test_core.js`, `src/test_cmp.js`, `src/test_split.js`, `src/test_repair.js`, `src/test_solid.js` — kiểm thử lõi bằng Node.js (chạy `build.py` trước).
+- `src/test_core.js`, `src/test_cmp.js`, `src/test_split.js`, `src/test_repair.js`, `src/test_solid.js`, `src/test_sketch.js`, `src/test_dress.js` — kiểm thử lõi bằng Node.js (chạy `build.py` trước).
 - `tests/ui*.py` — kiểm thử giao diện tự động bằng Playwright + Chrome.
 - `tests/make_split_meshes.js` — tạo các file STL mẫu cho `tests/ui5.py`, `tests/ui6.py`, `tests/ui7.py`.
 
@@ -37,7 +39,16 @@ Công cụ chỉnh sửa mesh STL/OBJ chạy offline trong trình duyệt. Mở 
 - Mục "Vá lưới hở": 3 kiểu vá (phẳng; chia lưới đều; chia lưới và uốn theo mặt cong xung quanh), giới hạn chu vi lỗ, khâu khe hở.
 - Công cụ đo tự nhận mặt phẳng, mặt trụ, mặt cầu, cạnh thẳng, cung tròn và đỉnh: bấm 1 cạnh để lấy chiều dài, 1 cung / mặt trụ / mặt cầu để lấy R, 2 đối tượng để đo khoảng cách hoặc góc. Giữ Alt để lấy điểm tự do.
 
-## Sketch, khối solid và Boolean
-- Nút "Sketch" trên thanh trên cùng: chọn mặt phẳng (Top / Front / Right hoặc một mặt phẳng trên mesh) rồi vẽ trong môi trường riêng: Line, Rectangle, Circle, Arc 3 điểm, Polygon, Fillet, Trim, Offset; gõ kích thước chính xác vào các ô trên thanh sketch.
-- "Extrude" / "Revolve": tạo khối từ các biên dạng kín của sketch, với New / Add / Remove / Intersect. Khối New là solid tham số (dấu ◆), sửa lại được qua menu chuột phải; "Solid → mesh" chuyển nó thành mesh thường.
-- Mục "Boolean": Union / Subtract / Intersect giữa các mesh kín, chạy bằng thư viện Manifold.
+## Sketch tham số
+- Nút "✏ Sketch": chọn mặt phẳng (Top / Front / Right hoặc một mặt phẳng trên mesh) rồi vẽ trong môi trường riêng.
+- Vẽ: Line, Rectangle, Rect. tâm, Circle, Arc 3 điểm, Cung tiếp tuyến, Polygon, Slot, Điểm; sửa: Fillet, Trim, Offset, Mirror, Nét dựng (construction), Xóa.
+- Ràng buộc: Kích thước (dài, ngang, dọc, điểm–đường, góc, bán kính, đường kính), Trùng, Đồng tâm, Song song, Vuông góc, Tiếp tuyến, Ngang, Dọc, Bằng, Trung điểm, Đối xứng, Cố định. Khi vẽ, app tự thêm ngang / dọc / trùng điểm / điểm trên nét / trung điểm.
+- Nét xanh = còn bậc tự do, nét trắng = đã ràng buộc đủ. Kéo điểm / nét để di chuyển phần còn tự do; nhấp đúp kích thước để sửa số. Ràng buộc xung đột hoặc thừa bị từ chối.
+- Sketch xong nằm trong "Danh sách sketch" bên trái: ẩn / hiện (Y), sửa (nhấp đúp), đổi tên, xóa. Sửa sketch thì các khối tạo từ nó tự dựng lại.
+
+## Khối solid, lệnh solid và Boolean
+- "Extrude" / "Revolve": chọn sketch trong hộp thoại (hoặc bấm sketch trên màn hình), bấm từng biên dạng để bỏ / lấy lại, New / Add / Remove / Intersect, xem trước bằng khối mờ.
+- Lệnh solid trên thanh trên cùng: Fillet, Chamfer (cạnh, có lấy cạnh nối tiếp tuyến), Move face (mặt phẳng / mặt trụ), Replace face, Shell, Draft. Có xem trước. Với khối ◆ các lệnh được lưu thành lịch sử và áp lại khi sửa sketch / thông số khối (cạnh / mặt được tìm lại theo vị trí; lệnh nào không tìm lại được thì bị bỏ và app báo).
+- "Boolean" trên thanh trên cùng: Union / Intersect dùng ô Tools; Subtract có 2 ô Tools và Targets riêng. Chạy bằng thư viện Manifold, chỉ trên lưới kín.
+- ⚙ (góc phải trên): đặt phím tắt cho Move, Rotate, Scale, Sketch, Extrude, Revolve, Boolean, các lệnh solid và ẩn / hiện (mặc định Y).
+- Giới hạn: không xuất STEP; khối là lưới tam giác tính từ thông số, các lệnh solid chạy trên lưới (không phải B-rep thật), nên góc gặp nhau của nhiều fillet không được làm tròn kiểu hình cầu như CAD.

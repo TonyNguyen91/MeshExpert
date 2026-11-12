@@ -1759,7 +1759,7 @@
       const pts = vs.map(function (v) { return [P[3 * v], P[3 * v + 1], P[3 * v + 2]]; }), n = pts.length, closed = n > 2 && vs[0] === vs[n - 1];
       let len = 0;
       for (let i = 0; i + 1 < n; i++) len += Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1], pts[i + 1][2] - pts[i][2]);
-      const ch = { pts: pts, closed: closed, len: len, r1: eR1[e0], r2: eR2[e0], type: 'curve' };
+      const ch = { pts: pts, vs: vs, closed: closed, len: len, r1: eR1[e0], r2: eR2[e0], type: 'curve' };
       const tol = 2e-4 * diag + 1e-3 * len;
       if (!closed) {                                          // straight?
         const a = pts[0], b = pts[n - 1], dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], dl = Math.hypot(dx, dy, dz);
@@ -2181,5 +2181,6 @@
     return { positions: m.positions, indices: m.indices, cut: cutA.size + cutB.size };
   }
 
-  return { parse: parse, weld: weld, decimate: decimate, split: split, triangulate: triangulate, offsetLoop: offsetLoop, extrudeSolid: extrudeSolid, revolveSolid: revolveSolid, boolean: boolean, borderEdges: borderEdges, borderLoops: borderLoops, stitch: stitch, fillHoles: fillHoles, features: features, boundary: boundary, fillHoles: fillHoles, featEdges: featEdges, fitFace: fitFace, splitAdv: splitAdv, edgeAdjacency: edgeAdjacency, writeSTL: writeSTL, writeOBJ: writeOBJ, zipStore: zipStore,
+  return { replaceFaceVerts: replaceFaceVerts, edgeTool: edgeTool, facePrism: facePrism, shellMesh: shellMesh, moveCylFace: moveCylFace, skModel: skModel, skSolve: skSolve, skAnalyse: skAnalyse, skCurValue: skCurValue, skCompact: skCompact, skDeleteEnts: skDeleteEnts, skMerge: skMerge, skFlat: skFlat, skFromFlat: skFromFlat, skRes: skRes, skVarMap: skVarMap, skGetX: skGetX, skScale: skScale, SK_DIMS: SK_DIMS,
+    parse: parse, weld: weld, decimate: decimate, split: split, triangulate: triangulate, offsetLoop: offsetLoop, extrudeSolid: extrudeSolid, revolveSolid: revolveSolid, boolean: boolean, borderEdges: borderEdges, borderLoops: borderLoops, stitch: stitch, fillHoles: fillHoles, features: features, boundary: boundary, fillHoles: fillHoles, featEdges: featEdges, fitFace: fitFace, splitAdv: splitAdv, edgeAdjacency: edgeAdjacency, writeSTL: writeSTL, writeOBJ: writeOBJ, zipStore: zipStore,
     buildBVH: buildBVH, raycast: raycast, undercut: undercut, collide: collide, stats: stats, topology: topology, deviation: deviation, rigidFit: rigidFit, icp: icp };
