@@ -76,6 +76,7 @@ with sync_playwright() as p:
     ok('pressed point was on the body',piv is not None and abs(piv[1])<0.6 and 99<piv[0]<121,piv)
     ok('pivot mark gone after release',pg.evaluate("__mrt.S.viewPivot")is None)
     R0=pg.evaluate("__mrt.cam().R"); t0=pg.evaluate("__mrt.cam().target")
+    pg.evaluate("document.querySelectorAll('.pop').forEach(p=>p.classList.remove('on'))")
     pg.mouse.move(*empty); pg.mouse.down(button='right'); pg.mouse.move(empty[0]-60,empty[1]+30,steps=5); pg.mouse.up(button='right')
     ok('right-drag on empty space still rotates, about the screen centre',pg.evaluate("__mrt.cam().R")!=R0 and pg.evaluate("__mrt.cam().target")==t0)
     pg.keyboard.press('Escape'); pg.mouse.click(*empty)

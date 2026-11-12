@@ -62,6 +62,7 @@ with sync_playwright() as p:
     m=last(); ok('radius tool: one click on the circular edge gives R 8',hv==['edge','arc'] and abs(m['r']-8)<1e-3,[hv,m])
     pg.click('[data-tool=dist]'); q=scr([110,0,20]); pg.mouse.move(*q); pg.wait_for_timeout(150); hv=pg.evaluate("__mrt.S.hovEnt&&[__mrt.S.hovEnt.kind,__mrt.S.hovEnt.sub]"); pg.screenshot(path=S+'/k4.png'); pg.mouse.click(*q); pg.wait_for_timeout(120)
     m=last(); ok('distance tool: one click on a straight edge gives its length 20',hv==['edge','line'] and m['type']=='len' and abs(m['v']-20)<1e-4,[hv,m])
+    er=pg.evaluate("(()=>{const r=document.getElementById('gl').getBoundingClientRect();return [r.left+60,r.top+260]})()"); pg.mouse.click(*er); pg.wait_for_timeout(60)   # empty space: clear the pending edge
     a=scr([2,1,25]); c=scr([112,12,20]); pg.mouse.click(*a); pg.mouse.move(*c); pg.wait_for_timeout(150); hv=pg.evaluate("__mrt.S.hovEnt&&__mrt.S.hovEnt.kind"); pg.mouse.click(*c); pg.wait_for_timeout(120)
     m=last(); ok('plane to parallel plane: 5 mm between the two top faces',hv=='plane' and m['type']=='dist' and abs(m['v']-5)<1e-4,[hv,m])
     cq=scr([100,0,20]); pg.mouse.click(*scr(side)); pg.mouse.move(cq[0]+2,cq[1]+2); pg.wait_for_timeout(150); hv=pg.evaluate("__mrt.S.hovEnt&&__mrt.S.hovEnt.kind"); pg.mouse.click(cq[0]+2,cq[1]+2); pg.wait_for_timeout(120)

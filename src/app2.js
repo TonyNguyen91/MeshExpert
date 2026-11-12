@@ -780,7 +780,7 @@
       const sel = selBodies().filter(function (b) { return b.visible; });
       const dg = drag && drag.type === 'giz' ? drag : null, hov = dg ? dg.axis : S.hov;
       // while rotating or scaling the handle stays where the drag started; while moving it travels with the bodies
-      const pv = dg && S.tool !== 'move' ? dg.pv3 : S.tool !== 'move' && $('pivot').value === 'o' ? [0, 0, 0] : boxCenter(unionBox(sel, true)), p = project(pv), Lw = 124 * 2 * cam.zoom / H, ends = [], arcs = [];
+      const pv = dg && S.tool !== 'move' ? dg.pv3 : S.tool !== 'move' && $('pivot').value !== 'c' ? pivotPoint(sel) : boxCenter(unionBox(sel, true)), p = project(pv), Lw = 124 * 2 * cam.zoom / H, ends = [], arcs = [];
       for (let i = 0; i < 3; i++) {
         ends.push(project(V.add(pv, V.mul(AXES[i], Lw))));
         const q = [];
@@ -943,10 +943,74 @@
     const s = mainCam.radius * 0.18;
     addMeasure('angle', [V.add(at, V.mul(u, s)), at, V.add(at, V.mul(w, s))]);
   }
-  function pushMeasure(m) { if (!S.cmp) pushUndo(); S.measures.push(m); updateMeasList(); dirty = true; }
+  function pushMeasure(m) { if (!S.cmp) pushUndo(); S.measures.push(m); S.measSel = S.measures.length - 1; updateMeasList(); dirty = true; }
+  // ---------- measurement details (like a CAD measure panel) ----------
+  function entLabel(e) { return (e.text || (e.free ? L('Điểm', 'Point') : e.kind === 'plane' ? L('Mặt phẳng', 'Plane') : L('Điểm', 'Point'))) + (e.bname ? ' · ' + e.bname : ''); }
+  function entCentre(e) {
+    if (e.kind === 'edge') { if (e.sub === 'arc' && e.c) return e.c; let c = [0, 0, 0]; for (const q of e.pts) c = V.add(c, q); return V.mul(c, 1 / e.pts.length); }
+    if (e.kind === 'sphere') return e.c;
+    if (e.kind === 'cyl') return footLine(e.at, { p: e.c, d: e.dir });
+    return e.kind === 'point' ? e.p : e.at;
+  }
+  function entPoints(e) { return e.kind === 'edge' ? e.pts : e.kind === 'point' ? [e.p] : null; }
+  function distExtras(m, e1, e2) {
+    m.ents = [entLabel(e1), entLabel(e2)];
+    m.dv = V.sub(m.pts[1], m.pts[0]);
+    const c1 = entCentre(e1), c2 = entCentre(e2);
+    if (e1.kind !== 'point' || e2.kind !== 'point') m.cd = [c1, c2];
+    const p1 = entPoints(e1), p2 = entPoints(e2);
+    if (p1 && p2 && (p1.length > 1 || p2.length > 1)) {
+      let best = -1, pr = null;
+      for (const a of p1) for (const b of p2) { const d = V.len(V.sub(b, a)); if (d > best) { best = d; pr = [a, b]; } }
+      m.mx = pr;
+      // the true shortest gap between the two (point sets and the segments between them), not between centres
+      const near = function (p, l) { let bd = Infinity, bp = l[0]; for (let i = 0; i < l.length; i++) { const a = l[i], b = l[Math.min(i + 1, l.length - 1)], ab = V.sub(b, a), t2 = V.dot(ab, ab), t = t2 > 0 ? Math.max(0, Math.min(1, V.dot(V.sub(p, a), ab) / t2)) : 0, q = V.add(a, V.mul(ab, t)), d = V.len(V.sub(q, p)); if (d < bd) { bd = d; bp = q; } } return [bd, bp]; };
+      let bm = Infinity, pm = null;
+      for (const a of p1) { const r = near(a, p2); if (r[0] < bm) { bm = r[0]; pm = [a, r[1]]; } }
+      for (const b of p2) { const r = near(b, p1); if (r[0] < bm) { bm = r[0]; pm = [r[1], b]; } }
+      if (pm && bm < m.v - 1e-9) { m.pts = [pm[0], pm[1]]; m.v = bm; m.dv = V.sub(pm[1], pm[0]); m.d = m.dv.map(Math.abs); }
+    }
+    const lens = [e1, e2].filter(function (e) { return e.kind === 'edge'; }).map(function (e) { return e.len; });
+    if (lens.length) m.lens = lens;
+  }
+  function measRows(m) {                                     // [label, value, unit, delta xyz or null]
+    const rows = [], dl = function (a, b) { return V.sub(b, a); };
+    if (m.type === 'dist') {
+      if (m.cd) rows.push([L('Khoảng cách tâm', 'Centre dist'), V.len(dl(m.cd[0], m.cd[1])), 'mm', dl(m.cd[0], m.cd[1])]);
+      if (m.mx) rows.push([L('Khoảng cách lớn nhất', 'Max dist'), V.len(dl(m.mx[0], m.mx[1])), 'mm', dl(m.mx[0], m.mx[1])]);
+      rows.push([L('Khoảng cách nhỏ nhất', 'Min dist'), m.v, 'mm', m.dv || dl(m.pts[0], m.pts[1])]);
+      if (m.lens) rows.push([L('Chiều dài', 'Length'), m.lens.reduce(function (a, b) { return a + b; }, 0), 'mm', null]);
+    } else if (m.type === 'len') {
+      rows.push([L('Chiều dài', 'Length'), m.v, 'mm', null]);
+      if (m.sub === 'arc') { rows.push([L('Bán kính', 'Radius'), m.r, 'mm', null], [L('Đường kính', 'Diameter'), 2 * m.r, 'mm', null]); if (m.c) rows.push([L('Tâm', 'Centre'), null, '', m.c]); }
+      const a = m.pts[0], b = m.pts[m.pts.length - 1]; rows.push([L('Hai đầu mút', 'End to end'), V.len(dl(a, b)), 'mm', dl(a, b)]);
+    } else if (m.type === 'radius') {
+      rows.push([L('Bán kính', 'Radius'), m.r, 'mm', null], [L('Đường kính', 'Diameter'), 2 * m.r, 'mm', null], [L('Tâm', 'Centre'), null, '', m.c]);
+    } else if (m.type === 'angle') rows.push([L('Góc', 'Angle'), m.v, '°', null], [L('Góc bù', 'Supplement'), 180 - m.v, '°', null]);
+    else rows.push([L('Bề dày', 'Thickness'), m.v, 'mm', dl(m.pts[0], m.pts[1])]);
+    return rows;
+  }
+  function updateMeasPanel() {
+    const el = $('measPanel');
+    if (!el) return;
+    const m = S.measures[S.measSel], AX = [['X', '#ff5a52'], ['Y', '#52d06a'], ['Z', '#4f9bff']];
+    let h = '<div class="selbox on"><div class="sbt">' + L('Đối tượng được đo', 'Measured entities') + '</div>';
+    const ents = S.tmp.length && S.tmp[0].e && !(m && m.solo && S.tmp.length === 1) ? S.tmp.map(function (p) { return entLabel(p.e); }) : m && m.ents ? m.ents : [];
+    h += ents.length ? ents.map(function (t) { return '<div class="sbi">' + t.replace(/</g, '&lt;') + '</div>'; }).join('') : '<div class="sbe">' + L('bấm vào mesh để chọn', 'click on the mesh to pick') + '</div>';
+    h += '</div>';
+    if (m && (!S.tmp.length || (m.solo && S.tmp.length === 1))) {
+      h += '<table class="mtab">';
+      for (const r of measRows(m)) {
+        h += '<tr class="mh"><td>' + r[0] + ':</td><td>' + (r[1] === null ? '' : '<b>' + f2(r[1], 3) + '</b> ' + r[2]) + '</td></tr>';
+        if (r[3]) AX.forEach(function (a, k) { h += '<tr><td class="ax"><span style="color:' + a[1] + '">' + a[0] + '</span></td><td>' + f2(r[3][k], 3) + ' mm</td></tr>'; });
+      }
+      h += '</table>';
+    }
+    el.innerHTML = h;
+  }
   // one click on an entity in a measuring tool
   function measurePick(t, e) {
-    const g = entGeo(e), n = S.tmp.length, mark = function () { const p = (e.kind === 'edge' || e.kind === 'plane' || e.kind === 'cyl' || e.kind === 'sphere' ? e.at : e.p).slice(); p.g = g; S.tmp.push(p); dirty = true; };
+    const g = entGeo(e), n = S.tmp.length, mark = function () { const p = (e.kind === 'edge' || e.kind === 'plane' || e.kind === 'cyl' || e.kind === 'sphere' ? e.at : e.p).slice(); p.g = g; p.e = e; S.tmp.push(p); dirty = true; updateMeasPanel(); };
     if (t === 'radius') {
       if (!n && e.kind === 'edge' && e.sub === 'arc') return pushMeasure({ type: 'radius', pts: [e.pts[0]], c: e.c, n: e.n, r: e.r });
       if (!n && e.kind === 'cyl') { const c = footLine(e.at, { p: e.c, d: e.dir }); return pushMeasure({ type: 'radius', pts: [V.add(c, V.mul(V.norm(V.sub(e.at, c)), e.r))], c: c, n: e.dir, r: e.r }); }
@@ -956,12 +1020,17 @@
       return;
     }
     if (t === 'dist') {
-      if (!n && e.kind === 'edge') return pushMeasure({ type: 'len', pts: e.pts, v: e.len, sub: e.sub, r: e.r });   // an edge alone: its length
+      if (!n && e.kind === 'edge') {                         // an edge alone: its length; a second pick turns it into a distance
+        pushMeasure({ type: 'len', pts: e.pts, v: e.len, sub: e.sub, r: e.r, c: e.c, ents: [entLabel(e)], solo: true });
+        mark(); S.lenFirst = S.measures.length - 1; updateMeasPanel(); return;
+      }
       mark();
       if (S.tmp.length < 2) return;
-      const a = S.tmp[0].g, b = S.tmp[1].g, d = entDist(a, b);
+      const a = S.tmp[0].g, b = S.tmp[1].g, d = entDist(a, b), e1 = S.tmp[0].e, e2 = S.tmp[1].e;
       S.tmp = [];
-      if (d) return addMeasure('dist', d);
+      if (S.lenFirst !== undefined && S.measures[S.lenFirst] && S.measures[S.lenFirst].solo) { S.measures.splice(S.lenFirst, 1); hist.undo.pop(); updateHistBtns(); }
+      S.lenFirst = undefined;
+      if (d) { addMeasure('dist', d); const m = S.measures[S.measures.length - 1]; if (m) { distExtras(m, e1, e2); S.measSel = S.measures.length - 1; updateMeasList(); } return; }
       flash(L('Hai đối tượng cắt nhau (khoảng cách 0): hiện góc giữa chúng', 'The two cross each other (distance 0): showing the angle between them'));
       return entAngle(a, b, e.at);
     }
@@ -1018,7 +1087,8 @@
     S.tool = t; S.tmp = [];
     document.querySelectorAll('[data-tool]').forEach(function (b) { b.classList.toggle('on', b.dataset.tool === t); });
     $('tpop').style.display = (t === 'move' || t === 'rotate' || t === 'scale' || t === 'mate') ? 'block' : 'none';
-    $('tpMate').style.display = t === 'mate' ? 'flex' : 'none'; S.mate = null;
+    $('tpMate').style.display = t === 'mate' ? 'flex' : 'none'; S.mate = null; S.pivPick = false;
+    if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick') { openPop('measure', true); updateMeasPanel(); }
     $('tpMove').style.display = t === 'move' ? 'flex' : 'none'; $('tpRot').style.display = t === 'rotate' ? 'flex' : 'none';
     $('tpScale').style.display = t === 'scale' ? 'flex' : 'none'; $('tpPivot').style.display = t === 'rotate' || t === 'scale' ? 'flex' : 'none';
     canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null; S.hovEnt = null;
@@ -1175,7 +1245,22 @@
     for (const b of list) { freeAna(b); b.stats = null; }
     updateExplode(); sceneChanged(false); refresh();
   }
-  function pivotPoint(list) { return $('pivot').value === 'o' ? [0, 0, 0] : boxCenter(unionBox(list, false)); }
+  function pivotPoint(list) { const v = $('pivot').value; return v === 'o' ? [0, 0, 0] : v === 'p' && S.pivot3 ? S.pivot3.slice() : boxCenter(unionBox(list, false)); }
+  // a snap point for the rotation centre: corner, centre of a round edge / sphere, point on a cylinder axis, centre of mass
+  function pivotSnap(px, py) {
+    const c = comAt(px, py);
+    if (c) return { kind: 'point', p: c, at: c, text: L('Trọng tâm', 'Centre of mass') };
+    const h = pickNear(px, py);
+    if (!h) return null;
+    const e = entityAt(h, px, py, false);
+    if (e.kind === 'edge' && e.sub === 'arc' && e.c) return { kind: 'point', p: e.c, at: e.c, text: L('Tâm cung R', 'Arc centre R') + f2(e.r), lines: e.lines };
+    if (e.kind === 'edge') { const q = e.pts, mid = q[Math.floor(q.length / 2)]; return { kind: 'point', p: e.sub === 'line' ? V.mul(V.add(q[0], q[q.length - 1]), 0.5) : mid, at: mid, text: L('Trung điểm cạnh', 'Edge midpoint'), lines: e.lines }; }
+    if (e.kind === 'cyl') { const f = footLine(e.at, { p: e.c, d: e.dir }); return { kind: 'point', p: f, at: f, text: L('Trên trục mặt trụ', 'On the cylinder axis') }; }
+    if (e.kind === 'sphere') return { kind: 'point', p: e.c, at: e.c, text: L('Tâm mặt cầu', 'Sphere centre') };
+    if (e.kind === 'point' && !e.free) return { kind: 'point', p: e.p, at: e.p, text: L('Đỉnh', 'Corner') };
+    const v = snapPoint(h, px, py);
+    return { kind: 'point', p: v, at: v, text: L('Điểm', 'Point') };
+  }
   function applyTransform(makeA) {
     if (blocked()) return;
     const list = needSel();
@@ -1243,6 +1328,12 @@
     if (!m || blocked()) { flash(L('Chưa có lần ghép nào', 'Nothing has been mated yet')); return; }
     undo(); m.flip = !m.flip; mateApply(m);
   });
+  $('bPivPick').addEventListener('click', function () {
+    S.pivPick = !S.pivPick; this.classList.toggle('primary', S.pivPick);
+    flash(S.pivPick ? L('Bấm điểm làm tâm xoay: đỉnh, tâm cung / lỗ tròn, trục mặt trụ, tâm mặt cầu, trọng tâm hoặc một điểm trên mesh', 'Click the rotation centre: a corner, the centre of an arc / round hole, a cylinder axis, a sphere centre, a centre of mass or a point on the mesh') : '', true);
+    dirty = true;
+  });
+  $('pivot').addEventListener('change', function () { if (this.value === 'p' && !S.pivot3) $('bPivPick').click(); dirty = true; });
   $('bMove').addEventListener('click', function () { applyTransform(function () { return M.trans([+$('mvX').value || 0, +$('mvY').value || 0, +$('mvZ').value || 0]); }); });
   $('bRot').addEventListener('click', function () {
     applyTransform(function (list) { return M.about(pivotPoint(list), M.rot(AXES[+$('rotAx').value], (+$('rotA').value || 0) * Math.PI / 180)); });
@@ -1399,7 +1490,8 @@
     const h = gizmoActive() && S.giz ? hitGizmo(px, py) : null;
     const t = S.tool, meas = t === 'dist' || t === 'angle' || t === 'radius', c = meas ? comAt(px, py) : null;
     let ent = null;
-    if (t === 'mate') { const hit = pickNear(px, py); if (hit) { ent = mateEnt(hit, px, py); } }
+    if (S.pivPick) ent = pivotSnap(px, py);
+    else if (t === 'mate') { const hit = pickNear(px, py); if (hit) { ent = mateEnt(hit, px, py); } }
     else if (meas && !c) { const hit = pickNear(px, py); if (hit) { ent = entityAt(hit, px, py, false); if (ent.free) ent = null; } }
     cam = mainCam;
     if (h !== S.hov || c !== S.hovCom || ent || S.hovEnt) { S.hov = h; S.hovCom = c; S.hovEnt = ent; dirty = true; }
@@ -1513,12 +1605,22 @@
       return;
     }
     const t = S.tool;
+    if (S.pivPick) {
+      const sp = pivotSnap(px, py);
+      if (!sp) { flash(L('Bấm vào mesh để lấy tâm xoay', 'Click on a mesh for the rotation centre')); return; }
+      S.pivot3 = sp.p.slice(); S.pivPick = false; $('pivot').value = 'p'; $('bPivPick').classList.remove('primary');
+      flash(L('Tâm xoay: ', 'Rotation centre: ') + sp.text + ' (' + sp.p.map(function (v) { return f2(v); }).join(', ') + ')', false); dirty = true; return;
+    }
     if (t === 'mate') { mateClick(px, py); return; }
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick' || t === 'secpick') {
       const cm = t === 'dist' || t === 'angle' || t === 'radius' ? comAt(px, py) : null;
-      if (cm) { measurePick(t, { kind: 'point', p: cm, at: cm }); return; }   // a centre-of-mass mark is a point like any other
+      if (cm) { measurePick(t, { kind: 'point', p: cm, at: cm, text: L('Trọng tâm', 'Centre of mass') }); return; }   // a centre-of-mass mark is a point like any other
       const h = pickNear(px, py);
-      if (!h) { flash(L('Không trúng mesh nào', 'No mesh under the cursor')); return; }
+      if (!h) {                                              // a click on empty space drops what is waiting to be measured
+        if (S.tmp.length) { S.tmp = []; S.lenFirst = undefined; updateMeasPanel(); dirty = true; flash(L('Đã bỏ các đối tượng đang chọn để đo', 'Cleared the picked entities')); }
+        else flash(L('Không trúng mesh nào', 'No mesh under the cursor'));
+        return;
+      }
       if (t === 'thick') { measureThickness(h); return; }
       if (t === 'secpick') {
         const sc = S.sec;
@@ -1528,7 +1630,7 @@
         $('secPos').value = Math.round(sc.s * 1000);
         updateSection(); setTool('select'); return;
       }
-      measurePick(t, entityAt(h, px, py, e.altKey));
+      const en = entityAt(h, px, py, e.altKey); en.bname = h.body.name; measurePick(t, en);
       return;
     }
     if (S.cmp) return;
@@ -1743,7 +1845,7 @@
       m.n = V.norm(n); m.r = V.len(V.sub(pts[0], m.c));
     }
     if (!S.cmp) pushUndo();
-    S.measures.push(m);
+    S.measures.push(m); S.measSel = S.measures.length - 1;
     updateMeasList(); dirty = true;
   }
   function measureThickness(h) {
@@ -1755,12 +1857,15 @@
   function updateMeasList() {
     const box = $('measList');
     box.innerHTML = '';
+    updateMeasPanel();
     if (!S.measures.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = L('Chọn công cụ đo phía trên màn hình 3D rồi bấm vào mesh.', 'Pick a measuring tool above the 3D view, then click on the mesh.'); box.appendChild(e); return; }
     S.measures.forEach(function (m, i) {
       const row = document.createElement('div'); row.className = 'item';
       const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (i + 1) + '. ' + measText(m); nm.title = measText(m);
       const x = document.createElement('button'); x.className = 'x'; x.textContent = '✕';
       x.addEventListener('click', function () { if (!S.cmp) pushUndo(); S.measures.splice(i, 1); updateMeasList(); dirty = true; });
+      if (i === S.measSel) row.classList.add('on');
+      row.addEventListener('click', function () { S.measSel = i; updateMeasList(); openPop('measure', true); });
       row.appendChild(nm); row.appendChild(x); box.appendChild(row);
     });
   }
