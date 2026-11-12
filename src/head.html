@@ -79,6 +79,19 @@
   input, textarea { -webkit-user-select: text; user-select: text; }
   #tpop { position: absolute; left: 10px; top: 54px; display: none; background: rgba(20,24,29,.92); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
   #tpop .row { margin: 3px 0; }
+  #sktools { position: absolute; left: 10px; top: 10px; display: none; gap: 4px; flex-wrap: wrap; align-items: center; background: rgba(20,24,29,.92); border: 1px solid var(--accent); border-radius: 6px; padding: 5px; max-width: calc(100% - 120px); }
+  #sktools .sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 3px; }
+  #sktools input[type=number] { width: 62px; }
+  #sktools label { display: inline-flex; gap: 4px; align-items: center; white-space: nowrap; }
+  #skFields { display: inline-flex; gap: 6px; align-items: center; }
+  #skplane, #fdlg { position: absolute; left: 10px; top: 56px; display: none; background: rgba(20,24,29,.96); border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; width: 300px; z-index: 5; }
+  #fdlg .ft { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
+  #fdlg .ft b { color: var(--accent); font-size: 14px; }
+  #fdlg .grow { flex: 1; }
+  .seg { display: flex; margin: 4px 0 6px; }
+  .seg button { flex: 1; border-radius: 0; }
+  .seg button:first-child { border-radius: 5px 0 0 5px; } .seg button:last-child { border-radius: 0 5px 5px 0; }
+  .seg button.on { background: var(--accent); color: #111; border-color: var(--accent); }
   #tpop input.s { width: 64px; }
   #cubeWrap { position: absolute; right: 16px; top: 14px; width: 70px; height: 70px; perspective: 600px; }
   #cube { position: absolute; left: 10px; top: 10px; width: 50px; height: 50px; transform-style: preserve-3d; }
@@ -120,6 +133,11 @@
   <button id="bRedo" title="Ctrl+Y" data-en="↷ Redo">↷ Tiến</button>
   <span class="sep"></span>
   <button id="bHome" data-en="⟲ Import position" data-en-title="Put the ticked bodies back where they were when imported" title="Đưa các body đang tick về vị trí lúc import">⟲ Vị trí lúc import</button>
+  <span class="sep"></span>
+  <button id="bSketch" data-en="✏ Sketch" data-en-title="Draw a sketch on a plane" title="Vẽ sketch trên một mặt phẳng">✏ Sketch</button>
+  <button id="bExtrude" data-en="Extrude" data-en-title="Make a solid by extruding the closed sketch profiles" title="Tạo khối bằng cách đùn các biên dạng kín của sketch">Extrude</button>
+  <button id="bRevolve" data-en="Revolve" data-en-title="Make a solid by revolving the closed sketch profiles" title="Tạo khối bằng cách xoay tròn các biên dạng kín của sketch">Revolve</button>
+  <button id="bToMesh" data-en="Solid → mesh" data-en-title="Turn the ticked solids into plain meshes" title="Chuyển các khối solid đang tick thành mesh thường">Solid → mesh</button>
   <span id="msg"></span>
   <span class="grow"></span>
   <button id="bVi" class="on">Việt</button><button id="bEn">EN</button>
@@ -202,6 +220,51 @@
     <button data-tool="radius" data-en="Radius">Đo bán kính</button>
     <button data-tool="thick" data-en="Wall thickness">Đo bề dày</button>
   </div>
+  <div id="sktools">
+    <button data-sk="select" data-en="Select">Chọn</button>
+    <button data-sk="line" data-en="Line">Line</button>
+    <button data-sk="rect" data-en="Rectangle">Rectangle</button>
+    <button data-sk="circle" data-en="Circle">Circle</button>
+    <button data-sk="arc" data-en="3-point arc">Arc 3 điểm</button>
+    <button data-sk="poly" data-en="Polygon">Polygon</button>
+    <span class="sep"></span>
+    <button data-sk="fillet" data-en="Fillet">Fillet</button>
+    <button data-sk="trim" data-en="Trim">Trim</button>
+    <button data-sk="offset" data-en="Offset">Offset</button>
+    <button id="skAxis" data-en="Axis line" data-en-title="Mark the selected line as the revolve axis (not part of the profile)" title="Đặt đường thẳng đang chọn làm trục xoay (không thuộc biên dạng)">Đặt làm trục</button>
+    <button id="skDel" data-en="Delete" title="Delete">Xóa</button>
+    <span class="sep"></span>
+    <span id="skFields"></span>
+    <label><input type="checkbox" id="skGrid" checked> <span data-en="Snap to grid">Bắt lưới</span></label>
+    <span class="sep"></span>
+    <button id="skUndo" title="Ctrl+Z">↶</button>
+    <button id="skOk" class="primary" data-en="✓ Finish sketch">✓ Xong sketch</button>
+    <button id="skCancel" data-en="✕ Cancel">✕ Hủy</button>
+  </div>
+  <div id="skplane">
+    <b data-en="Sketch plane">Mặt phẳng vẽ</b>
+    <div class="btns"><button data-pl="top">Top (XY)</button><button data-pl="front">Front (XZ)</button><button data-pl="right">Right (YZ)</button></div>
+    <div class="btns"><button data-pl="pick" data-en="Click a flat face of a mesh">Bấm một mặt phẳng trên mesh</button><button data-pl="edit" id="skEdit" data-en="Edit the last sketch">Sửa sketch gần nhất</button><button data-pl="x">✕</button></div>
+  </div>
+  <div id="fdlg">
+    <div class="ft"><b id="fTitle">Extrude</b><span class="grow"></span><button id="fOk" class="primary">✓</button><button id="fNo">✕</button></div>
+    <div class="seg" id="fOp"><button data-op="new" class="on">New</button><button data-op="add">Add</button><button data-op="remove">Remove</button><button data-op="intersect">Intersect</button></div>
+    <div id="fExt">
+      <div class="row"><span class="lbl" data-en="Depth">Chiều sâu</span><input type="number" id="fDepth" value="10" step="1"><span class="unit">mm</span></div>
+      <div class="row"><input type="range" id="fDepthR" min="1" max="200" step="1" value="10"></div>
+      <div class="row"><label><input type="checkbox" id="fSym"> <span data-en="Symmetric">Đối xứng 2 phía</span></label><label><input type="checkbox" id="fFlip"> <span data-en="Flip direction">Đảo hướng</span></label></div>
+      <div class="row"><span class="lbl" data-en="Draft">Góc thoát khuôn (draft)</span><input type="number" id="fDraft" value="0" step="0.5"><span class="unit">°</span></div>
+      <div class="row"><span class="lbl" data-en="End edge">Cạnh đầu khối</span><select id="fEdge"><option value="none" data-en="sharp">sắc</option><option value="chamfer">chamfer</option><option value="fillet">fillet</option></select><input type="number" id="fEdgeS" value="1" min="0" step="0.5"><span class="unit">mm</span></div>
+      <div class="row"><label><input type="checkbox" id="fEdgeB"> <span data-en="Both ends">Cả 2 đầu</span></label></div>
+      <div class="row"><span class="lbl" data-en="Shell wall (0 = solid)">Shell: bề dày vỏ (0 = đặc)</span><input type="number" id="fShell" value="0" min="0" step="0.5"><span class="unit">mm</span></div>
+    </div>
+    <div id="fRev">
+      <div class="row"><span class="lbl" data-en="Axis">Trục xoay</span><select id="fAxis"></select></div>
+      <div class="row"><span class="lbl" data-en="Angle">Góc</span><input type="number" id="fAng" value="360" min="1" max="360" step="5"><span class="unit">°</span></div>
+      <div class="row"><input type="range" id="fAngR" min="5" max="360" step="5" value="360"></div>
+    </div>
+    <div class="note" id="fNote"></div>
+  </div>
   <div id="tpop">
     <div id="tpMove" class="row"><span data-en="Move">Di chuyển</span> X <input type="number" id="mvX" class="s" value="0"> Y <input type="number" id="mvY" class="s" value="0"> Z <input type="number" id="mvZ" class="s" value="0"> <span class="unit">mm</span><button id="bMove" class="primary" data-en="Apply">Áp dụng</button></div>
     <div id="tpRot" class="row"><span data-en="Rotate about">Xoay quanh</span>
@@ -253,6 +316,14 @@
     <div class="row"><span class="lbl" data-en="First stitch gaps up to">Khâu khe hở trước, tới</span><input type="number" id="holeStitch" value="0" min="0" step="0.01"><span class="unit">mm</span></div>
     <div class="btns"><button id="bFill" data-en="Fill holes">Vá lỗ</button></div>
     <div class="box" id="holeRes" data-en="Open borders are drawn bright red. Tick a body and press Fill holes. Rim limit 0 = every hole; stitch 0 = off.">Viền hở được vẽ màu đỏ sáng. Tick body rồi bấm "Vá lỗ". Chu vi 0 = vá mọi lỗ; khâu 0 = không khâu.</div>
+  </div></details>
+
+  <details open><summary>Boolean</summary><div class="c">
+    <div class="seg" id="boolOp"><button data-op="union" class="on">Union</button><button data-op="subtract">Subtract</button><button data-op="intersect">Intersect</button></div>
+    <div class="box" id="boolInfo"></div>
+    <div class="row"><label><input type="checkbox" id="boolKeep"> <span data-en="Keep tools">Giữ lại tools</span></label></div>
+    <div class="btns"><button id="bBool" data-en="✓ Apply boolean">✓ Thực hiện boolean</button></div>
+    <div class="box" id="boolRes" data-en="Tick the bodies in order: for Subtract the first one ticked is the target, the others are the tools. Works on closed meshes.">Tick các body theo thứ tự: với Subtract, body tick đầu tiên là target, các body sau là tools. Chỉ chạy trên lưới kín.</div>
   </div></details>
 
   <details><summary>Explode</summary><div class="c">

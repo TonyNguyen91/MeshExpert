@@ -1791,5 +1791,395 @@
     return { reg: reg, regions: regs, chains: chains, corners: corner.size, noisy: noisy };
   }
 
-  return { parse: parse, weld: weld, decimate: decimate, split: split, borderEdges: borderEdges, borderLoops: borderLoops, stitch: stitch, fillHoles: fillHoles, features: features, boundary: boundary, fillHoles: fillHoles, featEdges: featEdges, fitFace: fitFace, splitAdv: splitAdv, edgeAdjacency: edgeAdjacency, writeSTL: writeSTL, writeOBJ: writeOBJ, zipStore: zipStore,
+
+  // ---------- 2D profiles: triangulation, offset; solids from profiles ----------
+  const area2 = function (l) { let a = 0; for (let i = 0, n = l.length; i < n; i++) { const p = l[i], q = l[(i + 1) % n]; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; };
+  const segX = function (a, b, c, d) {                      // do the open segments ab and cd properly cross?
+    const o = function (p, q, r) { return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]); };
+    const d1 = o(a, b, c), d2 = o(a, b, d), d3 = o(c, d, a), d4 = o(c, d, b);
+    return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+  };
+  // triangles (index triples into the concatenated loops) of a region: loops[0] outer (counter-clockwise), the rest holes
+  function triangulate(loops) {
+    const pts = [], rings = [];
+    for (const l of loops) { const r = []; for (const p of l) { r.push(pts.length); pts.push(p); } rings.push(r); }
+    let poly = rings[0].slice();
+    const holes = rings.slice(1).map(function (r) { let m = 0; for (let i = 1; i < r.length; i++) if (pts[r[i]][0] > pts[r[m]][0]) m = i; return { r: r, m: m }; });
+    holes.sort(function (a, b) { return pts[b.r[b.m]][0] - pts[a.r[a.m]][0]; });
+    for (const h of holes) {                                  // bridge each hole to a vertex of the outline that it can see
+      const hp = pts[h.r[h.m]];
+      let best = -1, bd = Infinity;
+      for (let i = 0; i < poly.length; i++) {
+        const q = pts[poly[i]], d = (q[0] - hp[0]) * (q[0] - hp[0]) + (q[1] - hp[1]) * (q[1] - hp[1]);
+        if (d >= bd) continue;
+        let clear = true;
+        for (let k = 0; k < poly.length && clear; k++) { const a = pts[poly[k]], b = pts[poly[(k + 1) % poly.length]]; if (segX(hp, q, a, b)) clear = false; }
+        for (const g of holes) for (let k = 0; k < g.r.length && clear; k++) { const a = pts[g.r[k]], b = pts[g.r[(k + 1) % g.r.length]]; if (segX(hp, q, a, b)) clear = false; }
+        if (clear) { bd = d; best = i; }
+      }
+      if (best < 0) best = 0;
+      const ins = [];
+      for (let k = 0; k <= h.r.length; k++) ins.push(h.r[(h.m + k) % h.r.length]);
+      ins.push(poly[best]);
+      poly = poly.slice(0, best + 1).concat(ins, poly.slice(best + 1));
+    }
+    const tri = [], cr = function (a, b, c) { return (pts[b][0] - pts[a][0]) * (pts[c][1] - pts[a][1]) - (pts[b][1] - pts[a][1]) * (pts[c][0] - pts[a][0]); };
+    let guard = 0;
+    while (poly.length > 3 && guard++ < 100000) {
+      const n = poly.length;
+      let cut = -1, fallback = -1;
+      for (let i = 0; i < n && cut < 0; i++) {
+        const a = poly[(i + n - 1) % n], b = poly[i], c = poly[(i + 1) % n], ar = cr(a, b, c);
+        if (ar <= 1e-14) { if (ar > -1e-14 && fallback < 0) fallback = i; continue; }
+        let ear = true;
+        for (let k = 0; k < n && ear; k++) {
+          const v = poly[k];
+          if (v === a || v === b || v === c) continue;
+          const p = pts[v];
+          if ((p[0] === pts[a][0] && p[1] === pts[a][1]) || (p[0] === pts[b][0] && p[1] === pts[b][1]) || (p[0] === pts[c][0] && p[1] === pts[c][1])) continue;
+          if (cr(a, b, v) >= 0 && cr(b, c, v) >= 0 && cr(c, a, v) >= 0) ear = false;
+        }
+        if (ear) cut = i;
+      }
+      if (cut < 0) cut = fallback >= 0 ? fallback : 0;
+      const a = poly[(cut + n - 1) % n], b = poly[cut], c = poly[(cut + 1) % n];
+      if (cr(a, b, c) > 1e-14) tri.push(a, b, c);
+      poly.splice(cut, 1);
+    }
+    if (poly.length === 3 && cr(poly[0], poly[1], poly[2]) > 1e-14) tri.push(poly[0], poly[1], poly[2]);
+    return tri;
+  }
+  // move a closed loop sideways by d towards its left (into the material, for outlines and holes alike); null if it collapses
+  function offsetLoop(l, d) {
+    const n = l.length, out = [];
+    if (d === 0) return l.map(function (p) { return [p[0], p[1]]; });
+    for (let i = 0; i < n; i++) {
+      const p = l[(i + n - 1) % n], q = l[i], r = l[(i + 1) % n];
+      let ax = q[0] - p[0], ay = q[1] - p[1], bx = r[0] - q[0], by = r[1] - q[1];
+      const la = Math.hypot(ax, ay) || 1, lb = Math.hypot(bx, by) || 1;
+      ax /= la; ay /= la; bx /= lb; by /= lb;
+      const k = 1 + (-ay) * (-by) + ax * bx, f = d / Math.max(k, 0.25);
+      out.push([q[0] + (-ay - by) * f, q[1] + (ax + bx) * f]);
+    }
+    const a0 = area2(l), a1 = area2(out);
+    if (a0 * a1 <= 0) return null;
+    for (let i = 0; i < n; i++) {                              // an edge that turned round means the loop pinched off
+      const p = l[i], q = l[(i + 1) % n], P = out[i], Q = out[(i + 1) % n];
+      if ((q[0] - p[0]) * (Q[0] - P[0]) + (q[1] - p[1]) * (Q[1] - P[1]) < 0) return null;
+    }
+    if (n <= 400) for (let i = 0; i < n; i++) for (let j = i + 2; j < n; j++) { if (i === 0 && j === n - 1) continue; if (segX(out[i], out[(i + 1) % n], out[j], out[(j + 1) % n])) return null; }
+    return out;
+  }
+  function soupToMesh(tris) {                                 // weld, drop slivers, wind every triangle like its neighbours, volume positive
+    const m = weld(new Float32Array(tris), null);
+    let v = 0; const P = m.positions, I = m.indices;
+    {
+      const nv = P.length / 3, nt = I.length / 3, em = new Map(), seen = new Uint8Array(nt), stack = [];
+      for (let h = 0; h < I.length; h++) { const a = I[h], b = I[h % 3 === 2 ? h - 2 : h + 1], k = a < b ? a * nv + b : b * nv + a; if (em.has(k)) em.get(k).push(h); else em.set(k, [h]); }
+      for (let s0 = 0; s0 < nt; s0++) {
+        if (seen[s0]) continue;
+        seen[s0] = 1; stack.push(s0);
+        while (stack.length) {
+          const t = stack.pop();
+          for (let c = 0; c < 3; c++) {
+            const h = 3 * t + c, a = I[h], b = I[c === 2 ? h - 2 : h + 1], l = em.get(a < b ? a * nv + b : b * nv + a);
+            if (l.length !== 2) continue;
+            const o = l[0] === h ? l[1] : l[0], u = (o / 3) | 0;
+            if (seen[u]) continue;
+            if (I[o] === a) { const x = I[3 * u + 1]; I[3 * u + 1] = I[3 * u + 2]; I[3 * u + 2] = x; }   // same direction on both sides: turn the neighbour over
+            seen[u] = 1; stack.push(u);
+          }
+        }
+      }
+    }
+    for (let t = 0; t < I.length; t += 3) { const a = 3 * I[t], b = 3 * I[t + 1], c = 3 * I[t + 2]; v += P[a] * (P[b + 1] * P[c + 2] - P[b + 2] * P[c + 1]) + P[a + 1] * (P[b + 2] * P[c] - P[b] * P[c + 2]) + P[a + 2] * (P[b] * P[c + 1] - P[b + 1] * P[c]); }
+    if (v < 0) for (let t = 0; t < I.length; t += 3) { const x = I[t + 1]; I[t + 1] = I[t + 2]; I[t + 2] = x; }
+    return m;
+  }
+  // regions: [{loops}] with loops[0] the outline (ccw) and the rest holes (cw). frame: {o, u, v, n}.
+  // opt: z0, z1, draft (rad, + = narrower towards z1), edge 'none'|'chamfer'|'fillet', edgeSize, edgeBoth, shell (wall, open at z1)
+  function extrudeSolid(regions, frame, opt) {
+    const z0 = Math.min(opt.z0, opt.z1), z1 = Math.max(opt.z0, opt.z1), H = z1 - z0, td = Math.tan(opt.draft || 0), es = opt.edge && opt.edge !== 'none' ? (opt.edgeSize || 0) : 0, sh = opt.shell || 0;
+    if (!(H > 0)) throw new Error('depth');
+    if (es * (opt.edgeBoth ? 2 : 1) >= H || (sh > 0 && sh >= H)) throw new Error('size');
+    const sec = [], round = opt.edge === 'fillet', m = round ? 6 : 1;
+    if (es > 0 && opt.edgeBoth && !sh) for (let k = 0; k < m; k++) { const f = k / m * Math.PI / 2; sec.push(round ? [z0 + es * (1 - Math.cos(f)), es * (1 - Math.sin(f))] : [z0, es]); }
+    sec.push([z0 + (es > 0 && opt.edgeBoth && !sh ? es : 0), 0]);
+    if (es > 0) { sec.push([z1 - es, 0]); for (let k = 1; k <= m; k++) { const f = k / m * Math.PI / 2; sec.push(round ? [z1 - es + es * Math.sin(f), es * (1 - Math.cos(f))] : [z1, es]); } } else sec.push([z1, 0]);
+    for (const q of sec) q[1] += (q[0] - z0) * td;
+    const P3 = function (p, z) { const o = frame.o, u = frame.u, v = frame.v, n = frame.n; return [o[0] + p[0] * u[0] + p[1] * v[0] + z * n[0], o[1] + p[0] * u[1] + p[1] * v[1] + z * n[1], o[2] + p[0] * u[2] + p[1] * v[2] + z * n[2]]; };
+    const T = [], tri3 = function (a, b, c) { T.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]); };
+    for (const rg of regions) {
+      const ring = function (off) { return rg.loops.map(function (l) { const r = offsetLoop(l, off); if (!r) throw new Error('offset'); return r; }); };
+      const wall = function (A, za, B, zb, flip) {
+        for (let li = 0; li < A.length; li++) for (let i = 0, n = A[li].length; i < n; i++) {
+          const j = (i + 1) % n, a = P3(A[li][i], za), b = P3(A[li][j], za), c = P3(B[li][j], zb), d = P3(B[li][i], zb);
+          if (flip) { tri3(a, c, b); tri3(a, d, c); } else { tri3(a, b, c); tri3(a, c, d); }
+        }
+      };
+      const cap = function (R, z, up) {
+        const tr = triangulate(R), all = []; for (const l of R) for (const p of l) all.push(p);
+        for (let t = 0; t < tr.length; t += 3) { const a = P3(all[tr[t]], z), b = P3(all[tr[t + 1]], z), c = P3(all[tr[t + 2]], z); if (up) tri3(a, b, c); else tri3(a, c, b); }
+      };
+      const rings = sec.map(function (q) { return ring(q[1]); });
+      cap(rings[0], sec[0][0], false);
+      for (let k = 0; k + 1 < sec.length; k++) wall(rings[k], sec[k][0], rings[k + 1], sec[k + 1][0], false);
+      if (!sh) { cap(rings[rings.length - 1], z1, true); continue; }
+      // hollow: the same sections moved in by the wall thickness, from a floor at z0 + shell up to the open top
+      const zf = z0 + sh, inner = [[zf, (zf - z0) * td + sh]];
+      for (const q of sec) if (q[0] > zf + 1e-9) inner.push([q[0], q[1] + sh]);
+      const ir = inner.map(function (q) { return ring(q[1]); });
+      cap(ir[0], zf, true);
+      for (let k = 0; k + 1 < inner.length; k++) wall(ir[k], inner[k][0], ir[k + 1], inner[k + 1][0], true);
+      wall(rings[rings.length - 1], z1, ir[ir.length - 1], z1, false);
+    }
+    return soupToMesh(T);
+  }
+  // axis: {p: [x, y], d: [dx, dy]} in the sketch plane; angle in radians (2*PI = full turn)
+  function revolveSolid(regions, frame, axis, angle) {
+    const full = angle >= 2 * Math.PI - 1e-9, steps = Math.max(8, Math.ceil(angle / (Math.PI / 36))), dl = Math.hypot(axis.d[0], axis.d[1]), dx = axis.d[0] / dl, dy = axis.d[1] / dl;
+    let side = 0;
+    for (const rg of regions) for (const l of rg.loops) for (const p of l) { const s = (p[0] - axis.p[0]) * -dy + (p[1] - axis.p[1]) * dx; if (Math.abs(s) > 1e-7) { if (side && s * side < 0) throw new Error('axis'); side = s; } }
+    if (!side) throw new Error('axis');
+    const o = frame.o, u = frame.u, v = frame.v, n = frame.n;
+    const P3 = function (p, th) {                             // rotate about the axis: the distance from the axis swings out of the plane
+      const t = (p[0] - axis.p[0]) * dx + (p[1] - axis.p[1]) * dy, r = (p[0] - axis.p[0]) * -dy + (p[1] - axis.p[1]) * dx;
+      const x = axis.p[0] + t * dx + r * Math.cos(th) * -dy, y = axis.p[1] + t * dy + r * Math.cos(th) * dx, z = r * Math.sin(th);
+      return [o[0] + x * u[0] + y * v[0] + z * n[0], o[1] + x * u[1] + y * v[1] + z * n[1], o[2] + x * u[2] + y * v[2] + z * n[2]];
+    };
+    const T = [], tri3 = function (a, b, c) { T.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]); };
+    for (const rg of regions) {
+      for (const l of rg.loops) for (let i = 0, m = l.length; i < m; i++) {
+        const j = (i + 1) % m;
+        for (let k = 0; k < steps; k++) {
+          const t0 = angle * k / steps, t1 = full && k === steps - 1 ? 0 : angle * (k + 1) / steps;
+          const a = P3(l[i], t0), b = P3(l[j], t0), c = P3(l[j], t1), d = P3(l[i], t1);
+          tri3(a, b, c); tri3(a, c, d);
+        }
+      }
+      if (!full) {
+        const tr = triangulate(rg.loops), all = []; for (const l of rg.loops) for (const p of l) all.push(p);
+        for (let t = 0; t < tr.length; t += 3) { tri3(P3(all[tr[t]], 0), P3(all[tr[t + 1]], 0), P3(all[tr[t + 2]], 0)); tri3(P3(all[tr[t]], angle), P3(all[tr[t + 2]], angle), P3(all[tr[t + 1]], angle)); }
+      }
+    }
+    // walls and caps were wound for one side of the axis; on the other side everything is mirrored, which soupToMesh undoes
+    return soupToMesh(T);
+  }
+
+  // ---------- boolean of two closed meshes ----------
+  // op: 'union' | 'subtract' (A minus B) | 'intersect'
+  function boolean(A, B, op, prog) {
+    const PA = A.positions, IA = A.indices, PB = B.positions, IB = B.indices, ntA = IA.length / 3, ntB = IB.length / 3;
+    const bvA = buildBVH(PA, IA), bvB = buildBVH(PB, IB);
+    let mnx = Infinity, mxx = -Infinity;
+    for (let i = 0; i < PA.length; i++) { if (PA[i] < mnx) mnx = PA[i]; if (PA[i] > mxx) mxx = PA[i]; }
+    for (let i = 0; i < PB.length; i++) { if (PB[i] < mnx) mnx = PB[i]; if (PB[i] > mxx) mxx = PB[i]; }
+    const diag = (mxx - mnx) || 1, eps = 1e-11 * diag;
+    // 1) which triangles cut which
+    const cutA = new Map(), cutB = new Map(), st = [], nb = bvB.nb, nl = bvB.nl, order = bvB.order;
+    for (let t = 0; t < ntA; t++) {
+      const a0 = 3 * IA[3 * t], a1 = 3 * IA[3 * t + 1], a2 = 3 * IA[3 * t + 2];
+      const x0 = Math.min(PA[a0], PA[a1], PA[a2]) - eps, x1 = Math.max(PA[a0], PA[a1], PA[a2]) + eps, y0 = Math.min(PA[a0 + 1], PA[a1 + 1], PA[a2 + 1]) - eps, y1 = Math.max(PA[a0 + 1], PA[a1 + 1], PA[a2 + 1]) + eps, z0 = Math.min(PA[a0 + 2], PA[a1 + 2], PA[a2 + 2]) - eps, z1 = Math.max(PA[a0 + 2], PA[a1 + 2], PA[a2 + 2]) + eps;
+      st.length = 0; st.push(0);
+      while (st.length) {
+        const node = st.pop(), o = 6 * node;
+        if (x1 < nb[o] || x0 > nb[o + 3] || y1 < nb[o + 1] || y0 > nb[o + 4] || z1 < nb[o + 2] || z0 > nb[o + 5]) continue;
+        const l = nl[2 * node];
+        if (l >= 0) { st.push(l, nl[2 * node + 1]); continue; }
+        const s = -l - 1, e = s + nl[2 * node + 1];
+        for (let i = s; i < e; i++) {
+          const tb = order[i], b0 = 3 * IB[3 * tb], b1 = 3 * IB[3 * tb + 1], b2 = 3 * IB[3 * tb + 2];
+          if (segTri(PA, a0, a1, PB, b0, b1, b2) || segTri(PA, a1, a2, PB, b0, b1, b2) || segTri(PA, a2, a0, PB, b0, b1, b2) ||
+              segTri(PB, b0, b1, PA, a0, a1, a2) || segTri(PB, b1, b2, PA, a0, a1, a2) || segTri(PB, b2, b0, PA, a0, a1, a2)) {
+            if (cutA.has(t)) cutA.get(t).push(tb); else cutA.set(t, [tb]);
+            if (cutB.has(tb)) cutB.get(tb).push(t); else cutB.set(tb, [t]);
+          }
+        }
+      }
+    }
+    if (prog) prog(0.2);
+    const out = [], ids = [];                                 // triangle soup of the result; ids: source vertex (or -1) per corner
+    const edgePts = new Map();                                // per source edge / cut line: the points that landed on it
+    const emit = function (pts, vid, flip, base, tags) {       // fan a convex polygon
+      if (tags) {
+        // a cut may have put a point on an edge that the triangle next door shares: take every such point in, so both match
+        let np = null, ni = null;
+        for (let k = 0, n = pts.length; k < n; k++) {
+          const l = tags[k] >= 0 ? edgePts.get(tags[k]) : null;
+          if (np) { np.push(pts[k]); ni.push(vid[k]); }
+          if (!l) continue;
+          const a = pts[k], b = pts[(k + 1) % n], dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], l2 = dx * dx + dy * dy + dz * dz;
+          if (l2 === 0) continue;
+          const ins = [];
+          for (const q of l) { const sp = ((q[0] - a[0]) * dx + (q[1] - a[1]) * dy + (q[2] - a[2]) * dz) / l2; if (sp > 1e-9 && sp < 1 - 1e-9) ins.push([sp, q]); }
+          if (!ins.length) continue;
+          if (!np) { np = pts.slice(0, k + 1); ni = vid.slice(0, k + 1); }
+          ins.sort(function (x, y) { return x[0] - y[0]; });
+          for (const q of ins) { np.push(q[1]); ni.push(-1); }
+        }
+        if (np) {
+          let cx = 0, cy = 0, cz = 0;
+          for (const q of pts) { cx += q[0]; cy += q[1]; cz += q[2]; }
+          const c = [cx / pts.length, cy / pts.length, cz / pts.length];
+          for (let k = 0, n = np.length; k < n; k++) {
+            const b = np[flip ? (k + 1) % n : k], d = np[flip ? k : (k + 1) % n], ib = ni[flip ? (k + 1) % n : k], id = ni[flip ? k : (k + 1) % n];
+            out.push(c[0], c[1], c[2], b[0], b[1], b[2], d[0], d[1], d[2]);
+            ids.push(-1, ib < 0 ? -1 : base + ib, id < 0 ? -1 : base + id);
+          }
+          return;
+        }
+      }
+      for (let k = 1; k + 1 < pts.length; k++) {
+        const a = pts[0], b = pts[flip ? k + 1 : k], c = pts[flip ? k : k + 1];
+        out.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]);
+        ids.push(vid[0] < 0 ? -1 : base + vid[0], vid[flip ? k + 1 : k] < 0 ? -1 : base + vid[flip ? k + 1 : k], vid[flip ? k : k + 1] < 0 ? -1 : base + vid[flip ? k : k + 1]);
+      }
+    };
+    const TAGB = (PA.length / 3) * (PA.length / 3), TAGP = TAGB + (PB.length / 3) * (PB.length / 3);
+    // triangles lying in one flat face share a number, so the line where two faces meet has one name however they are triangulated
+    const faces = function (P, I, nt) {
+      const adj = edgeAdjacency(P, I, P.length / 3, null).adj, par = new Int32Array(nt), N = new Float64Array(4 * nt);
+      for (let t = 0; t < nt; t++) {
+        par[t] = t;
+        const a = 3 * I[3 * t], b = 3 * I[3 * t + 1], c = 3 * I[3 * t + 2];
+        const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], wx = P[c] - P[a], wy = P[c + 1] - P[a + 1], wz = P[c + 2] - P[a + 2];
+        let nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx; const l = Math.hypot(nx, ny, nz) || 1;
+        nx /= l; ny /= l; nz /= l;
+        N[4 * t] = nx; N[4 * t + 1] = ny; N[4 * t + 2] = nz; N[4 * t + 3] = nx * P[a] + ny * P[a + 1] + nz * P[a + 2];
+      }
+      const find = function (x) { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; };
+      for (let h = 0; h < 3 * nt; h++) {
+        const o = adj[h];
+        if (o <= h) continue;
+        const t = (h / 3) | 0, u = (o / 3) | 0;
+        if (N[4 * t] * N[4 * u] + N[4 * t + 1] * N[4 * u + 1] + N[4 * t + 2] * N[4 * u + 2] < 1 - 1e-10) continue;
+        const v = 3 * I[3 * u + (o % 3 + 2) % 3];
+        if (Math.abs(N[4 * t] * P[v] + N[4 * t + 1] * P[v + 1] + N[4 * t + 2] * P[v + 2] - N[4 * t + 3]) > eps) continue;
+        const ra = find(t), rb = find(u); if (ra !== rb) par[rb] = ra;
+      }
+      const id = new Int32Array(nt);
+      for (let t = 0; t < nt; t++) id[t] = find(t);
+      return { adj: adj, id: id };
+    };
+    const fA = faces(PA, IA, ntA), fB = faces(PB, IB, ntB);
+    const side = function (P, I, nt, cuts, Po, Io, bvO, keepInside, flip, base, tagBase, isA, adj) {
+      // triangles that are not cut: one inside/outside test per connected patch
+      const nvS = P.length / 3, ekey = function (a, b) { return tagBase + (a < b ? a * nvS + b : b * nvS + a); };
+      const kept = [];
+      const state = new Int8Array(nt), stack = [];
+      for (let s = 0; s < nt; s++) {
+        if (state[s] || cuts.has(s)) continue;
+        const a = 3 * I[3 * s], b = 3 * I[3 * s + 1], c = 3 * I[3 * s + 2];
+        const ins = inside(bvO, (P[a] + P[b] + P[c]) / 3, (P[a + 1] + P[b + 1] + P[c + 1]) / 3, (P[a + 2] + P[b + 2] + P[c + 2]) / 3) ? 1 : 2;
+        state[s] = ins; stack.push(s);
+        while (stack.length) {
+          const t = stack.pop();
+          for (let k = 0; k < 3; k++) { const o = adj[3 * t + k]; if (o < 0) continue; const u = (o / 3) | 0; if (!state[u] && !cuts.has(u)) { state[u] = ins; stack.push(u); } }
+        }
+      }
+      // cut triangles: split along the planes of the triangles that cross them, then test every piece
+      cuts.forEach(function (list, t) {
+        let frags = [{ p: [], id: [], et: [] }];
+        for (let k = 0; k < 3; k++) { const v = I[3 * t + k]; frags[0].p.push([P[3 * v], P[3 * v + 1], P[3 * v + 2]]); frags[0].id.push(v); frags[0].et.push(ekey(v, I[3 * t + (k + 1) % 3])); }
+        for (const ot of list) {
+          const pairTag = TAGP + (isA ? fA.id[t] * ntB + fB.id[ot] : fA.id[ot] * ntB + fB.id[t]);   // the line where the two faces meet: same name on both meshes
+          const a = 3 * Io[3 * ot], b = 3 * Io[3 * ot + 1], c = 3 * Io[3 * ot + 2];
+          const A0 = [Po[a], Po[a + 1], Po[a + 2]], e1 = [Po[b] - A0[0], Po[b + 1] - A0[1], Po[b + 2] - A0[2]], e2 = [Po[c] - A0[0], Po[c + 1] - A0[1], Po[c + 2] - A0[2]];
+          let nx = e1[1] * e2[2] - e1[2] * e2[1], ny = e1[2] * e2[0] - e1[0] * e2[2], nz = e1[0] * e2[1] - e1[1] * e2[0];
+          const nl2 = Math.hypot(nx, ny, nz);
+          if (nl2 === 0) continue;
+          nx /= nl2; ny /= nl2; nz /= nl2;
+          const d0 = nx * A0[0] + ny * A0[1] + nz * A0[2], next = [];
+          const d11 = e1[0] * e1[0] + e1[1] * e1[1] + e1[2] * e1[2], d12 = e1[0] * e2[0] + e1[1] * e2[1] + e1[2] * e2[2], d22 = e2[0] * e2[0] + e2[1] * e2[1] + e2[2] * e2[2], den = d11 * d22 - d12 * d12;
+          const bary = function (q) { const w = [q[0] - A0[0], q[1] - A0[1], q[2] - A0[2]], w1 = w[0] * e1[0] + w[1] * e1[1] + w[2] * e1[2], w2 = w[0] * e2[0] + w[1] * e2[1] + w[2] * e2[2]; const v = (d22 * w1 - d12 * w2) / den, ww = (d11 * w2 - d12 * w1) / den; return [1 - v - ww, v, ww]; };
+          for (const f of frags) {
+            const n = f.p.length, ds = new Array(n);
+            let pos = 0, neg = 0;
+            for (let k = 0; k < n; k++) { let d = nx * f.p[k][0] + ny * f.p[k][1] + nz * f.p[k][2] - d0; if (Math.abs(d) <= eps) d = 0; ds[k] = d; if (d > 0) pos++; else if (d < 0) neg++; }
+            if (!pos || !neg) { next.push(f); continue; }
+            // the two points where the plane crosses the outline of this piece
+            const X = [];
+            for (let k = 0; k < n; k++) {
+              const j = (k + 1) % n;
+              if (ds[k] === 0) X.push(f.p[k]);
+              else if (ds[k] * ds[j] < 0) { const s = ds[k] / (ds[k] - ds[j]); X.push([f.p[k][0] + s * (f.p[j][0] - f.p[k][0]), f.p[k][1] + s * (f.p[j][1] - f.p[k][1]), f.p[k][2] + s * (f.p[j][2] - f.p[k][2])]); }
+            }
+            // does that crossing line really run through the other triangle? (otherwise its plane is of no concern here)
+            let hit = false;
+            if (X.length >= 2) {
+              const b0 = bary(X[0]), b1 = bary(X[1]);
+              let lo = 0, hi = 1;
+              for (let k = 0; k < 3; k++) { const u0 = b0[k] + 1e-6, u1 = b1[k] + 1e-6; if (u0 < 0 && u1 < 0) { lo = 2; break; } if (u0 < 0) lo = Math.max(lo, u0 / (u0 - u1)); else if (u1 < 0) hi = Math.min(hi, u0 / (u0 - u1)); }
+              hit = hi - lo > -1e-6;
+            }
+            if (!hit) { next.push(f); continue; }
+            { const l = edgePts.get(pairTag); if (l) l.push(X[0], X[1]); else edgePts.set(pairTag, [X[0], X[1]]); }
+            const P1 = { p: [], id: [], et: [] }, P2 = { p: [], id: [], et: [] };
+            const add = function (G, p, id, tag) { G.p.push(p); G.id.push(id); G.et.push(tag); };
+            for (let k = 0; k < n; k++) {
+              const j = (k + 1) % n, dk = ds[k], dj = ds[j], tg = f.et[k];
+              // et[k] names the source edge that the side k -> k+1 lies on (-1: a cut)
+              if (dk >= 0) add(P1, f.p[k], f.id[k], dk === 0 && dj < 0 ? pairTag : tg);
+              if (dk <= 0) add(P2, f.p[k], f.id[k], dk === 0 && dj > 0 ? pairTag : tg);
+              if (dk * dj < 0) {
+                const s = dk / (dk - dj), q = [f.p[k][0] + s * (f.p[j][0] - f.p[k][0]), f.p[k][1] + s * (f.p[j][1] - f.p[k][1]), f.p[k][2] + s * (f.p[j][2] - f.p[k][2])];
+                if (tg >= 0) { const l = edgePts.get(tg); if (l) l.push(q); else edgePts.set(tg, [q]); }
+                add(P1, q, -1, dk > 0 ? pairTag : tg); add(P2, q, -1, dk < 0 ? pairTag : tg);
+              }
+            }
+            if (P1.p.length >= 3) next.push(P1);
+            if (P2.p.length >= 3) next.push(P2);
+          }
+          frags = next;
+        }
+        for (const f of frags) {
+          let cx = 0, cy = 0, cz = 0;
+          for (const q of f.p) { cx += q[0]; cy += q[1]; cz += q[2]; }
+          const n = f.p.length;
+          if (inside(bvO, cx / n, cy / n, cz / n) === keepInside) kept.push(f);
+        }
+      });
+      return function () {                                    // emit once both meshes have been cut
+        for (const f of kept) emit(f.p, f.id, flip, base, f.et);
+        const tg3 = [0, 0, 0];
+        for (let t = 0; t < nt; t++) {
+          if (cuts.has(t) || (state[t] === 1) !== keepInside) continue;
+          const pts = [], vid = [];
+          for (let k = 0; k < 3; k++) { const v = I[3 * t + k]; pts.push([P[3 * v], P[3 * v + 1], P[3 * v + 2]]); vid.push(v); tg3[k] = ekey(v, I[3 * t + (k + 1) % 3]); }
+          emit(pts, vid, flip, base, edgePts.size ? tg3 : null);
+        }
+      };
+    };
+    const nvA = PA.length / 3;
+    const emA = side(PA, IA, ntA, cutA, PB, IB, bvB, op === 'intersect', false, 0, 0, true, fA.adj);
+    if (prog) prog(0.6);
+    const emB = side(PB, IB, ntB, cutB, PA, IA, bvA, op !== 'union', op === 'subtract', nvA, TAGB, false, fB.adj);
+    emA(); emB();
+    if (prog) prog(0.85);
+    // 2) join: original vertices by number, new ones by position
+    const X = [], grid = new Map(), tol = 1e-10 * diag, inv = 1 / tol, t2 = tol * tol, srcMap = new Map(), I2 = new Uint32Array(ids.length);
+    const addNew = function (x, y, z) {
+      const cx = Math.floor(x * inv), cy = Math.floor(y * inv), cz = Math.floor(z * inv);
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (let dz = -1; dz <= 1; dz++) {
+        const l = grid.get((cx + dx) + ',' + (cy + dy) + ',' + (cz + dz));
+        if (l) for (const u of l) { const ex = X[3 * u] - x, ey = X[3 * u + 1] - y, ez = X[3 * u + 2] - z; if (ex * ex + ey * ey + ez * ez <= t2) return u; }
+      }
+      const id = X.length / 3, k = cx + ',' + cy + ',' + cz;
+      X.push(x, y, z);
+      if (grid.has(k)) grid.get(k).push(id); else grid.set(k, [id]);
+      return id;
+    };
+    for (let i = 0; i < ids.length; i++) {
+      const s = ids[i], x = out[3 * i], y = out[3 * i + 1], z = out[3 * i + 2];
+      if (s >= 0) { let v = srcMap.get(s); if (v === undefined) { v = X.length / 3; X.push(x, y, z); srcMap.set(s, v); } I2[i] = v; }
+      else if (s === -2) { I2[i] = X.length / 3; X.push(x, y, z); }
+      else I2[i] = addNew(x, y, z);
+    }
+    const T = [];
+    for (let t = 0; t < I2.length; t += 3) if (I2[t] !== I2[t + 1] && I2[t + 1] !== I2[t + 2] && I2[t] !== I2[t + 2]) T.push(I2[t], I2[t + 1], I2[t + 2]);
+    const m = compact(new Float32Array(X), new Uint32Array(T));
+    return { positions: m.positions, indices: m.indices, cut: cutA.size + cutB.size };
+  }
+
+  return { parse: parse, weld: weld, decimate: decimate, split: split, triangulate: triangulate, offsetLoop: offsetLoop, extrudeSolid: extrudeSolid, revolveSolid: revolveSolid, boolean: boolean, borderEdges: borderEdges, borderLoops: borderLoops, stitch: stitch, fillHoles: fillHoles, features: features, boundary: boundary, fillHoles: fillHoles, featEdges: featEdges, fitFace: fitFace, splitAdv: splitAdv, edgeAdjacency: edgeAdjacency, writeSTL: writeSTL, writeOBJ: writeOBJ, zipStore: zipStore,
     buildBVH: buildBVH, raycast: raycast, undercut: undercut, collide: collide, stats: stats, topology: topology, deviation: deviation, rigidFit: rigidFit, icp: icp };

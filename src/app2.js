@@ -14,6 +14,7 @@
     if (cmd === 'decimate') return c.decimate(p.mesh, p.opt, prog);
     if (cmd === 'split') return c.splitAdv(p.mesh, p.opt);
     if (cmd === 'fill') return c.fillHoles(p.mesh, p.opt);
+    if (cmd === 'bool') return c.boolean(p.a, p.b, p.op, prog);
     if (cmd === 'undercut') return c.undercut(p.mesh, p.dir, p.minDraft, prog);
     if (cmd === 'collide') return c.collide(p.a, p.b);
     if (cmd === 'deviation') return c.deviation(p.b, p.a, prog);
@@ -148,7 +149,7 @@
     const b = {
       id: S.idSeq++, name: uniqueName(name), geo: geo, orig: o.orig || geo, matrix: m, matrix0: o.matrix0 ? o.matrix0.slice() : m.slice(),
       color: o.color ? o.color.slice() : nextColor(), opacity: o.opacity === undefined ? 1 : o.opacity, visible: o.visible !== false,
-      material: o.material || '', density: o.density || 0, off: [0, 0, 0], ana: null, stats: null
+      material: o.material || '', density: o.density || 0, off: [0, 0, 0], ana: null, stats: null, solid: o.solid || null
     };
     if (o.index === undefined) S.bodies.push(b); else S.bodies.splice(o.index, 0, b);
     return b;
@@ -165,7 +166,7 @@
     if (b.ana && gl) { gl.deleteVertexArray(b.ana.vao); gl.deleteBuffer(b.ana.pb); gl.deleteBuffer(b.ana.cb); }
     b.ana = null;
   }
-  function setGeo(b, geo) { const old = b.geo; b.geo = geo; freeAna(b); b.stats = null; releaseGeo(old); }
+  function setGeo(b, geo, keepSolid) { const old = b.geo; b.geo = geo; freeAna(b); b.stats = null; if (!keepSolid) b.solid = null; releaseGeo(old); }
   function removeBody(b) {
     const i = S.bodies.indexOf(b);
     if (i < 0) return;
@@ -269,7 +270,7 @@
     return {
       bodies: S.bodies.map(function (b) {
         return { id: b.id, name: b.name, geo: b.geo, orig: b.orig, matrix: b.matrix.slice(), matrix0: b.matrix0.slice(), color: b.color.slice(), opacity: b.opacity,
-          visible: vis && vis.has(b) ? vis.get(b) : b.visible, material: b.material, density: b.density };
+          visible: vis && vis.has(b) ? vis.get(b) : b.visible, material: b.material, density: b.density, solid: b.solid || null };
       }),
       sel: selBodies().map(function (b) { return b.id; }), measures: JSON.parse(JSON.stringify(S.measures))
     };
@@ -744,6 +745,7 @@
       }
       for (const p of q) dot2(p, '#ffffff', 3);
     }
+    drawSketch();
     for (const p of S.tmp) dot2(project(p), '#ffcf5a', 4.5);
     if (S.hovEnt) {                                          // what a click would take, in the measuring tools
       const e = S.hovEnt, HC = '#ffe14a';
@@ -1021,7 +1023,7 @@
     refresh();
   }
   function refresh() {
-    updateList(); updateInfo(); syncCounts(true); updateHoleUI();
+    updateList(); updateInfo(); syncCounts(true); updateHoleUI(); if (typeof updateBoolUI === 'function') updateBoolUI();
     // Split is only lit while something is ticked; with nothing ticked and no split to continue, the option goes back to 1
     $('bSplit').classList.toggle('primary', S.sel.size > 0);
     const live = S.spl && S.spl.items.every(function (it) { return it.out.length && it.out.every(function (b) { return S.bodies.indexOf(b) >= 0; }); });
@@ -1055,7 +1057,7 @@
       cv.addEventListener('click', function (e) { e.stopPropagation(); });
       cv.addEventListener('change', function () { if (S.cmp) { cv.checked = !cv.checked; blocked(); return; } pushUndo(); b.visible = cv.checked; updateExplode(); sceneChanged(false); });
       const chip = document.createElement('span'); chip.className = 'chip'; chip.style.background = 'rgb(' + b.color.join(',') + ')';
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = b.name; nm.title = b.name;
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (b.solid ? '◆ ' : '') + b.name; nm.title = b.name + (b.solid ? L(' (khối solid: còn sửa được thông số)', ' (solid: its parameters can still be edited)') : '');
       nm.addEventListener('dblclick', function (e) { e.stopPropagation(); renameBody(b); });
       const ct = document.createElement('span'); ct.className = 'num'; ct.textContent = fmtN(b.geo.indices.length / 3);
       const ms = document.createElement('span'); ms.className = 'num'; ms.textContent = b.density > 0 ? massTxt(getStats(b).volume / 1000 * b.density) : '-';
@@ -1146,7 +1148,7 @@
     $('bVi').classList.toggle('on', lang === 'vi'); $('bEn').classList.toggle('on', lang === 'en');
     $('lMax').textContent = modeValue() === 'edge' ? L('Edge Length (tối thiểu)', 'Edge Length (minimum)') : 'Maximum';
     $('ucRes').innerHTML = ucLegend();
-    fillMats(); updateMeasList(); refresh(); updateCmpUI(); updateSplitUI(); updateHoleUI();
+    fillMats(); updateMeasList(); refresh(); updateCmpUI(); updateSplitUI(); updateHoleUI(); if (typeof updateBoolUI === 'function') updateBoolUI();
     if (S.col) renderCollisions();
     flash('');
   }
@@ -1313,6 +1315,7 @@
         if (S.tool === 'rotate') rotStart(drag, p[0], p[1]);
         canvas.style.cursor = 'grabbing';
       } else drag = { type: 'click', x0: p[0], y0: p[1], cam: cam };
+      if (S.sk) drag = { type: 'click', x0: p[0], y0: p[1], cam: cam };
     }
     cam = mainCam;
   });
@@ -1320,6 +1323,7 @@
   // nothing pressed: light up the gizmo handle or the centre-of-mass mark under the cursor
   function hover(px, py) {
     cam = camAt(px);
+    if (S.sk) { skHover(px, py); cam = mainCam; return; }
     const h = gizmoActive() && S.giz ? hitGizmo(px, py) : null;
     const t = S.tool, meas = t === 'dist' || t === 'angle' || t === 'radius', c = meas ? comAt(px, py) : null;
     let ent = null;
@@ -1343,7 +1347,7 @@
       cam.target = V.add(cam.target, V.add(V.mul(right(), -(p[0] - drag.x) * k), V.mul(up(), (p[1] - drag.y) * k)));
       drag.x = p[0]; drag.y = p[1]; dirty = true;
     } else if (drag.type === 'giz') gizmoDrag(drag, p[0], p[1], e.shiftKey);
-    else if (drag.type === 'click' && boxAllowed() && Math.hypot(p[0] - drag.x0, p[1] - drag.y0) >= 4) drag.type = 'box';
+    else if (drag.type === 'click' && !S.sk && S.tool !== 'skplane' && boxAllowed() && Math.hypot(p[0] - drag.x0, p[1] - drag.y0) >= 4) drag.type = 'box';
     if (drag.type === 'box') { S.box = { x0: drag.x0, y0: drag.y0, x1: p[0], y1: p[1] }; dirty = true; }
     syncCams(cam);
     cam = mainCam;
@@ -1423,6 +1427,8 @@
     if (add) { for (const h of hit) S.sel.add(h); refresh(); } else select(hit, false);
   }
   function onClick(px, py, e) {
+    if (S.sk) { skClick(px, py, e); return; }
+    if (S.tool === 'skplane') { skPickPlane(px, py); return; }
     if (S.cmp && S.cmp.split) {
       const i = px < W / 2 ? 0 : 1, h = pickNear(px, py, [i ? S.cmp.b : S.cmp.a]);
       if (!h) { flash(L('Không trúng mesh', 'No mesh under the cursor')); return; }
@@ -1457,6 +1463,7 @@
   window.addEventListener('keydown', function (e) {
     const tag = (e.target.tagName || '').toLowerCase();
     if (e.key === 'Escape') closeMenu();
+    if (modelKey(e)) return;
     // Space unticks everything, unless a text is being typed
     const typing = tag === 'textarea' || tag === 'select' || (tag === 'input' && ['checkbox', 'radio', 'range', 'color', 'button', 'file'].indexOf(e.target.type) < 0);
     if (e.code === 'Space' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -1499,7 +1506,7 @@
   // ================= context menu =================
   function closeMenu() { $('ctx').style.display = 'none'; }
   function openMenu(x, y, body) {
-    if (S.cmp || busy) return;
+    if (S.cmp || busy || S.sk) return;
     if (body && !S.sel.has(body)) select([body], false);
     const n = S.sel.size, items = [];
     if (body) {
@@ -1512,6 +1519,7 @@
       items.push([L('Xóa', 'Delete'), deleteSelected], null,
         ['Decimate…', function () { $('bApply').scrollIntoView({ block: 'center' }); flash(L('Đặt tham số Decimate ở khung bên trái rồi bấm Apply', 'Set the Decimate options on the left, then press Apply')); }],
         [L('Tách body', 'Split'), function () { $('bSplit').click(); }],
+        ...(body.solid ? [[L('Sửa khối solid…', 'Edit solid…'), function () { editSolid(body); }], [L('Chuyển solid → mesh', 'Convert solid → mesh'), function () { solidToMesh(); }]] : []),
         [L('Tách: phương án kế ▶', 'Split: next option ▶'), function () { $('bSplitNext').click(); }],
         [L('Gộp body tick', 'Merge ticked bodies'), joinSelected],
         [L('Phân tích undercut', 'Undercut analysis'), function () { $('bUc').click(); }]);
@@ -2225,7 +2233,7 @@
         geos.set(b.geo, g);
       }
       meta.bodies.push({ name: b.name, color: b.color, opacity: b.opacity, visible: vis && vis.has(b) ? vis.get(b) : b.visible, matrix: b.matrix, matrix0: b.matrix0,
-        material: b.material, density: b.density, sel: S.sel.has(b), pos: g.pos, nv: g.nv, idx: g.idx, nt: g.nt });
+        material: b.material, density: b.density, solid: b.solid || null, sel: S.sel.has(b), pos: g.pos, nv: g.nv, idx: g.idx, nt: g.nt });
     }
     let json = JSON.stringify(meta);
     let bytes = new TextEncoder().encode(json);
@@ -2306,7 +2314,8 @@
   window.addEventListener('dragleave', function () { $('drop').classList.remove('over'); });
   window.addEventListener('drop', function (e) { e.preventDefault(); $('drop').classList.remove('over'); handleFiles(Array.from(e.dataTransfer.files)); });
 
+/*MODEL*/
   applyLang(); updateHistBtns(); sceneChanged(true);
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();
