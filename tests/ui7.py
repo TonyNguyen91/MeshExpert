@@ -24,7 +24,7 @@ with sync_playwright() as p:
     def holes(i=0): return pg.evaluate("i=>{const b=__mrt.S.bodies[i];return __mrt.core.borderLoops(b.geo.positions,b.geo.indices)}",i)
     pg.evaluate("document.querySelectorAll('details').forEach(d=>d.open=true)"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
     # ---- layout ----
-    ok('display tools sit in the View tab of the ribbon',pg.evaluate("!!document.querySelector('#ribbon [data-page=view] #col')&&!!document.querySelector('#ribbon [data-page=view] #opa')&&!!document.querySelector('#ribbon [data-page=view] #cWire')&&!document.querySelector('#right #col')"))
+    ok('display tools sit in the Home tab of the ribbon',pg.evaluate("!!document.querySelector('#ribbon [data-page=home] #col')&&!!document.querySelector('#ribbon [data-page=home] #opa')&&!!document.querySelector('#ribbon [data-page=home] #cWire')&&!document.querySelector('#right #col')"))
     ok('split button is plain with nothing ticked','primary' not in cls('bSplit'),cls('bSplit'))
     # ---- open borders and filling ----
     pg.set_input_files('#file',[S+'/open.stl']); pg.wait_for_function("__mrt.S.bodies.length==1"); idle()

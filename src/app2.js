@@ -1054,7 +1054,7 @@
     $('bSaveSes').disabled = $('bClear').disabled = !S.bodies.length;
     const hd = document.createElement('div'); hd.className = 'brow hd';
     hd.innerHTML = '<span title="Highlight">☑</span><span title="' + L('Ẩn / hiện', 'Show / hide') + '">👁</span><span></span><span>' + L('Tên', 'Name') +
-      '</span><span class="num">' + L('Tam giác', 'Triangles') + '</span><span class="num">' + L('Khối lượng', 'Mass') + '</span>';
+      '</span><span class="num">' + L('Tam giác', 'Tris') + '</span><span class="num">' + L('K.lượng', 'Mass') + '</span>';
     box.appendChild(hd);
     if (!S.bodies.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = L('Chưa có mesh nào.', 'No mesh loaded.'); box.appendChild(e); return; }
     const frag = document.createDocumentFragment(), shown = Math.min(S.bodies.length, 400);

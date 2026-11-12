@@ -811,4 +811,4 @@
     dirty = true;
   }
   document.querySelectorAll('#rtabs .rtab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
-  try { const t = localStorage.getItem('mrt_tab'); if (t === 'view' || t === 'modify') showTab(t); } catch (e) { /* default tab */ }
+  try { const t = localStorage.getItem('mrt_tab'); if (t === 'home') showTab(t); } catch (e) { /* default tab */ }
