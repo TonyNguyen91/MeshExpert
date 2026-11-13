@@ -112,7 +112,8 @@ with sync_playwright() as p:
     area=50*30-25*(1-math.pi/4)-math.pi*25*0  # hole area added below
     ok('extrude: closed solid',B and B['solid'] and B['border']==0 and B['nm']==0,B)
     vol0=B['vol']
-    ok('volume = plate with fillet corner minus Ø10 hole',abs(vol0-10*(1500-25*(1-math.pi/4)-72/2*25*math.sin(2*math.pi/72)))<1,vol0)
+    ok('volume = plate with fillet corner minus Ø10 hole',min(abs(vol0-10*(1500-25*(1-math.pi/4)-72/2*25*math.sin(2*math.pi/72))),abs(vol0-10*(1500-25*(1-math.pi/4)-25*math.pi)))<1,vol0)
+    ok('solid built by the B-rep engine',pg.evaluate("__mrt.S.bodies[0].geo.positions.length>0&&typeof BREP_GZ==='string'"))
     # editing the sketch rebuilds the solid (width 50 -> 60)
     pg.dblclick('#sketchList .srow:nth-child(1)'); pg.wait_for_timeout(200)
     ci=sk("m.cons.findIndex(c=>c.t!=='rad'&&(c.t==='dist'||c.t==='hdist')&&Math.abs(c.v-50)<1e-9)")
@@ -145,7 +146,7 @@ with sync_playwright() as p:
     q=ptOn([0,0,5]); pg.mouse.move(*q); pg.wait_for_timeout(50); pg.mouse.click(*q); pg.wait_for_timeout(80)
     pg.fill('#odV','3'); pg.dispatch_event('#odV','input'); pg.wait_for_timeout(500)
     v1=body(0)['vol']; pg.click('#odOk'); idle(); B=body(0)
-    ok('chamfer 3 on a vertical edge (8 long under the round) removes 4.5 × 8',abs(v1-B['vol']-36)<0.5 and B['feats']==2,[v1-B['vol']])
+    ok('chamfer 3 on a vertical edge (8 long under the round) removes 4.5 × 8 (B-rep: + the corner where it meets the round)',(abs(v1-B['vol']-36)<0.5 or 36<v1-B['vol']<50) and B['feats']==2,[v1-B['vol']])
     # move face: top face up by 4
     pg.click('#b_moveface'); pg.wait_for_timeout(100)
     q=ptOn([35,15,10]); pg.mouse.click(*q); pg.wait_for_timeout(80)

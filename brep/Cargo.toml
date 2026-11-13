@@ -1,0 +1,13 @@
+[package]
+name = "mrtbrep"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+solidcraft-kernel = { workspace = true }
+solidcore-record = { workspace = true }
+serde_json = { workspace = true }

@@ -37,18 +37,19 @@
     const tol = 1e-6 * size, nodes = [], open = [], items = [];
     const node = function (p) { for (let i = 0; i < nodes.length; i++) if (d2(nodes[i].p, p) <= tol) return i; nodes.push({ p: p, e: [] }); return nodes.length - 1; };
     for (const e of use) {
-      if (e.t === 'circle') { const l = skTess(e); l.pop(); loops.push(l); continue; }
+      if (e.t === 'circle') { const l = skTess(e); l.pop(); l.segs = [{ type: 'arc', center: e.c.slice(), radius: e.r, start: 0, sweep: TAU }]; loops.push(l); continue; }
       const en = skEnds(e), it = { e: e, a: node(en[0]), b: node(en[1]), used: false };
       if (it.a === it.b) continue;
       nodes[it.a].e.push(it); nodes[it.b].e.push(it); items.push(it);
     }
     for (const s0 of items) {
       if (s0.used) continue;
-      const pts = [], chain = [];
+      const pts = [], chain = [], segs = [];
       let it = s0, at = s0.a, okLoop = true;
       for (;;) {
         it.used = true; chain.push(it);
         const t = skTess(it.e), fwd = it.a === at;
+        segs.push(skSeg(it.e, fwd));
         if (!fwd) t.reverse();
         t.pop();
         for (const p of t) pts.push(p);
@@ -59,7 +60,7 @@
         if (nx.used) { okLoop = false; break; }
         it = nx;
       }
-      if (okLoop && nodes[s0.a].e.length === 2 && pts.length >= 3) loops.push(pts); else for (const c of chain) open.push(c.e);
+      if (okLoop && nodes[s0.a].e.length === 2 && pts.length >= 3) { pts.segs = segs; loops.push(pts); } else for (const c of chain) open.push(c.e);
     }
     const area = function (l) { let a = 0; for (let i = 0, n = l.length; i < n; i++) { const p = l[i], q = l[(i + 1) % n]; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; };
     const info = loops.map(function (l) { return { l: l, a: Math.abs(area(l)), depth: 0, parent: -1 }; }).filter(function (q) { return q.a > 1e-12; });
@@ -67,9 +68,20 @@
       info.forEach(function (o, j) { if (i !== j && o.a > q.a && skInside(q.l[0], o.l)) { q.depth++; if (q.parent < 0 || o.a < info[q.parent].a) q.parent = j; } });
     });
     const regions = [];
-    info.forEach(function (q) { const ccw = area(q.l) > 0; if (q.depth % 2 === 0) { q.reg = { loops: [ccw ? q.l : q.l.slice().reverse()] }; regions.push(q.reg); } });
-    info.forEach(function (q) { if (q.depth % 2 === 1 && q.parent >= 0 && info[q.parent].reg) info[q.parent].reg.loops.push(area(q.l) < 0 ? q.l : q.l.slice().reverse()); });
+    info.forEach(function (q) { const ccw = area(q.l) > 0; if (q.depth % 2 === 0) { q.reg = { loops: [ccw ? q.l : q.l.slice().reverse()], segs: [skSegsDir(q.l.segs, ccw)] }; regions.push(q.reg); } });
+    info.forEach(function (q) { if (q.depth % 2 === 1 && q.parent >= 0 && info[q.parent].reg) { const cw = area(q.l) < 0; info[q.parent].reg.loops.push(cw ? q.l : q.l.slice().reverse()); info[q.parent].reg.segs.push(skSegsDir(q.l.segs, cw)); } });
     return { regions: regions, open: open.length };
+  }
+  // exact outline pieces (line / arc) of a loop, for the B-rep engine
+  function skSeg(e, fwd) {
+    if (e.t === 'line') return fwd ? { type: 'line', a: e.a.slice(), b: e.b.slice() } : { type: 'line', a: e.b.slice(), b: e.a.slice() };
+    const sw = e.a1 - e.a0;
+    return fwd ? { type: 'arc', center: e.c.slice(), radius: e.r, start: e.a0, sweep: sw } : { type: 'arc', center: e.c.slice(), radius: e.r, start: e.a1, sweep: -sw };
+  }
+  function skSegsDir(segs, keep) {
+    if (!segs) return null;
+    if (keep) return segs;
+    return segs.slice().reverse().map(function (g) { return g.type === 'line' ? { type: 'line', a: g.b, b: g.a } : { type: 'arc', center: g.center, radius: g.radius, start: g.start + g.sweep, sweep: -g.sweep }; });
   }
   function skInside(p, l) { let c = false; for (let i = 0, n = l.length, j = n - 1; i < n; j = i++) { const a = l[i], b = l[j]; if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; }
   // flat geometry of one model entity (construction included)

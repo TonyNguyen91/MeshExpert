@@ -156,7 +156,7 @@
   }
   function openFeature(type, edit) {
     if (blocked() || S.sk) { if (S.sk) flash(L('Hãy bấm "Xong sketch" trước', 'Finish the sketch first')); return; }
-    closeDlg();
+    closeDlg(); brepLib();
     let sid = edit && edit.solid ? edit.solid.sketchId || null : null;
     if (sid && !sketchById(sid)) sid = null;
     if (!edit) {
@@ -214,7 +214,7 @@
         const b = fd.edit;
         closeFeature();
         await rebuildSolid(b, recipe, m);
-      } else { const b = addBody(fd.type === 'extrude' ? 'Extrude' : 'Revolve', makeGeo(m.positions, m.indices), { solid: recipe }); S.sel = new Set([b]); closeFeature(); }
+      } else { setBusy(true, L('Dựng khối...', 'Building the solid...')); const bm = await brepMeshOf(recipe), mm = bm || m; setBusy(false); const b = addBody(fd.type === 'extrude' ? 'Extrude' : 'Revolve', makeGeo(mm.positions, mm.indices), { solid: recipe }); b.geoBrep = !!bm; S.sel = new Set([b]); closeFeature(); brNote(!!bm); }
       geomChanged(); sceneChanged(false);
       return;
     }
@@ -243,6 +243,10 @@
   function editSolid(b) { if (b.solid) openFeature(b.solid.type, b); }
   // a solid's base shape changed: rebuild it and replay its solid edits (fillet, shell...) on the new shape
   async function rebuildSolid(b, recipe, base) {
+    setBusy(true, L('Dựng lại khối...', 'Rebuilding the solid...'));
+    const bm = await brepMeshOf(recipe);
+    setBusy(false);
+    if (bm) { setGeo(b, makeGeo(bm.positions, bm.indices), true); b.geoBrep = true; b.solid = recipe; return; }
     let mesh = base, dropped = [];
     const feats = recipe.feats || [];
     if (feats.length) {
@@ -329,17 +333,18 @@
   function pickEdge(h, px, py, tangent) {
     const b = h.body, f = featOf(b), R = f.regions[f.reg[h.tri]];
     if (!R) return null;
-    let best = -1, bd = 10;
+    let best = -1, bd = 10, at = null;
     for (const ci of R.chains) {
       const c = f.chains[ci];
       for (let i = 0; i + 1 < c.pts.length; i++) {
         const a = project(c.pts[i]), q = project(c.pts[i + 1]), ax = q[0] - a[0], ay = q[1] - a[1], l2 = ax * ax + ay * ay, t = l2 > 1e-9 ? Math.max(0, Math.min(1, ((px - a[0]) * ax + (py - a[1]) * ay) / l2)) : 0;
         const d = Math.hypot(px - a[0] - t * ax, py - a[1] - t * ay);
-        if (d < bd) { bd = d; best = ci; }
+        if (d < bd) { bd = d; best = ci; at = V.add(c.pts[i], V.mul(V.sub(c.pts[i + 1], c.pts[i]), t)); }
       }
     }
     if (best < 0) return null;
     const out = [best];
+    out.at = at;                                             // the point clicked on the edge (world)
     if (tangent) {                                           // follow edges that continue smoothly from the ends
       const dir = function (c, atEnd) { const n = c.pts.length, a = atEnd ? c.pts[n - 1] : c.pts[0], q = atEnd ? c.pts[n - 2] : c.pts[1]; return V.norm(V.sub(a, q)); };
       const near = function (a, q) { return V.len(V.sub(a, q)) < 1e-6 * (1 + V.len(a)); };
@@ -466,6 +471,7 @@
   S.od = null;                                               // {cmd, sel: {box: [items]}, active, body}
   function closeDlg() { if (!S.od) return; S.od = null; $('odlg').style.display = 'none'; setGhosts([]); dirty = true; }
   function openDlg(cmd) {
+    if (cmd !== 'boolean') brepLib();
     if (blocked() || S.sk) { if (S.sk) flash(L('Hãy bấm "Xong sketch" trước', 'Finish the sketch first')); return; }
     closeFeature(); closeDlg(); $('skplane').style.display = 'none';
     setTool('select');
@@ -553,20 +559,20 @@
       if (!list) { flash(L('Bấm sát vào một cạnh (đường gãy giữa 2 mặt)', 'Click right on an edge (where two faces meet)')); return; }
       const li = od.sel[key], has = li.findIndex(function (it) { return it.ci === list[0]; });
       if (has >= 0) { const drop = new Set(list); od.sel[key] = li.filter(function (it) { return !drop.has(it.ci); }); }
-      else for (const ci of list) if (li.every(function (it) { return it.ci !== ci; })) li.push({ body: h.body, ci: ci });
+      else for (const ci of list) if (li.every(function (it) { return it.ci !== ci; })) li.push({ body: h.body, ci: ci, at: ci === list[0] ? list.at : null });
     } else {
       const r = f.reg[h.tri], R = f.regions[r];
       if ((kind === 'plane' || kind === 'plane1') && R.type !== 'plane') { flash(L('Hãy bấm một mặt phẳng', 'Click a flat face')); return; }
       if (od.cmd === 'moveface' && R.type !== 'plane' && R.type !== 'cyl') { flash(L('Move face dời được mặt phẳng hoặc mặt trụ', 'Move face moves flat or cylindrical faces')); return; }
       const li = od.sel[key], has = li.findIndex(function (it) { return it.r === r; });
-      if (has >= 0) li.splice(has, 1); else { if (kind === 'plane1') li.length = 0; li.push({ body: h.body, r: r }); }
+      if (has >= 0) li.splice(has, 1); else { if (kind === 'plane1') li.length = 0; li.push({ body: h.body, r: r, at: h.point || null }); }
       if (kind === 'plane1') { const nx = D.boxes.map(function (b) { return b[0]; }).filter(function (k) { return k !== key; })[0]; if (nx && !od.sel[nx].length) od.active = nx; }
     }
     buildDlg(); dlgPreview();
   }
   function dlgFeature() {                                     // the edit as a history record (descriptors in body coordinates)
     const od = S.od, b = od.body, f = featOf(b), rec = { type: od.cmd, v: od.v === undefined ? DRESS[od.cmd].num[2] : od.v, flip: !!od.flip, sel: {} };
-    for (const k of Object.keys(od.sel)) rec.sel[k] = od.sel[k].map(function (it) { return it.ci !== undefined ? edgeDesc(b, f, it.ci) : faceDesc(b, f, it.r); });
+    for (const k of Object.keys(od.sel)) rec.sel[k] = od.sel[k].map(function (it) { const d = it.ci !== undefined ? edgeDesc(b, f, it.ci) : faceDesc(b, f, it.r); if (it.at) d.at = toLocal(b, it.at); return d; });
     return rec;
   }
   function dlgReady() {
@@ -610,7 +616,19 @@
     }
     const b = od.body;
     if (!closedBody(b)) throw new Error(L('Body còn viền hở: vá kín trước', 'The body has open borders: close it first'));
-    const rec = dlgFeature(), mesh = await DRESS[od.cmd].apply({ positions: b.geo.positions, indices: b.geo.indices }, rec, false);
+    const rec = dlgFeature();
+    if (b.solid && BR_FEATS[od.cmd]) {
+      const bm = await brepMeshOf(Object.assign({}, b.solid, { feats: (b.solid.feats || []).concat([rec]) }));
+      if (bm) return [{ mesh: bm, matrix: b.matrix, hide: [b], body: b, rec: rec }];
+    }
+    if (b.solid && !BR_FEATS[od.cmd]) brLast = L('lệnh này chưa có trong lõi B-rep', 'this command is not in the B-rep engine yet');
+    let src = { positions: b.geo.positions, indices: b.geo.indices }, again = false;
+    if (b.solid && b.geoBrep) {                               // the mesh method starts from its own mesh of the solid
+      src = featMesh(b.solid.type, { frame: b.solid.frame, ents: b.solid.ents }, b.solid.params, b.solid.off);
+      for (const f of b.solid.feats || []) src = await DRESS[f.type].apply(src, f, true);
+      again = true;
+    }
+    const mesh = await DRESS[od.cmd].apply(src, rec, again);
     return [{ mesh: mesh, matrix: b.matrix, hide: [b], body: b, rec: rec }];
   }
   async function dlgOk() {
@@ -640,7 +658,7 @@
         flash(tri ? od.op.charAt(0).toUpperCase() + od.op.slice(1) + ': ' + fmtN(tri) + L(' tam giác · ', ' triangles · ') + f2((performance.now() - t0) / 1000, 1) + L(' giây', ' s') : L('Kết quả rỗng (các body không giao nhau theo phép này).', 'The result is empty (the bodies do not overlap for this operation).'), true);
       } else {
         const r = res[0], b = r.body;
-        setGeo(b, makeGeo(r.mesh.positions, r.mesh.indices), true);
+        setGeo(b, makeGeo(r.mesh.positions, r.mesh.indices), true); b.geoBrep = r.mesh.engine === 'brep'; if (b.solid) brNote(b.geoBrep);
         if (b.solid) { b.solid.feats = (b.solid.feats || []).concat([r.rec]); }
       }
       closeDlg();

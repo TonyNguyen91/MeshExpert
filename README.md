@@ -53,4 +53,8 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Lệnh solid trên thanh trên cùng: Fillet, Chamfer (cạnh, có lấy cạnh nối tiếp tuyến), Move face (mặt phẳng / mặt trụ), Replace face, Shell, Draft. Có xem trước. Với khối ◆ các lệnh được lưu thành lịch sử và áp lại khi sửa sketch / thông số khối (cạnh / mặt được tìm lại theo vị trí; lệnh nào không tìm lại được thì bị bỏ và app báo).
 - "Boolean" trên thanh trên cùng: Union / Intersect dùng ô Tools; Subtract có 2 ô Tools và Targets riêng. Chạy bằng thư viện Manifold, chỉ trên lưới kín.
 - ⚙ (góc phải trên): đặt phím tắt cho Move, Rotate, Scale, Sketch, Extrude, Revolve, Boolean, các lệnh solid và ẩn / hiện (mặc định Y).
-- Giới hạn: không xuất STEP; khối là lưới tam giác tính từ thông số, các lệnh solid chạy trên lưới (không phải B-rep thật), nên góc gặp nhau của nhiều fillet không được làm tròn kiểu hình cầu như CAD.
+- Lõi B-rep (khối chính xác): khối dựng từ sketch (Extrude / Revolve không draft, không bo / vát / vỏ trong hộp thoại) và các lệnh Fillet, Chamfer, Shell, Move face, Draft được dựng bằng lõi B-rep nhúng trong file (solidcore / SolidCraft kernel, Apache-2.0 / MIT, xem `src/LICENSES-BREP.txt`). Mặt cong, fillet, lỗ tròn là hình học chính xác; lưới hiển thị chia với dung sai 0,02 mm.
+- "STEP (solid)" trong nhóm Xuất file: tải các khối solid đang tick thành file STEP (mở được bằng CATIA, NX, Onshape...). Body chỉ là lưới (STL nhập vào, sau Boolean, hoặc có Replace face) không xuất STEP được.
+- Lệnh nào lõi B-rep không làm được (ví dụ Move face mặt trên đang tiếp xúc fillet, Replace face) thì app tự dựng lại khối bằng cách cũ trên lưới, như trước khi có B-rep.
+- Lõi B-rep nạp lần đầu mất khoảng 1–2 giây (khi mở Extrude / Revolve hoặc một lệnh solid). File index.html nặng khoảng 10,7 MB vì có lõi này.
+- Mã nguồn lớp bọc lõi B-rep ở thư mục `brep/` (cách biên dịch lại xem `brep/README.md`).

@@ -166,7 +166,7 @@
     if (b.ana && gl) { gl.deleteVertexArray(b.ana.vao); gl.deleteBuffer(b.ana.pb); gl.deleteBuffer(b.ana.cb); }
     b.ana = null;
   }
-  function setGeo(b, geo, keepSolid) { const old = b.geo; b.geo = geo; freeAna(b); b.stats = null; if (!keepSolid) b.solid = null; releaseGeo(old); }
+  function setGeo(b, geo, keepSolid) { const old = b.geo; b.geo = geo; b.geoBrep = false; freeAna(b); b.stats = null; if (!keepSolid) b.solid = null; releaseGeo(old); }
   function removeBody(b) {
     const i = S.bodies.indexOf(b);
     if (i < 0) return;
@@ -1141,7 +1141,7 @@
       cv.addEventListener('click', function (e) { e.stopPropagation(); });
       cv.addEventListener('change', function () { if (S.cmp) { cv.checked = !cv.checked; blocked(); return; } pushUndo(); b.visible = cv.checked; updateExplode(); sceneChanged(false); });
       const chip = document.createElement('span'); chip.className = 'chip'; chip.style.background = 'rgb(' + b.color.join(',') + ')';
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (b.solid ? '◆ ' : '') + b.name; nm.title = b.name + (b.solid ? L(' (khối solid: còn sửa được thông số)', ' (solid: its parameters can still be edited)') : '');
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (b.solid ? '◆ ' : '') + b.name + (b.solid ? (b.geoBrep ? ' · B-rep' : L(' · lưới', ' · mesh')) : ''); nm.title = b.name + (b.solid ? L(' (khối solid: còn sửa được thông số)', ' (solid: its parameters can still be edited)') + (b.geoBrep ? L(' — dựng bằng lõi B-rep, xuất được STEP', ' — built by the B-rep engine, can be saved as STEP') : L(' — dựng bằng lưới', ' — built as a mesh')) : '');
       nm.addEventListener('dblclick', function (e) { e.stopPropagation(); renameBody(b); });
       const ct = document.createElement('span'); ct.className = 'num'; ct.textContent = fmtN(b.geo.indices.length / 3);
       const ms = document.createElement('span'); ms.className = 'num'; ms.textContent = b.density > 0 ? massTxt(getStats(b).volume / 1000 * b.density) : '-';
