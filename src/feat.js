@@ -214,7 +214,7 @@
         const b = fd.edit;
         closeFeature();
         await rebuildSolid(b, recipe, m);
-      } else { setBusy(true, L('Dựng khối...', 'Building the solid...')); const bm = await brepMeshOf(recipe), mm = bm || m; setBusy(false); const b = addBody(fd.type === 'extrude' ? 'Extrude' : 'Revolve', makeGeo(mm.positions, mm.indices), { solid: recipe }); b.geoBrep = !!bm; S.sel = new Set([b]); closeFeature(); brNote(!!bm); }
+      } else { setBusy(true, L('Dựng khối...', 'Building the solid...')); const bm = await brepMeshOf(recipe), mm = bm || m; setBusy(false); const b = addBody(fd.type === 'extrude' ? 'Extrude' : 'Revolve', bm ? brGeo(bm) : makeGeo(mm.positions, mm.indices), { solid: recipe }); b.geoBrep = !!bm; S.sel = new Set([b]); closeFeature(); brNote(!!bm); }
       geomChanged(); sceneChanged(false);
       return;
     }
@@ -246,7 +246,7 @@
     setBusy(true, L('Dựng lại khối...', 'Rebuilding the solid...'));
     const bm = await brepMeshOf(recipe);
     setBusy(false);
-    if (bm) { setGeo(b, makeGeo(bm.positions, bm.indices), true); b.geoBrep = true; b.solid = recipe; return; }
+    if (bm) { setGeo(b, brGeo(bm), true); b.geoBrep = true; b.solid = recipe; return; }
     let mesh = base, dropped = [];
     const feats = recipe.feats || [];
     if (feats.length) {
@@ -623,7 +623,7 @@
     }
     if (b.solid && !BR_FEATS[od.cmd]) brLast = L('lệnh này chưa có trong lõi B-rep', 'this command is not in the B-rep engine yet');
     let src = { positions: b.geo.positions, indices: b.geo.indices }, again = false;
-    if (b.solid && b.geoBrep) {                               // the mesh method starts from its own mesh of the solid
+    if (b.solid && b.geo.brep) {                               // the mesh method starts from its own mesh of the solid
       src = featMesh(b.solid.type, { frame: b.solid.frame, ents: b.solid.ents }, b.solid.params, b.solid.off);
       for (const f of b.solid.feats || []) src = await DRESS[f.type].apply(src, f, true);
       again = true;
@@ -658,7 +658,7 @@
         flash(tri ? od.op.charAt(0).toUpperCase() + od.op.slice(1) + ': ' + fmtN(tri) + L(' tam giác · ', ' triangles · ') + f2((performance.now() - t0) / 1000, 1) + L(' giây', ' s') : L('Kết quả rỗng (các body không giao nhau theo phép này).', 'The result is empty (the bodies do not overlap for this operation).'), true);
       } else {
         const r = res[0], b = r.body;
-        setGeo(b, makeGeo(r.mesh.positions, r.mesh.indices), true); b.geoBrep = r.mesh.engine === 'brep'; if (b.solid) brNote(b.geoBrep);
+        setGeo(b, r.mesh.engine === 'brep' ? brGeo(r.mesh) : makeGeo(r.mesh.positions, r.mesh.indices), true); b.geoBrep = r.mesh.engine === 'brep'; if (b.solid) brNote(!!b.geo.brep);
         if (b.solid) { b.solid.feats = (b.solid.feats || []).concat([r.rec]); }
       }
       closeDlg();

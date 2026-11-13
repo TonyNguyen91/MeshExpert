@@ -160,6 +160,7 @@
     gl.deleteVertexArray(g.gl.vao); gl.deleteVertexArray(g.gl.vaoL);
     gl.deleteBuffer(g.gl.pos); gl.deleteBuffer(g.gl.idx); if (g.gl.line) gl.deleteBuffer(g.gl.line);
     if (g.holes && g.holes.vao) { gl.deleteVertexArray(g.holes.vao); gl.deleteBuffer(g.holes.buf); g.holes.vao = null; g.holes.buf = null; }
+    if (g.gl.vaoB) { gl.deleteVertexArray(g.gl.vaoB); gl.deleteBuffer(g.gl.bufB); }
     g.gl = null;
   }
   function freeAna(b) {
@@ -493,7 +494,18 @@
     if (b.ana && !plain) { gl.uniform1i(U.uMode, 2); gl.bindVertexArray(b.ana.vao); gl.drawArrays(gl.TRIANGLES, 0, b.ana.count); }
     else { gl.uniform1i(U.uMode, 0); gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES, b.geo.indices.length, gl.UNSIGNED_INT, 0); }
     gl.disable(gl.POLYGON_OFFSET_FILL);
-    if (edges) {
+    const brE = b.geo.brepE && b.geo.brepE.length;
+    if (brE && !(b.ana && !plain)) {   // B-rep solids show their true edges (not triangles), like CAD
+      if (!g.vaoB) {
+        g.vaoB = gl.createVertexArray(); g.bufB = gl.createBuffer();
+        gl.bindVertexArray(g.vaoB); gl.bindBuffer(gl.ARRAY_BUFFER, g.pos);
+        gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, g.bufB); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, b.geo.brepE, gl.STATIC_DRAW);
+      }
+      gl.uniform1i(U.uMode, 1); gl.uniform4f(U.uColor, 0.05, 0.06, 0.08, alpha < 1 ? alpha * 0.7 : 1);
+      gl.bindVertexArray(g.vaoB); gl.drawElements(gl.LINES, b.geo.brepE.length, gl.UNSIGNED_INT, 0);
+    }
+    if (edges && !brE) {
       ensureLines(b.geo);
       gl.uniform1i(U.uMode, 1); gl.uniform4f(U.uColor, 0, 0, 0, alpha < 1 ? alpha * 0.5 : 1);
       gl.bindVertexArray(g.vaoL); gl.drawElements(gl.LINES, g.nLine, gl.UNSIGNED_INT, 0);
@@ -868,19 +880,21 @@
     const b = h.body, off = S.cmp ? [0, 0, 0] : b.off, mv = function (p) { return V.add(p, off); };
     const free = { kind: 'point', p: snapPoint(h, px, py), at: h.point, free: true };
     if (freeOnly) return free;
-    const f = featOf(b), R = f.regions[f.reg[h.tri]];
+    const F = S.flt, f = featOf(b), R = f.regions[f.reg[h.tri]];
+    free.blocked = !F.point;
     if (!R) return free;
     const chains = R.chains.map(function (i) { return f.chains[i]; });
     // an edge or corner that lies well behind the surface under the cursor is hidden by it: not a candidate
     const w = viewer(), depth = V.dot(h.point, w) - 30 * 2 * cam.zoom / H;
     let best = null, bd = 11;
-    for (const c of chains) {
+    if (F.point) for (const c of chains) {
       if (c.closed) continue;
       for (const p of [c.pts[0], c.pts[c.pts.length - 1]]) { const wp = mv(p), q = project(wp), d = Math.hypot(q[0] - px, q[1] - py); if (d < bd && V.dot(wp, w) > depth) { bd = d; best = wp; } }
     }
     if (best) return { kind: 'point', p: best, at: best, text: L('Đỉnh', 'Corner') };
     let ec = null, ed = 8;
     for (const c of chains) {
+      if (c.type === 'line' ? !F.line : c.type === 'arc' ? !(F.circle || F.center) : !(F.line || F.circle)) continue;
       let p0 = mv(c.pts[0]), prev = project(p0);
       for (let i = 1; i < c.pts.length; i++) {
         const p1 = mv(c.pts[i]), q = project(p1), ax = q[0] - prev[0], ay = q[1] - prev[1], l2 = ax * ax + ay * ay;
@@ -889,15 +903,16 @@
         p0 = p1; prev = q;
       }
     }
+    if (ec && ec.type === 'arc' && !F.circle && ec.c) { const cc = mv(ec.c); return { kind: 'point', p: cc, at: cc, text: L('Tâm cung R', 'Arc centre R') + f2(ec.r), lines: [ec.pts.map(mv)] }; }
     if (ec) {
       const pts = ec.pts.map(mv);
       return { kind: 'edge', sub: ec.type, pts: pts, len: ec.len, r: ec.r, c: ec.c ? mv(ec.c) : null, n: ec.n, dir: ec.dir, p: pts[0], at: h.point, lines: [pts],
         text: ec.type === 'line' ? L('Cạnh thẳng ', 'Straight edge ') + f2(ec.len) + ' mm' : ec.type === 'arc' ? (ec.closed ? L('Đường tròn R ', 'Circle R ') : L('Cung R ', 'Arc R ')) + f2(ec.r) : L('Cạnh cong ', 'Curved edge ') + f2(ec.len) + ' mm' };
     }
     const lines = chains.map(function (c) { return c.pts.map(mv); });
-    if (R.type === 'plane') return { kind: 'plane', n: R.n, p: h.point, at: h.point, lines: lines, text: L('Mặt phẳng', 'Plane') };
-    if (R.type === 'cyl') return { kind: 'cyl', c: mv(R.c), dir: R.axis, r: R.r, p: h.point, at: h.point, lines: lines, text: L('Mặt trụ R ', 'Cylinder R ') + f2(R.r) };
-    if (R.type === 'sphere') return { kind: 'sphere', c: mv(R.c), r: R.r, p: h.point, at: h.point, lines: lines, text: L('Mặt cầu R ', 'Sphere R ') + f2(R.r) };
+    if (R.type === 'plane' && F.plane) return { kind: 'plane', n: R.n, p: h.point, at: h.point, lines: lines, text: L('Mặt phẳng', 'Plane') };
+    if (R.type === 'cyl' && (F.face || F.axis)) return { kind: 'cyl', c: mv(R.c), dir: R.axis, r: R.r, p: h.point, at: h.point, lines: lines, text: F.face ? L('Mặt trụ R ', 'Cylinder R ') + f2(R.r) : L('Trục mặt trụ R ', 'Cylinder axis R ') + f2(R.r) };
+    if (R.type === 'sphere' && (F.face || F.center)) return F.face ? { kind: 'sphere', c: mv(R.c), r: R.r, p: h.point, at: h.point, lines: lines, text: L('Mặt cầu R ', 'Sphere R ') + f2(R.r) } : { kind: 'point', p: mv(R.c), at: mv(R.c), text: L('Tâm mặt cầu', 'Sphere centre') };
     return free;
   }
   // reduce what was picked to a point, a line or a plane
@@ -1141,7 +1156,9 @@
       cv.addEventListener('click', function (e) { e.stopPropagation(); });
       cv.addEventListener('change', function () { if (S.cmp) { cv.checked = !cv.checked; blocked(); return; } pushUndo(); b.visible = cv.checked; updateExplode(); sceneChanged(false); });
       const chip = document.createElement('span'); chip.className = 'chip'; chip.style.background = 'rgb(' + b.color.join(',') + ')';
-      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (b.solid ? '◆ ' : '') + b.name + (b.solid ? (b.geoBrep ? ' · B-rep' : L(' · lưới', ' · mesh')) : ''); nm.title = b.name + (b.solid ? L(' (khối solid: còn sửa được thông số)', ' (solid: its parameters can still be edited)') + (b.geoBrep ? L(' — dựng bằng lõi B-rep, xuất được STEP', ' — built by the B-rep engine, can be saved as STEP') : L(' — dựng bằng lưới', ' — built as a mesh')) : '');
+      const nm = document.createElement('span'); nm.className = 'nm'; const isB = !!(b.geo && b.geo.brep);
+      nm.textContent = (b.solid && !isB ? '◆ ' : '') + b.name; nm.title = b.name + (b.solid ? L(' (khối solid: còn sửa được thông số)', ' (solid: its parameters can still be edited)') : '') + (isB ? L(' — khối B-rep chính xác, xuất được STEP', ' — exact B-rep solid, can be saved as STEP') : L(' — lưới tam giác', ' — triangle mesh'));
+      const kb = document.createElement('span'); kb.className = 'kind ' + (isB ? 'kb' : 'km'); kb.textContent = isB ? 'B-rep' : L('Lưới', 'Mesh'); nm.insertBefore(kb, nm.firstChild);
       nm.addEventListener('dblclick', function (e) { e.stopPropagation(); renameBody(b); });
       const ct = document.createElement('span'); ct.className = 'num'; ct.textContent = fmtN(b.geo.indices.length / 3);
       const ms = document.createElement('span'); ms.className = 'num'; ms.textContent = b.density > 0 ? massTxt(getStats(b).volume / 1000 * b.density) : '-';
@@ -1257,7 +1274,8 @@
     if (e.kind === 'edge') { const q = e.pts, mid = q[Math.floor(q.length / 2)]; return { kind: 'point', p: e.sub === 'line' ? V.mul(V.add(q[0], q[q.length - 1]), 0.5) : mid, at: mid, text: L('Trung điểm cạnh', 'Edge midpoint'), lines: e.lines }; }
     if (e.kind === 'cyl') { const f = footLine(e.at, { p: e.c, d: e.dir }); return { kind: 'point', p: f, at: f, text: L('Trên trục mặt trụ', 'On the cylinder axis') }; }
     if (e.kind === 'sphere') return { kind: 'point', p: e.c, at: e.c, text: L('Tâm mặt cầu', 'Sphere centre') };
-    if (e.kind === 'point' && !e.free) return { kind: 'point', p: e.p, at: e.p, text: L('Đỉnh', 'Corner') };
+    if (e.kind === 'point' && !e.free) return { kind: 'point', p: e.p, at: e.p, text: e.text || L('Đỉnh', 'Corner') };
+    if (e.blocked) return null;
     const v = snapPoint(h, px, py);
     return { kind: 'point', p: v, at: v, text: L('Điểm', 'Point') };
   }
@@ -1526,7 +1544,7 @@
     if (S.viewPivot) { S.viewPivot = null; dirty = true; }
     if (d.type === 'sk') { skDragEnd(d); cam = mainCam; hover(p[0], p[1]); return; }
     if (d.type === 'giz') { if (d.moved) { commitTransform(d.list); flash(toolHint(S.tool), true); } dirty = true; }
-    else if (d.type === 'box') { S.box = null; cam = mainCam; boxSelect(d.x0, d.y0, p[0], p[1], true); }
+    else if (d.type === 'box') { S.box = null; cam = mainCam; if (S.flt.body) boxSelect(d.x0, d.y0, p[0], p[1], true); else { dirty = true; flash(L('Bộ lọc đang tắt Body', 'The filter is off for bodies')); } }
     else if (d.type === 'click' && still) onClick(p[0], p[1], e);
     else if (d.type === 'rot' && still && e.button === 2 && !(S.cmp && S.cmp.split)) { const h = pick(p[0], p[1]); openMenu(e.clientX, e.clientY, h ? h.body : null); }
     cam = mainCam;
@@ -1630,12 +1648,15 @@
         $('secPos').value = Math.round(sc.s * 1000);
         updateSection(); setTool('select'); return;
       }
-      const en = entityAt(h, px, py, e.altKey); en.bname = h.body.name; measurePick(t, en);
+      const en = entityAt(h, px, py, e.altKey);
+      if (en.blocked && !e.altKey) { flash(L('Không có gì hợp bộ lọc ở chỗ này (xem thanh Lọc)', 'Nothing here matches the filter (see the Filter bar)')); return; }
+      en.bname = h.body.name; measurePick(t, en);
       return;
     }
     if (S.cmp) return;
     // every click adds a body to the ticked set (or takes it out again); a click on empty space clears the set
     const h = pick(px, py);
+    if (h && !S.flt.body) { flash(L('Bộ lọc đang tắt Body: bật nút "Body" ở thanh Lọc để chọn body', 'The filter is off for bodies: turn on "Body" in the Filter bar to pick bodies')); return; }
     if (h) select([h.body], true); else select([], false);
   }
 
@@ -1675,6 +1696,24 @@
     if (e.code === 'Space' && (tag === 'button' || (tag === 'input' && ['checkbox', 'radio', 'range', 'color', 'button', 'file'].indexOf(e.target.type) >= 0))) e.preventDefault();
   });
   document.querySelectorAll('[data-tool]').forEach(function (b) { b.addEventListener('click', function () { setTool(b.dataset.tool); }); });
+  // ---------- selection filter: what a click or a snap may take ----------
+  const FLT_KEYS = ['body', 'point', 'center', 'line', 'circle', 'axis', 'plane', 'face'];
+  S.flt = {}; FLT_KEYS.forEach(function (k) { S.flt[k] = true; });
+  try { const sv = JSON.parse(localStorage.getItem('mrt_flt') || 'null'); if (sv) FLT_KEYS.forEach(function (k) { if (typeof sv[k] === 'boolean') S.flt[k] = sv[k]; }); } catch (e) { /* no storage */ }
+  function showFlt() {
+    document.querySelectorAll('[data-flt]').forEach(function (b) { b.classList.toggle('on', !!S.flt[b.dataset.flt]); });
+    try { localStorage.setItem('mrt_flt', JSON.stringify(S.flt)); } catch (e) { /* no storage */ }
+    S.hovEnt = null; dirty = true;
+  }
+  let fltTimer = 0;
+  document.querySelectorAll('[data-flt]').forEach(function (b) {
+    b.addEventListener('click', function () { clearTimeout(fltTimer); const k = b.dataset.flt; fltTimer = setTimeout(function () { S.flt[k] = !S.flt[k]; showFlt(); }, 220); });
+    b.addEventListener('dblclick', function () {                 // only this kind; double-click again: all kinds
+      clearTimeout(fltTimer); const k = b.dataset.flt, solo = FLT_KEYS.every(function (q) { return S.flt[q] === (q === k); });
+      FLT_KEYS.forEach(function (q) { S.flt[q] = solo ? true : q === k; }); showFlt();
+    });
+  });
+  showFlt();
   document.querySelectorAll('#cubeWrap [data-va]').forEach(function (d) {
     d.addEventListener('click', function () {
       const a = 15 * Math.PI / 180, k = d.dataset.va;

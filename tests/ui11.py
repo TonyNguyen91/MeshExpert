@@ -20,7 +20,7 @@ with sync_playwright() as p:
     def uv(u,v): return pg.evaluate("p=>{const f=__mrt.S.sk.frame,w=[f.o[0]+p[0]*f.u[0]+p[1]*f.v[0],f.o[1]+p[0]*f.u[1]+p[1]*f.v[1],f.o[2]+p[0]*f.u[2]+p[1]*f.v[2]];const q=__mrt.project(w);const r=document.getElementById('gl').getBoundingClientRect();return [q[0]+r.left,q[1]+r.top]}",[u,v])
     def scr(pt): return pg.evaluate("p=>{const q=__mrt.project(p);const r=document.getElementById('gl').getBoundingClientRect();return [q[0]+r.left,q[1]+r.top]}",pt)
     def click(u,v): q=uv(u,v); pg.mouse.move(*q); pg.wait_for_timeout(30); pg.mouse.click(*q); pg.wait_for_timeout(50)
-    def body(i=0): return pg.evaluate("i=>{const b=__mrt.S.bodies[i];if(!b)return null;const s=__mrt.core.stats(b.geo.positions,b.geo.indices),t=__mrt.core.topology(b.geo.indices,b.geo.positions.length/3);return {vol:s.volume,border:t.border,nm:t.nonManifold,brep:!!b.geoBrep,feats:b.solid&&b.solid.feats?b.solid.feats.length:0,min:s.min,max:s.max}}",i)
+    def body(i=0): return pg.evaluate("i=>{const b=__mrt.S.bodies[i];if(!b)return null;const s=__mrt.core.stats(b.geo.positions,b.geo.indices),t=__mrt.core.topology(b.geo.indices,b.geo.positions.length/3);return {vol:s.volume,border:t.border,nm:t.nonManifold,brep:!!(b.geo&&b.geo.brep),edges:b.geo&&b.geo.brepE?b.geo.brepE.length/2:0,feats:b.solid&&b.solid.feats?b.solid.feats.length:0,min:s.min,max:s.max}}",i)
     pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
     # 40 x 30 rectangle with a Ø12 circle, extruded 20
     pg.click('#bSketch'); pg.click('#skplane [data-pl=top]'); pg.wait_for_timeout(200)
@@ -33,7 +33,7 @@ with sync_playwright() as p:
     pg.fill('#fDepth','20'); pg.dispatch_event('#fDepth','input'); pg.wait_for_timeout(200)
     pg.click('#fOk'); idle(); B=body()
     W,H,R=sz[0],sz[1],sz[2][0]
-    ok('body list and message say B-rep',' · B-rep' in pg.inner_text('#bodyList') and 'B-rep' in pg.inner_text('#status'),[pg.inner_text('#status')])
+    ok('body list badge and message say B-rep; true edges drawn','B-rep' in pg.inner_text('#bodyList .kind') and 'B-rep' in pg.inner_text('#status') and B['edges']>0,[pg.inner_text('#status'),B['edges']])
     exact=20*(W*H-math.pi*R*R)
     ok('extrude built by the B-rep engine: closed, exact volume (round hole, not a polygon)',B and B['brep'] and B['border']==0 and B['nm']==0 and abs(B['vol']-exact)<0.001*exact,[B,exact])
     # fillet the top front edge R3
@@ -60,5 +60,23 @@ with sync_playwright() as p:
     ok('no network requests',net==[],net)
     ok('no page errors',errs==[],errs)
     ok('no B-rep fallbacks',not [w for w in warns if 'B-rep' in w],[w for w in warns if 'B-rep' in w])
+    # selection filter: Body off -> a click on the body does not tick it; only Circle -> measuring snaps to round edges
+    pg.evaluate("document.getElementById('bIso').click()"); pg.wait_for_timeout(150)
+    pg.click('[data-tool=select]'); pg.evaluate("__mrt.S.sel=new Set()")
+    pg.click('[data-flt=body]'); pg.wait_for_timeout(300)
+    q=scr([(mn[0]+mx[0])/2,(mn[1]+mx[1])/2,mx[2]]); pg.mouse.click(*q); pg.wait_for_timeout(100)
+    ok('filter: Body off, clicking a body does not tick it',pg.evaluate("__mrt.S.sel.size")==0 and 'Body' in pg.inner_text('#status'))
+    pg.click('[data-flt=body]'); pg.wait_for_timeout(300); pg.mouse.click(*q); pg.wait_for_timeout(100)
+    ok('filter: Body on again, the click ticks it',pg.evaluate("__mrt.S.sel.size")==1)
+    pg.dblclick('[data-flt=plane]'); pg.wait_for_timeout(150)
+    ok('double-click: only Plane is on',pg.evaluate("Object.keys(__mrt.S.flt).filter(k=>__mrt.S.flt[k]).join()")=='plane')
+    pg.dblclick('[data-flt=plane]'); pg.wait_for_timeout(150)
+    ok('double-click again: every kind on',all(pg.evaluate("Object.values(__mrt.S.flt)")))
+    # extrude with draft, a top round and a wall: still B-rep
+    pg.click('#bodyList .brow:nth-child(1)'); pg.evaluate("__mrt.S.sel=new Set()")
+    pg.click('#sketchList .srow:nth-child(1)'); pg.keyboard.press('e'); pg.wait_for_timeout(200)
+    pg.fill('#fDepth','20'); pg.fill('#fDraft','3'); pg.dispatch_event('#fDraft','input'); pg.wait_for_timeout(200)
+    pg.click('#fOk'); idle(); B2=body(1)
+    ok('extrude with 3° draft is B-rep, smaller than the straight one',B2 and B2['brep'] and B2['border']==0 and B2['vol']<exact-100,[B2,exact])
     b.close()
 print('all passed' if fails==0 else 'FAILED '+str(fails))

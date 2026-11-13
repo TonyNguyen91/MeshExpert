@@ -61,6 +61,17 @@ pub fn run(cmd: &Value) -> Result<Value, String> {
             for b in it { if let Some(u) = k::boolean(&acc, &b, k::BoolOp::Union).map_err(e)? { acc = u; } }
             Ok(ok(acc))
         }
+        "extrudeTapered" => {
+            let plane: solidcore_record::Plane = serde_json::from_value(cmd["plane"].clone()).map_err(|x| x.to_string())?;
+            let regions: Vec<solidcore_record::Region2> = serde_json::from_value(cmd["regions"].clone()).map_err(|x| x.to_string())?;
+            let (from, to, dir, taper) = (num(cmd, "from")?, num(cmd, "to")?, num(cmd, "dir")?, num(cmd, "taper")?);
+            let mut acc: Option<k::Body> = None;
+            for r in &regions {
+                let b = k::extrude_tapered_between(&plane, r, from, to, 0.0, dir, taper, k::DraftCorner::PreserveCurvature).map_err(e)?;
+                acc = Some(match acc { None => b, Some(a) => k::boolean(&a, &b, k::BoolOp::Union).map_err(e)?.unwrap_or(a) });
+            }
+            Ok(ok(acc.ok_or("no region")?))
+        }
         "transform" => {
             let a = cmd["m"].as_array().ok_or("m")?;
             let mut m = [[0.0f64; 4]; 4];

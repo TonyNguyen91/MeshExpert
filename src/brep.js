@@ -43,7 +43,6 @@
   const BR_FEATS = { fillet: true, chamfer: true, shell: true, moveface: true, draft: true };
   function brCan(r) {
     if (!r || (r.type !== 'extrude' && r.type !== 'revolve')) return false;
-    if (r.type === 'extrude') { const p = r.params; if (p.draft || p.shell > 0 || (p.edge && p.edge !== 'none' && p.edgeSize > 0)) return false; }
     return (r.feats || []).every(function (f) { return BR_FEATS[f.type]; });
   }
   function brBase(r) {
@@ -53,8 +52,36 @@
     const regions = reg.map(function (g) { return { outer: { segs: g.segs[0] }, holes: g.segs.slice(1).map(function (s) { return { segs: s }; }) }; });
     const p = r.params;
     if (r.type === 'extrude') {
-      const d = p.depth;
-      return brCall({ op: 'extrude', plane: plane, regions: regions, start: p.sym ? -d / 2 : p.flip ? -d : 0, end: p.sym ? d / 2 : p.flip ? 0 : d }).id;
+      const d = p.depth, n = V.norm(r.frame.n), es = p.edge && p.edge !== 'none' ? (p.edgeSize || 0) : 0, sh = p.shell || 0;
+      if (!(d > 0)) throw new Error('depth');
+      if (es * (p.edgeBoth ? 2 : 1) >= d || (sh > 0 && sh >= d)) throw new Error('size');
+      const top = p.sym ? d / 2 : p.flip ? -d : d, bot = p.sym ? -d / 2 : 0, out = top > bot ? 1 : -1;
+      let id;
+      if (!p.draft) id = brCall({ op: 'extrude', plane: plane, regions: regions, start: p.sym ? -d / 2 : p.flip ? -d : 0, end: p.sym ? d / 2 : p.flip ? 0 : d }).id;
+      else {                                                  // draft: the profile is the section at the bottom, the walls lean in going up
+        const pl = p.sym ? { origin: V.add(r.frame.o, V.mul(n, -d / 2)), x_dir: r.frame.u, y_dir: r.frame.v } : plane;
+        id = brCall({ op: 'extrudeTapered', plane: pl, regions: regions, from: 0, to: d, dir: p.flip && !p.sym ? -1 : 1, taper: -p.draft * Math.PI / 180 }).id;
+      }
+      const lvl = function (q) { return V.dot(V.sub(q, r.frame.o), n); };
+      const swap = function (nx) { brCall({ op: 'free', id: id }); id = nx; };
+      if (es > 0) {                                           // round / bevel the edges of the end face(s)
+        const caps = [top].concat(p.edgeBoth && !sh ? [bot] : []), tol = 1e-6 * (1 + d);
+        const pts = brCall({ op: 'info', id: id }).edges.filter(function (e) { return caps.some(function (h) { return Math.abs(lvl(e.mid) - h) < tol; }); }).map(function (e) { return e.mid; });
+        if (pts.length) swap(brCall(p.edge === 'fillet' ? { op: 'fillet', id: id, r: es, edges: pts } : { op: 'chamfer', id: id, d: es, edges: pts }).id);
+      }
+      if (sh > 0) {                                           // hollow, open at the end face(s)
+        const m = brCall({ op: 'mesh', id: id, chord: 0.5 }), P = m.pos, T = m.tri, seen = new Set(), open = [], tol = 1e-5 * (1 + d);
+        for (let t = 0; t < T.length; t += 3) {
+          const fc = m.face[t / 3];
+          if (seen.has(fc)) continue;
+          const A = [P[3 * T[t]], P[3 * T[t] + 1], P[3 * T[t] + 2]], B = [P[3 * T[t + 1]], P[3 * T[t + 1] + 1], P[3 * T[t + 1] + 2]], C = [P[3 * T[t + 2]], P[3 * T[t + 2] + 1], P[3 * T[t + 2] + 2]];
+          const c = V.mul(V.add(V.add(A, B), C), 1 / 3), nn = V.cross(V.sub(B, A), V.sub(C, A));
+          if (Math.abs(lvl(c) - top) < tol && V.dot(nn, n) * out > 0.99 * V.len(nn)) { seen.add(fc); open.push(c); }
+        }
+        if (!open.length) throw new Error('shell: end face not found');
+        swap(brCall({ op: 'shell', id: id, t: sh, open: open }).id);
+      }
+      return id;
     }
     let o = [0, 0], dir = p.axis === 'v' ? [0, 1] : [1, 0];
     if (p.axis !== 'u' && p.axis !== 'v') { const e = r.ents.filter(function (q) { return q.axis; })[+p.axis]; if (!e) throw new Error('axis'); o = e.a; dir = [e.b[0] - e.a[0], e.b[1] - e.a[1]]; }
@@ -101,18 +128,30 @@
       if (j === undefined) { j = out.length / 3; map.set(k, j); out.push(x, y, z); }
       at[i] = j;
     }
-    const T = m.tri, I = [];
+    const T = m.tri, I = [], own = new Map(), E = [], nv = out.length / 3;
     for (let t = 0; t < T.length; t += 3) {
       const a = at[T[t]], b = at[T[t + 1]], c = at[T[t + 2]];
-      if (a !== b && b !== c && a !== c) I.push(a, b, c);
+      if (a === b || b === c || a === c) continue;
+      I.push(a, b, c);
+      const fc = m.face[t / 3];
+      for (const [u, v] of [[a, b], [b, c], [c, a]]) {          // a mesh edge between two different B-rep faces is a B-rep edge
+        const k = u < v ? u * nv + v : v * nv + u, o = own.get(k);
+        if (o === undefined) own.set(k, fc); else if (o !== fc && o !== -1) { E.push(u, v); own.set(k, -1); }
+      }
     }
-    return { positions: Float32Array.from(out), indices: Uint32Array.from(I), engine: 'brep' };
+    return { positions: Float32Array.from(out), indices: Uint32Array.from(I), edges: Uint32Array.from(E), engine: 'brep' };
+  }
+  // the geometry of an engine mesh: it knows it is B-rep and carries its true edges for drawing
+  function brGeo(bm) {
+    const g = makeGeo(bm.positions, bm.indices);
+    g.brep = true; g.brepE = bm.edges;
+    return g;
   }
   // mesh of a recipe from the engine, or null (then the caller uses the mesh method)
   async function brepMeshOf(r) {
     try {
       const id = await brepSolid(r);
-      if (id === null) { brLast = brCan(r) ? brWhy : L('lệnh hoặc tùy chọn này chưa có trong lõi B-rep (draft / bo / vát / vỏ trong hộp thoại Extrude, Replace face)', 'this command or option is not in the B-rep engine yet (draft / round / bevel / wall in the Extrude dialog, Replace face)'); return null; }
+      if (id === null) { brLast = brCan(r) ? brWhy : L('lệnh này chưa có trong lõi B-rep (Replace face)', 'this command is not in the B-rep engine yet (Replace face)'); return null; }
       brLast = ''; return brMesh(id);
     }
     catch (e) { console.warn('B-rep:', e.message || e); brLast = L('lõi B-rep không dựng được: ', 'the B-rep engine could not build it: ') + (e.message === 'known failure' ? L('như lần trước', 'as before') : (e.message || e)); return null; }
@@ -127,7 +166,7 @@
     const l = needSel();
     if (!l.length) return;
     const solids = l.filter(function (b) { return b.solid && brCan(b.solid); });
-    if (!solids.length) { flash(L('STEP chỉ xuất được khối solid dựng từ sketch (Extrude / Revolve, Fillet, Chamfer, Shell, Move face, Draft)', 'STEP is only for solids built from sketches (Extrude / Revolve, Fillet, Chamfer, Shell, Move face, Draft)'), true); return; }
+    if (!solids.length) { flash(L('STEP chỉ xuất được khối solid dựng từ sketch và đang là B-rep', 'STEP is only for solids built from sketches that are B-rep'), true); return; }
     showError(null); setBusy(true, 'STEP...');
     try {
       const ids = [];
