@@ -70,6 +70,7 @@ with sync_playwright() as p:
     sidef=[120,10,10] if w[0]>0 else [100,10,10]
     pg.click('[data-tool=angle]'); pg.mouse.click(*scr([112,12,20])); pg.mouse.click(*scr(sidef)); pg.wait_for_timeout(120)
     m=last(); ok('angle tool: two planes of the box, 90 degrees',m['type']=='angle' and abs(m['v']-90)<1e-3,m)
+    pg.evaluate("(()=>{__mrt.S.measures.forEach(m=>m.lo=[-3000,-3000]);__mrt.S.labBoxes=[];})()")   # callouts take clicks first: move them out of the way
     pg.click('[data-tool=dist]'); pg.keyboard.down('Alt'); pg.mouse.click(*scr([104,4,20])); pg.mouse.click(*scr([116,13,20])); pg.keyboard.up('Alt'); pg.wait_for_timeout(120)
     m=last(); ok('Alt: free points on a face',m['type']=='dist' and abs(m['v']-15)<0.2,m)
     pg.keyboard.press('Escape'); pg.screenshot(path=S+'/k5.png')

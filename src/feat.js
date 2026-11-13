@@ -232,11 +232,12 @@
     } catch (e) { showError(e); }
     setBusy(false); geomChanged();
   });
-  function solidToMesh() {
-    const list = selBodies().filter(function (b) { return b.solid; });
+  function solidToMesh(one) {
+    const list = (one ? [one] : selBodies()).filter(function (b) { return b.solid || (b.geo && b.geo.brep); });
     if (!list.length) { flash(L('Không có khối solid nào đang được tick', 'No solid is ticked')); return; }
     pushUndo();
-    for (const b of list) b.solid = null;
+    for (const b of list) setGeo(b, makeGeo(b.geo.positions, b.geo.indices));   // a plain mesh: no recipe, no B-rep, triangles shown
+    geomChanged();
     flash(L('Đã chuyển ', 'Converted ') + list.length + L(' khối solid thành mesh', ' solids to meshes'));
     refresh();
   }
@@ -782,7 +783,7 @@
     const k = comboOf(e);
     if (!k) return false;
     for (const c of CMDS) if (keymap[c[0]] && keymap[c[0]] === k) { e.preventDefault(); runShortcut(c[0]); return true; }
-    if (e.key === 'Delete' && S.skSel && !S.sel.size) { const s = sketchById(S.skSel); if (s) { deleteSketch(s); return true; } }
+    if (e.key === 'Delete' && S.skSel && !S.sel.size && !S.measFocus) { const s = sketchById(S.skSel); if (s) { deleteSketch(s); return true; } }
     return false;
   }
   // clicks / hover in the view while a dialog is open
