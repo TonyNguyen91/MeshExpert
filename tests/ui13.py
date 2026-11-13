@@ -58,6 +58,15 @@ with sync_playwright() as p:
     at(pc)
     G=geos(); L2=G[-1]
     ok('Line point–plane drops square onto the plane (length 5)',L2['type']=='line' and abs(math.dist(L2['p'],L2['p2'])-5)<1e-3,L2)
+    pg.fill('#geoLen','12'); pg.dispatch_event('#geoLen','input'); pg.wait_for_timeout(100)
+    L2b=geos()[-1]
+    ok('typed length 12: the normal line is 12 long, same direction',abs(math.dist(L2b['p'],L2b['p2'])-12)<1e-3 and L2b['p2'][2]>L2b['p'][2],L2b)
+    pg.fill('#geoLen','0'); pg.dispatch_event('#geoLen','input')
+    # plane first, then a point: also a normal line
+    pg.click('#bodyList .brow:nth-child(2) .nm') if False else None
+    at(pc); at(G[1]['p'])
+    L3=geos()[-1]
+    ok('plane first then point also works',L3['type']=='line' and abs(math.dist(L3['p'],L3['p2'])-5)<1e-3,L3)
     # Axis from the round top edge of the cylinder
     pg.click('[data-tool=gaxis]'); pg.wait_for_timeout(100)
     rad=(C[1][0]-C[0][0])/2; cc=[(C[0][0]+C[1][0])/2,(C[0][1]+C[1][1])/2,C[1][2]]
@@ -76,7 +85,8 @@ with sync_playwright() as p:
     pg.click('[data-tool=select]'); pg.mouse.move(900,800); pg.keyboard.press('Space'); pg.wait_for_timeout(100)
     with pg.expect_download() as dl: pg.click('#bStep')
     path=os.path.join(S,'geo.step'); dl.value.save_as(path); txt=open(path).read()
-    ok('STEP of the geometry: points, polylines in a wireframe set',dl.value.suggested_filename=='geometry.step' and "CARTESIAN_POINT('P1'" in txt and 'POLYLINE' in txt and 'GEOMETRIC_CURVE_SET' in txt and 'GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION' in txt,dl.value.suggested_filename)
+    ok('STEP of the geometry: points, polylines in a wireframe set',dl.value.suggested_filename=='geometry.step' and "CARTESIAN_POINT('P1'" in txt and 'GEOMETRIC_CURVE_SET' in txt and 'GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION' in txt,dl.value.suggested_filename)
+    ok('lines written as trimmed LINEs, points also as a + (for Onshape)','TRIMMED_CURVE' in txt and 'POLYLINE' not in txt and "TRIMMED_CURVE('P1_X'" in txt)
     # Mate: block corner onto the cylinder centre point (a geometry point)
     pg.click('[data-tool=mate]'); pg.dblclick('[data-flt=point]'); pg.wait_for_timeout(150)
     at(corner,2,-2)

@@ -1196,7 +1196,7 @@
     document.querySelectorAll('[data-tool]').forEach(function (b) { b.classList.toggle('on', b.dataset.tool === t); });
     const geoT = t === 'gpoint' || t === 'gline' || t === 'gplane' || t === 'gaxis', xf = t === 'move' || t === 'rotate' || t === 'scale';
     $('tpop').style.display = (xf || t === 'mate' || geoT) ? 'block' : 'none';
-    $('tpAxes').style.display = xf ? 'flex' : 'none'; $('tpGeo').style.display = geoT ? 'flex' : 'none'; S.axPick = null; S.geoPick = []; if (geoT) geoToolUI(t);
+    $('tpAxes').style.display = xf ? 'flex' : 'none'; $('tpGeo').style.display = geoT ? 'flex' : 'none'; S.axPick = null; S.geoPick = []; S.geoPlane = null; if (geoT) geoToolUI(t);
     $('tpMate').style.display = t === 'mate' ? 'flex' : 'none'; S.mate = null; S.pivPick = false;
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick') { openPop('measure', true); updateMeasPanel(); }
     $('tpMove').style.display = t === 'move' ? 'flex' : 'none'; $('tpRot').style.display = t === 'rotate' ? 'flex' : 'none';

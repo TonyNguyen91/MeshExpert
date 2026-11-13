@@ -62,10 +62,10 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Nút "STEP (solid)" sáng lên khi có khối B-rep đang được tick. Chuột phải vào khối → "Chuyển solid → mesh" đổi khối đó thành lưới thường (nhãn đổi thành Lưới).
 - Nhóm Geometry (cạnh nhóm Sketch) tạo hình tham chiếu trực tiếp trên màn hình 3D, theo bộ lọc:
   - Point: bấm đỉnh, tâm đường tròn, điểm trên cạnh hoặc điểm trên mặt mesh.
-  - Line: Điểm–Điểm (bấm 2 điểm) hoặc Điểm–Mặt (bấm 1 điểm rồi 1 mặt phẳng, đường vuông góc xuống mặt).
+  - Line: Điểm–Điểm (bấm 2 điểm) hoặc Mặt–Điểm (bấm mặt phẳng và điểm, thứ tự nào cũng được): đường vuông góc với mặt qua điểm; ô Dài (thanh kéo / số) đặt độ dài tùy ý, 0 = tới mặt phẳng; Đảo chiều; sửa lại được cho đường đang chọn.
   - Plane: Theo mặt (bấm mặt phẳng, chỉnh Offset bằng thanh kéo / ô số, Đảo chiều; áp cho mặt đang chọn trong danh sách) hoặc 3 điểm.
   - Axis: từ mặt trụ, cạnh tròn, cạnh thẳng hoặc 2 điểm.
-  - Các geometry nằm trong danh sách "Sketches / Geos" (ẩn / hiện, đổi tên, xóa bằng chuột phải hoặc phím Delete), dùng được làm đối tượng đo, đích của Mate, trục X của tay nắm, và được xuất cùng file STEP (khung dây: điểm, polyline). Không tick body nào mà bấm "STEP (solid)" thì xuất riêng geometry.
+  - Các geometry nằm trong danh sách "Sketches / Geos" (ẩn / hiện, đổi tên, xóa bằng chuột phải hoặc phím Delete), dùng được làm đối tượng đo, đích của Mate, trục X của tay nắm, và được xuất cùng file STEP (khung dây: điểm, đường thẳng dạng LINE cắt đoạn, viền mặt phẳng). Ô "Điểm dạng + (Onshape)" dưới nút STEP: mỗi điểm xuất thêm dấu + gồm 3 đoạn ngắn, vì Onshape không đọc điểm rời (CATIA vẫn nhận điểm thật). Không tick body nào mà bấm "STEP (solid)" thì xuất riêng geometry.
 - Mate face / axis có thêm điểm: điểm (đỉnh, tâm theo bộ lọc, hoặc điểm geometry) ghép vào điểm, mặt phẳng hoặc trục; mặt / trục ghép vào điểm. Lần bấm đầu phải trên body cần dời; đích có thể là geometry.
 - Move / Rotate / Scale: dòng "Trục X" trong bảng nhỏ đặt trục X của tay nắm theo cạnh thẳng, trục (mặt trụ / cạnh tròn), pháp tuyến mặt phẳng, 2 điểm hoặc vector nhập tay ("Thế giới" để về trục gốc). Số nhập ở Move / Rotate / Scale tính theo hệ trục này. Dòng "Tâm" chọn tâm (vùng chọn, gốc tọa độ, hoặc điểm bấm chọn) cho cả 3 lệnh.
 - "STEP (solid)" trong nhóm Xuất file: tải các khối solid đang tick thành file STEP (mở được bằng CATIA, NX, Onshape...). Body chỉ là lưới (STL nhập vào, sau Boolean, hoặc có Replace face) không xuất STEP được.

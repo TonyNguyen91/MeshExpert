@@ -2,7 +2,7 @@
   // ================= reference geometry: points, lines, planes, axes made in the 3D view =================
   // Each lives in world coordinates: {id, type, name, p, p2 (line / axis end), n, u, size (plane), base, off, flip, vis}.
   S.gax = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
-  S.geos = []; S.geoSeq = 1; S.geoSel = null; S.geoPick = []; S.geoMode = { gline: 'pp', gplane: 'face' }; S.axPick = null;
+  S.geos = []; S.geoSeq = 1; S.geoSel = null; S.geoPick = []; S.geoPlane = null; S.geoMode = { gline: 'pp', gplane: 'face' }; S.axPick = null;
   const GEO_COL = { point: '#ff7ad9', line: '#ffd166', axis: '#c58bff', plane: '#78c8ff' };
   const GEO_PFX = { point: 'P', line: 'L', axis: 'A', plane: 'PL' };
   const geoById = function (id) { return S.geos.filter(function (g) { return g.id === id; })[0] || null; };
@@ -44,6 +44,7 @@
       ctx.font = '11px "Segoe UI", Arial'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(8,10,14,0.85)'; ctx.strokeText(g.name, lp[0] + 6, lp[1] - 6); ctx.fillStyle = col; ctx.fillText(g.name, lp[0] + 6, lp[1] - 6);
     }
     for (const p of S.geoPick) { const q = project(p); dot2(q, '#14181d', 6); dot2(q, '#ffcf5a', 4.5); }
+    if (S.geoPlane) { const q = project(S.geoPlane.p), e = project(V.add(S.geoPlane.p, V.mul(S.geoPlane.n, sceneSize() * 0.2))); line2(q, e, '#ffcf5a', 2); dot2(q, '#ffcf5a', 4.5); }
   }
   // ---------- picking a geometry under the cursor (as the selection filter allows) ----------
   function geoAt(px, py) {
@@ -104,7 +105,11 @@
     if (!e) return null;
     const m = S.geoMode, n = S.geoPick.length;
     if (t === 'gplane' && m.gplane === 'face') return e.kind === 'plane' ? e : null;
-    if (t === 'gline' && m.gline === 'ppl' && n === 1) return e.kind === 'plane' ? e : null;
+    if (t === 'gline' && m.gline === 'ppl') {                // plane and point, in either order
+      if (!S.geoPlane && !n && e.kind === 'plane') return e;
+      if (n && !S.geoPlane) return e.kind === 'plane' ? e : null;
+      return ptEnt(e);
+    }
     if (t === 'gaxis' && !n && (e.kind === 'cyl' || (e.kind === 'edge' && (e.sub === 'line' || (e.sub === 'arc' && e.n))))) return e;
     return ptEnt(e);
   }
@@ -117,11 +122,15 @@
       const n = V.norm(e.n), g = { type: 'plane', base: { p: e.at.slice(), n: n }, off: +$('geoOff').value || 0, flip: $('geoFlip').checked, size: sceneSize(), u: anyPerp(n) };
       planeFromBase(g); geoAdd(g); return;
     }
-    if (t === 'gline' && m.gline === 'ppl' && S.geoPick.length === 1) {
-      const p = S.geoPick[0], n = V.norm(e.n), f = V.sub(p, V.mul(n, V.dot(V.sub(p, e.p), n)));
-      S.geoPick = [];
-      if (V.len(V.sub(f, p)) < 1e-6) { flash(L('Điểm nằm trên mặt phẳng: không có đường vuông góc', 'The point lies on the plane: no square line')); dirty = true; return; }
-      geoAdd({ type: 'line', p: p.slice(), p2: f }); return;
+    if (t === 'gline' && m.gline === 'ppl') {
+      if (e.kind === 'plane') S.geoPlane = { p: e.p.slice(), n: V.norm(e.n) }; else S.geoPick = [e.p.slice()];
+      dirty = true;
+      if (!S.geoPlane || !S.geoPick.length) { flash(S.geoPlane ? L('Giờ bấm một điểm', 'Now click a point') : L('Giờ bấm một mặt phẳng', 'Now click a plane'), true); return; }
+      const p = S.geoPick[0], pl = S.geoPlane, f = V.sub(p, V.mul(pl.n, V.dot(V.sub(p, pl.p), pl.n))), to = V.sub(f, p);
+      S.geoPick = []; S.geoPlane = null;
+      const g = { type: 'line', lb: { p: p.slice(), f: f, d: V.len(to) > 1e-6 ? V.norm(to) : pl.n.slice() } };   // normal to the plane through the point
+      if (!lineFromBase(g)) return;
+      geoAdd(g); return;
     }
     if (t === 'gaxis' && e.kind !== 'point') {
       let c, d, len;
@@ -150,12 +159,19 @@
     if (V.len(V.sub(P[1], P[0])) < 1e-9) { flash(L('Hai điểm trùng nhau', 'The two points are the same')); return; }
     geoAdd({ type: t === 'gaxis' ? 'axis' : 'line', p: P[0], p2: P[1] });
   }
+  // a line normal to a plane: length 0 = down to the plane, otherwise that long; Flip turns it the other way
+  function lineFromBase(g) {
+    const Ln = +$('geoLen').value || 0, d = $('geoLFlip').checked ? V.mul(g.lb.d, -1) : g.lb.d;
+    if (Ln > 0) { g.p = g.lb.p.slice(); g.p2 = V.add(g.lb.p, V.mul(d, Ln)); return true; }
+    if (V.len(V.sub(g.lb.f, g.lb.p)) < 1e-6) { flash(L('Điểm nằm trên mặt phẳng: hãy nhập độ dài', 'The point lies on the plane: type a length')); dirty = true; return false; }
+    g.p = g.lb.p.slice(); g.p2 = g.lb.f.slice(); return true;
+  }
   function planeFromBase(g) {
     const n = g.flip ? V.mul(g.base.n, -1) : g.base.n;
     g.n = n.slice(); g.p = V.add(g.base.p, V.mul(g.base.n, g.off || 0));
   }
   function geoToolUI(t) {
-    const box = $('geoModes'), m = S.geoMode, opts = t === 'gline' ? [['pp', 'Điểm – Điểm', 'Point – Point'], ['ppl', 'Điểm – Mặt', 'Point – Plane']] : t === 'gplane' ? [['face', 'Theo mặt', 'On face'], ['3p', '3 điểm', '3 points']] : [];
+    const box = $('geoModes'), m = S.geoMode, opts = t === 'gline' ? [['pp', 'Điểm – Điểm', 'Point – Point'], ['ppl', 'Mặt – Điểm (vuông góc)', 'Plane – Point (normal)']] : t === 'gplane' ? [['face', 'Theo mặt', 'On face'], ['3p', '3 điểm', '3 points']] : [];
     box.innerHTML = '';
     for (const o of opts) {
       const b = document.createElement('button'); b.textContent = L(o[1], o[2]); b.className = m[t] === o[0] ? 'primary' : '';
@@ -163,6 +179,7 @@
       box.appendChild(b);
     }
     $('geoPlaneOpt').style.display = t === 'gplane' && m.gplane === 'face' ? 'flex' : 'none';
+    $('geoLineOpt').style.display = t === 'gline' && m.gline === 'ppl' ? 'flex' : 'none'; S.geoPlane = null;
     const sp = geoById(S.geoSel);
     if (t === 'gplane' && sp && sp.base) { $('geoOff').value = sp.off || 0; $('geoOffR').value = sp.off || 0; $('geoFlip').checked = !!sp.flip; }
   }
@@ -173,6 +190,15 @@
     if (!g || !g.base) return;
     g.off = +$('geoOff').value || 0; g.flip = $('geoFlip').checked; planeFromBase(g); dirty = true;
   }
+  // length / flip change the selected normal line
+  function geoLineEdit(fromRange) {
+    if (fromRange) $('geoLen').value = $('geoLenR').value; else $('geoLenR').value = $('geoLen').value;
+    const g = geoById(S.geoSel);
+    if (g && g.lb) { lineFromBase(g); dirty = true; }
+  }
+  $('geoLen').addEventListener('input', function () { geoLineEdit(false); });
+  $('geoLenR').addEventListener('input', function () { geoLineEdit(true); });
+  $('geoLFlip').addEventListener('change', function () { geoLineEdit(false); });
   $('geoOff').addEventListener('input', function () { geoPlaneEdit(false); });
   $('geoOffR').addEventListener('input', function () { geoPlaneEdit(true); });
   $('geoFlip').addEventListener('change', function () { geoPlaneEdit(false); });
@@ -239,21 +265,39 @@
     const sr = txt.match(/#(\d+)=SHAPE_REPRESENTATION\('[^']*',\(#(\d+)\),#(\d+)\);/);
     if (!sr || !geos.length) return txt;
     let n = 0; txt.replace(/#(\d+)=/g, function (a, k) { n = Math.max(n, +k); return a; }); n++;
-    const out = [], items = [], nm = function (s) { return String(s).replace(/[^\x20-\x7e]/g, '_').replace(/'/g, ''); };
+    const out = [], items = [], nm = function (s) { return String(s).replace(/[^\x20-\x7e]/g, '_').replace(/'/g, ''); }, ref = function (k) { return '#' + k; };
     const cp = function (p, name) { const id = n++; out.push('#' + id + "=CARTESIAN_POINT('" + nm(name) + "',(" + p.map(stepNum).join(',') + '));'); return id; };
+    // a straight segment as a LINE trimmed at its two ends (the form CAD readers take most reliably)
+    const seg = function (a, b, name) {
+      const L = V.len(V.sub(b, a));
+      if (!(L > 1e-9)) return null;
+      const d = V.mul(V.sub(b, a), 1 / L), pa = cp(a, ''), pb = cp(b, ''), dir = n++, vec = n++, ln = n++, tc = n++;
+      out.push('#' + dir + "=DIRECTION('',(" + d.map(stepNum).join(',') + '));');
+      out.push('#' + vec + "=VECTOR('',#" + dir + ',1.);');
+      out.push('#' + ln + "=LINE('',#" + pa + ',#' + vec + ');');
+      out.push('#' + tc + "=TRIMMED_CURVE('" + nm(name) + "',#" + ln + ',(#' + pa + ',PARAMETER_VALUE(0.)),(#' + pb + ',PARAMETER_VALUE(' + stepNum(L) + ')),.T.,.PARAMETER.);');
+      items.push(tc); return tc;
+    };
+    const cross = $('cStepCross') && $('cStepCross').checked, cs = Math.max(0.5, sceneSize() * 0.02);
     for (const g of geos) {
-      if (g.type === 'point') { items.push(cp(g.p, g.name)); continue; }
-      const pts = g.type === 'plane' ? planeCorners(g) : [g.p, g.p2], ids = pts.map(function (p) { return cp(p, ''); });
-      if (g.type === 'plane') ids.push(ids[0]);
-      const id = n++; out.push('#' + id + "=POLYLINE('" + nm(g.name) + "',(" + ids.map(function (k) { return '#' + k; }).join(',') + '));'); items.push(id);
+      if (g.type === 'point') {
+        items.push(cp(g.p, g.name));
+        if (cross) for (const a of AXES) seg(V.sub(g.p, V.mul(a, cs)), V.add(g.p, V.mul(a, cs)), g.name + '_' + 'XYZ'[AXES.indexOf(a)]);   // readers without points (Onshape) still get the spot
+        continue;
+      }
+      if (g.type === 'plane') { const c = planeCorners(g); for (let k = 0; k < 4; k++) seg(c[k], c[(k + 1) % 4], g.name + '_' + (k + 1)); continue; }
+      seg(g.p, g.p2, g.name);
     }
+    if (!items.length) return txt;
     const set = n++, rep = n++, rel = n++;
-    out.push('#' + set + "=GEOMETRIC_CURVE_SET('Geometry',(" + items.map(function (k) { return '#' + k; }).join(',') + '));');
+    out.push('#' + set + "=GEOMETRIC_CURVE_SET('Geometry',(" + items.map(ref).join(',') + '));');
     out.push('#' + rep + "=GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION('Geometry',(#" + set + ',#' + sr[2] + '),#' + sr[3] + ');');
     out.push('#' + rel + "=SHAPE_REPRESENTATION_RELATIONSHIP('','',#" + sr[1] + ',#' + rep + ');');
     const k = txt.lastIndexOf('ENDSEC;');
     return txt.slice(0, k) + out.join('\n') + '\n' + txt.slice(k);
   }
+  try { const v = localStorage.getItem('mrt_stepcross'); if (v !== null) $('cStepCross').checked = v === '1'; } catch (e) { /* no storage */ }
+  $('cStepCross').addEventListener('change', function () { try { localStorage.setItem('mrt_stepcross', this.checked ? '1' : '0'); } catch (e) { /* no storage */ } });
   // a STEP file holding only the geometry
   function stepGeosOnly(geos) {
     const head = ['ISO-10303-21;', 'HEADER;', "FILE_DESCRIPTION(('MrT MeshExpert geometry'),'2;1');", "FILE_NAME('','',(''),('MrT MeshExpert'),'MrT MeshExpert','MrT MeshExpert','');",
