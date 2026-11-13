@@ -1,0 +1,271 @@
+
+  // ================= reference geometry: points, lines, planes, axes made in the 3D view =================
+  // Each lives in world coordinates: {id, type, name, p, p2 (line / axis end), n, u, size (plane), base, off, flip, vis}.
+  S.gax = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  S.geos = []; S.geoSeq = 1; S.geoSel = null; S.geoPick = []; S.geoMode = { gline: 'pp', gplane: 'face' }; S.axPick = null;
+  const GEO_COL = { point: '#ff7ad9', line: '#ffd166', axis: '#c58bff', plane: '#78c8ff' };
+  const GEO_PFX = { point: 'P', line: 'L', axis: 'A', plane: 'PL' };
+  const geoById = function (id) { return S.geos.filter(function (g) { return g.id === id; })[0] || null; };
+  function geoAdd(g) {
+    pushUndo();
+    g.id = S.geoSeq++; g.vis = true;
+    g.name = GEO_PFX[g.type] + (S.geos.filter(function (o) { return o.type === g.type; }).length + 1);
+    S.geos.push(g); S.geoSel = g.id; S.skSel = null;
+    updateSketchList(); dirty = true;
+    flash(L('Đã tạo ', 'Created ') + g.name, false);
+    return g;
+  }
+  function deleteGeo(id) { const g = geoById(id); if (!g) return; pushUndo(); S.geos = S.geos.filter(function (o) { return o !== g; }); if (S.geoSel === id) S.geoSel = null; updateSketchList(); dirty = true; }
+  function planeCorners(g) {
+    const u = g.u, v = V.cross(g.n, u), s = g.size / 2;
+    return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(function (k) { return V.add(g.p, V.add(V.mul(u, k[0] * s), V.mul(v, k[1] * s))); });
+  }
+  const anyPerp = function (n) { return V.norm(V.cross(n, Math.abs(n[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0])); };
+  // ---------- drawing ----------
+  function drawGeos() {
+    for (const g of S.geos) {
+      if (g.vis === false) continue;
+      const sel = g.id === S.geoSel, col = sel ? '#ffffff' : GEO_COL[g.type];
+      let lp;
+      if (g.type === 'point') { const q = project(g.p); line2([q[0] - 6, q[1]], [q[0] + 6, q[1]], col, 1.5); line2([q[0], q[1] - 6], [q[0], q[1] + 6], col, 1.5); dot2(q, col, sel ? 4 : 3); lp = q; }
+      else if (g.type === 'line' || g.type === 'axis') {
+        const a = project(g.p), b = project(g.p2);
+        ctx.setLineDash(g.type === 'axis' ? [10, 3, 2, 3] : []); line2(a, b, col, sel ? 2.6 : 1.8); ctx.setLineDash([]);
+        if (g.type === 'line') { dot2(a, col, 2.5); dot2(b, col, 2.5); }
+        lp = b;
+      } else if (g.type === 'plane') {
+        const q = planeCorners(g).map(project);
+        ctx.fillStyle = sel ? 'rgba(255,255,255,0.10)' : 'rgba(120,200,255,0.10)'; ctx.beginPath(); q.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }); ctx.closePath(); ctx.fill();
+        poly2(q.concat([q[0]]), col, sel ? 2 : 1.2);
+        const c = project(g.p), e = project(V.add(g.p, V.mul(g.n, g.size * 0.18)));
+        line2(c, e, col, 1.2); dot2(e, col, 2);
+        lp = q[2];
+      }
+      ctx.font = '11px "Segoe UI", Arial'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(8,10,14,0.85)'; ctx.strokeText(g.name, lp[0] + 6, lp[1] - 6); ctx.fillStyle = col; ctx.fillText(g.name, lp[0] + 6, lp[1] - 6);
+    }
+    for (const p of S.geoPick) { const q = project(p); dot2(q, '#14181d', 6); dot2(q, '#ffcf5a', 4.5); }
+  }
+  // ---------- picking a geometry under the cursor (as the selection filter allows) ----------
+  function geoAt(px, py) {
+    const F = S.flt;
+    let best = null, bd = 9;
+    for (const g of S.geos) {
+      if (g.vis === false || g.type !== 'point' || !F.point) continue;
+      const q = project(g.p), d = Math.hypot(q[0] - px, q[1] - py);
+      if (d < bd) { bd = d; best = { kind: 'point', p: g.p.slice(), at: g.p.slice(), text: g.name, geo: g }; }
+    }
+    if (best) return best;
+    bd = 6;
+    for (const g of S.geos) {
+      if (g.vis === false || (g.type === 'line' ? !F.line : g.type === 'axis' ? !(F.axis || F.line) : true)) continue;
+      const a = project(g.p), b = project(g.p2), ax = b[0] - a[0], ay = b[1] - a[1], l2 = ax * ax + ay * ay;
+      const t = l2 > 1e-9 ? Math.max(0, Math.min(1, ((px - a[0]) * ax + (py - a[1]) * ay) / l2)) : 0, d = Math.hypot(px - a[0] - t * ax, py - a[1] - t * ay);
+      if (d < bd) {
+        bd = d; const dir = V.norm(V.sub(g.p2, g.p)), at = V.add(g.p, V.mul(V.sub(g.p2, g.p), t));
+        best = { kind: 'edge', sub: 'line', pts: [g.p.slice(), g.p2.slice()], dir: dir, len: V.len(V.sub(g.p2, g.p)), p: g.p.slice(), at: at, lines: [[g.p, g.p2]], text: g.name, geo: g };
+      }
+    }
+    if (best || !F.plane) return best;
+    for (const g of S.geos) {
+      if (g.vis === false || g.type !== 'plane') continue;
+      const q = planeCorners(g).map(project);
+      let inside = false;
+      for (let i = 0, j = 3; i < 4; j = i++) { const a = q[i], b = q[j]; if ((a[1] > py) !== (b[1] > py) && px < (b[0] - a[0]) * (py - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside; }
+      let edge = false;                                     // inside the square: only where no mesh is in the way, or right on its border
+      for (let i = 0, j = 3; i < 4; j = i++) { const a = q[j], b = q[i], ax = b[0] - a[0], ay = b[1] - a[1], l2 = ax * ax + ay * ay, t = l2 > 1e-9 ? Math.max(0, Math.min(1, ((px - a[0]) * ax + (py - a[1]) * ay) / l2)) : 0; if (Math.hypot(px - a[0] - t * ax, py - a[1] - t * ay) < 6) edge = true; }
+      if (!edge && (!inside || pick(px, py))) continue;
+      const r = screenRay(px, py), dn = V.dot(r.d, g.n);
+      const at = Math.abs(dn) > 1e-9 ? V.add(r.o, V.mul(r.d, V.dot(V.sub(g.p, r.o), g.n) / dn)) : g.p.slice();
+      return { kind: 'plane', n: g.n.slice(), p: at, at: at, lines: [planeCorners(g).concat([planeCorners(g)[0]])], text: g.name, geo: g };
+    }
+    return null;
+  }
+  // a geometry, else what the mesh offers under the cursor (null when the filter allows nothing there)
+  function pickEnt(px, py, allowFree) {
+    const g = geoAt(px, py);
+    if (g) return g;
+    const h = pickNear(px, py);
+    if (!h) return null;
+    const e = entityAt(h, px, py, false);
+    if (e.free && (!allowFree || e.blocked)) return null;
+    e.bname = h.body.name;
+    return e;
+  }
+  // the point a pick stands for
+  function entPoint(e) {
+    if (e.kind === 'point') return e.p;
+    if (e.kind === 'edge' && e.sub === 'arc' && e.c && S.flt.center) return e.c;
+    return e.at;
+  }
+  const ptEnt = function (e) { const p = entPoint(e); return { kind: 'point', p: p, at: p, text: e.kind === 'point' ? e.text : L('Điểm', 'Point'), lines: e.lines }; };
+  // ---------- the tools ----------
+  function geoToolEnt(t, px, py) {
+    const e = pickEnt(px, py, true);
+    if (!e) return null;
+    const m = S.geoMode, n = S.geoPick.length;
+    if (t === 'gplane' && m.gplane === 'face') return e.kind === 'plane' ? e : null;
+    if (t === 'gline' && m.gline === 'ppl' && n === 1) return e.kind === 'plane' ? e : null;
+    if (t === 'gaxis' && !n && (e.kind === 'cyl' || (e.kind === 'edge' && (e.sub === 'line' || (e.sub === 'arc' && e.n))))) return e;
+    return ptEnt(e);
+  }
+  function sceneSize() { return Math.max(10, mainCam.radius * 0.45); }
+  function geoToolClick(t, px, py) {
+    const e = geoToolEnt(t, px, py), m = S.geoMode;
+    if (!e) { flash(L('Không có gì hợp lệnh / bộ lọc ở chỗ này', 'Nothing here fits the command / filter')); return; }
+    if (t === 'gpoint') { geoAdd({ type: 'point', p: e.p.slice() }); return; }
+    if (t === 'gplane' && m.gplane === 'face') {
+      const n = V.norm(e.n), g = { type: 'plane', base: { p: e.at.slice(), n: n }, off: +$('geoOff').value || 0, flip: $('geoFlip').checked, size: sceneSize(), u: anyPerp(n) };
+      planeFromBase(g); geoAdd(g); return;
+    }
+    if (t === 'gline' && m.gline === 'ppl' && S.geoPick.length === 1) {
+      const p = S.geoPick[0], n = V.norm(e.n), f = V.sub(p, V.mul(n, V.dot(V.sub(p, e.p), n)));
+      S.geoPick = [];
+      if (V.len(V.sub(f, p)) < 1e-6) { flash(L('Điểm nằm trên mặt phẳng: không có đường vuông góc', 'The point lies on the plane: no square line')); dirty = true; return; }
+      geoAdd({ type: 'line', p: p.slice(), p2: f }); return;
+    }
+    if (t === 'gaxis' && e.kind !== 'point') {
+      let c, d, len;
+      if (e.kind === 'cyl') {
+        c = e.c; d = V.norm(e.dir); let t0 = Infinity, t1 = -Infinity;
+        for (const l of e.lines || []) for (const q of l) { const s = V.dot(V.sub(q, c), d); t0 = Math.min(t0, s); t1 = Math.max(t1, s); }
+        if (!(t1 > t0)) { t0 = -e.r * 2; t1 = e.r * 2; }
+        const ext = (t1 - t0) * 0.15; geoAdd({ type: 'axis', p: V.add(c, V.mul(d, t0 - ext)), p2: V.add(c, V.mul(d, t1 + ext)) }); return;
+      }
+      if (e.sub === 'arc') { c = e.c; d = V.norm(e.n); len = Math.max(e.r * 3, sceneSize() * 0.3); geoAdd({ type: 'axis', p: V.sub(c, V.mul(d, len / 2)), p2: V.add(c, V.mul(d, len / 2)) }); return; }
+      const a = e.pts[0], b = e.pts[e.pts.length - 1], ext = V.mul(V.sub(b, a), 0.15);
+      geoAdd({ type: 'axis', p: V.sub(a, ext), p2: V.add(b, ext) }); return;
+    }
+    // point picks: line (2), plane (3), axis (2), the first point of point–plane
+    S.geoPick.push(e.p.slice()); dirty = true;
+    const need = t === 'gplane' ? 3 : t === 'gline' && m.gline === 'ppl' ? 1 : 2;
+    if (S.geoPick.length < need) { flash(t === 'gline' && m.gline === 'ppl' ? L('Giờ bấm một mặt phẳng', 'Now click a plane') : L('Điểm ', 'Point ') + S.geoPick.length + '/' + need, true); return; }
+    if (t === 'gline' && m.gline === 'ppl') return;
+    const P = S.geoPick; S.geoPick = [];
+    if (t === 'gplane') {
+      const n = V.cross(V.sub(P[1], P[0]), V.sub(P[2], P[0]));
+      if (V.len(n) < 1e-9) { flash(L('3 điểm thẳng hàng: không dựng được mặt phẳng', 'The 3 points are in a line: no plane')); return; }
+      const c = V.mul(V.add(V.add(P[0], P[1]), P[2]), 1 / 3), sz = Math.max(V.len(V.sub(P[1], P[0])), V.len(V.sub(P[2], P[0])), V.len(V.sub(P[2], P[1]))) * 1.4;
+      geoAdd({ type: 'plane', p: c, n: V.norm(n), u: V.norm(V.sub(P[1], P[0])), size: Math.max(sz, 1) }); return;
+    }
+    if (V.len(V.sub(P[1], P[0])) < 1e-9) { flash(L('Hai điểm trùng nhau', 'The two points are the same')); return; }
+    geoAdd({ type: t === 'gaxis' ? 'axis' : 'line', p: P[0], p2: P[1] });
+  }
+  function planeFromBase(g) {
+    const n = g.flip ? V.mul(g.base.n, -1) : g.base.n;
+    g.n = n.slice(); g.p = V.add(g.base.p, V.mul(g.base.n, g.off || 0));
+  }
+  function geoToolUI(t) {
+    const box = $('geoModes'), m = S.geoMode, opts = t === 'gline' ? [['pp', 'Điểm – Điểm', 'Point – Point'], ['ppl', 'Điểm – Mặt', 'Point – Plane']] : t === 'gplane' ? [['face', 'Theo mặt', 'On face'], ['3p', '3 điểm', '3 points']] : [];
+    box.innerHTML = '';
+    for (const o of opts) {
+      const b = document.createElement('button'); b.textContent = L(o[1], o[2]); b.className = m[t] === o[0] ? 'primary' : '';
+      b.addEventListener('click', function () { m[t] = o[0]; S.geoPick = []; geoToolUI(t); dirty = true; });
+      box.appendChild(b);
+    }
+    $('geoPlaneOpt').style.display = t === 'gplane' && m.gplane === 'face' ? 'flex' : 'none';
+    const sp = geoById(S.geoSel);
+    if (t === 'gplane' && sp && sp.base) { $('geoOff').value = sp.off || 0; $('geoOffR').value = sp.off || 0; $('geoFlip').checked = !!sp.flip; }
+  }
+  // offset / flip change the selected plane made on a face
+  function geoPlaneEdit(fromRange) {
+    if (fromRange) $('geoOff').value = $('geoOffR').value; else $('geoOffR').value = $('geoOff').value;
+    const g = geoById(S.geoSel);
+    if (!g || !g.base) return;
+    g.off = +$('geoOff').value || 0; g.flip = $('geoFlip').checked; planeFromBase(g); dirty = true;
+  }
+  $('geoOff').addEventListener('input', function () { geoPlaneEdit(false); });
+  $('geoOffR').addEventListener('input', function () { geoPlaneEdit(true); });
+  $('geoFlip').addEventListener('change', function () { geoPlaneEdit(false); });
+  // ---------- the X axis of the move / rotate / scale handles ----------
+  function axDir(e) {
+    if (e.kind === 'edge' && e.sub === 'line') return e.dir || V.norm(V.sub(e.pts[e.pts.length - 1], e.pts[0]));
+    if (e.kind === 'edge' && e.sub === 'arc' && e.n) return e.n;
+    if (e.kind === 'cyl') return e.dir;
+    if (e.kind === 'plane') return e.n;
+    return null;
+  }
+  function axPickEnt(px, py) { const e = pickEnt(px, py, false); return e ? (axDir(e) ? e : ptEnt(e)) : null; }
+  function showGax() { const x = S.gax[0]; $('axX').value = +f2(x[0], 4); $('axY').value = +f2(x[1], 4); $('axZ').value = +f2(x[2], 4); $('bAxReset').classList.toggle('primary', !gaxWorld()); }
+  function axPickClick(px, py) {
+    const e = axPickEnt(px, py);
+    if (!e) { flash(L('Hãy bấm cạnh, trục, mặt phẳng hoặc 2 điểm (theo bộ lọc)', 'Click an edge, an axis, a plane or 2 points (as the filter allows)')); return; }
+    let d = axDir(e);
+    if (!d) {
+      S.axPick.pts.push(e.p.slice()); S.geoPick = S.axPick.pts.slice(); dirty = true;
+      if (S.axPick.pts.length < 2) { flash(L('Bấm điểm thứ hai: trục X đi từ điểm 1 tới điểm 2', 'Click the second point: X runs from point 1 to point 2'), true); return; }
+      d = V.sub(S.axPick.pts[1], S.axPick.pts[0]);
+      if (V.len(d) < 1e-9) { S.axPick.pts = []; S.geoPick = []; flash(L('Hai điểm trùng nhau', 'The two points are the same')); return; }
+    }
+    setGaxX(d); S.axPick = null; S.geoPick = []; $('bAxPick').classList.remove('primary'); showGax();
+    canvas.style.cursor = toolCursor(); flash(L('Trục X của tay nắm đã theo ', 'The handle X axis now follows ') + (e.text || L('hướng đã chọn', 'the picked direction')), false); dirty = true;
+  }
+  $('bAxPick').addEventListener('click', function () {
+    S.axPick = S.axPick ? null : { pts: [] }; S.geoPick = []; S.pivPick = false; $('bPivPick').classList.remove('primary');
+    this.classList.toggle('primary', !!S.axPick); canvas.style.cursor = toolCursor();
+    flash(S.axPick ? L('Bấm cạnh thẳng, trục (mặt trụ / cạnh tròn), mặt phẳng (pháp tuyến) hoặc 2 điểm để đặt trục X', 'Click a straight edge, an axis (cylinder / round edge), a plane (its normal) or 2 points to set the X axis') : '', true); dirty = true;
+  });
+  $('bAxSet').addEventListener('click', function () {
+    const v = [+$('axX').value || 0, +$('axY').value || 0, +$('axZ').value || 0];
+    if (V.len(v) < 1e-9) { flash(L('Vector trục X phải khác 0', 'The X vector must not be zero')); return; }
+    setGaxX(v); showGax(); dirty = true;
+  });
+  ['axX', 'axY', 'axZ'].forEach(function (id) { $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('bAxSet').click(); } }); });
+  $('bAxReset').addEventListener('click', function () { S.gax = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; showGax(); dirty = true; });
+  showGax();
+  // ---------- the list (under the sketches) ----------
+  function appendGeoRows(box) {
+    for (const g of S.geos) {
+      const row = document.createElement('div');
+      row.className = 'srow geo' + (S.geoSel === g.id ? ' sel' : '');
+      const cv = document.createElement('input'); cv.type = 'checkbox'; cv.checked = g.vis !== false;
+      cv.addEventListener('click', function (e) { e.stopPropagation(); });
+      cv.addEventListener('change', function () { pushUndo(); g.vis = cv.checked; dirty = true; });
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.innerHTML = '<b style="color:' + GEO_COL[g.type] + '">' + { point: '•', line: '／', axis: '┆', plane: '▱' }[g.type] + '</b> ' + g.name;
+      const info = document.createElement('span'); info.className = 'num'; info.textContent = { point: L('điểm', 'point'), line: L('đường', 'line'), axis: L('trục', 'axis'), plane: L('mặt phẳng', 'plane') }[g.type];
+      row.appendChild(cv); row.appendChild(nm); row.appendChild(info);
+      row.addEventListener('click', function () { S.geoSel = g.id; S.skSel = null; updateSketchList(); if (S.tool === 'gplane') geoToolUI('gplane'); dirty = true; });
+      row.addEventListener('contextmenu', function (e) {
+        e.preventDefault(); S.geoSel = g.id; S.skSel = null; updateSketchList();
+        showMenu([[L('Đổi tên', 'Rename'), function () { const n = prompt(L('Tên:', 'Name:'), g.name); if (n && n.trim()) { pushUndo(); g.name = n.trim().replace(/['\\]/g, ''); updateSketchList(); dirty = true; } }],
+          [g.vis !== false ? L('Ẩn', 'Hide') : L('Hiện', 'Show'), function () { pushUndo(); g.vis = g.vis === false; updateSketchList(); dirty = true; }], null,
+          [L('Xóa', 'Delete'), function () { deleteGeo(g.id); }]], e.clientX, e.clientY);
+      });
+      box.appendChild(row);
+    }
+  }
+  // ---------- STEP: the geometry as a wireframe set beside the solids ----------
+  function stepNum(v) { if (Math.abs(v) < 1e-12) v = 0; const s = String(+v.toPrecision(15)); return /[.eE]/.test(s) ? s.replace('e', 'E') : s + '.'; }
+  function stepAddGeos(txt, geos) {
+    const sr = txt.match(/#(\d+)=SHAPE_REPRESENTATION\('[^']*',\(#(\d+)\),#(\d+)\);/);
+    if (!sr || !geos.length) return txt;
+    let n = 0; txt.replace(/#(\d+)=/g, function (a, k) { n = Math.max(n, +k); return a; }); n++;
+    const out = [], items = [], nm = function (s) { return String(s).replace(/[^\x20-\x7e]/g, '_').replace(/'/g, ''); };
+    const cp = function (p, name) { const id = n++; out.push('#' + id + "=CARTESIAN_POINT('" + nm(name) + "',(" + p.map(stepNum).join(',') + '));'); return id; };
+    for (const g of geos) {
+      if (g.type === 'point') { items.push(cp(g.p, g.name)); continue; }
+      const pts = g.type === 'plane' ? planeCorners(g) : [g.p, g.p2], ids = pts.map(function (p) { return cp(p, ''); });
+      if (g.type === 'plane') ids.push(ids[0]);
+      const id = n++; out.push('#' + id + "=POLYLINE('" + nm(g.name) + "',(" + ids.map(function (k) { return '#' + k; }).join(',') + '));'); items.push(id);
+    }
+    const set = n++, rep = n++, rel = n++;
+    out.push('#' + set + "=GEOMETRIC_CURVE_SET('Geometry',(" + items.map(function (k) { return '#' + k; }).join(',') + '));');
+    out.push('#' + rep + "=GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION('Geometry',(#" + set + ',#' + sr[2] + '),#' + sr[3] + ');');
+    out.push('#' + rel + "=SHAPE_REPRESENTATION_RELATIONSHIP('','',#" + sr[1] + ',#' + rep + ');');
+    const k = txt.lastIndexOf('ENDSEC;');
+    return txt.slice(0, k) + out.join('\n') + '\n' + txt.slice(k);
+  }
+  // a STEP file holding only the geometry
+  function stepGeosOnly(geos) {
+    const head = ['ISO-10303-21;', 'HEADER;', "FILE_DESCRIPTION(('MrT MeshExpert geometry'),'2;1');", "FILE_NAME('','',(''),('MrT MeshExpert'),'MrT MeshExpert','MrT MeshExpert','');",
+      "FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 1 1 4 }'));", 'ENDSEC;', 'DATA;',
+      "#1=APPLICATION_CONTEXT('managed model based 3d engineering');", "#2=APPLICATION_PROTOCOL_DEFINITION('international standard','ap242_managed_model_based_3d_engineering',2014,#1);",
+      "#3=PRODUCT_CONTEXT('',#1,'mechanical');", "#4=PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');", '#5=(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));',
+      '#6=(NAMED_UNIT(*)PLANE_ANGLE_UNIT()SI_UNIT($,.RADIAN.));', '#7=(NAMED_UNIT(*)SI_UNIT($,.STERADIAN.)SOLID_ANGLE_UNIT());',
+      "#8=UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(0.0001),#5,'distance_accuracy_value','confusion accuracy');",
+      "#9=(GEOMETRIC_REPRESENTATION_CONTEXT(3)GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#8))GLOBAL_UNIT_ASSIGNED_CONTEXT((#5,#6,#7))REPRESENTATION_CONTEXT('Context #1','3D Context with UNIT and UNCERTAINTY'));",
+      "#10=CARTESIAN_POINT('',(0.,0.,0.));", "#11=DIRECTION('',(1.,0.,0.));", "#12=DIRECTION('',(0.,0.,1.));", "#13=AXIS2_PLACEMENT_3D('',#10,#12,#11);",
+      "#14=PRODUCT('Geometry','Geometry','',(#3));", "#15=PRODUCT_DEFINITION_FORMATION('','',#14);", "#16=PRODUCT_DEFINITION('design','',#15,#4);",
+      "#17=PRODUCT_DEFINITION_SHAPE('','',#16);", "#18=SHAPE_REPRESENTATION('Geometry',(#13),#9);", '#19=SHAPE_DEFINITION_REPRESENTATION(#17,#18);',
+      "#20=PRODUCT_RELATED_PRODUCT_CATEGORY('part','',(#14));", 'ENDSEC;', 'END-ISO-10303-21;'];
+    return stepAddGeos(head.join('\n') + '\n', geos);
+  }

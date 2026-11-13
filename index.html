@@ -233,7 +233,8 @@
  <div id="ribbon">
   <div class="rpage on" data-page="home">
    <div class="rgrp"><div class="rbody"><button id="bSketch" class="bb" title="Sketch: vẽ sketch trên một mặt phẳng" data-en-title="Sketch: draw on a plane"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.4" stroke-linejoin="round"><path d="M3 17l7 4 11-6-7-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M13 3l3 3-6 6-3.5.5.5-3.5z" fill="#f0a030" stroke="#ffd28a"/></svg><span>Sketch</span></button></div><div class="rtitle" data-en="Sketch">Sketch</div></div>
-   <div class="rgrp"><div class="rbody"><div class="rcol"><button id="bExtrude" class="sb" title="Extrude: đùn biên dạng kín của sketch" data-en-title="Extrude: push closed sketch profiles out"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 16l6 3 10-5-6-3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 16V8l6 3v8M10 11l10-5v8M4 8l10-5 6 3" fill="none" stroke="#dfe6ee"/><path d="M15 12V3m-2 2l2-2 2 2" stroke="#f0a030" fill="none"/></svg><span>Extrude</span></button><button id="bRevolve" class="sb" title="Revolve: xoay biên dạng quanh trục" data-en-title="Revolve: turn profiles about an axis"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M7 2v20" stroke="#c58bff" stroke-dasharray="2 2"/><path d="M10 5h6v11h-6z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2.5 16.5a9.5 3.5 0 0 0 19 0" fill="none" stroke="#f0a030" stroke-width="1.8"/><path d="M21.5 16.5l-2.6-.4m2.6.4l.8-2.5" stroke="#f0a030" stroke-width="1.8" fill="none"/></svg><span>Revolve</span></button><button id="b_boolean" class="sb" title="Boolean: gộp / trừ / giao các body" data-en-title="Boolean: union / subtract / intersect"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><circle cx="9" cy="12" r="6" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="15" cy="12" r="6" fill="rgba(240,160,48,.55)" stroke="#ffd28a"/></svg><span>Boolean</span></button></div><div class="rcol"><button id="b_fillet" class="sb" title="Fillet: bo tròn cạnh" data-en-title="Fillet: round edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10a6 6 0 0 1 6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10a6 6 0 0 1 6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Fillet</span></button><button id="b_chamfer" class="sb" title="Chamfer: vát cạnh" data-en-title="Chamfer: bevel edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10l6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10l6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Chamfer</span></button><button id="b_shell" class="sb" title="Shell: làm rỗng khối thành vỏ" data-en-title="Shell: hollow out a solid"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M3 8l9-4 9 4v10l-9 4-9-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 9l6-2.7L18 9v7.5l-6 2.7-6-2.7z" fill="#14181d" stroke="#f0a030"/></svg><span>Shell</span></button></div><div class="rcol"><button id="b_draft" class="sb" title="Draft: nghiêng mặt để thoát khuôn" data-en-title="Draft: tilt faces for mould release"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M6 20l3-16h9v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 20l3-16" stroke="#f0a030" stroke-width="2.2"/><path d="M6 20V6" stroke="#dfe6ee" stroke-dasharray="2 2"/><path d="M6 10a4 4 0 0 1 1.9.3" stroke="#ffd28a" fill="none"/></svg><span>Draft</span></button></div></div><div class="rtitle" data-en="Feature">Feature</div></div>
+      <div class="rgrp"><div class="rbody"><div class="rcol"><button data-tool="gpoint" class="sb" title="Point: đặt điểm trên mesh / theo bộ lọc" data-en-title="Point: place a point on the mesh / as the filter allows"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12h10M12 7v10" stroke="#ff7ad9"/><circle cx="12" cy="12" r="2.6" fill="#ff7ad9" stroke="#ffd2f2"/></svg><span>Point</span></button><button data-tool="gline" class="sb" title="Line: điểm–điểm hoặc điểm–mặt" data-en-title="Line: point–point or point–plane"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19L20 5" stroke="#ffd166" stroke-width="2"/><circle cx="4" cy="19" r="2" fill="#ffd166"/><circle cx="20" cy="5" r="2" fill="#ffd166"/></svg><span>Line</span></button></div><div class="rcol"><button data-tool="gplane" class="sb" title="Plane: theo mặt (offset, đảo chiều) hoặc 3 điểm" data-en-title="Plane: on a face (offset, flip) or 3 points"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16l5-9h13l-5 9z" fill="rgba(120,200,255,.25)" stroke="#78c8ff"/><path d="M12 11.5V4" stroke="#78c8ff"/></svg><span>Plane</span></button><button data-tool="gaxis" class="sb" title="Axis: trục từ mặt trụ / cạnh hoặc 2 điểm" data-en-title="Axis: from a cylinder / edge or 2 points"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20" stroke="#c58bff" stroke-width="1.8" stroke-dasharray="4 2 1 2"/><ellipse cx="12" cy="12" rx="6" ry="2.4" stroke="#6f8aa8"/></svg><span>Axis</span></button></div></div><div class="rtitle" data-en="Geometry">Geometry</div></div>
+<div class="rgrp"><div class="rbody"><div class="rcol"><button id="bExtrude" class="sb" title="Extrude: đùn biên dạng kín của sketch" data-en-title="Extrude: push closed sketch profiles out"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 16l6 3 10-5-6-3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 16V8l6 3v8M10 11l10-5v8M4 8l10-5 6 3" fill="none" stroke="#dfe6ee"/><path d="M15 12V3m-2 2l2-2 2 2" stroke="#f0a030" fill="none"/></svg><span>Extrude</span></button><button id="bRevolve" class="sb" title="Revolve: xoay biên dạng quanh trục" data-en-title="Revolve: turn profiles about an axis"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M7 2v20" stroke="#c58bff" stroke-dasharray="2 2"/><path d="M10 5h6v11h-6z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2.5 16.5a9.5 3.5 0 0 0 19 0" fill="none" stroke="#f0a030" stroke-width="1.8"/><path d="M21.5 16.5l-2.6-.4m2.6.4l.8-2.5" stroke="#f0a030" stroke-width="1.8" fill="none"/></svg><span>Revolve</span></button><button id="b_boolean" class="sb" title="Boolean: gộp / trừ / giao các body" data-en-title="Boolean: union / subtract / intersect"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><circle cx="9" cy="12" r="6" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="15" cy="12" r="6" fill="rgba(240,160,48,.55)" stroke="#ffd28a"/></svg><span>Boolean</span></button></div><div class="rcol"><button id="b_fillet" class="sb" title="Fillet: bo tròn cạnh" data-en-title="Fillet: round edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10a6 6 0 0 1 6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10a6 6 0 0 1 6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Fillet</span></button><button id="b_chamfer" class="sb" title="Chamfer: vát cạnh" data-en-title="Chamfer: bevel edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10l6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10l6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Chamfer</span></button><button id="b_shell" class="sb" title="Shell: làm rỗng khối thành vỏ" data-en-title="Shell: hollow out a solid"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M3 8l9-4 9 4v10l-9 4-9-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 9l6-2.7L18 9v7.5l-6 2.7-6-2.7z" fill="#14181d" stroke="#f0a030"/></svg><span>Shell</span></button></div><div class="rcol"><button id="b_draft" class="sb" title="Draft: nghiêng mặt để thoát khuôn" data-en-title="Draft: tilt faces for mould release"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M6 20l3-16h9v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 20l3-16" stroke="#f0a030" stroke-width="2.2"/><path d="M6 20V6" stroke="#dfe6ee" stroke-dasharray="2 2"/><path d="M6 10a4 4 0 0 1 1.9.3" stroke="#ffd28a" fill="none"/></svg><span>Draft</span></button></div></div><div class="rtitle" data-en="Feature">Feature</div></div>
    <div class="rgrp"><div class="rbody"><div class="rcol"><button id="b_moveface" class="sb" title="Move face: dời mặt phẳng / mặt trụ" data-en-title="Move face: move flat / cylindrical faces"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V11h12v9z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 11h12" stroke="#f0a030" stroke-width="2.2"/><path d="M10 9V3m-2 2l2-2 2 2" stroke="#f0a030" fill="none"/><path d="M4 7h12" stroke="#f0a030" stroke-dasharray="2 2"/></svg><span>Move face</span></button><button id="b_replace" class="sb" title="Replace face: đưa mặt về mặt phẳng của mặt khác" data-en-title="Replace face: put faces onto another face"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M3 20V13h10v7z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 13h10" stroke="#f0a030" stroke-width="2.2"/><path d="M14 6h7v14h-7z" fill="#5a6676" stroke="#b8c4d2"/><path d="M8 11V6h4m-2-2l2 2-2 2" stroke="#f0a030" fill="none"/></svg><span>Replace face</span></button></div></div><div class="rtitle" data-en="Synchronous Modeling">Synchronous Modeling</div></div>
    <div class="rgrp"><div class="rbody"><div class="rcol"><label class="mini" data-en-title="Colour and opacity of the ticked bodies" title="Màu và độ đục của các body đang tick"><input type="color" id="col" value="#92aac8"><input type="range" id="opa" min="5" max="100" value="100"><span class="unit" id="opaV">100%</span></label><button class="sb popb" data-pop="explode" title="Tách xa các body để nhìn" data-en-title="Spread the bodies apart"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="6" height="6" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 3l4 4M21 3l-4 4M3 21l4-4M21 21l-4-4" stroke="#f0a030"/></svg><span data-en="Explode">Explode</span></button><button class="sb popb" data-pop="section" title="Mặt cắt (section)" data-en-title="Section view"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l8-4 8 4v8l-8 4-8-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2 12h20" stroke="#ff6b5e" stroke-width="2"/></svg><span data-en="Section">Mặt cắt</span></button></div><div class="tgrid"><label class="tg" title="Cạnh lưới" data-en-title="Edges"><input type="checkbox" id="cWire" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L12 4l9 16zM7.5 12h9M12 4v16" stroke="#9cc4ee"/></svg></label><label class="tg" title="Viền hở (đỏ)" data-en-title="Open borders (red)"><input type="checkbox" id="cHoles" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="12" r="5" fill="#14181d" stroke="#ff3b30" stroke-width="2"/></svg></label><label class="tg" title="Hệ trục XYZ" data-en-title="XYZ axes"><input type="checkbox" id="cAxes" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V5M5 19h14M5 19l9-6" stroke-width="2"/><path d="M5 19V5" stroke="#4f9bff" stroke-width="2"/><path d="M5 19h14" stroke="#ff5a52" stroke-width="2"/><path d="M5 19l9-6" stroke="#52d06a" stroke-width="2"/></svg></label><label class="tg" title="Bảng thông tin" data-en-title="Info panel"><input type="checkbox" id="cInfo" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke="#9cc4ee"/><path d="M12 11v6" stroke="#f0a030" stroke-width="2"/><circle cx="12" cy="7.5" r="1.2" fill="#f0a030"/></svg></label><label class="tg" title="Đảo chiều zoom" data-en-title="Invert zoom"><input type="checkbox" id="cZoomInv"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6" stroke="#9cc4ee"/><path d="M15 15l5 5" stroke="#9cc4ee" stroke-width="2"/><path d="M7 10h6M10 7l-3 3 3 3" stroke="#f0a030"/></svg></label></div></div><div class="rtitle" data-en="Display">Hiển thị</div></div>
    <div class="rgrp"><div class="rbody"><button id="bNormal" class="bb hl" title="Nhìn thẳng theo hướng chuẩn gần nhất (X / Y / Z)" data-en-title="Look straight along the nearest standard direction (X / Y / Z)"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.5"><rect x="4" y="6" width="16" height="13" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M12 1v9m-3-3l3 3 3-3" stroke="#f0a030" fill="none" stroke-width="2"/><circle cx="12" cy="12.5" r="1.6" fill="#f0a030"/></svg><span>Normal</span></button><div class="rcol"><button id="bFit" class="sb" title="Thu vừa màn hình" data-en-title="Fit the view"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" stroke="#9cc4ee"/><rect x="8" y="8" width="8" height="8" fill="#3d6fa8" stroke="#dfe6ee"/></svg><span>Fit</span></button><button id="bIso" class="sb" title="Hướng nhìn Iso" data-en-title="Isometric view"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.3" stroke-linejoin="round"><path d="M12 3l8 4.5-8 4.5-8-4.5z" fill="#5d8fc8" stroke="#dfe6ee"/><path d="M4 7.5V16l8 4.5V12z" fill="#3d6fa8" stroke="#dfe6ee"/><path d="M20 7.5V16l-8 4.5V12z" fill="#2c5486" stroke="#dfe6ee"/></svg><span>Iso</span></button></div></div><div class="rtitle" data-en="Orient">Hướng nhìn</div></div>
@@ -275,7 +276,7 @@
     </div>
   </div></div>
 
-  <div class="sec"><div class="hd" data-en="Sketches">Danh sách sketch</div><div class="c">
+  <div class="sec"><div class="hd" data-en="Sketches / Geos">Sketches / Geos</div><div class="c">
     <div class="list" id="sketchList"></div>
   </div></div>
 
@@ -407,6 +408,8 @@
     <div id="tpMate" class="row"><label title="Mặt áp cùng chiều (không đối mặt) / đảo chiều trục" data-en-title="Faces point the same way (not face to face) / reverse the axis"><input type="checkbox" id="mtFlip"> <span data-en="Flip">Đảo chiều</span></label>
       <span data-en="Gap">Khe hở</span> <input type="number" id="mtOff" class="s" value="0" step="0.1"><span class="unit">mm</span>
       <button id="bMateFlip" data-en="Flip the last mate">Đảo lần ghép vừa rồi</button></div>
+    <div id="tpAxes" class="row"><span class="lbl" data-en="X axis">Trục X</span><button id="bAxPick" title="Bấm cạnh / trục / mặt phẳng hoặc 2 điểm" data-en-title="Click an edge / axis / plane or 2 points" data-en="Pick…">Chọn…</button> <input type="number" id="axX" class="s" value="1" step="0.1"> <input type="number" id="axY" class="s" value="0" step="0.1"> <input type="number" id="axZ" class="s" value="0" step="0.1"><button id="bAxSet" data-en="Set">Đặt</button><button id="bAxReset" title="Về trục thế giới" data-en-title="Back to the world axes" data-en="World">Thế giới</button></div>
+    <div id="tpGeo" class="row"><span id="geoModes"></span><span id="geoPlaneOpt" style="display:flex;align-items:center;gap:4px"><span data-en="Offset">Offset</span> <input type="range" id="geoOffR" min="-50" max="50" step="0.5" value="0" style="width:110px"> <input type="number" id="geoOff" class="s" value="0" step="0.5"><span class="unit">mm</span> <label><input type="checkbox" id="geoFlip"> <span data-en="Flip">Đảo chiều</span></label></span></div>
     <div id="tpPivot" class="row"><span class="lbl" data-en="About">Tâm</span>
       <select id="pivot" style="width:140px"><option value="c" data-en="Selection centre">Tâm vùng chọn</option><option value="o" data-en="World origin">Gốc tọa độ</option><option value="p" data-en="Picked point">Điểm đã chọn</option></select><button id="bPivPick" title="Bấm rồi chọn tâm xoay trên mesh: đỉnh, tâm cung / lỗ, trục trụ, trọng tâm…" data-en-title="Press, then pick the rotation centre on a mesh: corner, arc / hole centre, cylinder axis, centre of mass…" data-en="⌖ Pick centre">⌖ Chọn tâm</button></div>
   </div>
@@ -4011,6 +4014,18 @@ var wasm_bindgen = (function(exports) {
     return o;
   }
   const AXES = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  // the frame the move / rotate / scale handles work in (world axes unless X has been aligned to something)
+  const GX = function (i) { return S.gax[i]; };          // S.gax is set up with the geometry tools
+  const gaxWorld = function () { return S.gax.every(function (a, i) { return a[i] === 1; }); };
+  // a matrix whose columns are the frame axes
+  function gaxM() { const X = S.gax[0], Y = S.gax[1], Z = S.gax[2]; return [X[0], X[1], X[2], 0, Y[0], Y[1], Y[2], 0, Z[0], Z[1], Z[2], 0, 0, 0, 0, 1]; }
+  function setGaxX(x) {                                      // X along x; Y and Z follow, keeping Z as close to world Z as they can
+    x = V.norm(x);
+    let z = V.sub([0, 0, 1], V.mul(x, x[2]));
+    if (V.len(z) < 1e-6) z = V.sub([0, 1, 0], V.mul(x, x[1]));
+    z = V.norm(z);
+    S.gax = [x, V.cross(z, x), z];
+  }
   const AXN = ['X', 'Y', 'Z'], AXC = ['#ff5a52', '#52d06a', '#4f9bff'];
 
   // ================= state =================
@@ -4185,7 +4200,7 @@ var wasm_bindgen = (function(exports) {
         return { id: b.id, name: b.name, geo: b.geo, orig: b.orig, matrix: b.matrix.slice(), matrix0: b.matrix0.slice(), color: b.color.slice(), opacity: b.opacity,
           visible: vis && vis.has(b) ? vis.get(b) : b.visible, material: b.material, density: b.density, solid: b.solid || null };
       }),
-      sel: selBodies().map(function (b) { return b.id; }), measures: JSON.parse(JSON.stringify(S.measures)), sketches: JSON.stringify(S.sketches), skSel: S.skSel
+      sel: selBodies().map(function (b) { return b.id; }), measures: JSON.parse(JSON.stringify(S.measures)), sketches: JSON.stringify(S.sketches), skSel: S.skSel, geos: JSON.stringify(S.geos), geoSeq: S.geoSeq
     };
   }
   function updateHistBtns() { $('bUndo').disabled = !hist.undo.length; $('bRedo').disabled = !hist.redo.length; }
@@ -4202,6 +4217,7 @@ var wasm_bindgen = (function(exports) {
     S.sel = new Set(S.bodies.filter(function (b) { return s.sel.indexOf(b.id) >= 0; }));
     S.measures = JSON.parse(JSON.stringify(s.measures)); S.tmp = []; S.col = null;
     if (s.sketches) { S.sketches = JSON.parse(s.sketches); S.skSel = s.skSel; }
+    if (s.geos) { S.geos = JSON.parse(s.geos); S.geoSeq = s.geoSeq || S.geos.length + 1; if (!S.geos.some(function (g) { return g.id === S.geoSel; })) S.geoSel = null; }
     resetBox('colRes');
     updateExplode(); sceneChanged(false); updateMeasList(); refresh();
   }
@@ -4617,9 +4633,8 @@ var wasm_bindgen = (function(exports) {
   }
   // point at angle a on the circle of radius r around c, in the plane normal to axis i (angle 0 = next axis)
   function ringPt(c, i, r, a) {
-    const j = (i + 1) % 3, k = (i + 2) % 3, p = c.slice();
-    p[j] += r * Math.cos(a); p[k] += r * Math.sin(a);
-    return p;
+    const j = (i + 1) % 3, k = (i + 2) % 3;
+    return V.add(c, V.add(V.mul(GX(j), r * Math.cos(a)), V.mul(GX(k), r * Math.sin(a))));
   }
   // bounding box of the ticked bodies with its three sizes, as in a model-info view
   function drawBBox(list) {
@@ -4666,7 +4681,7 @@ var wasm_bindgen = (function(exports) {
   // the rotation in progress: dial around the axis, swept sector, angle read-out
   function drawRotation(dr, pv, Lw) {
     const i = dr.axis, r = Lw * 0.95, col = AXC[i], th0 = dr.th0, ang = (dr.ang || 0) * Math.PI / 180, c = project(pv);
-    gline(project(V.sub(pv, V.mul(AXES[i], Lw * 1.15))), project(V.add(pv, V.mul(AXES[i], Lw * 1.15))), col, 2);
+    gline(project(V.sub(pv, V.mul(GX(i), Lw * 1.15))), project(V.add(pv, V.mul(GX(i), Lw * 1.15))), col, 2);
     const ring = [];
     for (let k = 0; k <= 96; k++) ring.push(project(ringPt(pv, i, r, k / 96 * 6.2832)));
     gpoly(ring, col, 2.5);
@@ -4749,7 +4764,7 @@ var wasm_bindgen = (function(exports) {
       }
     }
     if (S.show.box && tick.length) drawBBox(tick);
-    drawMeasures();
+    drawGeos(); drawMeasures();
     drawSketch(); drawDlgSel();
     for (const p of S.tmp) dot2(project(p), '#ffcf5a', 4.5);
     if (S.hovEnt) {                                          // what a click would take, in the measuring tools
@@ -4777,9 +4792,9 @@ var wasm_bindgen = (function(exports) {
       const sel = selBodies().filter(function (b) { return b.visible; });
       const dg = drag && drag.type === 'giz' ? drag : null, hov = dg ? dg.axis : S.hov;
       // while rotating or scaling the handle stays where the drag started; while moving it travels with the bodies
-      const pv = dg && S.tool !== 'move' ? dg.pv3 : S.tool !== 'move' && $('pivot').value !== 'c' ? pivotPoint(sel) : boxCenter(unionBox(sel, true)), p = project(pv), Lw = 124 * 2 * cam.zoom / H, ends = [], arcs = [];
+      const pv = dg && S.tool !== 'move' ? dg.pv3 : $('pivot').value !== 'c' && !(S.tool === 'move' && dg) ? pivotPoint(sel) : boxCenter(unionBox(sel, true)), p = project(pv), Lw = 124 * 2 * cam.zoom / H, ends = [], arcs = [];
       for (let i = 0; i < 3; i++) {
-        ends.push(project(V.add(pv, V.mul(AXES[i], Lw))));
+        ends.push(project(V.add(pv, V.mul(GX(i), Lw))));
         const q = [];
         if (S.tool === 'rotate') for (let k = 0; k <= GIZ_ARC.n; k++) q.push(project(ringPt(pv, i, Lw * GIZ_ARC.r, GIZ_ARC.a0 + (GIZ_ARC.a1 - GIZ_ARC.a0) * k / GIZ_ARC.n)));
         arcs.push(q);
@@ -5083,18 +5098,24 @@ var wasm_bindgen = (function(exports) {
       radius: L('Bấm 1 cung tròn, mặt trụ hoặc mặt cầu; hoặc 3 điểm trên cùng một cung', 'Click one arc, cylinder or sphere; or 3 points on the same arc'),
       thick: L('Bấm vào một điểm trên mesh để đo bề dày tại đó', 'Click a point on the mesh to measure the wall thickness there'),
       secpick: L('Bấm vào một mặt trên mesh để lấy làm mặt cắt', 'Click a face on the mesh to use it as the section plane'),
-      mate: L('Bấm mặt phẳng / mặt trụ / cạnh tròn trên body cần dời, rồi bấm mặt / trục đích trên body khác: mặt áp mặt, trục trùng trục', 'Click a flat face / cylinder / round edge on the body to move, then the target face / axis on another body: face to face, axis on axis')
+      mate: L('Bấm mặt phẳng / mặt trụ / cạnh / điểm trên body cần dời, rồi bấm đích trên body khác hoặc geometry: mặt áp mặt, trục trùng trục, điểm vào điểm / mặt / trục', 'Click a face / cylinder / edge / point on the body to move, then the target on another body or a geometry: face to face, axis on axis, point onto point / face / axis'),
+      gpoint: L('Bấm để đặt điểm: đỉnh, tâm, trung điểm hoặc điểm trên mesh (theo bộ lọc). Esc để thôi', 'Click to place a point: corner, centre or a point on the mesh (as the filter allows). Esc to stop'),
+      gline: L('Điểm–Điểm: bấm 2 điểm. Điểm–Mặt: bấm 1 điểm rồi 1 mặt phẳng (đường vuông góc xuống mặt)', 'Point–Point: click 2 points. Point–Plane: click a point, then a plane (the line drops square onto it)'),
+      gplane: L('Theo mặt: bấm một mặt phẳng (offset, đảo chiều ở bảng nhỏ). 3 điểm: bấm 3 điểm', 'On face: click a flat face (offset and flip in the small panel). 3 points: click 3 points'),
+      gaxis: L('Bấm mặt trụ, cạnh tròn hoặc cạnh thẳng; hoặc 2 điểm', 'Click a cylinder, a round edge or a straight edge; or 2 points')
     }[t] || '';
   }
   function setTool(t) {
     if (S.cmp && S.cmp.split) t = 'select';
     S.tool = t; S.tmp = [];
     document.querySelectorAll('[data-tool]').forEach(function (b) { b.classList.toggle('on', b.dataset.tool === t); });
-    $('tpop').style.display = (t === 'move' || t === 'rotate' || t === 'scale' || t === 'mate') ? 'block' : 'none';
+    const geoT = t === 'gpoint' || t === 'gline' || t === 'gplane' || t === 'gaxis', xf = t === 'move' || t === 'rotate' || t === 'scale';
+    $('tpop').style.display = (xf || t === 'mate' || geoT) ? 'block' : 'none';
+    $('tpAxes').style.display = xf ? 'flex' : 'none'; $('tpGeo').style.display = geoT ? 'flex' : 'none'; S.axPick = null; S.geoPick = []; if (geoT) geoToolUI(t);
     $('tpMate').style.display = t === 'mate' ? 'flex' : 'none'; S.mate = null; S.pivPick = false;
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick') { openPop('measure', true); updateMeasPanel(); }
     $('tpMove').style.display = t === 'move' ? 'flex' : 'none'; $('tpRot').style.display = t === 'rotate' ? 'flex' : 'none';
-    $('tpScale').style.display = t === 'scale' ? 'flex' : 'none'; $('tpPivot').style.display = t === 'rotate' || t === 'scale' ? 'flex' : 'none';
+    $('tpScale').style.display = t === 'scale' ? 'flex' : 'none'; $('tpPivot').style.display = xf ? 'flex' : 'none';
     canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null; S.hovEnt = null;
     if ((t === 'move' || t === 'rotate' || t === 'scale') && !S.sel.size) flash(L('Hãy tick chọn body trước', 'Tick a body first'));
     else flash(toolHint(t), !!toolHint(t));
@@ -5255,6 +5276,8 @@ var wasm_bindgen = (function(exports) {
   function pivotPoint(list) { const v = $('pivot').value; return v === 'o' ? [0, 0, 0] : v === 'p' && S.pivot3 ? S.pivot3.slice() : boxCenter(unionBox(list, false)); }
   // a snap point for the rotation centre: corner, centre of a round edge / sphere, point on a cylinder axis, centre of mass
   function pivotSnap(px, py) {
+    const gp = geoAt(px, py);
+    if (gp && gp.kind === 'point') return gp;
     const c = comAt(px, py);
     if (c) return { kind: 'point', p: c, at: c, text: L('Trọng tâm', 'Centre of mass') };
     const h = pickNear(px, py);
@@ -5282,7 +5305,8 @@ var wasm_bindgen = (function(exports) {
   // ---------- mate: face onto face, axis onto axis ----------
   // what a click gives for mating: a plane {t:'plane', p, n} or an axis {t:'axis', p, d, ring}
   function mateEnt(h, px, py) {
-    const e = entityAt(h, px, py, false);
+    const e = h.geoEnt || entityAt(h, px, py, false);
+    if (e.kind === 'point' && !e.free) return Object.assign({}, e, { mg: { t: 'point', p: e.p }, body: h.body, text: (e.text || L('Điểm', 'Point')) });
     if (e.kind === 'plane') return Object.assign({}, e, { mg: { t: 'plane', p: e.p, n: V.norm(e.n) }, body: h.body });
     if (e.kind === 'cyl') return Object.assign({}, e, { mg: { t: 'axis', p: e.c, d: V.norm(e.dir) }, body: h.body, text: L('Trục mặt trụ R', 'Cylinder axis R') + f2(e.r) });
     if (e.kind === 'edge' && e.sub === 'arc' && e.n) return Object.assign({}, e, { mg: { t: 'axis', p: e.c, d: V.norm(e.n), ring: true }, body: h.body, text: L('Trục cung R', 'Arc axis R') + f2(e.r) });
@@ -5295,6 +5319,14 @@ var wasm_bindgen = (function(exports) {
     return M.rot(V.mul(ax, 1 / s), Math.atan2(s, c));
   }
   function mateMatrix(a, b, flip, gap) {
+    if (a.t === 'point' || b.t === 'point') {               // a point mate only slides the bodies (no turning)
+      const foot = function (p, ax) { return V.add(ax.p, V.mul(ax.d, V.dot(V.sub(p, ax.p), ax.d))); };
+      if (a.t === 'point' && b.t === 'point') return M.trans(V.sub(b.p, a.p));
+      if (a.t === 'point' && b.t === 'plane') return M.trans(V.mul(b.n, V.dot(V.sub(b.p, a.p), b.n) + gap));
+      if (a.t === 'point' && b.t === 'axis') return M.trans(V.sub(foot(a.p, b), a.p));
+      if (a.t === 'plane') return M.trans(V.mul(a.n, V.dot(V.sub(b.p, a.p), a.n) - gap));
+      return M.trans(V.sub(b.p, foot(b.p, a)));
+    }
     if (a.t === 'plane') {
       const goal = flip ? b.n : V.mul(b.n, -1), R = M.about(a.p, rotTo(a.n, goal));
       return M.mul(M.trans(V.mul(b.n, V.dot(V.sub(b.p, a.p), b.n) + gap)), R);
@@ -5314,16 +5346,17 @@ var wasm_bindgen = (function(exports) {
   }
   function mateClick(px, py) {
     if (blocked()) return;
-    const h = pickNear(px, py), e = h ? mateEnt(h, px, py) : null;
-    if (!e) { flash(L('Hãy bấm vào mặt phẳng, mặt trụ hoặc cạnh tròn / thẳng', 'Click a flat face, a cylinder or a round / straight edge')); return; }
+    const g = S.mate && S.mate.a ? geoAt(px, py) : null, h = g ? { body: null, geoEnt: g } : pickNear(px, py), e = h ? mateEnt(h, px, py) : null;   // the first pick is on the body to move
+    if (!e) { flash(L('Hãy bấm vào mặt phẳng, mặt trụ, cạnh tròn / thẳng hoặc điểm (theo bộ lọc)', 'Click a flat face, a cylinder, a round / straight edge or a point (as the filter allows)')); return; }
     const st = S.mate;
+    if ((!st || !st.a) && !e.body) { flash(L('Đối tượng thứ nhất phải nằm trên body cần dời', 'The first pick must be on the body to move')); return; }
     if (!st || !st.a) {
       S.mate = { a: e }; S.tmp = [e.at];
-      flash(L('Đã chọn ', 'Picked ') + (e.mg.t === 'plane' ? L('mặt', 'a face') : L('trục', 'an axis')) + L(' trên "', ' on "') + e.body.name + L('". Giờ bấm ', '". Now click the target ') + (e.mg.t === 'plane' ? L('mặt đích', 'face') : L('trục đích', 'axis')) + L(' trên body khác.', ' on another body.'), true);
+      flash(L('Đã chọn ', 'Picked ') + (e.mg.t === 'plane' ? L('mặt', 'a face') : e.mg.t === 'point' ? L('điểm', 'a point') : L('trục', 'an axis')) + L(' trên "', ' on "') + e.body.name + L('". Giờ bấm đích (mặt / trục / điểm) trên body khác hoặc một geometry.', '". Now click the target (face / axis / point) on another body or a geometry.'), true);
       dirty = true; return;
     }
-    if (e.body === st.a.body) { flash(L('Đích phải nằm trên body khác', 'The target must be on another body')); return; }
-    if (e.mg.t !== st.a.mg.t) { flash(L('Phải ghép mặt với mặt, trục với trục', 'Mate a face with a face, an axis with an axis')); return; }
+    if (e.body && e.body === st.a.body) { flash(L('Đích phải nằm trên body khác', 'The target must be on another body')); return; }
+    if (e.mg.t !== st.a.mg.t && st.a.mg.t !== 'point' && e.mg.t !== 'point') { flash(L('Mặt ghép với mặt, trục với trục; điểm ghép được với điểm, mặt hoặc trục', 'Mate a face with a face, an axis with an axis; a point with a point, a face or an axis')); return; }
     const list = S.sel.has(st.a.body) ? selBodies().filter(function (b) { return b !== e.body; }) : [st.a.body];
     const m = { a: st.a, b: e, ids: list.map(function (b) { return b.id; }), flip: $('mtFlip').checked, gap: +$('mtOff').value || 0 };
     mateApply(m);
@@ -5342,15 +5375,17 @@ var wasm_bindgen = (function(exports) {
     dirty = true;
   });
   $('pivot').addEventListener('change', function () { if (this.value === 'p' && !S.pivot3) $('bPivPick').click(); dirty = true; });
-  $('bMove').addEventListener('click', function () { applyTransform(function () { return M.trans([+$('mvX').value || 0, +$('mvY').value || 0, +$('mvZ').value || 0]); }); });
+  // scaling along the handle frame axes
+  function gaxScale(sv) { const B = gaxM(); return M.mul(B, M.mul(M.scale(sv), M.inv(B))); }
+  $('bMove').addEventListener('click', function () { applyTransform(function () { return M.trans(V.add(V.add(V.mul(GX(0), +$('mvX').value || 0), V.mul(GX(1), +$('mvY').value || 0)), V.mul(GX(2), +$('mvZ').value || 0))); }); });
   $('bRot').addEventListener('click', function () {
-    applyTransform(function (list) { return M.about(pivotPoint(list), M.rot(AXES[+$('rotAx').value], (+$('rotA').value || 0) * Math.PI / 180)); });
+    applyTransform(function (list) { return M.about(pivotPoint(list), M.rot(GX(+$('rotAx').value), (+$('rotA').value || 0) * Math.PI / 180)); });
   });
   $('bScale').addEventListener('click', function () {
     applyTransform(function (list) {
       const x = +$('scX').value, y = $('scUni').checked ? x : +$('scY').value, z = $('scUni').checked ? x : +$('scZ').value;
       if (!x || !y || !z) { flash(L('Hệ số tỉ lệ phải khác 0', 'Scale factors must not be 0')); return null; }
-      return M.about(pivotPoint(list), M.scale([x, y, z]));
+      return M.about(pivotPoint(list), gaxScale([x, y, z]));
     });
   });
   $('scUni').addEventListener('change', function () { $('scY').disabled = $('scZ').disabled = this.checked; });
@@ -5398,19 +5433,19 @@ var wasm_bindgen = (function(exports) {
   }
   // angle of the cursor around axis i, measured in the plane through the gizmo centre
   function planeAngle(dr, px, py) {
-    const i = dr.axis, j = (i + 1) % 3, k = (i + 2) % 3, ray = screenRay(px, py);
-    const t = (dr.pv3[i] - ray.o[i]) / ray.d[i];
-    return Math.atan2(ray.o[k] + t * ray.d[k] - dr.pv3[k], ray.o[j] + t * ray.d[j] - dr.pv3[j]);
+    const i = dr.axis, j = (i + 1) % 3, k = (i + 2) % 3, ray = screenRay(px, py), n = GX(i);
+    const t = V.dot(V.sub(dr.pv3, ray.o), n) / V.dot(ray.d, n), q = V.sub(V.add(ray.o, V.mul(ray.d, t)), dr.pv3);
+    return Math.atan2(V.dot(q, GX(k)), V.dot(q, GX(j)));
   }
   function rotStart(dr, px, py) {
     const i = dr.axis, w = viewer();
     dr.ang = 0; dr.acc = 0;
-    if (Math.abs(w[i]) >= 0.3) { dr.mode = 'plane'; dr.th0 = dr.last = planeAngle(dr, px, py); return; }
+    if (Math.abs(V.dot(w, GX(i))) >= 0.3) { dr.mode = 'plane'; dr.th0 = dr.last = planeAngle(dr, px, py); return; }
     // the dial is seen (almost) edge-on: turn by sliding the cursor the way the grabbed point of the dial would travel
     dr.mode = 'slide'; dr.th0 = S.giz.hitAng;
-    const rv = V.sub(ringPt([0, 0, 0], i, 1, dr.th0), [0, 0, 0]), vel = V.cross(AXES[i], rv), r = right(), u = up();
+    const rv = V.sub(ringPt([0, 0, 0], i, 1, dr.th0), [0, 0, 0]), vel = V.cross(GX(i), rv), r = right(), u = up();
     let sx = V.dot(vel, r), sy = -V.dot(vel, u), sl = Math.hypot(sx, sy);
-    if (sl < 0.3) { const f = V.cross(AXES[i], w), sg = V.dot(rv, w) >= 0 ? 1 : -1; sx = sg * V.dot(f, r); sy = -sg * V.dot(f, u); sl = Math.hypot(sx, sy) || 1; }
+    if (sl < 0.3) { const f = V.cross(GX(i), w), sg = V.dot(rv, w) >= 0 ? 1 : -1; sx = sg * V.dot(f, r); sy = -sg * V.dot(f, u); sl = Math.hypot(sx, sy) || 1; }
     dr.sdir = [sx / sl, sy / sl]; dr.spx = dr.Lw * GIZ_ARC.r * H / (2 * cam.zoom) * Math.max(sl, 0.5);
   }
   function gizmoDrag(dr, px, py, shift) {
@@ -5426,9 +5461,9 @@ var wasm_bindgen = (function(exports) {
       } else {
         let s = al < 6 ? 0 : (dx * a2[0] + dy * a2[1]) / al * dr.Lw / al;
         if (shift) s = Math.round(s);
-        d = V.mul(AXES[i], s); txt = 'Δ' + AXN[i] + ' = ' + f2(s) + ' mm';
+        d = V.mul(GX(i), s); txt = 'Δ' + AXN[i] + ' = ' + f2(s) + ' mm';
       }
-      $('mvX').value = +f2(d[0], 3); $('mvY').value = +f2(d[1], 3); $('mvZ').value = +f2(d[2], 3);
+      $('mvX').value = +f2(V.dot(d, GX(0)), 3); $('mvY').value = +f2(V.dot(d, GX(1)), 3); $('mvZ').value = +f2(V.dot(d, GX(2)), 3);   // in the handle frame
       A = M.trans(d);
     } else if (S.tool === 'rotate') {
       let ang;
@@ -5441,7 +5476,7 @@ var wasm_bindgen = (function(exports) {
       if (shift) ang = Math.round(ang);
       dr.ang = ang;
       $('rotAx').value = i; $('rotA').value = +f2(ang, 2);
-      A = M.about(dr.pivot, M.rot(AXES[i], ang * Math.PI / 180)); txt = L('Xoay quanh ', 'Rotate about ') + AXN[i] + ' = ' + f2(ang, 1) + '°';
+      A = M.about(dr.pivot, M.rot(GX(i), ang * Math.PI / 180)); txt = L('Xoay quanh ', 'Rotate about ') + AXN[i] + ' = ' + f2(ang, 1) + '°';
     } else {
       const s = i < 0 ? dx - dy : (al < 6 ? dx : (dx * a2[0] + dy * a2[1]) / al);
       let f = Math.exp(s * 0.006);
@@ -5449,7 +5484,7 @@ var wasm_bindgen = (function(exports) {
       $('scUni').checked = i < 0; $('scY').disabled = $('scZ').disabled = i < 0;
       $('scX').value = +f2(i < 0 || i === 0 ? f : 1, 4); $('scY').value = +f2(i < 0 || i === 1 ? f : 1, 4); $('scZ').value = +f2(i < 0 || i === 2 ? f : 1, 4);
       const sv = i < 0 ? [f, f, f] : [i === 0 ? f : 1, i === 1 ? f : 1, i === 2 ? f : 1];
-      A = M.about(dr.pivot, M.scale(sv)); txt = L('Tỉ lệ ', 'Scale ') + (i < 0 ? L('đồng đều', 'uniform') : AXN[i]) + ' = ' + f2(f, 3);
+      A = M.about(dr.pivot, gaxScale(sv)); txt = L('Tỉ lệ ', 'Scale ') + (i < 0 ? L('đồng đều', 'uniform') : AXN[i]) + ' = ' + f2(f, 3);
     }
     dr.start.forEach(function (m0, b) { b.matrix = M.mul(A, m0); });
     flash(txt, true); dirty = true;
@@ -5495,7 +5530,7 @@ var wasm_bindgen = (function(exports) {
     }
     cam = mainCam;
   });
-  function toolCursor() { const t = S.tool; return (t === 'select' || t === 'move' || t === 'rotate' || t === 'scale') ? 'default' : 'crosshair'; }
+  function toolCursor() { const t = S.tool; return (t === 'select' || t === 'move' || t === 'rotate' || t === 'scale') && !S.axPick && !S.pivPick ? 'default' : 'crosshair'; }
   // nothing pressed: light up the gizmo handle or the centre-of-mass mark under the cursor
   function hover(px, py) {
     cam = camAt(px);
@@ -5509,9 +5544,11 @@ var wasm_bindgen = (function(exports) {
     const h = gizmoActive() && S.giz ? hitGizmo(px, py) : null;
     const t = S.tool, meas = t === 'dist' || t === 'angle' || t === 'radius', c = meas ? comAt(px, py) : null;
     let ent = null;
-    if (S.pivPick) ent = pivotSnap(px, py);
-    else if (t === 'mate') { const hit = pickNear(px, py); if (hit) { ent = mateEnt(hit, px, py); } }
-    else if (meas && !c) { const hit = pickNear(px, py); if (hit) { ent = entityAt(hit, px, py, false); if (ent.free) ent = null; } }
+    if (S.axPick) ent = axPickEnt(px, py);
+    else if (t === 'gpoint' || t === 'gline' || t === 'gplane' || t === 'gaxis') ent = geoToolEnt(t, px, py);
+    else if (S.pivPick) ent = pivotSnap(px, py);
+    else if (t === 'mate') { const g = S.mate && S.mate.a ? geoAt(px, py) : null, hit = g ? { body: null, geoEnt: g } : pickNear(px, py); if (hit) { ent = mateEnt(hit, px, py); } }
+    else if (meas && !c) { const g = geoAt(px, py); if (g) ent = g; else { const hit = pickNear(px, py); if (hit) { ent = entityAt(hit, px, py, false); if (ent.free) ent = null; } } }
     cam = mainCam;
     if (h !== S.hov || c !== S.hovCom || ent || S.hovEnt) { S.hov = h; S.hovCom = c; S.hovEnt = ent; dirty = true; }
     canvas.style.cursor = h !== null ? 'grab' : toolCursor();
@@ -5627,6 +5664,8 @@ var wasm_bindgen = (function(exports) {
       return;
     }
     const t = S.tool;
+    if (S.axPick) { axPickClick(px, py); return; }
+    if (t === 'gpoint' || t === 'gline' || t === 'gplane' || t === 'gaxis') { geoToolClick(t, px, py, e); return; }
     if (S.pivPick) {
       const sp = pivotSnap(px, py);
       if (!sp) { flash(L('Bấm vào mesh để lấy tâm xoay', 'Click on a mesh for the rotation centre')); return; }
@@ -5637,6 +5676,8 @@ var wasm_bindgen = (function(exports) {
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick' || t === 'secpick') {
       const cm = t === 'dist' || t === 'angle' || t === 'radius' ? comAt(px, py) : null;
       if (cm) { measurePick(t, { kind: 'point', p: cm, at: cm, text: L('Trọng tâm', 'Centre of mass') }); return; }   // a centre-of-mass mark is a point like any other
+      const gh = t === 'dist' || t === 'angle' ? geoAt(px, py) : null;
+      if (gh) { gh.bname = ''; measurePick(t, gh); return; }
       const h = pickNear(px, py);
       if (!h) {                                              // a click on empty space drops what is waiting to be measured
         if (S.tmp.length) { S.tmp = []; S.lenFirst = undefined; updateMeasPanel(); dirty = true; flash(L('Đã bỏ các đối tượng đang chọn để đo', 'Cleared the picked entities')); }
@@ -5679,7 +5720,7 @@ var wasm_bindgen = (function(exports) {
     if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
     const ctrl = e.ctrlKey || e.metaKey;
     if (e.key === 'Escape') { setTool('select'); flash(''); }
-    else if (e.key === 'Delete') { if (S.measFocus && S.measures[S.measSel]) deleteMeasure(S.measSel); else deleteSelected(); }
+    else if (e.key === 'Delete') { if (S.measFocus && S.measures[S.measSel]) deleteMeasure(S.measSel); else if (S.geoSel && !S.sel.size) deleteGeo(S.geoSel); else deleteSelected(); }
     else if (ctrl && e.code === 'KeyZ') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
     else if (ctrl && e.code === 'KeyY') { e.preventDefault(); redo(); }
     else if (ctrl && e.code === 'KeyC') { copySel(); if (S.clip.length) flash(L('Đã chép ' + S.clip.length + ' body', S.clip.length + ' bodies copied')); }
@@ -6456,7 +6497,7 @@ var wasm_bindgen = (function(exports) {
   // ================= session (.mrtl) =================
   function saveSession() {
     const vis = S.cmp ? new Map(S.cmp.vis) : null;
-    const meta = { app: 'MrT Decimate Mesh', format: 2, view: { R: mainCam.R, target: mainCam.target, zoom: mainCam.zoom }, explode: S.explode, sketches: S.sketches, skSeq: S.skSeq,
+    const meta = { app: 'MrT Decimate Mesh', format: 2, view: { R: mainCam.R, target: mainCam.target, zoom: mainCam.zoom }, explode: S.explode, sketches: S.sketches, skSeq: S.skSeq, geos: S.geos, geoSeq: S.geoSeq,
       section: { on: S.sec.on, flip: S.sec.flip, axis: S.sec.axis, s: S.sec.s, nView: S.sec.nView, nPick: S.sec.nPick }, measures: S.measures, bodies: [] };
     const blobs = [], geos = new Map();
     let off = 0;
@@ -6498,6 +6539,7 @@ var wasm_bindgen = (function(exports) {
     if (meta.section) { Object.assign(S.sec, meta.section); $('secOn').checked = S.sec.on; $('secFlip').checked = S.sec.flip; $('secAx').value = S.sec.axis; $('secPos').value = Math.round(S.sec.s * 1000); }
     S.measures = (meta.measures || []).filter(function (m) { return m.v !== undefined || m.r !== undefined; });
     S.sketches = meta.sketches || []; S.skSeq = meta.skSeq || S.sketches.length + 1;
+    S.geos = meta.geos || []; S.geoSeq = meta.geoSeq || S.geos.length + 1; S.geoSel = null;
     updateExplode(); sceneChanged(true);
     if (meta.view) { mainCam.R = meta.view.R; mainCam.target = meta.view.target; mainCam.zoom = meta.view.zoom; }
     hist.undo.length = 0; hist.redo.length = 0; updateHistBtns();
@@ -6505,7 +6547,7 @@ var wasm_bindgen = (function(exports) {
   }
   function clearAll() {
     for (const b of S.bodies.slice()) removeBody(b);
-    S.measures = []; S.tmp = []; S.clip = []; S.colorSeq = 0; S.col = null; S.spl = null; S.sketches = []; S.skSel = null;
+    S.measures = []; S.tmp = []; S.clip = []; S.colorSeq = 0; S.col = null; S.spl = null; S.sketches = []; S.skSel = null; S.geos = []; S.geoSel = null; S.geoSeq = 1;
     resetBox('colRes'); resetBox('splitRes'); resetBox('holeRes'); updateMeasList();
   }
   $('bSaveSes').addEventListener('click', function () { try { saveSession(); } catch (e) { showError(e); } });
@@ -6667,7 +6709,7 @@ var wasm_bindgen = (function(exports) {
     const box = $('sketchList');
     if (!box) return;
     box.innerHTML = '';
-    if (!S.sketches.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = L('Chưa có sketch. Bấm "✏ Sketch" để vẽ.', 'No sketch yet. Press "✏ Sketch" to draw one.'); box.appendChild(e); return; }
+    if (!S.sketches.length && !(S.geos && S.geos.length)) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = L('Chưa có sketch / geometry. Bấm "✏ Sketch" hoặc nhóm Geometry để tạo.', 'No sketch / geometry yet. Press "✏ Sketch" or use the Geometry group.'); box.appendChild(e); return; }
     for (const s of S.sketches) {
       const row = document.createElement('div');
       row.className = 'srow' + (S.skSel === s.id ? ' sel' : '') + (S.fd && S.fd.sketchId === s.id ? ' use' : '');
@@ -6680,12 +6722,13 @@ var wasm_bindgen = (function(exports) {
       row.appendChild(cv); row.appendChild(nm); row.appendChild(info);
       row.addEventListener('click', function () {
         if (S.fd && featUseSketch(s.id)) return;
-        S.skSel = s.id; updateSketchList(); dirty = true;
+        S.skSel = s.id; S.geoSel = null; updateSketchList(); dirty = true;
       });
       row.addEventListener('dblclick', function () { editSketch(s); });
-      row.addEventListener('contextmenu', function (e) { e.preventDefault(); S.skSel = s.id; updateSketchList(); sketchMenu(s, e.clientX, e.clientY); });
+      row.addEventListener('contextmenu', function (e) { e.preventDefault(); S.skSel = s.id; S.geoSel = null; updateSketchList(); sketchMenu(s, e.clientX, e.clientY); });
       box.appendChild(row);
     }
+    if (S.geos) appendGeoRows(box);
   }
   function sketchMenu(s, x, y) {
     showMenu([[L('Sửa sketch', 'Edit sketch'), function () { editSketch(s); }],
@@ -8547,26 +8590,302 @@ var wasm_bindgen = (function(exports) {
     else flash(L('Khối dựng bằng lưới — ', 'Built as a mesh — ') + (brLast || L('lõi B-rep không chạy', 'the B-rep engine did not run')), true);
   }
   async function exportStep() {
-    const l = needSel();
-    if (!l.length) return;
+    const l = selBodies(), geos = S.geos.filter(function (g) { return g.vis !== false; });
+    if (!l.length && !geos.length) { needSel(); return; }
     const solids = l.filter(function (b) { return b.solid && brCan(b.solid); });
-    if (!solids.length) { flash(L('STEP chỉ xuất được khối solid dựng từ sketch và đang là B-rep', 'STEP is only for solids built from sketches that are B-rep'), true); return; }
+    if (!solids.length && !geos.length) { flash(L('STEP chỉ xuất được khối solid dựng từ sketch và đang là B-rep, cùng các geometry (điểm / đường / mặt / trục)', 'STEP is only for B-rep solids built from sketches, and geometry (points / lines / planes / axes)'), true); return; }
     showError(null); setBusy(true, 'STEP...');
     try {
-      const ids = [];
-      for (const b of solids) {
-        const id = await brepSolid(b.solid);
-        if (id === null) throw new Error(L('Không khởi động được lõi B-rep', 'The B-rep engine could not start'));
-        ids.push(brCall({ op: 'transform', id: id, m: Array.from(b.matrix) }).id);   // both column-major
-      }
-      const txt = brCall({ op: 'step', ids: ids }).step;
-      for (const id of ids) brCall({ op: 'free', id: id });
-      download([txt], (solids.length === 1 ? safe(solids[0].name) : 'solids') + '.step');
-      if (solids.length < l.length) flash(L('Bỏ qua ', 'Skipped ') + (l.length - solids.length) + L(' body không phải solid từ sketch', ' bodies that are not sketch solids'), true);
+      let txt;
+      if (solids.length) {
+        const ids = [];
+        for (const b of solids) {
+          const id = await brepSolid(b.solid);
+          if (id === null) throw new Error(L('Không khởi động được lõi B-rep', 'The B-rep engine could not start'));
+          ids.push(brCall({ op: 'transform', id: id, m: Array.from(b.matrix) }).id);   // both column-major
+        }
+        txt = brCall({ op: 'step', ids: ids }).step;
+        for (const id of ids) brCall({ op: 'free', id: id });
+        txt = stepAddGeos(txt, geos);
+      } else txt = stepGeosOnly(geos);
+      download([txt], (solids.length === 1 ? safe(solids[0].name) : solids.length ? 'solids' : 'geometry') + '.step');
+      const skip = l.length - solids.length;
+      flash(L('Đã xuất STEP: ', 'STEP written: ') + solids.length + L(' khối', ' solids') + (geos.length ? ', ' + geos.length + ' geometry' : '') + (skip ? L(' · bỏ qua ', ' · skipped ') + skip + L(' body không phải B-rep', ' non-B-rep bodies') : ''), true);
     } catch (e) { showError(e); }
     setBusy(false);
   }
   $('bStep').addEventListener('click', exportStep);
+
+  // ================= reference geometry: points, lines, planes, axes made in the 3D view =================
+  // Each lives in world coordinates: {id, type, name, p, p2 (line / axis end), n, u, size (plane), base, off, flip, vis}.
+  S.gax = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  S.geos = []; S.geoSeq = 1; S.geoSel = null; S.geoPick = []; S.geoMode = { gline: 'pp', gplane: 'face' }; S.axPick = null;
+  const GEO_COL = { point: '#ff7ad9', line: '#ffd166', axis: '#c58bff', plane: '#78c8ff' };
+  const GEO_PFX = { point: 'P', line: 'L', axis: 'A', plane: 'PL' };
+  const geoById = function (id) { return S.geos.filter(function (g) { return g.id === id; })[0] || null; };
+  function geoAdd(g) {
+    pushUndo();
+    g.id = S.geoSeq++; g.vis = true;
+    g.name = GEO_PFX[g.type] + (S.geos.filter(function (o) { return o.type === g.type; }).length + 1);
+    S.geos.push(g); S.geoSel = g.id; S.skSel = null;
+    updateSketchList(); dirty = true;
+    flash(L('Đã tạo ', 'Created ') + g.name, false);
+    return g;
+  }
+  function deleteGeo(id) { const g = geoById(id); if (!g) return; pushUndo(); S.geos = S.geos.filter(function (o) { return o !== g; }); if (S.geoSel === id) S.geoSel = null; updateSketchList(); dirty = true; }
+  function planeCorners(g) {
+    const u = g.u, v = V.cross(g.n, u), s = g.size / 2;
+    return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(function (k) { return V.add(g.p, V.add(V.mul(u, k[0] * s), V.mul(v, k[1] * s))); });
+  }
+  const anyPerp = function (n) { return V.norm(V.cross(n, Math.abs(n[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0])); };
+  // ---------- drawing ----------
+  function drawGeos() {
+    for (const g of S.geos) {
+      if (g.vis === false) continue;
+      const sel = g.id === S.geoSel, col = sel ? '#ffffff' : GEO_COL[g.type];
+      let lp;
+      if (g.type === 'point') { const q = project(g.p); line2([q[0] - 6, q[1]], [q[0] + 6, q[1]], col, 1.5); line2([q[0], q[1] - 6], [q[0], q[1] + 6], col, 1.5); dot2(q, col, sel ? 4 : 3); lp = q; }
+      else if (g.type === 'line' || g.type === 'axis') {
+        const a = project(g.p), b = project(g.p2);
+        ctx.setLineDash(g.type === 'axis' ? [10, 3, 2, 3] : []); line2(a, b, col, sel ? 2.6 : 1.8); ctx.setLineDash([]);
+        if (g.type === 'line') { dot2(a, col, 2.5); dot2(b, col, 2.5); }
+        lp = b;
+      } else if (g.type === 'plane') {
+        const q = planeCorners(g).map(project);
+        ctx.fillStyle = sel ? 'rgba(255,255,255,0.10)' : 'rgba(120,200,255,0.10)'; ctx.beginPath(); q.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }); ctx.closePath(); ctx.fill();
+        poly2(q.concat([q[0]]), col, sel ? 2 : 1.2);
+        const c = project(g.p), e = project(V.add(g.p, V.mul(g.n, g.size * 0.18)));
+        line2(c, e, col, 1.2); dot2(e, col, 2);
+        lp = q[2];
+      }
+      ctx.font = '11px "Segoe UI", Arial'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(8,10,14,0.85)'; ctx.strokeText(g.name, lp[0] + 6, lp[1] - 6); ctx.fillStyle = col; ctx.fillText(g.name, lp[0] + 6, lp[1] - 6);
+    }
+    for (const p of S.geoPick) { const q = project(p); dot2(q, '#14181d', 6); dot2(q, '#ffcf5a', 4.5); }
+  }
+  // ---------- picking a geometry under the cursor (as the selection filter allows) ----------
+  function geoAt(px, py) {
+    const F = S.flt;
+    let best = null, bd = 9;
+    for (const g of S.geos) {
+      if (g.vis === false || g.type !== 'point' || !F.point) continue;
+      const q = project(g.p), d = Math.hypot(q[0] - px, q[1] - py);
+      if (d < bd) { bd = d; best = { kind: 'point', p: g.p.slice(), at: g.p.slice(), text: g.name, geo: g }; }
+    }
+    if (best) return best;
+    bd = 6;
+    for (const g of S.geos) {
+      if (g.vis === false || (g.type === 'line' ? !F.line : g.type === 'axis' ? !(F.axis || F.line) : true)) continue;
+      const a = project(g.p), b = project(g.p2), ax = b[0] - a[0], ay = b[1] - a[1], l2 = ax * ax + ay * ay;
+      const t = l2 > 1e-9 ? Math.max(0, Math.min(1, ((px - a[0]) * ax + (py - a[1]) * ay) / l2)) : 0, d = Math.hypot(px - a[0] - t * ax, py - a[1] - t * ay);
+      if (d < bd) {
+        bd = d; const dir = V.norm(V.sub(g.p2, g.p)), at = V.add(g.p, V.mul(V.sub(g.p2, g.p), t));
+        best = { kind: 'edge', sub: 'line', pts: [g.p.slice(), g.p2.slice()], dir: dir, len: V.len(V.sub(g.p2, g.p)), p: g.p.slice(), at: at, lines: [[g.p, g.p2]], text: g.name, geo: g };
+      }
+    }
+    if (best || !F.plane) return best;
+    for (const g of S.geos) {
+      if (g.vis === false || g.type !== 'plane') continue;
+      const q = planeCorners(g).map(project);
+      let inside = false;
+      for (let i = 0, j = 3; i < 4; j = i++) { const a = q[i], b = q[j]; if ((a[1] > py) !== (b[1] > py) && px < (b[0] - a[0]) * (py - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside; }
+      let edge = false;                                     // inside the square: only where no mesh is in the way, or right on its border
+      for (let i = 0, j = 3; i < 4; j = i++) { const a = q[j], b = q[i], ax = b[0] - a[0], ay = b[1] - a[1], l2 = ax * ax + ay * ay, t = l2 > 1e-9 ? Math.max(0, Math.min(1, ((px - a[0]) * ax + (py - a[1]) * ay) / l2)) : 0; if (Math.hypot(px - a[0] - t * ax, py - a[1] - t * ay) < 6) edge = true; }
+      if (!edge && (!inside || pick(px, py))) continue;
+      const r = screenRay(px, py), dn = V.dot(r.d, g.n);
+      const at = Math.abs(dn) > 1e-9 ? V.add(r.o, V.mul(r.d, V.dot(V.sub(g.p, r.o), g.n) / dn)) : g.p.slice();
+      return { kind: 'plane', n: g.n.slice(), p: at, at: at, lines: [planeCorners(g).concat([planeCorners(g)[0]])], text: g.name, geo: g };
+    }
+    return null;
+  }
+  // a geometry, else what the mesh offers under the cursor (null when the filter allows nothing there)
+  function pickEnt(px, py, allowFree) {
+    const g = geoAt(px, py);
+    if (g) return g;
+    const h = pickNear(px, py);
+    if (!h) return null;
+    const e = entityAt(h, px, py, false);
+    if (e.free && (!allowFree || e.blocked)) return null;
+    e.bname = h.body.name;
+    return e;
+  }
+  // the point a pick stands for
+  function entPoint(e) {
+    if (e.kind === 'point') return e.p;
+    if (e.kind === 'edge' && e.sub === 'arc' && e.c && S.flt.center) return e.c;
+    return e.at;
+  }
+  const ptEnt = function (e) { const p = entPoint(e); return { kind: 'point', p: p, at: p, text: e.kind === 'point' ? e.text : L('Điểm', 'Point'), lines: e.lines }; };
+  // ---------- the tools ----------
+  function geoToolEnt(t, px, py) {
+    const e = pickEnt(px, py, true);
+    if (!e) return null;
+    const m = S.geoMode, n = S.geoPick.length;
+    if (t === 'gplane' && m.gplane === 'face') return e.kind === 'plane' ? e : null;
+    if (t === 'gline' && m.gline === 'ppl' && n === 1) return e.kind === 'plane' ? e : null;
+    if (t === 'gaxis' && !n && (e.kind === 'cyl' || (e.kind === 'edge' && (e.sub === 'line' || (e.sub === 'arc' && e.n))))) return e;
+    return ptEnt(e);
+  }
+  function sceneSize() { return Math.max(10, mainCam.radius * 0.45); }
+  function geoToolClick(t, px, py) {
+    const e = geoToolEnt(t, px, py), m = S.geoMode;
+    if (!e) { flash(L('Không có gì hợp lệnh / bộ lọc ở chỗ này', 'Nothing here fits the command / filter')); return; }
+    if (t === 'gpoint') { geoAdd({ type: 'point', p: e.p.slice() }); return; }
+    if (t === 'gplane' && m.gplane === 'face') {
+      const n = V.norm(e.n), g = { type: 'plane', base: { p: e.at.slice(), n: n }, off: +$('geoOff').value || 0, flip: $('geoFlip').checked, size: sceneSize(), u: anyPerp(n) };
+      planeFromBase(g); geoAdd(g); return;
+    }
+    if (t === 'gline' && m.gline === 'ppl' && S.geoPick.length === 1) {
+      const p = S.geoPick[0], n = V.norm(e.n), f = V.sub(p, V.mul(n, V.dot(V.sub(p, e.p), n)));
+      S.geoPick = [];
+      if (V.len(V.sub(f, p)) < 1e-6) { flash(L('Điểm nằm trên mặt phẳng: không có đường vuông góc', 'The point lies on the plane: no square line')); dirty = true; return; }
+      geoAdd({ type: 'line', p: p.slice(), p2: f }); return;
+    }
+    if (t === 'gaxis' && e.kind !== 'point') {
+      let c, d, len;
+      if (e.kind === 'cyl') {
+        c = e.c; d = V.norm(e.dir); let t0 = Infinity, t1 = -Infinity;
+        for (const l of e.lines || []) for (const q of l) { const s = V.dot(V.sub(q, c), d); t0 = Math.min(t0, s); t1 = Math.max(t1, s); }
+        if (!(t1 > t0)) { t0 = -e.r * 2; t1 = e.r * 2; }
+        const ext = (t1 - t0) * 0.15; geoAdd({ type: 'axis', p: V.add(c, V.mul(d, t0 - ext)), p2: V.add(c, V.mul(d, t1 + ext)) }); return;
+      }
+      if (e.sub === 'arc') { c = e.c; d = V.norm(e.n); len = Math.max(e.r * 3, sceneSize() * 0.3); geoAdd({ type: 'axis', p: V.sub(c, V.mul(d, len / 2)), p2: V.add(c, V.mul(d, len / 2)) }); return; }
+      const a = e.pts[0], b = e.pts[e.pts.length - 1], ext = V.mul(V.sub(b, a), 0.15);
+      geoAdd({ type: 'axis', p: V.sub(a, ext), p2: V.add(b, ext) }); return;
+    }
+    // point picks: line (2), plane (3), axis (2), the first point of point–plane
+    S.geoPick.push(e.p.slice()); dirty = true;
+    const need = t === 'gplane' ? 3 : t === 'gline' && m.gline === 'ppl' ? 1 : 2;
+    if (S.geoPick.length < need) { flash(t === 'gline' && m.gline === 'ppl' ? L('Giờ bấm một mặt phẳng', 'Now click a plane') : L('Điểm ', 'Point ') + S.geoPick.length + '/' + need, true); return; }
+    if (t === 'gline' && m.gline === 'ppl') return;
+    const P = S.geoPick; S.geoPick = [];
+    if (t === 'gplane') {
+      const n = V.cross(V.sub(P[1], P[0]), V.sub(P[2], P[0]));
+      if (V.len(n) < 1e-9) { flash(L('3 điểm thẳng hàng: không dựng được mặt phẳng', 'The 3 points are in a line: no plane')); return; }
+      const c = V.mul(V.add(V.add(P[0], P[1]), P[2]), 1 / 3), sz = Math.max(V.len(V.sub(P[1], P[0])), V.len(V.sub(P[2], P[0])), V.len(V.sub(P[2], P[1]))) * 1.4;
+      geoAdd({ type: 'plane', p: c, n: V.norm(n), u: V.norm(V.sub(P[1], P[0])), size: Math.max(sz, 1) }); return;
+    }
+    if (V.len(V.sub(P[1], P[0])) < 1e-9) { flash(L('Hai điểm trùng nhau', 'The two points are the same')); return; }
+    geoAdd({ type: t === 'gaxis' ? 'axis' : 'line', p: P[0], p2: P[1] });
+  }
+  function planeFromBase(g) {
+    const n = g.flip ? V.mul(g.base.n, -1) : g.base.n;
+    g.n = n.slice(); g.p = V.add(g.base.p, V.mul(g.base.n, g.off || 0));
+  }
+  function geoToolUI(t) {
+    const box = $('geoModes'), m = S.geoMode, opts = t === 'gline' ? [['pp', 'Điểm – Điểm', 'Point – Point'], ['ppl', 'Điểm – Mặt', 'Point – Plane']] : t === 'gplane' ? [['face', 'Theo mặt', 'On face'], ['3p', '3 điểm', '3 points']] : [];
+    box.innerHTML = '';
+    for (const o of opts) {
+      const b = document.createElement('button'); b.textContent = L(o[1], o[2]); b.className = m[t] === o[0] ? 'primary' : '';
+      b.addEventListener('click', function () { m[t] = o[0]; S.geoPick = []; geoToolUI(t); dirty = true; });
+      box.appendChild(b);
+    }
+    $('geoPlaneOpt').style.display = t === 'gplane' && m.gplane === 'face' ? 'flex' : 'none';
+    const sp = geoById(S.geoSel);
+    if (t === 'gplane' && sp && sp.base) { $('geoOff').value = sp.off || 0; $('geoOffR').value = sp.off || 0; $('geoFlip').checked = !!sp.flip; }
+  }
+  // offset / flip change the selected plane made on a face
+  function geoPlaneEdit(fromRange) {
+    if (fromRange) $('geoOff').value = $('geoOffR').value; else $('geoOffR').value = $('geoOff').value;
+    const g = geoById(S.geoSel);
+    if (!g || !g.base) return;
+    g.off = +$('geoOff').value || 0; g.flip = $('geoFlip').checked; planeFromBase(g); dirty = true;
+  }
+  $('geoOff').addEventListener('input', function () { geoPlaneEdit(false); });
+  $('geoOffR').addEventListener('input', function () { geoPlaneEdit(true); });
+  $('geoFlip').addEventListener('change', function () { geoPlaneEdit(false); });
+  // ---------- the X axis of the move / rotate / scale handles ----------
+  function axDir(e) {
+    if (e.kind === 'edge' && e.sub === 'line') return e.dir || V.norm(V.sub(e.pts[e.pts.length - 1], e.pts[0]));
+    if (e.kind === 'edge' && e.sub === 'arc' && e.n) return e.n;
+    if (e.kind === 'cyl') return e.dir;
+    if (e.kind === 'plane') return e.n;
+    return null;
+  }
+  function axPickEnt(px, py) { const e = pickEnt(px, py, false); return e ? (axDir(e) ? e : ptEnt(e)) : null; }
+  function showGax() { const x = S.gax[0]; $('axX').value = +f2(x[0], 4); $('axY').value = +f2(x[1], 4); $('axZ').value = +f2(x[2], 4); $('bAxReset').classList.toggle('primary', !gaxWorld()); }
+  function axPickClick(px, py) {
+    const e = axPickEnt(px, py);
+    if (!e) { flash(L('Hãy bấm cạnh, trục, mặt phẳng hoặc 2 điểm (theo bộ lọc)', 'Click an edge, an axis, a plane or 2 points (as the filter allows)')); return; }
+    let d = axDir(e);
+    if (!d) {
+      S.axPick.pts.push(e.p.slice()); S.geoPick = S.axPick.pts.slice(); dirty = true;
+      if (S.axPick.pts.length < 2) { flash(L('Bấm điểm thứ hai: trục X đi từ điểm 1 tới điểm 2', 'Click the second point: X runs from point 1 to point 2'), true); return; }
+      d = V.sub(S.axPick.pts[1], S.axPick.pts[0]);
+      if (V.len(d) < 1e-9) { S.axPick.pts = []; S.geoPick = []; flash(L('Hai điểm trùng nhau', 'The two points are the same')); return; }
+    }
+    setGaxX(d); S.axPick = null; S.geoPick = []; $('bAxPick').classList.remove('primary'); showGax();
+    canvas.style.cursor = toolCursor(); flash(L('Trục X của tay nắm đã theo ', 'The handle X axis now follows ') + (e.text || L('hướng đã chọn', 'the picked direction')), false); dirty = true;
+  }
+  $('bAxPick').addEventListener('click', function () {
+    S.axPick = S.axPick ? null : { pts: [] }; S.geoPick = []; S.pivPick = false; $('bPivPick').classList.remove('primary');
+    this.classList.toggle('primary', !!S.axPick); canvas.style.cursor = toolCursor();
+    flash(S.axPick ? L('Bấm cạnh thẳng, trục (mặt trụ / cạnh tròn), mặt phẳng (pháp tuyến) hoặc 2 điểm để đặt trục X', 'Click a straight edge, an axis (cylinder / round edge), a plane (its normal) or 2 points to set the X axis') : '', true); dirty = true;
+  });
+  $('bAxSet').addEventListener('click', function () {
+    const v = [+$('axX').value || 0, +$('axY').value || 0, +$('axZ').value || 0];
+    if (V.len(v) < 1e-9) { flash(L('Vector trục X phải khác 0', 'The X vector must not be zero')); return; }
+    setGaxX(v); showGax(); dirty = true;
+  });
+  ['axX', 'axY', 'axZ'].forEach(function (id) { $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('bAxSet').click(); } }); });
+  $('bAxReset').addEventListener('click', function () { S.gax = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; showGax(); dirty = true; });
+  showGax();
+  // ---------- the list (under the sketches) ----------
+  function appendGeoRows(box) {
+    for (const g of S.geos) {
+      const row = document.createElement('div');
+      row.className = 'srow geo' + (S.geoSel === g.id ? ' sel' : '');
+      const cv = document.createElement('input'); cv.type = 'checkbox'; cv.checked = g.vis !== false;
+      cv.addEventListener('click', function (e) { e.stopPropagation(); });
+      cv.addEventListener('change', function () { pushUndo(); g.vis = cv.checked; dirty = true; });
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.innerHTML = '<b style="color:' + GEO_COL[g.type] + '">' + { point: '•', line: '／', axis: '┆', plane: '▱' }[g.type] + '</b> ' + g.name;
+      const info = document.createElement('span'); info.className = 'num'; info.textContent = { point: L('điểm', 'point'), line: L('đường', 'line'), axis: L('trục', 'axis'), plane: L('mặt phẳng', 'plane') }[g.type];
+      row.appendChild(cv); row.appendChild(nm); row.appendChild(info);
+      row.addEventListener('click', function () { S.geoSel = g.id; S.skSel = null; updateSketchList(); if (S.tool === 'gplane') geoToolUI('gplane'); dirty = true; });
+      row.addEventListener('contextmenu', function (e) {
+        e.preventDefault(); S.geoSel = g.id; S.skSel = null; updateSketchList();
+        showMenu([[L('Đổi tên', 'Rename'), function () { const n = prompt(L('Tên:', 'Name:'), g.name); if (n && n.trim()) { pushUndo(); g.name = n.trim().replace(/['\\]/g, ''); updateSketchList(); dirty = true; } }],
+          [g.vis !== false ? L('Ẩn', 'Hide') : L('Hiện', 'Show'), function () { pushUndo(); g.vis = g.vis === false; updateSketchList(); dirty = true; }], null,
+          [L('Xóa', 'Delete'), function () { deleteGeo(g.id); }]], e.clientX, e.clientY);
+      });
+      box.appendChild(row);
+    }
+  }
+  // ---------- STEP: the geometry as a wireframe set beside the solids ----------
+  function stepNum(v) { if (Math.abs(v) < 1e-12) v = 0; const s = String(+v.toPrecision(15)); return /[.eE]/.test(s) ? s.replace('e', 'E') : s + '.'; }
+  function stepAddGeos(txt, geos) {
+    const sr = txt.match(/#(\d+)=SHAPE_REPRESENTATION\('[^']*',\(#(\d+)\),#(\d+)\);/);
+    if (!sr || !geos.length) return txt;
+    let n = 0; txt.replace(/#(\d+)=/g, function (a, k) { n = Math.max(n, +k); return a; }); n++;
+    const out = [], items = [], nm = function (s) { return String(s).replace(/[^\x20-\x7e]/g, '_').replace(/'/g, ''); };
+    const cp = function (p, name) { const id = n++; out.push('#' + id + "=CARTESIAN_POINT('" + nm(name) + "',(" + p.map(stepNum).join(',') + '));'); return id; };
+    for (const g of geos) {
+      if (g.type === 'point') { items.push(cp(g.p, g.name)); continue; }
+      const pts = g.type === 'plane' ? planeCorners(g) : [g.p, g.p2], ids = pts.map(function (p) { return cp(p, ''); });
+      if (g.type === 'plane') ids.push(ids[0]);
+      const id = n++; out.push('#' + id + "=POLYLINE('" + nm(g.name) + "',(" + ids.map(function (k) { return '#' + k; }).join(',') + '));'); items.push(id);
+    }
+    const set = n++, rep = n++, rel = n++;
+    out.push('#' + set + "=GEOMETRIC_CURVE_SET('Geometry',(" + items.map(function (k) { return '#' + k; }).join(',') + '));');
+    out.push('#' + rep + "=GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION('Geometry',(#" + set + ',#' + sr[2] + '),#' + sr[3] + ');');
+    out.push('#' + rel + "=SHAPE_REPRESENTATION_RELATIONSHIP('','',#" + sr[1] + ',#' + rep + ');');
+    const k = txt.lastIndexOf('ENDSEC;');
+    return txt.slice(0, k) + out.join('\n') + '\n' + txt.slice(k);
+  }
+  // a STEP file holding only the geometry
+  function stepGeosOnly(geos) {
+    const head = ['ISO-10303-21;', 'HEADER;', "FILE_DESCRIPTION(('MrT MeshExpert geometry'),'2;1');", "FILE_NAME('','',(''),('MrT MeshExpert'),'MrT MeshExpert','MrT MeshExpert','');",
+      "FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 1 1 4 }'));", 'ENDSEC;', 'DATA;',
+      "#1=APPLICATION_CONTEXT('managed model based 3d engineering');", "#2=APPLICATION_PROTOCOL_DEFINITION('international standard','ap242_managed_model_based_3d_engineering',2014,#1);",
+      "#3=PRODUCT_CONTEXT('',#1,'mechanical');", "#4=PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');", '#5=(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));',
+      '#6=(NAMED_UNIT(*)PLANE_ANGLE_UNIT()SI_UNIT($,.RADIAN.));', '#7=(NAMED_UNIT(*)SI_UNIT($,.STERADIAN.)SOLID_ANGLE_UNIT());',
+      "#8=UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(0.0001),#5,'distance_accuracy_value','confusion accuracy');",
+      "#9=(GEOMETRIC_REPRESENTATION_CONTEXT(3)GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#8))GLOBAL_UNIT_ASSIGNED_CONTEXT((#5,#6,#7))REPRESENTATION_CONTEXT('Context #1','3D Context with UNIT and UNCERTAINTY'));",
+      "#10=CARTESIAN_POINT('',(0.,0.,0.));", "#11=DIRECTION('',(1.,0.,0.));", "#12=DIRECTION('',(0.,0.,1.));", "#13=AXIS2_PLACEMENT_3D('',#10,#12,#11);",
+      "#14=PRODUCT('Geometry','Geometry','',(#3));", "#15=PRODUCT_DEFINITION_FORMATION('','',#14);", "#16=PRODUCT_DEFINITION('design','',#15,#4);",
+      "#17=PRODUCT_DEFINITION_SHAPE('','',#16);", "#18=SHAPE_REPRESENTATION('Geometry',(#13),#9);", '#19=SHAPE_DEFINITION_REPRESENTATION(#17,#18);',
+      "#20=PRODUCT_RELATED_PRODUCT_CATEGORY('part','',(#14));", 'ENDSEC;', 'END-ISO-10303-21;'];
+    return stepAddGeos(head.join('\n') + '\n', geos);
+  }
 
   applyLang(); updateHistBtns(); sceneChanged(true);
   requestAnimationFrame(frame);

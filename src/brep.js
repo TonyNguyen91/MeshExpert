@@ -163,22 +163,27 @@
     else flash(L('Khối dựng bằng lưới — ', 'Built as a mesh — ') + (brLast || L('lõi B-rep không chạy', 'the B-rep engine did not run')), true);
   }
   async function exportStep() {
-    const l = needSel();
-    if (!l.length) return;
+    const l = selBodies(), geos = S.geos.filter(function (g) { return g.vis !== false; });
+    if (!l.length && !geos.length) { needSel(); return; }
     const solids = l.filter(function (b) { return b.solid && brCan(b.solid); });
-    if (!solids.length) { flash(L('STEP chỉ xuất được khối solid dựng từ sketch và đang là B-rep', 'STEP is only for solids built from sketches that are B-rep'), true); return; }
+    if (!solids.length && !geos.length) { flash(L('STEP chỉ xuất được khối solid dựng từ sketch và đang là B-rep, cùng các geometry (điểm / đường / mặt / trục)', 'STEP is only for B-rep solids built from sketches, and geometry (points / lines / planes / axes)'), true); return; }
     showError(null); setBusy(true, 'STEP...');
     try {
-      const ids = [];
-      for (const b of solids) {
-        const id = await brepSolid(b.solid);
-        if (id === null) throw new Error(L('Không khởi động được lõi B-rep', 'The B-rep engine could not start'));
-        ids.push(brCall({ op: 'transform', id: id, m: Array.from(b.matrix) }).id);   // both column-major
-      }
-      const txt = brCall({ op: 'step', ids: ids }).step;
-      for (const id of ids) brCall({ op: 'free', id: id });
-      download([txt], (solids.length === 1 ? safe(solids[0].name) : 'solids') + '.step');
-      if (solids.length < l.length) flash(L('Bỏ qua ', 'Skipped ') + (l.length - solids.length) + L(' body không phải solid từ sketch', ' bodies that are not sketch solids'), true);
+      let txt;
+      if (solids.length) {
+        const ids = [];
+        for (const b of solids) {
+          const id = await brepSolid(b.solid);
+          if (id === null) throw new Error(L('Không khởi động được lõi B-rep', 'The B-rep engine could not start'));
+          ids.push(brCall({ op: 'transform', id: id, m: Array.from(b.matrix) }).id);   // both column-major
+        }
+        txt = brCall({ op: 'step', ids: ids }).step;
+        for (const id of ids) brCall({ op: 'free', id: id });
+        txt = stepAddGeos(txt, geos);
+      } else txt = stepGeosOnly(geos);
+      download([txt], (solids.length === 1 ? safe(solids[0].name) : solids.length ? 'solids' : 'geometry') + '.step');
+      const skip = l.length - solids.length;
+      flash(L('Đã xuất STEP: ', 'STEP written: ') + solids.length + L(' khối', ' solids') + (geos.length ? ', ' + geos.length + ' geometry' : '') + (skip ? L(' · bỏ qua ', ' · skipped ') + skip + L(' body không phải B-rep', ' non-B-rep bodies') : ''), true);
     } catch (e) { showError(e); }
     setBusy(false);
   }

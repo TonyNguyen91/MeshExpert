@@ -114,7 +114,7 @@
     const box = $('sketchList');
     if (!box) return;
     box.innerHTML = '';
-    if (!S.sketches.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = L('Chưa có sketch. Bấm "✏ Sketch" để vẽ.', 'No sketch yet. Press "✏ Sketch" to draw one.'); box.appendChild(e); return; }
+    if (!S.sketches.length && !(S.geos && S.geos.length)) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = L('Chưa có sketch / geometry. Bấm "✏ Sketch" hoặc nhóm Geometry để tạo.', 'No sketch / geometry yet. Press "✏ Sketch" or use the Geometry group.'); box.appendChild(e); return; }
     for (const s of S.sketches) {
       const row = document.createElement('div');
       row.className = 'srow' + (S.skSel === s.id ? ' sel' : '') + (S.fd && S.fd.sketchId === s.id ? ' use' : '');
@@ -127,12 +127,13 @@
       row.appendChild(cv); row.appendChild(nm); row.appendChild(info);
       row.addEventListener('click', function () {
         if (S.fd && featUseSketch(s.id)) return;
-        S.skSel = s.id; updateSketchList(); dirty = true;
+        S.skSel = s.id; S.geoSel = null; updateSketchList(); dirty = true;
       });
       row.addEventListener('dblclick', function () { editSketch(s); });
-      row.addEventListener('contextmenu', function (e) { e.preventDefault(); S.skSel = s.id; updateSketchList(); sketchMenu(s, e.clientX, e.clientY); });
+      row.addEventListener('contextmenu', function (e) { e.preventDefault(); S.skSel = s.id; S.geoSel = null; updateSketchList(); sketchMenu(s, e.clientX, e.clientY); });
       box.appendChild(row);
     }
+    if (S.geos) appendGeoRows(box);
   }
   function sketchMenu(s, x, y) {
     showMenu([[L('Sửa sketch', 'Edit sketch'), function () { editSketch(s); }],
