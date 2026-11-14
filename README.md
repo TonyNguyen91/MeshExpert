@@ -84,6 +84,10 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Lõi B-rep nạp lần đầu mất khoảng 1–2 giây (khi mở Extrude / Revolve hoặc một lệnh solid). File index.html nặng khoảng 10,7 MB vì có lõi này.
 - Mã nguồn lớp bọc lõi B-rep ở thư mục `brep/` (cách biên dịch lại xem `brep/README.md`).
 
+## Biểu tượng app
+- App có biểu tượng riêng (khối lưới tam giác) hiện trên tab Chrome. Biểu tượng được nhúng thẳng trong index.html (không cần mạng); bản gốc để chỉnh là src/icon.svg (sửa xong chạy lại build và cập nhật dữ liệu nhúng trong src/head.html).
+- Tạo lối tắt ra màn hình có biểu tượng: mở index.html bằng Chrome → menu ⋮ → Truyền, lưu và chia sẻ (Cast, save and share) → Tạo lối tắt… (Create shortcut…), tick "Mở dưới dạng cửa sổ" nếu muốn app chạy cửa sổ riêng.
+
 ## Phiên làm việc (.mrtl)
 - Các nút trên cùng có biểu tượng: Phiên mới, Mở file / phiên, Lưu phiên, Lưu thành…, Xóa hết, Lùi, Tiến, Vị trí lúc import. Tên file phiên đang mở hiện ngay cạnh nút lưu.
 - Phiên mới: xóa sạch và bắt đầu phiên chưa có tên.
