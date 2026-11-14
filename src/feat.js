@@ -742,6 +742,8 @@
     }
     const s = sketchById(S.skSel);
     if (s) { pushUndo(); s.visible = !s.visible; updateSketchList(); dirty = true; return; }
+    const gl = geoSelList();
+    if (gl.length) { hideGeos(gl); return; }
     flash(L('Hãy chọn body (hoặc sketch) cần ẩn / hiện', 'Select the bodies (or sketch) to hide / show'));
   }
   function buildSettings() {
@@ -837,6 +839,7 @@
     const el = $('pop_' + k); if (!el) return;
     const show = on === undefined ? !el.classList.contains('on') : on;
     el.classList.toggle('on', show);
+    if (k === 'undercut' && !show) ucPickStop();
     document.querySelectorAll('.popb[data-pop="' + k + '"]').forEach(function (b) { b.classList.toggle('on', show); });
     if (show) el.scrollIntoView({ block: 'nearest' });
   }

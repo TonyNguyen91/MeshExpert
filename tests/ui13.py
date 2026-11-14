@@ -42,6 +42,8 @@ with sync_playwright() as p:
     # Line point - point through the two geometry points (geometry points snap first)
     pg.click('[data-tool=gline]'); pg.wait_for_timeout(100)
     at(G[0]['p']); at(G[1]['p'])
+    ok('Line panel: two pick boxes, both filled, Create enabled',pg.locator('#geoSlots .gslot.ok').count()==2 and pg.is_enabled('#geoMake'))
+    pg.keyboard.press('Enter'); pg.wait_for_timeout(150)
     G=geos(); L1=G[-1]
     ok('Line point–point between the two points',L1['type']=='line' and near(L1['p'],G[0]['p']) and near(L1['p2'],G[1]['p']),L1)
     # Plane on the top face, then offset 5
@@ -55,7 +57,7 @@ with sync_playwright() as p:
     pg.click('[data-tool=gline]'); pg.wait_for_timeout(100); pg.click('#geoModes button:nth-child(2)'); pg.wait_for_timeout(100)
     at(G[0]['p'])
     pc=pg.evaluate("(()=>{const g=__mrt.S.geos[__mrt.S.geos.length-1],u=g.u,v=[g.n[1]*u[2]-g.n[2]*u[1],g.n[2]*u[0]-g.n[0]*u[2],g.n[0]*u[1]-g.n[1]*u[0]],s=g.size/2;return [g.p[0]+u[0]*s,g.p[1]+u[1]*s,g.p[2]+u[2]*s]})()")
-    at(pc)
+    at(pc); pg.keyboard.press('Enter'); pg.wait_for_timeout(150)
     G=geos(); L2=G[-1]
     ok('Line point–plane drops square onto the plane (length 5)',L2['type']=='line' and abs(math.dist(L2['p'],L2['p2'])-5)<1e-3,L2)
     pg.fill('#geoLen','12'); pg.dispatch_event('#geoLen','input'); pg.wait_for_timeout(100)
@@ -64,7 +66,7 @@ with sync_playwright() as p:
     pg.fill('#geoLen','0'); pg.dispatch_event('#geoLen','input')
     # plane first, then a point: also a normal line
     pg.click('#bodyList .brow:nth-child(2) .nm') if False else None
-    at(pc); at(G[1]['p'])
+    at(pc); at(G[1]['p']); pg.click('#geoMake'); pg.wait_for_timeout(150)
     L3=geos()[-1]
     ok('plane first then point also works',L3['type']=='line' and abs(math.dist(L3['p'],L3['p2'])-5)<1e-3,L3)
     # Axis from the round top edge of the cylinder
@@ -135,6 +137,68 @@ with sync_playwright() as p:
     ok('Show all again',pg.evaluate("__mrt.S.sketches.every(s=>s.visible)&&__mrt.S.geos.every(g=>g.vis!==false)"))
     ok('Export box stays on top (not in the scrolling part)',pg.evaluate("!!document.querySelector('#leftTop #bStep')&&!document.querySelector('#leftScroll #bStep')"))
     pg.evaluate("__mrt.S.sketches.pop()")
+    ok('File box: no Open button, no Edit group shown',not pg.is_visible('#drop') and not pg.is_visible('#bDup') and not pg.is_visible('#bDel'))
+    # origin: a point snaps onto O (iso view, the cylinder out of the way, the block where the mate left it)
+    pg.click('[data-tool=select]'); pg.mouse.move(900,800); pg.keyboard.press('Shift+Digit7'); pg.wait_for_timeout(150)
+    pg.evaluate("(()=>{const s=__mrt.S;s.bodies[1].visible=false;for(const g of s.geos)if(g.type==='point'&&Math.hypot(...g.p)<40)g.vis=false;})()"); pg.wait_for_timeout(100)
+    A5=box(0); corner=pg.evaluate("(()=>{const b=__mrt.S.bodies[0],m=b.matrix,P=b.geo.positions;let best=null,bs=-1e9;for(let k=0;k<P.length;k+=3){const x=m[0]*P[k]+m[4]*P[k+1]+m[8]*P[k+2]+m[12],y=m[1]*P[k]+m[5]*P[k+1]+m[9]*P[k+2]+m[13],z=m[2]*P[k]+m[6]*P[k+1]+m[10]*P[k+2]+m[14];const sc=z*100-x;if(sc>bs){bs=sc;best=[x,y,z];}}return best})()")   # a real top corner, smallest x
+    pg.evaluate("p=>{__mrt.cam().target=[p[0]/2,p[1]/2,p[2]/2];}",corner); pg.wait_for_timeout(150)
+    pg.click('[data-tool=gpoint]'); pg.wait_for_timeout(100)
+    at([0,0,0]); PO=geos()[-1]
+    ok('Point snaps onto the origin O',PO['type']=='point' and near(PO['p'],[0,0,0],1e-9),PO)
+    # Line point - vector: from the block corner along the origin X axis, flipped, 15 long
+    Ln=pg.evaluate("Math.max(__mrt.cam().radius*0.225,1e-6)")
+    pg.click('[data-tool=gline]'); pg.wait_for_timeout(100); pg.click('#geoModes button[data-gm=pv]'); pg.wait_for_timeout(100)
+    ok('Point – Vector mode: start point and direction boxes',pg.locator('#geoSlots .gslot').count()==3-1 and 'Hướng' in pg.inner_text('#geoSlots'))
+    pg.fill('#geoLen','15'); pg.dispatch_event('#geoLen','input'); pg.check('#geoLFlip')
+    at(corner,0,0); at([Ln*0.6,0,0])
+    st=pg.evaluate("Object.keys(__mrt.S.gl.v).join()")
+    pg.keyboard.press('Enter'); pg.wait_for_timeout(150)
+    LV=geos()[-1]
+    ok('Line point–vector along the origin X axis, flipped, 15 long',LV['type']=='line' and near(LV['p'],corner,1e-6) and near(LV['p2'],[corner[0]-15,corner[1],corner[2]],1e-6),[st,LV])
+    # select geometry in the 3D view: body first, geometry where no body is
+    pg.click('[data-tool=select]'); pg.keyboard.press('Space'); pg.wait_for_timeout(100)
+    pg.evaluate("(()=>{document.getElementById('geoLFlip').checked=false;document.getElementById('geoLen').value='0';})()")
+    lm=[corner[0]-10,corner[1],corner[2]]; at(lm)
+    gs=pg.evaluate("[...__mrt.S.geoSet]"); lid=pg.evaluate("__mrt.S.geos[__mrt.S.geos.length-1].id")
+    ok('click on a geometry away from bodies selects it',gs==[lid] and pg.evaluate("__mrt.S.sel.size")==0,gs)
+    pg.keyboard.press('y'); pg.wait_for_timeout(100)
+    ok('Y hides the selected geometry',pg.evaluate("__mrt.S.geos[__mrt.S.geos.length-1].vis")==False)
+    pg.keyboard.press('Control+z'); pg.wait_for_timeout(150)
+    at(A[0][:2]+[A[1][2]]) if False else None
+    LL=geos()[-1]; q1=scr(LL['p']); q2=scr(LL['p2'])
+    a0=[min(q1[0],q2[0])-8,min(q1[1],q2[1])-8]; a1=[max(q1[0],q2[0])+8,max(q1[1],q2[1])+8]
+    pg.mouse.move(*a0); pg.mouse.down(); pg.mouse.move(a1[0],a1[1],steps=6); pg.mouse.up(); pg.wait_for_timeout(150)
+    ok('box with no body in it selects geometry',pg.evaluate("__mrt.S.geoSet.size")>=1 and pg.evaluate("__mrt.S.sel.size")==0,pg.evaluate("[...__mrt.S.geoSet]"))
+    n0=len(geos()); pg.keyboard.press('Delete'); pg.wait_for_timeout(100)
+    ok('Delete removes the selected geometry',len(geos())==n0-pg.evaluate("0")-1 or len(geos())<n0,[n0,len(geos())])
+    pg.keyboard.press('Control+z'); pg.wait_for_timeout(150)
+    # sketch on an origin base plane
+    pg.evaluate("__mrt.S.bodies[0].visible=false"); pg.wait_for_timeout(100)
+    pg.click('#bSketch'); pg.click('#skplane [data-pl=pick]'); pg.wait_for_timeout(100)
+    Ln=pg.evaluate("Math.max(__mrt.cam().radius*0.225,1e-6)")
+    q=scr([-Ln*0.25,-Ln*0.25,0]) if False else scr([Ln*0.3,Ln*0.3,0])
+    pg.mouse.move(q[0],q[1]); pg.wait_for_timeout(120)
+    hv=pg.evaluate("__mrt.S.skHov&&__mrt.S.skHov.geo&&__mrt.S.skHov.geo.id")
+    ok('origin base plane XY lights up for the sketch',hv=='oP0',hv)
+    pg.mouse.click(q[0],q[1]); pg.wait_for_timeout(150)
+    fr=pg.evaluate("__mrt.S.sk&&__mrt.S.sk.frame")
+    ok('sketch on XY with its origin at O',fr and near(fr['o'],[0,0,0],1e-9) and abs(abs(fr['n'][2])-1)<1e-9,fr)
+    pg.click('#skCancel'); pg.wait_for_timeout(150)
+    pg.evaluate("(()=>{const s=__mrt.S;s.bodies[0].visible=true;s.bodies[1].visible=true;})()")
+    # undercut: pull direction picked from the top face; hide the bodies not analysed
+    pg.evaluate("(()=>{const s=__mrt.S;s.sel.clear();s.sel.add(s.bodies[0]);})()")
+    pg.evaluate("document.querySelector('.popb[data-pop=undercut]')?document.querySelector('.popb[data-pop=undercut]').click():document.getElementById('pop_undercut').classList.add('on')"); pg.wait_for_timeout(100)
+    pg.select_option('#ucAx','pick'); pg.wait_for_timeout(100)
+    ok('pick mode starts when "Pick on screen" is chosen',pg.evaluate("__mrt.S.ucPick"))
+    at([(A5[0][0]+A5[1][0])/2+1,(A5[0][1]+A5[1][1])/2+1,A5[1][2]])
+    ud=pg.evaluate("__mrt.S.ucDir&&__mrt.S.ucDir.d")
+    ok('pull direction from the top face normal',ud and abs(abs(ud[2])-1)<1e-6 and not pg.evaluate("__mrt.S.ucPick"),ud)
+    pg.check('#ucIso'); pg.click('#bUc'); idle()
+    ok('Undercut ran with the picked direction; the other body is hidden',('0.000, 0.000, 1.000' in pg.inner_text('#ucRes') or '0.000, 0.000, -1.000' in pg.inner_text('#ucRes')) and pg.evaluate("!__mrt.S.bodies[1].visible&&__mrt.S.bodies[0].visible"),pg.inner_text('#ucRes')[-120:])
+    pg.uncheck('#ucIso'); pg.wait_for_timeout(100)
+    ok('unticking brings the other body back',pg.evaluate("__mrt.S.bodies[1].visible"))
+    pg.click('#bUcClr'); pg.wait_for_timeout(100)
     # undo takes back geometry too
     n=len(geos()); pg.keyboard.press('Control+z'); pg.keyboard.press('Control+z'); pg.wait_for_timeout(200)
     ok('undo brings back the earlier geometry list',len(geos())<=n)

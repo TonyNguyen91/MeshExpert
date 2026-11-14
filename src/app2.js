@@ -849,7 +849,7 @@
       }
     }
     if (S.show.box && tick.length) drawBBox(tick);
-    drawGeos(); drawMeasures(); updGeoVisBtn();
+    drawGeos(); drawUcDir(); drawMeasures(); updGeoVisBtn();
     drawSketch(); drawDlgSel();
     for (const p of S.tmp) dot2(project(p), '#ffcf5a', 4.5);
     drawSkHov();
@@ -1186,7 +1186,7 @@
       secpick: L('Bấm vào một mặt trên mesh để lấy làm mặt cắt', 'Click a face on the mesh to use it as the section plane'),
       mate: L('Bấm mặt phẳng / mặt trụ / cạnh / điểm trên body cần dời, rồi bấm đích trên body khác hoặc geometry: mặt áp mặt, trục trùng trục, điểm vào điểm / mặt / trục', 'Click a face / cylinder / edge / point on the body to move, then the target on another body or a geometry: face to face, axis on axis, point onto point / face / axis'),
       gpoint: L('Bấm để đặt điểm: đỉnh, tâm, trung điểm hoặc điểm trên mesh (theo bộ lọc). Esc để thôi', 'Click to place a point: corner, centre or a point on the mesh (as the filter allows). Esc to stop'),
-      gline: L('Điểm–Điểm: bấm 2 điểm. Điểm–Mặt: bấm 1 điểm rồi 1 mặt phẳng (đường vuông góc xuống mặt)', 'Point–Point: click 2 points. Point–Plane: click a point, then a plane (the line drops square onto it)'),
+      gline: L('Line: chọn kiểu ở bảng nhỏ, bấm trên màn hình để điền từng ô (ô viền cam là ô đang nhận), rồi bấm Tạo line hoặc Enter', 'Line: pick the kind in the small panel, click in the view to fill each box (the orange box takes the click), then Create line or Enter'),
       gplane: L('Theo mặt: bấm một mặt phẳng (offset, đảo chiều ở bảng nhỏ). 3 điểm: bấm 3 điểm', 'On face: click a flat face (offset and flip in the small panel). 3 points: click 3 points'),
       gaxis: L('Bấm mặt trụ, cạnh tròn hoặc cạnh thẳng; hoặc 2 điểm', 'Click a cylinder, a round edge or a straight edge; or 2 points')
     }[t] || '';
@@ -1202,14 +1202,14 @@
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick') { openPop('measure', true); updateMeasPanel(); }
     $('tpMove').style.display = t === 'move' ? 'flex' : 'none'; $('tpRot').style.display = t === 'rotate' ? 'flex' : 'none';
     $('tpScale').style.display = t === 'scale' ? 'flex' : 'none'; $('tpPivot').style.display = xf ? 'flex' : 'none';
-    canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null; S.hovEnt = null; S.skHov = null;
+    ucPickStop(); canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null; S.hovEnt = null; S.skHov = null;
     if ((t === 'move' || t === 'rotate' || t === 'scale') && !S.sel.size) flash(L('Hãy tick chọn body trước', 'Tick a body first'));
     else flash(toolHint(t), !!toolHint(t));
     dirty = true;
   }
   function select(list, add) {
     if (!add) S.sel.clear();
-    if (!add && !list.length) { S.spl = null; if (S.skSel) { S.skSel = null; updateSketchList(); } }                  // unticking everything also ends the "next option" run of the last split
+    if (!add && !list.length) { S.spl = null; if (S.skSel) { S.skSel = null; updateSketchList(); } if (S.geoSet.size || S.geoSel) { S.geoSet.clear(); S.geoSel = null; updateSketchList(); dirty = true; } }                  // unticking everything also ends the "next option" run of the last split
     for (const b of list) { if (add && S.sel.has(b)) S.sel.delete(b); else S.sel.add(b); }
     refresh();
   }
@@ -1631,7 +1631,8 @@
     const h = gizmoActive() && S.giz ? hitGizmo(px, py) : null;
     const t = S.tool, meas = t === 'dist' || t === 'angle' || t === 'radius', c = meas ? comAt(px, py) : null;
     let ent = null;
-    if (S.axPick) ent = axPickEnt(px, py);
+    if (S.ucPick) ent = ucPickEnt(px, py);
+    else if (S.axPick) ent = axPickEnt(px, py);
     else if (t === 'gpoint' || t === 'gline' || t === 'gplane' || t === 'gaxis') ent = geoToolEnt(t, px, py);
     else if (S.pivPick) ent = pivotSnap(px, py);
     else if (t === 'mate') { const g = S.mate && S.mate.a ? geoAt(px, py) : null, hit = g ? { body: null, geoEnt: g } : pickNear(px, py); if (hit) { ent = mateEnt(hit, px, py); } }
@@ -1671,9 +1672,12 @@
     if (d.type === 'sk') { skDragEnd(d); cam = mainCam; hover(p[0], p[1]); return; }
     if (d.type === 'lab') { cam = mainCam; updateMeasPanel(); hover(p[0], p[1]); return; }
     if (d.type === 'giz') { if (d.moved) { commitTransform(d.list); flash(toolHint(S.tool), true); } dirty = true; }
-    else if (d.type === 'box') { S.box = null; cam = mainCam; if (S.flt.body) boxSelect(d.x0, d.y0, p[0], p[1], true); else { dirty = true; flash(L('Bộ lọc đang tắt Body', 'The filter is off for bodies')); } }
+    else if (d.type === 'box') { S.box = null; cam = mainCam; if (!(S.flt.body && boxSelect(d.x0, d.y0, p[0], p[1], true)) && !geoBoxSelect(d.x0, d.y0, p[0], p[1])) { dirty = true; if (!S.flt.body) flash(L('Bộ lọc đang tắt Body', 'The filter is off for bodies')); } }
     else if (d.type === 'click' && still) onClick(p[0], p[1], e);
-    else if (d.type === 'rot' && still && e.button === 2 && !(S.cmp && S.cmp.split)) { const h = pick(p[0], p[1]); openMenu(e.clientX, e.clientY, h ? h.body : null); }
+    else if (d.type === 'rot' && still && e.button === 2 && !(S.cmp && S.cmp.split)) {
+      const h = pick(p[0], p[1]), gg = h ? null : geoAt(p[0], p[1]);
+      if (gg && gg.geo && !gg.geo.origin && !S.sk && !busy) geoMenu(gg.geo, e.clientX, e.clientY); else openMenu(e.clientX, e.clientY, h ? h.body : null);
+    }
     cam = mainCam;
     hover(p[0], p[1]);
   });
@@ -1736,12 +1740,32 @@
       }
       if (sel) hit.push(body);
     }
+    if (!hit.length) return 0;                               // nothing: the box may take geometry instead
     if (add) { for (const h of hit) S.sel.add(h); refresh(); } else select(hit, false);
+    return hit.length;
+  }
+  // a box with no body in it takes the geometry it holds (left-to-right: wholly inside; right-to-left: touched)
+  function geoBoxSelect(x0, y0, x1, y1) {
+    const cross = x1 < x0, l = Math.min(x0, x1), r = Math.max(x0, x1), t = Math.min(y0, y1), b = Math.max(y0, y1), got = [];
+    const inR = function (q) { return q[0] >= l && q[0] <= r && q[1] >= t && q[1] <= b; };
+    for (const g of S.geos) {
+      if (g.vis === false) continue;
+      const pts = (g.type === 'point' ? [g.p] : g.type === 'plane' ? planeCorners(g) : [g.p, g.p2]).map(project);
+      let ok = cross ? pts.some(inR) : pts.every(inR);
+      if (!ok && cross && pts.length > 1) for (let i = 0; i < pts.length && !ok; i++) { const a = pts[i], c = pts[(i + 1) % pts.length]; ok = segRect(a[0], a[1], c[0], c[1], l, t, r, b); }
+      if (ok) got.push(g.id);
+    }
+    if (!got.length) return 0;
+    for (const id of got) S.geoSet.add(id);
+    S.geoSel = got[got.length - 1]; S.skSel = null; updateSketchList(); dirty = true;
+    flash(L('Đã chọn ', 'Selected ') + got.length + L(' geometry: Delete để xóa, Y để ẩn', ' geometry: Delete removes, Y hides'), false);
+    return got.length;
   }
   function onClick(px, py, e) {
     if (S.measFocus) { S.measFocus = false; dirty = true; }
     if (S.sk) { skClick(px, py, e); return; }
     if (S.tool === 'skplane') { skPickPlane(px, py); return; }
+    if (S.ucPick) { ucPickClick(px, py); return; }
     if (modelClick(px, py, e)) return;
     if (S.cmp && S.cmp.split) {
       const i = px < W / 2 ? 0 : 1, h = pickNear(px, py, [i ? S.cmp.b : S.cmp.a]);
@@ -1788,8 +1812,16 @@
     if (S.cmp) return;
     // every click adds a body to the ticked set (or takes it out again); a click on empty space clears the set
     const h = pick(px, py);
-    if (h && !S.flt.body) { flash(L('Bộ lọc đang tắt Body: bật nút "Body" ở thanh Lọc để chọn body', 'The filter is off for bodies: turn on "Body" in the Filter bar to pick bodies')); return; }
-    if (h) select([h.body], true); else select([], false);
+    if (h && S.flt.body) { select([h.body], true); return; }
+    const gg = geoAt(px, py);                                // geometry comes last: only where no body is taken
+    if (gg && gg.geo && !gg.geo.origin) {
+      const id = gg.geo.id;
+      if (S.geoSet.has(id) || S.geoSel === id) { S.geoSet.delete(id); if (S.geoSel === id) S.geoSel = null; } else { S.geoSet.add(id); S.geoSel = id; S.skSel = null; }
+      updateSketchList(); dirty = true;
+      flash(gg.geo.name + L(': Delete để xóa, Y để ẩn, chuột phải để xem thêm', ': Delete removes, Y hides, right-click for more'), false); return;
+    }
+    if (h) { flash(L('Bộ lọc đang tắt Body: bật nút "Body" ở thanh Lọc để chọn body', 'The filter is off for bodies: turn on "Body" in the Filter bar to pick bodies')); return; }
+    select([], false);
   }
 
   window.addEventListener('keydown', function (e) {
@@ -1807,7 +1839,7 @@
     if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
     const ctrl = e.ctrlKey || e.metaKey;
     if (e.key === 'Escape') { setTool('select'); flash(''); }
-    else if (e.key === 'Delete') { if (S.measFocus && S.measures[S.measSel]) deleteMeasure(S.measSel); else if (S.geoSel && !S.sel.size) deleteGeo(S.geoSel); else deleteSelected(); }
+    else if (e.key === 'Delete') { if (S.measFocus && S.measures[S.measSel]) deleteMeasure(S.measSel); else if (!S.sel.size && geoSelList().length) deleteGeos(geoSelList().map(function (g) { return g.id; })); else deleteSelected(); }
     else if (ctrl && e.code === 'KeyZ') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
     else if (ctrl && e.code === 'KeyY') { e.preventDefault(); redo(); }
     else if (ctrl && e.code === 'KeyC') { copySel(); if (S.clip.length) flash(L('Đã chép ' + S.clip.length + ' body', S.clip.length + ' bodies copied')); }
@@ -2293,16 +2325,17 @@
 
   // ================= tooling analysis =================
   const UC_PAL = [[60, 220, 110], [70, 160, 255], [255, 220, 40], [255, 50, 60]];
-  $('ucAx').addEventListener('change', function () { $('ucVecRow').style.display = this.value === 'custom' ? 'flex' : 'none'; });
+  $('ucAx').addEventListener('change', function () { $('ucVecRow').style.display = this.value === 'pick' ? 'flex' : 'none'; if (this.value === 'pick' && !S.ucDir) ucPickStart(); else if (this.value !== 'pick') ucPickStop(); dirty = true; });
   $('ucBright').addEventListener('input', function () { $('ucBrightV').textContent = this.value + '%'; dirty = true; });
-  $('bUcClr').addEventListener('click', function () { if (blocked()) return; clearAna(); $('ucRes').innerHTML = ucLegend(); });
+  $('bUcClr').addEventListener('click', function () { if (blocked()) return; clearAna(); $('ucRes').innerHTML = ucLegend(); S.ucList = null; ucIsoApply(); });
   $('bUc').addEventListener('click', async function () {
     if (blocked()) return;
     const list = needSel();
     if (!list.length) return;
     const ax = $('ucAx').value;
-    let dir = ax === 'x' ? [1, 0, 0] : ax === 'y' ? [0, 1, 0] : ax === 'z' ? [0, 0, 1] : ax === 'view' ? viewer() : [+$('ucX').value || 0, +$('ucY').value || 0, +$('ucZ').value || 0];
-    if (V.len(dir) < 1e-12) { showError(L('Vector hướng mở khuôn không được bằng 0.', 'The pull direction vector must not be 0.')); return; }
+    let dir = ax === 'x' ? [1, 0, 0] : ax === 'y' ? [0, 1, 0] : ax === 'z' ? [0, 0, 1] : ax === 'view' ? viewer() : S.ucDir ? (S.ucDir.flip ? V.mul(S.ucDir.d, -1) : S.ucDir.d) : null;
+    if (!dir || V.len(dir) < 1e-12) { ucPickStart(); flash(L('Hãy chọn hướng mở khuôn: bấm một mặt phẳng, cạnh thẳng hoặc trục', 'Pick the pull direction: click a plane, a straight edge or an axis'), true); return; }
+    ucPickStop();
     dir = V.norm(dir);
     showError(null); setBusy(true, L('Đang phân tích undercut...', 'Analysing undercuts...'));
     const tot = [0, 0, 0, 0], withUc = [];
@@ -2314,6 +2347,7 @@
         for (let k = 0; k < 4; k++) tot[k] += r.area[k];
         if (r.area[3] > 0) withUc.push([b.name, r.area[3]]);
       }
+      S.ucList = list.slice(); ucIsoApply();
       const all = tot[0] + tot[1] + tot[2] + tot[3] || 1, pc = function (k) { return f2(tot[k] / 100) + ' cm² (' + f2(100 * tot[k] / all, 1) + '%)'; };
       let html = ucLegend() + '<br>' + L('Hướng: ', 'Direction: ') + dir.map(function (v) { return f2(v, 3); }).join(', ') + ' · ' + list.length + ' body<br>' +
         L('Phía +: ', '+ half: ') + pc(0) + '<br>' + L('Phía −: ', '− half: ') + pc(1) + '<br>' + L('Thiếu góc thoát: ', 'Draft too small: ') + pc(2) + '<br>' +
@@ -2676,12 +2710,12 @@
   }
   $('drop').addEventListener('click', function () { $('file').click(); });
   $('file').addEventListener('change', function () { const f = Array.from(this.files); this.value = ''; handleFiles(f); });
-  window.addEventListener('dragover', function (e) { e.preventDefault(); $('drop').classList.add('over'); });
-  window.addEventListener('dragleave', function () { $('drop').classList.remove('over'); });
-  window.addEventListener('drop', function (e) { e.preventDefault(); $('drop').classList.remove('over'); handleFiles(Array.from(e.dataTransfer.files)); });
+  window.addEventListener('dragover', function (e) { e.preventDefault(); $('leftTop').classList.add('over'); });
+  window.addEventListener('dragleave', function () { $('leftTop').classList.remove('over'); });
+  window.addEventListener('drop', function (e) { e.preventDefault(); $('leftTop').classList.remove('over'); handleFiles(Array.from(e.dataTransfer.files)); });
 
 /*MODEL*/
   applyLang(); updateHistBtns(); sceneChanged(true);
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();

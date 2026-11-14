@@ -2,7 +2,7 @@
   // ================= reference geometry: points, lines, planes, axes made in the 3D view =================
   // Each lives in world coordinates: {id, type, name, p, p2 (line / axis end), n, u, size (plane), base, off, flip, vis}.
   S.gax = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
-  S.geos = []; S.geoSeq = 1; S.geoSel = null; S.geoPick = []; S.geoPlane = null; S.geoMode = { gline: 'pp', gplane: 'face' }; S.axPick = null;
+  S.geos = []; S.geoSeq = 1; S.geoSel = null; S.geoPick = []; S.geoPlane = null; S.geoMode = { gline: 'pp', gplane: 'face' }; S.axPick = null; S.geoSet = new Set(); S.gl = { act: 0, v: {} };
   const GEO_COL = { point: '#ff7ad9', line: '#ffd166', axis: '#c58bff', plane: '#78c8ff' };
   const GEO_PFX = { point: 'P', line: 'L', axis: 'A', plane: 'PL' };
   const geoById = function (id) { return S.geos.filter(function (g) { return g.id === id; })[0] || null; };
@@ -15,7 +15,31 @@
     flash(L('Đã tạo ', 'Created ') + g.name, false);
     return g;
   }
-  function deleteGeo(id) { const g = geoById(id); if (!g) return; pushUndo(); S.geos = S.geos.filter(function (o) { return o !== g; }); if (S.geoSel === id) S.geoSel = null; updateSketchList(); dirty = true; }
+  function deleteGeo(id) { deleteGeos([id]); }
+  function deleteGeos(ids) {
+    const k = new Set(ids), n = S.geos.filter(function (o) { return k.has(o.id); }).length;
+    if (!n) return;
+    pushUndo(); S.geos = S.geos.filter(function (o) { return !k.has(o.id); });
+    if (k.has(S.geoSel)) S.geoSel = null; for (const i of ids) S.geoSet.delete(i);
+    updateSketchList(); dirty = true; flash(L('Đã xóa ', 'Deleted ') + n + ' geometry', false);
+  }
+  const geoIsSel = function (g) { return S.geoSet.has(g.id) || g.id === S.geoSel; };
+  function geoSelList() { const k = new Set(S.geoSet); if (S.geoSel) k.add(S.geoSel); return S.geos.filter(function (g) { return k.has(g.id); }); }
+  function geoSelOnly(ids) { S.geoSet = new Set(ids); S.geoSel = ids.length ? ids[ids.length - 1] : null; if (ids.length) S.skSel = null; updateSketchList(); dirty = true; }
+  function hideGeos(list) { if (!list.length) return; pushUndo(); for (const g of list) g.vis = false; S.geoSet.clear(); S.geoSel = null; updateSketchList(); dirty = true; flash(L('Đã ẩn ', 'Hidden: ') + list.length + L(' geometry (hiện lại ở danh sách Sketches / Geos)', ' geometry (show again in the Sketches / Geos list)'), false); }
+  // ---------- the world origin as geometry to snap to: point O, the X / Y / Z axes and the three base planes ----------
+  const ORG_PL = [['XY (Top)', [0, 0, 1], [1, 0, 0]], ['XZ (Front)', [0, -1, 0], [1, 0, 0]], ['YZ (Right)', [1, 0, 0], [0, 1, 0]]];
+  function originGeos() {
+    if (!$('cAxes').checked) return [];
+    const Ln = Math.max(mainCam.radius * 0.225, 1e-6), out = [{ id: 'oO', origin: true, type: 'point', p: [0, 0, 0], name: L('Gốc O', 'Origin O') }];
+    for (let i = 0; i < 3; i++) out.push({ id: 'oA' + i, origin: true, type: 'axis', p: [0, 0, 0], p2: V.mul(AXES[i], Ln), name: L('Trục ', 'Axis ') + 'XYZ'[i] });
+    ORG_PL.forEach(function (q, i) {
+      const n = q[1], u = q[2], v = V.cross(n, u), sz = Ln * 0.42, c = Ln * 0.3;
+      out.push({ id: 'oP' + i, origin: true, type: 'plane', n: n, u: u, size: sz, p: V.add(V.mul(u, c), V.mul(v, c)), org: [0, 0, 0], short: q[0].split(' ')[0], name: L('Mặt ', 'Plane ') + q[0] });
+    });
+    return out;
+  }
+  const snapGeos = function () { return S.geos.concat(originGeos()); };
   function planeCorners(g) {
     const u = g.u, v = V.cross(g.n, u), s = g.size / 2;
     return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(function (k) { return V.add(g.p, V.add(V.mul(u, k[0] * s), V.mul(v, k[1] * s))); });
@@ -23,9 +47,16 @@
   const anyPerp = function (n) { return V.norm(V.cross(n, Math.abs(n[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0])); };
   // ---------- drawing ----------
   function drawGeos() {
+    for (const g of originGeos()) {                          // the base planes, small and faint, by the origin axes
+      if (g.type !== 'plane') continue;
+      const q = planeCorners(g).map(project);
+      ctx.fillStyle = 'rgba(160,190,220,0.07)'; ctx.beginPath(); q.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }); ctx.closePath(); ctx.fill();
+      ctx.setLineDash([4, 3]); poly2(q.concat([q[0]]), 'rgba(170,200,230,0.55)', 1); ctx.setLineDash([]);
+      const lp = q[2]; ctx.font = '10px "Segoe UI", Arial'; ctx.fillStyle = 'rgba(190,210,235,0.75)'; ctx.fillText(g.short, lp[0] + 3, lp[1] - 3);
+    }
     for (const g of S.geos) {
       if (g.vis === false) continue;
-      const sel = g.id === S.geoSel, col = sel ? '#ffffff' : GEO_COL[g.type];
+      const sel = geoIsSel(g), col = sel ? '#ffffff' : GEO_COL[g.type];
       let lp;
       if (g.type === 'point') { const q = project(g.p); line2([q[0] - 6, q[1]], [q[0] + 6, q[1]], col, 1.5); line2([q[0], q[1] - 6], [q[0], q[1] + 6], col, 1.5); dot2(q, col, sel ? 4 : 3); lp = q; }
       else if (g.type === 'line' || g.type === 'axis') {
@@ -45,29 +76,34 @@
     }
     for (const p of S.geoPick) { const q = project(p); dot2(q, '#14181d', 6); dot2(q, '#ffcf5a', 4.5); }
     if (S.geoPlane) { const q = project(S.geoPlane.p), e = project(V.add(S.geoPlane.p, V.mul(S.geoPlane.n, sceneSize() * 0.2))); line2(q, e, '#ffcf5a', 2); dot2(q, '#ffcf5a', 4.5); }
+    if (S.tool === 'gline') drawGlPicks();
   }
   // ---------- picking a geometry under the cursor (as the selection filter allows) ----------
   function geoAt(px, py) {
     const F = S.flt;
-    let best = null, bd = 9;
-    for (const g of S.geos) {
+    let best = null, bd = 9, mh;
+    const GS = snapGeos(), w = viewer();
+    // the origin items sit behind the meshes: a mesh in front of them at the cursor hides them
+    const hidden = function (g, p) { if (!g.origin) return false; if (mh === undefined) mh = pick(px, py) || null; return !!mh && V.dot(mh.point, w) > V.dot(p, w) + 1e-6 * (1 + Math.abs(V.dot(p, w))); };
+    for (const g of GS) {
       if (g.vis === false || g.type !== 'point' || !F.point) continue;
       const q = project(g.p), d = Math.hypot(q[0] - px, q[1] - py);
-      if (d < bd) { bd = d; best = { kind: 'point', p: g.p.slice(), at: g.p.slice(), text: g.name, geo: g }; }
+      if (d < bd && !hidden(g, g.p)) { bd = d; best = { kind: 'point', p: g.p.slice(), at: g.p.slice(), text: g.name, geo: g }; }
     }
     if (best) return best;
     bd = 6;
-    for (const g of S.geos) {
+    for (const g of GS) {
       if (g.vis === false || (g.type === 'line' ? !F.line : g.type === 'axis' ? !(F.axis || F.line) : true)) continue;
       const a = project(g.p), b = project(g.p2), ax = b[0] - a[0], ay = b[1] - a[1], l2 = ax * ax + ay * ay;
       const t = l2 > 1e-9 ? Math.max(0, Math.min(1, ((px - a[0]) * ax + (py - a[1]) * ay) / l2)) : 0, d = Math.hypot(px - a[0] - t * ax, py - a[1] - t * ay);
-      if (d < bd) {
-        bd = d; const dir = V.norm(V.sub(g.p2, g.p)), at = V.add(g.p, V.mul(V.sub(g.p2, g.p), t));
+      const at0 = V.add(g.p, V.mul(V.sub(g.p2, g.p), t));
+      if (d < bd && !hidden(g, at0)) {
+        bd = d; const dir = V.norm(V.sub(g.p2, g.p)), at = at0;
         best = { kind: 'edge', sub: 'line', pts: [g.p.slice(), g.p2.slice()], dir: dir, len: V.len(V.sub(g.p2, g.p)), p: g.p.slice(), at: at, lines: [[g.p, g.p2]], text: g.name, geo: g };
       }
     }
     if (best || !F.plane) return best;
-    for (const g of S.geos) {
+    for (const g of GS) {
       if (g.vis === false || g.type !== 'plane') continue;
       const q = planeCorners(g).map(project);
       let inside = false;
@@ -77,6 +113,7 @@
       if (!edge && (!inside || pick(px, py))) continue;
       const r = screenRay(px, py), dn = V.dot(r.d, g.n);
       const at = Math.abs(dn) > 1e-9 ? V.add(r.o, V.mul(r.d, V.dot(V.sub(g.p, r.o), g.n) / dn)) : g.p.slice();
+      if (hidden(g, at)) continue;
       return { kind: 'plane', n: g.n.slice(), p: at, at: at, lines: [planeCorners(g).concat([planeCorners(g)[0]])], text: g.name, geo: g };
     }
     return null;
@@ -105,11 +142,7 @@
     if (!e) return null;
     const m = S.geoMode, n = S.geoPick.length;
     if (t === 'gplane' && m.gplane === 'face') return e.kind === 'plane' ? e : null;
-    if (t === 'gline' && m.gline === 'ppl') {                // plane and point, in either order
-      if (!S.geoPlane && !n && e.kind === 'plane') return e;
-      if (n && !S.geoPlane) return e.kind === 'plane' ? e : null;
-      return ptEnt(e);
-    }
+    if (t === 'gline') { const r = glTarget(e); return r ? r.show : null; }
     if (t === 'gaxis' && !n && (e.kind === 'cyl' || (e.kind === 'edge' && (e.sub === 'line' || (e.sub === 'arc' && e.n))))) return e;
     return ptEnt(e);
   }
@@ -122,16 +155,7 @@
       const n = V.norm(e.n), g = { type: 'plane', base: { p: e.at.slice(), n: n }, off: +$('geoOff').value || 0, flip: $('geoFlip').checked, size: sceneSize(), u: anyPerp(n) };
       planeFromBase(g); geoAdd(g); return;
     }
-    if (t === 'gline' && m.gline === 'ppl') {
-      if (e.kind === 'plane') S.geoPlane = { p: e.p.slice(), n: V.norm(e.n) }; else S.geoPick = [e.p.slice()];
-      dirty = true;
-      if (!S.geoPlane || !S.geoPick.length) { flash(S.geoPlane ? L('Giờ bấm một điểm', 'Now click a point') : L('Giờ bấm một mặt phẳng', 'Now click a plane'), true); return; }
-      const p = S.geoPick[0], pl = S.geoPlane, f = V.sub(p, V.mul(pl.n, V.dot(V.sub(p, pl.p), pl.n))), to = V.sub(f, p);
-      S.geoPick = []; S.geoPlane = null;
-      const g = { type: 'line', lb: { p: p.slice(), f: f, d: V.len(to) > 1e-6 ? V.norm(to) : pl.n.slice() } };   // normal to the plane through the point
-      if (!lineFromBase(g)) return;
-      geoAdd(g); return;
-    }
+    if (t === 'gline') { glClick(pickEnt(px, py, true)); return; }
     if (t === 'gaxis' && e.kind !== 'point') {
       let c, d, len;
       if (e.kind === 'cyl') {
@@ -144,11 +168,10 @@
       const a = e.pts[0], b = e.pts[e.pts.length - 1], ext = V.mul(V.sub(b, a), 0.15);
       geoAdd({ type: 'axis', p: V.sub(a, ext), p2: V.add(b, ext) }); return;
     }
-    // point picks: line (2), plane (3), axis (2), the first point of point–plane
+    // point picks: plane (3), axis (2)
     S.geoPick.push(e.p.slice()); dirty = true;
-    const need = t === 'gplane' ? 3 : t === 'gline' && m.gline === 'ppl' ? 1 : 2;
-    if (S.geoPick.length < need) { flash(t === 'gline' && m.gline === 'ppl' ? L('Giờ bấm một mặt phẳng', 'Now click a plane') : L('Điểm ', 'Point ') + S.geoPick.length + '/' + need, true); return; }
-    if (t === 'gline' && m.gline === 'ppl') return;
+    const need = t === 'gplane' ? 3 : 2;
+    if (S.geoPick.length < need) { flash(L('Điểm ', 'Point ') + S.geoPick.length + '/' + need, true); return; }
     const P = S.geoPick; S.geoPick = [];
     if (t === 'gplane') {
       const n = V.cross(V.sub(P[1], P[0]), V.sub(P[2], P[0]));
@@ -159,29 +182,136 @@
     if (V.len(V.sub(P[1], P[0])) < 1e-9) { flash(L('Hai điểm trùng nhau', 'The two points are the same')); return; }
     geoAdd({ type: t === 'gaxis' ? 'axis' : 'line', p: P[0], p2: P[1] });
   }
-  // a line normal to a plane: length 0 = down to the plane, otherwise that long; Flip turns it the other way
-  function lineFromBase(g) {
-    const Ln = +$('geoLen').value || 0, d = $('geoLFlip').checked ? V.mul(g.lb.d, -1) : g.lb.d;
+  // ---------- Line: three ways, each with its own pick boxes ----------
+  // pp: start point → end point · ppl: point + plane, normal to the plane · pv: start point + a direction (edge, axis, plane normal)
+  const GL_SLOTS = {
+    pp: [['a', 'pt', 'Điểm đầu', 'Start point'], ['b', 'pt', 'Điểm cuối', 'End point']],
+    ppl: [['pt', 'pt', 'Điểm', 'Point'], ['pl', 'plane', 'Mặt phẳng (line vuông góc mặt này)', 'Plane (the line is normal to it)']],
+    pv: [['pt', 'pt', 'Điểm đầu', 'Start point'], ['v', 'vec', 'Hướng: cạnh thẳng / trục / pháp tuyến mặt', 'Direction: straight edge / axis / plane normal']]
+  };
+  const GL_HINT = {
+    pp: ['Dài = 0: line nối đúng 2 điểm. Nhập độ dài: line đi từ điểm đầu về phía điểm cuối, dài đúng số đó.', 'Length 0: the line joins the 2 points. A length: from the start point towards the end point, that long.'],
+    ppl: ['Dài = 0: line đi từ điểm xuống tới mặt phẳng. Nhập độ dài: dài đúng số đó (Đảo chiều để quay hướng).', 'Length 0: from the point down to the plane. A length: that long (Flip turns it round).'],
+    pv: ['Line đi từ điểm đầu theo hướng đã chọn, dài đúng số đã nhập (Đảo chiều để quay hướng).', 'From the start point along the picked direction, as long as typed (Flip turns it round).']
+  };
+  const glSlots = function () { return GL_SLOTS[S.geoMode.gline] || GL_SLOTS.pp; };
+  function glAccept(e, kind) {
+    if (!e) return null;
+    if (kind === 'pt') { const q = ptEnt(e); return { val: { p: q.p.slice(), text: q.text || L('Điểm', 'Point') }, show: q }; }
+    if (kind === 'plane') return e.kind === 'plane' ? { val: { p: e.p.slice(), n: V.norm(e.n), text: e.text || L('Mặt phẳng', 'Plane') }, show: e } : null;
+    const d = axDir(e);
+    return d ? { val: { d: V.norm(d), at: (e.at || e.p).slice(), text: (e.text || L('Hướng', 'Direction')) + (e.kind === 'plane' ? L(' (pháp tuyến)', ' (normal)') : '') }, show: e } : null;
+  }
+  // which box a click on this entity fills: the active one, else the next free one that takes it
+  function glTarget(e) {
+    if (!e) return null;
+    const sl = glSlots(), v = S.gl.v, order = [];
+    if (S.geoMode.gline === 'ppl' && e.kind === 'plane' && !v.pl) order.push(1);   // a plane goes to the plane box, picked first or second
+    order.push(S.gl.act);
+    for (let i = 0; i < sl.length; i++) if (!v[sl[i][0]]) order.push(i);
+    for (const i of order) { if (i == null || i >= sl.length) continue; const r = glAccept(e, sl[i][1]); if (r) { r.i = i; return r; } }
+    return null;
+  }
+  function glClick(e) {
+    const r = glTarget(e), sl = glSlots();
+    if (!r) { flash(L('Ô đang chọn cần: ', 'The active box needs: ') + L(sl[S.gl.act][2], sl[S.gl.act][3]), true); return; }
+    const g0 = geoById(S.geoSel); if (g0 && g0.type === 'line') S.geoSel = null;   // a new line from here on, not an edit of the last one
+    S.gl.v[sl[r.i][0]] = r.val;
+    let nx = -1; for (let k = 1; k <= sl.length; k++) { const j = (r.i + k) % sl.length; if (!S.gl.v[sl[j][0]]) { nx = j; break; } }
+    S.gl.act = nx < 0 ? r.i : nx;
+    glPanel(); dirty = true;
+    flash(glReady() ? L('Đủ rồi: chỉnh độ dài / đảo chiều nếu cần, rồi bấm "Tạo line" hoặc Enter', 'Ready: set the length / flip if needed, then press "Create line" or Enter') : L('Giờ chọn: ', 'Now pick: ') + L(sl[S.gl.act][2], sl[S.gl.act][3]), true);
+  }
+  const glReady = function () { return glSlots().every(function (q) { return !!S.gl.v[q[0]]; }); };
+  function glBase() {
+    const m = S.geoMode.gline, v = S.gl.v;
+    if (m === 'pp') { const d = V.sub(v.b.p, v.a.p); if (V.len(d) < 1e-9) return null; return { p: v.a.p.slice(), f: v.b.p.slice(), d: V.norm(d) }; }
+    if (m === 'ppl') { const p = v.pt.p, pl = v.pl, f = V.sub(p, V.mul(pl.n, V.dot(V.sub(p, pl.p), pl.n))), to = V.sub(f, p); return { p: p.slice(), f: f, d: V.len(to) > 1e-6 ? V.norm(to) : pl.n.slice() }; }
+    return { p: v.pt.p.slice(), f: null, d: v.v.d.slice() };
+  }
+  // the ends from the base and the Length / Flip fields (length 0 = to the end point / plane)
+  function lineFromBase(g, quiet) {
+    const Ln = +$('geoLen').value || 0, fl = $('geoLFlip').checked, d = fl ? V.mul(g.lb.d, -1) : g.lb.d;
+    g.lb.len = Ln; g.lb.flip = fl;
     if (Ln > 0) { g.p = g.lb.p.slice(); g.p2 = V.add(g.lb.p, V.mul(d, Ln)); return true; }
-    if (V.len(V.sub(g.lb.f, g.lb.p)) < 1e-6) { flash(L('Điểm nằm trên mặt phẳng: hãy nhập độ dài', 'The point lies on the plane: type a length')); dirty = true; return false; }
+    if (!g.lb.f) { if (!quiet) flash(L('Hãy nhập độ dài cho line', 'Type a length for the line')); return false; }
+    if (V.len(V.sub(g.lb.f, g.lb.p)) < 1e-6) { if (!quiet) flash(L('Điểm nằm trên mặt phẳng: hãy nhập độ dài', 'The point lies on the plane: type a length')); dirty = true; return false; }
     g.p = g.lb.p.slice(); g.p2 = g.lb.f.slice(); return true;
   }
+  function glMake() {
+    if (!glReady()) { const sl = glSlots(); flash(L('Còn thiếu: ', 'Still missing: ') + sl.filter(function (q) { return !S.gl.v[q[0]]; }).map(function (q) { return L(q[2], q[3]); }).join(', '), true); return; }
+    const lb = glBase();
+    if (!lb) { flash(L('Hai điểm trùng nhau', 'The two points are the same')); return; }
+    const g = { type: 'line', lb: lb, mode: S.geoMode.gline };
+    if (!lineFromBase(g)) return;
+    S.gl = { act: 0, v: {} }; geoAdd(g); glPanel();
+  }
+  function glPreview() {
+    if (!glReady()) return null;
+    const lb = glBase(); if (!lb) return null;
+    const g = { lb: lb }; return lineFromBase(g, true) ? g : null;
+  }
+  function drawGlPicks() {
+    const v = S.gl.v, PC = '#ffcf5a', sl = glSlots();
+    sl.forEach(function (q, i) {
+      const x = v[q[0]]; if (!x) return;
+      const lbl = String(i + 1);
+      if (q[1] === 'pt') { const c = project(x.p); dot2(c, '#14181d', 7); dot2(c, PC, 5); tag(c[0] + 12, c[1] - 12, lbl, '#14181d', PC); }
+      else { const o = x.at || x.p, dir = x.d || x.n, c = project(o), e = project(V.add(o, V.mul(dir, sceneSize() * 0.2))); arrow2(c, e, PC, 10, 4); line2(c, e, PC, 2); tag(e[0] + 10, e[1] - 10, lbl, '#14181d', PC); }
+    });
+    const g = glPreview();
+    if (g) { const a = project(g.p), b = project(g.p2); ctx.setLineDash([7, 4]); line2(a, b, '#ffe14a', 2.2); ctx.setLineDash([]); dot2(a, '#ffe14a', 3); dot2(b, '#ffe14a', 3); const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; tag(m[0], m[1] - 14, f2(V.len(V.sub(g.p2, g.p))) + ' mm', '#14181d', '#ffe14a'); }
+  }
+  // the pick boxes of the Line panel
+  function glPanel() {
+    const box = $('geoSlots'); if (!box) return;
+    box.innerHTML = '';
+    glSlots().forEach(function (q, i) {
+      const x = S.gl.v[q[0]], d = document.createElement('div');
+      d.className = 'gslot' + (S.gl.act === i ? ' act' : '') + (x ? ' ok' : ''); d.dataset.slot = i;
+      d.innerHTML = '<span class="gn">' + (i + 1) + '</span><span style="display:flex;flex-direction:column;flex:1"><span class="gk"></span><span class="gv' + (x ? '' : ' empty') + '"></span></span>' + (x ? '<span class="gx" title="Bỏ">✕</span>' : '');
+      d.querySelector('.gk').textContent = L(q[2], q[3]);
+      d.querySelector('.gv').textContent = x ? x.text : (S.gl.act === i ? L('← bấm trên màn hình 3D', '← click in the 3D view') : L('(chưa chọn)', '(not picked)'));
+      d.addEventListener('click', function (ev) {
+        if (ev.target.classList.contains('gx')) delete S.gl.v[q[0]];
+        S.gl.act = i; glPanel(); dirty = true;
+      });
+      box.appendChild(d);
+    });
+    $('geoLHint').textContent = L.apply(null, GL_HINT[S.geoMode.gline] || GL_HINT.pp);
+    $('geoMake').disabled = !glReady();
+  }
+  $('geoMake').addEventListener('click', glMake);
+  $('geoClr').addEventListener('click', function () { S.gl = { act: 0, v: {} }; glPanel(); dirty = true; });
+  window.addEventListener('keydown', function (e) {
+    if (S.tool !== 'gline' || e.key !== 'Enter' || S.sk) return;
+    const tg = (e.target.tagName || '').toLowerCase();
+    if (tg === 'textarea' || (tg === 'input' && e.target.id !== 'geoLen')) return;
+    e.preventDefault(); glMake();
+  });
   function planeFromBase(g) {
     const n = g.flip ? V.mul(g.base.n, -1) : g.base.n;
     g.n = n.slice(); g.p = V.add(g.base.p, V.mul(g.base.n, g.off || 0));
   }
   function geoToolUI(t) {
-    const box = $('geoModes'), m = S.geoMode, opts = t === 'gline' ? [['pp', 'Điểm – Điểm', 'Point – Point'], ['ppl', 'Mặt – Điểm (vuông góc)', 'Plane – Point (normal)']] : t === 'gplane' ? [['face', 'Theo mặt', 'On face'], ['3p', '3 điểm', '3 points']] : [];
+    const box = $('geoModes'), m = S.geoMode, opts = t === 'gline' ? [['pp', 'Điểm – Điểm', 'Point – Point'], ['ppl', 'Điểm – Mặt (vuông góc)', 'Point – Plane (normal)'], ['pv', 'Điểm – Vector', 'Point – Vector']] : t === 'gplane' ? [['face', 'Theo mặt', 'On face'], ['3p', '3 điểm', '3 points']] : [];
     box.innerHTML = '';
     for (const o of opts) {
-      const b = document.createElement('button'); b.textContent = L(o[1], o[2]); b.className = m[t] === o[0] ? 'primary' : '';
-      b.addEventListener('click', function () { m[t] = o[0]; S.geoPick = []; geoToolUI(t); dirty = true; });
+      const b = document.createElement('button'); b.textContent = L(o[1], o[2]); b.className = m[t] === o[0] ? 'primary' : ''; b.dataset.gm = o[0];
+      b.addEventListener('click', function () {
+        m[t] = o[0]; S.geoPick = []; S.gl = { act: 0, v: {} };
+        if (t === 'gline' && o[0] === 'pv' && !(+$('geoLen').value > 0)) { $('geoLen').value = 20; $('geoLenR').value = 20; }
+        geoToolUI(t); dirty = true;
+      });
       box.appendChild(b);
     }
     $('geoPlaneOpt').style.display = t === 'gplane' && m.gplane === 'face' ? 'flex' : 'none';
-    $('geoLineOpt').style.display = t === 'gline' && m.gline === 'ppl' ? 'flex' : 'none'; S.geoPlane = null;
+    $('geoLineOpt').style.display = t === 'gline' ? 'block' : 'none'; S.geoPlane = null;
+    $('tpGeo').style.maxWidth = t === 'gline' ? '390px' : '';
     const sp = geoById(S.geoSel);
     if (t === 'gplane' && sp && sp.base) { $('geoOff').value = sp.off || 0; $('geoOffR').value = sp.off || 0; $('geoFlip').checked = !!sp.flip; }
+    if (t === 'gline' && sp && sp.lb && sp.lb.len !== undefined) { $('geoLen').value = sp.lb.len; $('geoLenR').value = Math.min(200, sp.lb.len); $('geoLFlip').checked = !!sp.lb.flip; }
+    if (t === 'gline') glPanel();
   }
   // offset / flip change the selected plane made on a face
   function geoPlaneEdit(fromRange) {
@@ -194,7 +324,9 @@
   function geoLineEdit(fromRange) {
     if (fromRange) $('geoLen').value = $('geoLenR').value; else $('geoLenR').value = $('geoLen').value;
     const g = geoById(S.geoSel);
-    if (g && g.lb) { lineFromBase(g); dirty = true; }
+    if (g && g.lb) lineFromBase(g);
+    if (S.tool === 'gline') glPanel();
+    dirty = true;
   }
   $('geoLen').addEventListener('input', function () { geoLineEdit(false); });
   $('geoLenR').addEventListener('input', function () { geoLineEdit(true); });
@@ -242,16 +374,19 @@
   function appendGeoRows(box) {
     for (const g of S.geos) {
       const row = document.createElement('div');
-      row.className = 'srow geo' + (S.geoSel === g.id ? ' sel' : '');
+      row.className = 'srow geo' + (geoIsSel(g) ? ' sel' : '');
       const cv = document.createElement('input'); cv.type = 'checkbox'; cv.checked = g.vis !== false;
       cv.addEventListener('click', function (e) { e.stopPropagation(); });
       cv.addEventListener('change', function () { pushUndo(); g.vis = cv.checked; dirty = true; });
       const nm = document.createElement('span'); nm.className = 'nm'; nm.innerHTML = '<b style="color:' + GEO_COL[g.type] + '">' + { point: '•', line: '／', axis: '┆', plane: '▱' }[g.type] + '</b> ' + g.name;
       const info = document.createElement('span'); info.className = 'num'; info.textContent = { point: L('điểm', 'point'), line: L('đường', 'line'), axis: L('trục', 'axis'), plane: L('mặt phẳng', 'plane') }[g.type];
       row.appendChild(cv); row.appendChild(nm); row.appendChild(info);
-      row.addEventListener('click', function () { S.geoSel = g.id; S.skSel = null; updateSketchList(); if (S.tool === 'gplane') geoToolUI('gplane'); dirty = true; });
+      row.addEventListener('click', function (ev) {
+        if (ev.ctrlKey || ev.shiftKey) { if (S.geoSet.has(g.id)) S.geoSet.delete(g.id); else S.geoSet.add(g.id); S.geoSel = g.id; S.skSel = null; updateSketchList(); dirty = true; return; }
+        geoSelOnly([g.id]); if (S.tool === 'gplane' || S.tool === 'gline') geoToolUI(S.tool);
+      });
       row.addEventListener('contextmenu', function (e) {
-        e.preventDefault(); S.geoSel = g.id; S.skSel = null; updateSketchList();
+        e.preventDefault(); if (!S.geoSet.has(g.id)) geoSelOnly([g.id]);
         showMenu([[L('Đổi tên', 'Rename'), function () { const n = prompt(L('Tên:', 'Name:'), g.name); if (n && n.trim()) { pushUndo(); g.name = n.trim().replace(/['\\]/g, ''); updateSketchList(); dirty = true; } }],
           [g.vis !== false ? L('Ẩn', 'Hide') : L('Hiện', 'Show'), function () { pushUndo(); g.vis = g.vis === false; updateSketchList(); dirty = true; }], null,
           [L('Xóa', 'Delete'), function () { deleteGeo(g.id); }]], e.clientX, e.clientY);
@@ -335,13 +470,13 @@
   function skPlaneEnt(px, py) {
     const ray = screenRay(px, py), h = pickNear(px, py);
     let best = null, bt = h ? h.t : Infinity;
-    for (const g of S.geos) {                                // Geometry planes, whichever is in front of the mesh
+    for (const g of snapGeos()) {                            // Geometry planes (and the base planes), whichever is in front of the mesh
       if (g.vis === false || g.type !== 'plane') continue;
       const dn = V.dot(ray.d, g.n);
       if (Math.abs(dn) < 1e-9) continue;
       const t = V.dot(V.sub(g.p, ray.o), g.n) / dn, at = V.add(ray.o, V.mul(ray.d, t)), u = g.u, v = V.cross(g.n, u), r = V.sub(at, g.p), s = g.size / 2 * 1.02;
       if (Math.abs(V.dot(r, u)) > s || Math.abs(V.dot(r, v)) > s || t > bt) continue;
-      bt = t; best = { geo: g, n: g.n.slice(), o: g.p.slice(), u: g.u.slice(), poly: planeCorners(g), text: g.name };
+      bt = t; best = { geo: g, n: g.n.slice(), o: (g.org || g.p).slice(), u: g.u.slice(), poly: planeCorners(g), text: g.name };
     }
     if (best || !h) return best;
     const b = h.body, f = featOf(b), ri = f.reg[h.tri], R = f.regions[ri];
@@ -409,3 +544,56 @@
   function updGeoVisBtn() { const b = $('bGeoVis'); if (b) b.classList.toggle('off', !geoAllVisible()); }
   $('bGeoStep').addEventListener('click', exportGeoStep);
   $('bGeoVis').addEventListener('click', toggleGeoVis);
+
+  // right-click on a geometry in the 3D view
+  function geoMenu(g, x, y) {
+    if (!S.geoSet.has(g.id) && S.geoSel !== g.id) geoSelOnly([g.id]);
+    const list = geoSelList(), many = list.length > 1;
+    showMenu([[L('Ẩn', 'Hide') + (many ? ' (' + list.length + ')' : ''), function () { hideGeos(geoSelList()); }],
+      ...(many ? [] : [[L('Đổi tên', 'Rename'), function () { const n = prompt(L('Tên:', 'Name:'), g.name); if (n && n.trim()) { pushUndo(); g.name = n.trim().replace(/['\\]/g, ''); updateSketchList(); dirty = true; } }]]), null,
+      [L('Xóa', 'Delete') + (many ? ' (' + list.length + ')' : ''), function () { deleteGeos(geoSelList().map(function (o) { return o.id; })); }]], x, y);
+  }
+
+  // ---------- tooling analysis: the pull direction from a plane / line / axis, and hiding the bodies not analysed ----------
+  S.ucPick = false; S.ucDir = null; S.ucList = null; S.ucHid = null;
+  function ucPickEnt(px, py) { const e = pickEnt(px, py, false); return e && axDir(e) ? e : null; }
+  function ucPickStart() { S.ucPick = true; S.axPick = null; $('bUcPick').classList.add('primary'); canvas.style.cursor = 'crosshair'; flash(L('Bấm một mặt phẳng (lấy pháp tuyến), cạnh thẳng, đường hoặc trục làm hướng mở khuôn (theo bộ lọc)', 'Click a plane (its normal), a straight edge, a line or an axis for the pull direction (as the filter allows)'), true); dirty = true; }
+  function ucPickStop() { if (!S.ucPick) return; S.ucPick = false; $('bUcPick').classList.remove('primary'); canvas.style.cursor = toolCursor(); S.hovEnt = null; dirty = true; }
+  function ucDirText() {
+    const u = S.ucDir; if (!u) { $('ucDirTxt').textContent = L('(chưa chọn)', '(not picked)'); return; }
+    const d = u.flip ? V.mul(u.d, -1) : u.d;
+    $('ucDirTxt').textContent = u.text + ' → ' + d.map(function (v) { return f2(v, 3); }).join(', ');
+  }
+  function ucPickClick(px, py) {
+    const e = ucPickEnt(px, py);
+    if (!e) { flash(L('Ở đây không có mặt phẳng / cạnh thẳng / trục nào (xem bộ lọc)', 'No plane / straight edge / axis here (see the filter)')); return; }
+    S.ucDir = { d: V.norm(axDir(e)), at: (e.at || e.p).slice(), text: e.text || L('Hướng', 'Direction'), flip: $('ucFlip').checked };
+    $('ucAx').value = 'pick'; $('ucVecRow').style.display = 'flex'; ucDirText(); ucPickStop();
+    flash(L('Hướng mở khuôn: ', 'Pull direction: ') + S.ucDir.text + L('. Bấm "Phân tích".', '. Press "Analyse".'), false);
+  }
+  $('bUcPick').addEventListener('click', function () { if (S.ucPick) ucPickStop(); else ucPickStart(); });
+  $('ucFlip').addEventListener('change', function () { if (S.ucDir) { S.ucDir.flip = this.checked; ucDirText(); dirty = true; } });
+  ucDirText();
+  function drawUcDir() {
+    const u = S.ucDir;
+    if (!u || $('ucAx').value !== 'pick' || !$('pop_undercut') || !$('pop_undercut').classList.contains('on')) return;
+    const d = u.flip ? V.mul(u.d, -1) : u.d, a = project(u.at), b = project(V.add(u.at, V.mul(d, sceneSize() * 0.3)));
+    line2(a, b, '#ff9f1a', 2.5); arrow2(a, b, '#ff9f1a', 12, 5); tag(b[0] + 12, b[1] - 10, L('Mở khuôn', 'Pull'), '#14181d', '#ff9f1a');
+  }
+  // hide every shown body that was not analysed; bring them back when the box is cleared or the colours go
+  function ucIsoApply() {
+    const on = $('ucIso').checked && S.ucList && S.ucList.length;
+    if (on) {
+      const keep = new Set(S.ucList);
+      if (!S.ucHid) S.ucHid = [];
+      for (const b of S.bodies) if (b.visible && !keep.has(b)) { b.visible = false; S.ucHid.push(b); }
+    } else if (S.ucHid) {
+      for (const b of S.ucHid) if (S.bodies.indexOf(b) >= 0) b.visible = true;
+      S.ucHid = null;
+    } else return;
+    updateExplode(); sceneChanged(false); refresh(); dirty = true;
+  }
+  $('ucIso').addEventListener('change', function () {
+    if (this.checked && !(S.ucList && S.ucList.length)) S.ucList = selBodies();
+    ucIsoApply();
+  });
