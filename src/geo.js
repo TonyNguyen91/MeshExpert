@@ -286,6 +286,18 @@
         continue;
       }
       if (g.type === 'plane') { const c = planeCorners(g); for (let k = 0; k < 4; k++) seg(c[k], c[(k + 1) % 4], g.name + '_' + (k + 1)); continue; }
+      if (g.type === 'circle' || g.type === 'arc') {         // sketch circles / arcs: a CIRCLE, trimmed for an arc
+        const c0 = cp(g.c, ''), dn = n++, du = n++, ax = n++, ci = n++;
+        out.push('#' + dn + "=DIRECTION('',(" + g.n.map(stepNum).join(',') + '));');
+        out.push('#' + du + "=DIRECTION('',(" + g.u.map(stepNum).join(',') + '));');
+        out.push('#' + ax + "=AXIS2_PLACEMENT_3D('',#" + c0 + ',#' + dn + ',#' + du + ');');
+        out.push('#' + ci + "=CIRCLE('" + (g.type === 'circle' ? nm(g.name) : '') + "',#" + ax + ',' + stepNum(g.r) + ');');
+        if (g.type === 'circle') { items.push(ci); continue; }
+        const v = V.cross(g.n, g.u), at = function (a) { return V.add(g.c, V.add(V.mul(g.u, g.r * Math.cos(a)), V.mul(v, g.r * Math.sin(a)))); };
+        const pa = cp(at(g.a0), ''), pb = cp(at(g.a1), ''), tc = n++;
+        out.push('#' + tc + "=TRIMMED_CURVE('" + nm(g.name) + "',#" + ci + ',(#' + pa + '),(#' + pb + '),.T.,.CARTESIAN.);');
+        items.push(tc); continue;
+      }
       seg(g.p, g.p2, g.name);
     }
     if (!items.length) return txt;
@@ -313,3 +325,87 @@
       "#20=PRODUCT_RELATED_PRODUCT_CATEGORY('part','',(#14));", 'ENDSEC;', 'END-ISO-10303-21;'];
     return stepAddGeos(head.join('\n') + '\n', geos);
   }
+  // ---------- sketch "pick a plane": light up the flat face (or Geometry plane) the cursor snaps to ----------
+  function skRegTris(b, f, ri) {
+    if (!b.feat.rt) b.feat.rt = new Map();
+    let t = b.feat.rt.get(ri);
+    if (!t) { t = []; for (let i = 0; i < f.reg.length; i++) if (f.reg[i] === ri) t.push(i); b.feat.rt.set(ri, t); }
+    return t;
+  }
+  function skPlaneEnt(px, py) {
+    const ray = screenRay(px, py), h = pickNear(px, py);
+    let best = null, bt = h ? h.t : Infinity;
+    for (const g of S.geos) {                                // Geometry planes, whichever is in front of the mesh
+      if (g.vis === false || g.type !== 'plane') continue;
+      const dn = V.dot(ray.d, g.n);
+      if (Math.abs(dn) < 1e-9) continue;
+      const t = V.dot(V.sub(g.p, ray.o), g.n) / dn, at = V.add(ray.o, V.mul(ray.d, t)), u = g.u, v = V.cross(g.n, u), r = V.sub(at, g.p), s = g.size / 2 * 1.02;
+      if (Math.abs(V.dot(r, u)) > s || Math.abs(V.dot(r, v)) > s || t > bt) continue;
+      bt = t; best = { geo: g, n: g.n.slice(), o: g.p.slice(), u: g.u.slice(), poly: planeCorners(g), text: g.name };
+    }
+    if (best || !h) return best;
+    const b = h.body, f = featOf(b), ri = f.reg[h.tri], R = f.regions[ri];
+    if (!R || R.type !== 'plane') return { bad: true, at: h.point };
+    const off = S.cmp ? [0, 0, 0] : b.off, wm = worldMesh(b);
+    return { body: b, n: R.n.slice(), o: h.point.slice(), tris: skRegTris(b, f, ri), pos: wm.positions, idx: wm.indices, off: off, text: L('Mặt phẳng', 'Flat face') };
+  }
+  function drawSkHov() {
+    const e = S.skHov;
+    if (!e) return;
+    const HC = '#ffe14a';
+    if (e.bad) { const q = project(e.at); tag(q[0], q[1] - 20, L('Không phải mặt phẳng', 'Not a flat face'), '#ffffff', '#e05050'); return; }
+    ctx.fillStyle = 'rgba(255,225,74,0.38)';
+    if (e.poly) {
+      const q = e.poly.map(project);
+      ctx.beginPath(); q.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }); ctx.closePath(); ctx.fill();
+      poly2(q.concat([q[0]]), HC, 2.5);
+    } else {
+      const P = e.pos, I = e.idx, o = e.off, pr = function (k) { return project([P[k * 3] + o[0], P[k * 3 + 1] + o[1], P[k * 3 + 2] + o[2]]); };
+      ctx.beginPath();
+      for (const t of e.tris) { const a = pr(I[t * 3]), b = pr(I[t * 3 + 1]), c = pr(I[t * 3 + 2]); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.closePath(); }
+      ctx.fill();
+    }
+    const c = project(e.o), tip = project(V.add(e.o, V.mul(e.n, sceneSize() * 0.08)));
+    line2(c, tip, HC, 2); dot2(c, HC, 4);
+    tag(c[0], c[1] - 22, e.text, '#ffffff', HC);
+  }
+
+  // ---------- the Sketches / Geos list: export them as STEP, hide / show them all ----------
+  function sketchGeos() {                                    // visible sketches as STEP items (construction left out)
+    const out = [];
+    for (const s of S.sketches) {
+      if (!s.visible) continue;
+      const f = s.frame, m = s.m, u = V.norm(f.u);
+      let n = V.norm(f.n);
+      if (V.dot(V.cross(n, u), f.v) < 0) n = V.mul(n, -1);    // so that angles in the sketch turn the same way in 3D
+      let k = 0;
+      for (const e of m.ents) {
+        if (e.cons) continue;
+        const g = skGeo(m, e), nm = s.name + '_' + (++k);
+        if (g.t === 'line') out.push({ type: 'line', p: sk3(f, g.a), p2: sk3(f, g.b), name: nm });
+        else if (g.t === 'point') out.push({ type: 'point', p: sk3(f, g.p), name: nm });
+        else if (g.t === 'circle') out.push({ type: 'circle', c: sk3(f, g.c), n: n, u: u, r: g.r, name: nm });
+        else if (g.t === 'arc') out.push({ type: 'arc', c: sk3(f, g.c), n: n, u: u, r: g.r, a0: g.a0, a1: g.a1, name: nm });
+      }
+    }
+    return out;
+  }
+  function exportGeoStep() {
+    if (blocked()) return;
+    const geos = S.geos.filter(function (g) { return g.vis !== false; }), sks = sketchGeos();
+    if (!geos.length && !sks.length) { flash(L('Không có sketch / geometry nào đang hiện để xuất', 'No visible sketch / geometry to export')); return; }
+    download([stepGeosOnly(geos.concat(sks))], 'geometry.step');
+    flash(L('Đã xuất STEP: ', 'STEP written: ') + geos.length + ' geometry, ' + S.sketches.filter(function (s) { return s.visible; }).length + ' sketch', true);
+  }
+  function geoAllVisible() { return S.sketches.some(function (s) { return s.visible; }) || S.geos.some(function (g) { return g.vis !== false; }); }
+  function toggleGeoVis() {
+    if (!S.sketches.length && !S.geos.length) return;
+    const show = !geoAllVisible();
+    pushUndo();
+    for (const s of S.sketches) s.visible = show;
+    for (const g of S.geos) g.vis = show;
+    updateSketchList(); dirty = true;
+  }
+  function updGeoVisBtn() { const b = $('bGeoVis'); if (b) b.classList.toggle('off', !geoAllVisible()); }
+  $('bGeoStep').addEventListener('click', exportGeoStep);
+  $('bGeoVis').addEventListener('click', toggleGeoVis);

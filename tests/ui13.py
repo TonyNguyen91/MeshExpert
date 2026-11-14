@@ -19,7 +19,7 @@ with sync_playwright() as p:
     def scr(pt): return pg.evaluate("p=>{const q=__mrt.project(p);const r=document.getElementById('gl').getBoundingClientRect();return [q[0]+r.left,q[1]+r.top]}",pt)
     def at(pt,dx=0,dy=0): q=scr(pt); pg.mouse.move(q[0]+dx,q[1]+dy); pg.wait_for_timeout(120); pg.mouse.click(q[0]+dx,q[1]+dy); pg.wait_for_timeout(150)
     def box(i): return pg.evaluate("i=>{const b=__mrt.S.bodies[i],s=__mrt.core.stats(b.geo.positions,b.geo.indices),m=b.matrix;const P=b.geo.positions;let mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];for(let k=0;k<P.length;k+=3){const x=m[0]*P[k]+m[4]*P[k+1]+m[8]*P[k+2]+m[12],y=m[1]*P[k]+m[5]*P[k+1]+m[9]*P[k+2]+m[13],z=m[2]*P[k]+m[6]*P[k+1]+m[10]*P[k+2]+m[14];mn=[Math.min(mn[0],x),Math.min(mn[1],y),Math.min(mn[2],z)];mx=[Math.max(mx[0],x),Math.max(mx[1],y),Math.max(mx[2],z)];}return [mn,mx]}",i)
-    def geos(): return pg.evaluate("__mrt.S.geos.map(g=>({type:g.type,name:g.name,p:g.p,p2:g.p2,n:g.n}))")
+    def geos(): return pg.evaluate("__mrt.S.geos.map(g=>({type:g.type,name:g.name,p:g.p,p2:g.p2,n:g.n,u:g.u,size:g.size}))")
     pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
     pg.set_input_files('#file',[S+'/block.stl',S+'/cyl.stl']); pg.wait_for_function("__mrt.S.bodies.length==2"); idle()
     A=box(0); C=box(1)
@@ -83,7 +83,7 @@ with sync_playwright() as p:
     ok('Sketches / Geos list shows the geometry',pg.locator('#sketchList .srow.geo').count()==len(G) and 'sketches / geos' in pg.inner_text('body').lower(),pg.locator('#sketchList .srow.geo').count())
     # STEP with only geometry (nothing ticked)
     pg.click('[data-tool=select]'); pg.mouse.move(900,800); pg.keyboard.press('Space'); pg.wait_for_timeout(100)
-    with pg.expect_download() as dl: pg.click('#bStep')
+    with pg.expect_download() as dl: pg.click('#bGeoStep')
     path=os.path.join(S,'geo.step'); dl.value.save_as(path); txt=open(path).read()
     ok('STEP of the geometry: points, polylines in a wireframe set',dl.value.suggested_filename=='geometry.step' and "CARTESIAN_POINT('P1'" in txt and 'GEOMETRIC_CURVE_SET' in txt and 'GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION' in txt,dl.value.suggested_filename)
     ok('lines written as trimmed LINEs, points also as a + (for Onshape)','TRIMMED_CURVE' in txt and 'POLYLINE' not in txt and "TRIMMED_CURVE('P1_X'" in txt)
@@ -107,6 +107,34 @@ with sync_playwright() as p:
     A3=box(0); c1=[(A3[0][i]+A3[1][i])/2 for i in range(3)]
     ok('Move 10 along the picked X axis',near([c1[i]-c0[i] for i in range(3)],[10*gx[i] for i in range(3)],1e-3),[c1[i]-c0[i] for i in range(3)])
     pg.click('#bAxReset'); ok('World axes again',pg.evaluate("__mrt.S.gax[0].join()")=='1,0,0')
+    # Sketch "pick a plane": the flat face under the cursor lights up; a Geometry plane can be picked too
+    pg.click('[data-tool=select]'); pg.click('#bSketch'); pg.click('#skplane [data-pl=pick]'); pg.wait_for_timeout(100)
+    top=pg.evaluate("__mrt.S.bodies[0].geo.positions.length")  # body exists
+    A4=box(0); tc=[(A4[0][0]+A4[1][0])/2+1,(A4[0][1]+A4[1][1])/2+1,A4[1][2]]
+    q=scr(tc); pg.mouse.move(q[0],q[1]); pg.wait_for_timeout(150)
+    hv=pg.evaluate("(()=>{const e=__mrt.S.skHov;return e?{tris:e.tris?e.tris.length:0,n:e.n,geo:!!e.geo,bad:!!e.bad}:null})()")
+    ok('hovering a flat face lights it (its triangles) in Sketch pick-plane',hv and hv['tris']>0 and abs(abs(hv['n'][2])-1)<1e-6,hv)
+    PLn=[g for g in geos() if g['type']=='plane'][0]
+    far=[PLn['p'][i]+PLn['u'][i]*PLn['size']*0.45 for i in range(3)]
+    q=scr(far); pg.mouse.move(q[0],q[1]); pg.wait_for_timeout(150)
+    hv2=pg.evaluate("(()=>{const e=__mrt.S.skHov;return e?{geo:e.geo?e.geo.name:null}:null})()")
+    ok('a Geometry plane lights up too',hv2 and hv2['geo']==PLn['name'],hv2)
+    pg.mouse.click(q[0],q[1]); pg.wait_for_timeout(200)
+    fr=pg.evaluate("__mrt.S.sk&&__mrt.S.sk.frame")
+    ok('the sketch goes onto that Geometry plane',fr and abs(abs(sum(fr['n'][i]*PLn['n'][i] for i in range(3)))-1)<1e-6 and abs(sum((fr['o'][i]-PLn['p'][i])*PLn['n'][i] for i in range(3)))<1e-6,fr)
+    pg.click('#skCancel'); pg.wait_for_timeout(150)
+    # Export geometry with a sketch (line, circle, arc); STEP (solid) leaves geometry out
+    pg.evaluate("""(()=>{const S=__mrt.S;S.sketches.push({id:900,name:'SkT',frame:{o:[0,0,30],u:[1,0,0],v:[0,1,0],n:[0,0,1]},m:{pts:[[0,0],[5,0],[0,5]],ents:[{t:'circle',c:0,r:3},{t:'line',a:1,b:2},{t:'arc',c:0,a:1,b:2},{t:'line',a:0,b:1,cons:true}],cons:[]},visible:true});})()""")
+    with pg.expect_download() as dl: pg.click('#bGeoStep')
+    path=os.path.join(S,'geo2.step'); dl.value.save_as(path); txt=open(path).read()
+    ok('Export geometry writes the sketch: circle, arc (trimmed circle), lines; construction left out',txt.count("CIRCLE(")==2 and "TRIMMED_CURVE('SkT_3'" in txt and "TRIMMED_CURVE('SkT_2'" in txt and 'SkT_4' not in txt and ".CARTESIAN." in txt)
+    ok('points as + option sits in the Sketches / Geos header',pg.evaluate("!!document.querySelector('.sec .hdx #cStepCross')"))
+    pg.click('#bGeoVis'); pg.wait_for_timeout(100)
+    ok('Hide all: every sketch and geometry hidden',pg.evaluate("__mrt.S.sketches.every(s=>!s.visible)&&__mrt.S.geos.every(g=>g.vis===false)") and pg.evaluate("document.getElementById('bGeoVis').classList.contains('off')"))
+    pg.click('#bGeoVis'); pg.wait_for_timeout(100)
+    ok('Show all again',pg.evaluate("__mrt.S.sketches.every(s=>s.visible)&&__mrt.S.geos.every(g=>g.vis!==false)"))
+    ok('Export box stays on top (not in the scrolling part)',pg.evaluate("!!document.querySelector('#leftTop #bStep')&&!document.querySelector('#leftScroll #bStep')"))
+    pg.evaluate("__mrt.S.sketches.pop()")
     # undo takes back geometry too
     n=len(geos()); pg.keyboard.press('Control+z'); pg.keyboard.press('Control+z'); pg.wait_for_timeout(200)
     ok('undo brings back the earlier geometry list',len(geos())<=n)

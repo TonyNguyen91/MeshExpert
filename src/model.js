@@ -113,6 +113,7 @@
   function updateSketchList() {
     const box = $('sketchList');
     if (!box) return;
+    updGeoVisBtn();
     box.innerHTML = '';
     if (!S.sketches.length && !(S.geos && S.geos.length)) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = L('Chưa có sketch / geometry. Bấm "✏ Sketch" hoặc nhóm Geometry để tạo.', 'No sketch / geometry yet. Press "✏ Sketch" or use the Geometry group.'); box.appendChild(e); return; }
     for (const s of S.sketches) {
@@ -758,14 +759,15 @@
     dirty = true;
   }
   function skPickPlane(px, py) {
-    const h = pickNear(px, py);
-    if (!h) { flash(L('Không trúng mesh nào', 'No mesh under the cursor')); return; }
-    const e = entityAt(h, px, py, false);
-    let n = e.kind === 'plane' ? V.norm(e.n) : h.normal;
+    const e = skPlaneEnt(px, py);
+    if (!e) { flash(L('Không trúng mặt phẳng nào', 'No flat face under the cursor')); return; }
+    if (e.bad) { flash(L('Hãy bấm một mặt phẳng (hoặc Plane của Geometry)', 'Click a flat face (or a Geometry plane)')); return; }
+    let n = V.norm(e.n);
     if (V.dot(n, viewer()) < 0) n = V.mul(n, -1);
-    const u = V.norm(V.cross(Math.abs(n[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0], n));
-    setTool('select');
-    skEnter({ o: h.point.slice(), u: u, v: V.cross(n, u), n: n });
+    let u = e.u ? V.norm(V.sub(e.u, V.mul(n, V.dot(e.u, n)))) : null;
+    if (!u || !isFinite(u[0])) u = V.norm(V.cross(Math.abs(n[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0], n));
+    S.skHov = null; setTool('select');
+    skEnter({ o: e.o.slice(), u: u, v: V.cross(n, u), n: n });
   }
   // ---------- drawing ----------
   const SKC = { free: '#6fc3ff', fixed: '#ffffff', cons: '#c58bff', sel: '#ffa726', hov: '#ffe14a', pre: '#ffcf5a' };

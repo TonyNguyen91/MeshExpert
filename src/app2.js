@@ -849,9 +849,10 @@
       }
     }
     if (S.show.box && tick.length) drawBBox(tick);
-    drawGeos(); drawMeasures();
+    drawGeos(); drawMeasures(); updGeoVisBtn();
     drawSketch(); drawDlgSel();
     for (const p of S.tmp) dot2(project(p), '#ffcf5a', 4.5);
+    drawSkHov();
     if (S.hovEnt) {                                          // what a click would take, in the measuring tools
       const e = S.hovEnt, HC = '#ffe14a';
       for (const pl of e.lines || []) poly2(pl.map(project), HC, e.kind === 'edge' ? 4.5 : 2.5);
@@ -1201,7 +1202,7 @@
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick') { openPop('measure', true); updateMeasPanel(); }
     $('tpMove').style.display = t === 'move' ? 'flex' : 'none'; $('tpRot').style.display = t === 'rotate' ? 'flex' : 'none';
     $('tpScale').style.display = t === 'scale' ? 'flex' : 'none'; $('tpPivot').style.display = xf ? 'flex' : 'none';
-    canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null; S.hovEnt = null;
+    canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null; S.hovEnt = null; S.skHov = null;
     if ((t === 'move' || t === 'rotate' || t === 'scale') && !S.sel.size) flash(L('Hãy tick chọn body trước', 'Tick a body first'));
     else flash(toolHint(t), !!toolHint(t));
     dirty = true;
@@ -1620,6 +1621,7 @@
   function hover(px, py) {
     cam = camAt(px);
     if (S.sk) { skHover(px, py); cam = mainCam; return; }
+    if (S.tool === 'skplane') { S.skHov = skPlaneEnt(px, py); cam = mainCam; canvas.style.cursor = 'crosshair'; dirty = true; return; }
     const lh = labAt(px, py);
     if (lh || S.hovLab) {
       if (!lh || !S.hovLab || lh.i !== S.hovLab.i || lh.row !== S.hovLab.row) { S.hovLab = lh; dirty = true; }
@@ -1638,7 +1640,7 @@
     if (h !== S.hov || c !== S.hovCom || ent || S.hovEnt) { S.hov = h; S.hovCom = c; S.hovEnt = ent; dirty = true; }
     canvas.style.cursor = h !== null ? 'grab' : toolCursor();
   }
-  canvas.addEventListener('pointerleave', function () { if (!drag && (S.hov !== null || S.hovCom || S.hovEnt || S.hovLab)) { S.hov = null; S.hovCom = null; S.hovEnt = null; S.hovLab = null; dirty = true; } });
+  canvas.addEventListener('pointerleave', function () { if (!drag && (S.hov !== null || S.hovCom || S.hovEnt || S.hovLab)) { S.hov = null; S.hovCom = null; S.hovEnt = null; S.hovLab = null; S.skHov = null; dirty = true; } });
   canvas.addEventListener('pointermove', function (e) {
     const p = evPos(e);
     if (!drag) { hover(p[0], p[1]); return; }

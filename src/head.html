@@ -27,7 +27,19 @@
   #top label { display: flex; gap: 4px; align-items: center; cursor: pointer; white-space: nowrap; }
   #top .grow { flex: 1; }
   #wrap { flex: 1; display: flex; min-height: 0; }
-  #left { width: 280px; min-width: 280px; overflow-y: auto; background: var(--panel); border-right: 1px solid var(--line); padding: 8px; }
+  #left { width: 280px; min-width: 280px; display: flex; flex-direction: column; overflow: hidden; background: var(--panel); border-right: 1px solid var(--line); padding: 0; }
+  #leftTop { flex: none; padding: 8px 8px 6px; border-bottom: 1px solid var(--line); }
+  #leftScroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; }
+  #expBox .eg { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 4px; }
+  #drop.over { border-color: var(--accent) !important; background: #2a2415; }
+  .sec > .hd.hdx { display: flex; align-items: center; gap: 4px; }
+  .hdx > span:first-child { flex: 1; }
+  .hda { display: flex; align-items: center; gap: 3px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+  button.hb { display: flex; align-items: center; gap: 3px; padding: 1px 5px; height: 21px; font-size: 11px; background: #1b2128; }
+  button.hb .sl { display: none; }
+  button.hb.off .sl { display: inline; }
+  button.hb.off { opacity: .75; }
+  label.hc { display: flex; align-items: center; gap: 2px; font-size: 12px; color: var(--text); cursor: pointer; padding: 0 2px; }
   #main { flex: 1; position: relative; min-width: 0; }
   #gl, #ov { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #ov { pointer-events: none; }
@@ -52,9 +64,6 @@
   button.primary { background: var(--accent); color: #1a1205; border-color: var(--accent); font-weight: 600; }
   button.on { background: var(--accent); color: #1a1205; border-color: var(--accent); }
   .btns { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
-  #drop { border: 1.5px dashed var(--line); border-radius: 6px; padding: 7px 8px; text-align: center; color: var(--muted); cursor: pointer; margin-bottom: 8px; }
-  #drop.over { border-color: var(--accent); color: var(--text); background: #2a2415; }
-  #drop b { color: var(--text); }
   .box { margin-top: 6px; padding: 6px 7px; border: 1px solid var(--line); border-radius: 4px; background: #11151a; color: var(--muted); font-variant-numeric: tabular-nums; }
   .box b { color: var(--ok); }
   .box .bad { color: var(--bad); }
@@ -247,8 +256,17 @@
 
 <div id="wrap">
 <div id="left">
-  <div id="drop" data-en="Drop files here or <b>click to browse</b> (.stl, .obj, .mrtl)">Kéo thả nhiều file vào đây hoặc <b>bấm để chọn</b> (.stl, .obj, .mrtl)</div>
+  <div id="leftTop"><div class="bg" id="expBox"><div class="bgt" data-en="Open / Export">Mở / Xuất file</div>
+    <div class="eg">
+      <button id="drop" class="lb" title="Mở file (.stl, .obj, .mrtl) — hoặc kéo thả file vào cửa sổ" data-en-title="Open files (.stl, .obj, .mrtl) — or drop files on the window"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5V13h12V6H8L6.5 4.5z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 12V8m-2 2l2-2 2 2" stroke="#f0a030" stroke-width="1.5"/></svg><span data-en="Open / drop files">Mở / thả file</span></button>
+      <button id="bStl" class="lb" title="Tải STL body tick" data-en-title="Download ticked STL"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m-3-3l3 3 3-3" stroke="#f0a030" stroke-width="1.6"/><path d="M2.5 11v2.5h11V11" stroke="#9cc4ee"/></svg><span data-en="Ticked STL">Tải STL tick</span></button>
+      <button id="bZip" class="lb" title="Tải tất cả (.zip)" data-en-title="Download all (.zip)"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2h7l3 3v9H3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M7 3v1M8 4.5v1M7 6v1M8 7.5v1" stroke="#f0a030"/><rect x="6.5" y="9" width="2" height="2.5" stroke="#f0a030"/></svg><span data-en="All (.zip)">Tất cả (.zip)</span></button>
+      <button id="bMerge" class="lb" title="Tải gộp 1 STL" data-en-title="Download as 1 STL"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l5 4 5-4M8 7v6m-2.5-2.5L8 13l2.5-2.5" stroke="#f0a030" stroke-width="1.5"/></svg><span data-en="As 1 STL">Gộp 1 STL</span></button>
+      <button id="bStep" class="lb" title="Tải STEP khối solid tick" data-en-title="Download ticked solids as STEP"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l5 2.8v5.4L8 13.5l-5-2.8V5.3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 5.3l5 2.8 5-2.8M8 8.1v5.4" stroke="#f0a030"/></svg><span data-en="STEP (solid)">STEP (solid)</span></button>
+    </div>
+  </div></div>
   <input type="file" id="file" accept=".stl,.obj,.mrtl" multiple hidden>
+  <div id="leftScroll">
 
   <div class="sec"><div class="hd" data-en="Bodies">Danh sách body</div><div class="c">
     <div class="list" id="bodyList"></div>
@@ -267,17 +285,10 @@
         <button id="bDup" class="lb" title="Ctrl+C, Ctrl+V"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="9" height="9" rx="1.5" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M11 3V2.5A.5.5 0 0 0 10.5 2h-8a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 .5.5H3" stroke="#9cc4ee"/></svg><span data-en="Duplicate">Nhân bản</span></button>
         <button id="bDel" class="lb" title="Delete"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.7 9h5.6l.7-9" stroke="#ff8a7e"/></svg><span data-en="Delete">Xóa</span></button>
       </div>
-      <div class="bg"><div class="bgt" data-en="Export">Xuất file</div>
-        <button id="bStl" class="lb" title="Tải STL body tick" data-en-title="Download ticked STL"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m-3-3l3 3 3-3" stroke="#f0a030" stroke-width="1.6"/><path d="M2.5 11v2.5h11V11" stroke="#9cc4ee"/></svg><span data-en="Ticked STL">Tải STL tick</span></button>
-        <button id="bZip" class="lb" title="Tải tất cả (.zip)" data-en-title="Download all (.zip)"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2h7l3 3v9H3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M7 3v1M8 4.5v1M7 6v1M8 7.5v1" stroke="#f0a030"/><rect x="6.5" y="9" width="2" height="2.5" stroke="#f0a030"/></svg><span data-en="All (.zip)">Tất cả (.zip)</span></button>
-        <button id="bMerge" class="lb" title="Tải gộp 1 STL" data-en-title="Download as 1 STL"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l5 4 5-4M8 7v6m-2.5-2.5L8 13l2.5-2.5" stroke="#f0a030" stroke-width="1.5"/></svg><span data-en="As 1 STL">Gộp 1 STL</span></button>
-        <button id="bStep" class="lb" title="Tải STEP khối solid tick" data-en-title="Download ticked solids as STEP"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l5 2.8v5.4L8 13.5l-5-2.8V5.3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 5.3l5 2.8 5-2.8M8 8.1v5.4" stroke="#f0a030"/></svg><span data-en="STEP (solid)">STEP (solid)</span></button>
-        <label class="lb" title="Mỗi điểm xuất thêm dấu + gồm 3 đoạn thẳng ngắn (Onshape không đọc điểm rời)" data-en-title="Each point also gets a + of 3 short lines (Onshape does not read loose points)" style="font-size:11px;gap:4px"><input type="checkbox" id="cStepCross" checked><span data-en="Points as + (Onshape)">Điểm dạng + (Onshape)</span></label>
-      </div>
     </div>
   </div></div>
 
-  <div class="sec"><div class="hd" data-en="Sketches / Geos">Sketches / Geos</div><div class="c">
+  <div class="sec"><div class="hd hdx"><span data-en="Sketches / Geos">Sketches / Geos</span><span class="hda"><button id="bGeoVis" class="hb" title="Ẩn / hiện toàn bộ sketch và geometry" data-en-title="Hide / show all sketches and geometry"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z" stroke="#9cc4ee"/><circle cx="8" cy="8" r="2.2" fill="#f0a030"/><path class="sl" d="M3 13L13 3" stroke="#ff6b5e" stroke-width="1.6"/></svg></button><button id="bGeoStep" class="hb" title="Xuất STEP các sketch / geometry đang hiện" data-en-title="Export the visible sketches / geometry as STEP"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l5 2.8v5.4L8 13.5l-5-2.8V5.3z" stroke="#9cc4ee"/><path d="M5 10.5l6-5M5 6h0M11 10.5h0" stroke="#f0a030" stroke-width="1.6"/></svg><span>STEP</span></button><label class="hc" title="Điểm dạng + (cho Onshape): mỗi điểm xuất thêm dấu + gồm 3 đoạn thẳng ngắn (Onshape không đọc điểm rời)" data-en-title="Points as + (for Onshape): each point also gets a + of 3 short lines (Onshape does not read loose points)" ><input type="checkbox" id="cStepCross" checked><span>+</span></label></span></div><div class="c">
     <div class="list" id="sketchList"></div>
   </div></div>
 
@@ -302,6 +313,7 @@
     <div class="btns"><button class="primary" id="bApply">Apply</button><button id="bReset" data-en="Back to original mesh">Về mesh gốc</button></div>
     <div class="box" id="result" data-en="Applies only to the ticked bodies.">Chỉ áp dụng cho các body đang tick.</div>
   </div></div>
+  </div>
 </div>
 
 <div id="main">

@@ -27,7 +27,19 @@
   #top label { display: flex; gap: 4px; align-items: center; cursor: pointer; white-space: nowrap; }
   #top .grow { flex: 1; }
   #wrap { flex: 1; display: flex; min-height: 0; }
-  #left { width: 280px; min-width: 280px; overflow-y: auto; background: var(--panel); border-right: 1px solid var(--line); padding: 8px; }
+  #left { width: 280px; min-width: 280px; display: flex; flex-direction: column; overflow: hidden; background: var(--panel); border-right: 1px solid var(--line); padding: 0; }
+  #leftTop { flex: none; padding: 8px 8px 6px; border-bottom: 1px solid var(--line); }
+  #leftScroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; }
+  #expBox .eg { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 4px; }
+  #drop.over { border-color: var(--accent) !important; background: #2a2415; }
+  .sec > .hd.hdx { display: flex; align-items: center; gap: 4px; }
+  .hdx > span:first-child { flex: 1; }
+  .hda { display: flex; align-items: center; gap: 3px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+  button.hb { display: flex; align-items: center; gap: 3px; padding: 1px 5px; height: 21px; font-size: 11px; background: #1b2128; }
+  button.hb .sl { display: none; }
+  button.hb.off .sl { display: inline; }
+  button.hb.off { opacity: .75; }
+  label.hc { display: flex; align-items: center; gap: 2px; font-size: 12px; color: var(--text); cursor: pointer; padding: 0 2px; }
   #main { flex: 1; position: relative; min-width: 0; }
   #gl, #ov { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #ov { pointer-events: none; }
@@ -52,9 +64,6 @@
   button.primary { background: var(--accent); color: #1a1205; border-color: var(--accent); font-weight: 600; }
   button.on { background: var(--accent); color: #1a1205; border-color: var(--accent); }
   .btns { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
-  #drop { border: 1.5px dashed var(--line); border-radius: 6px; padding: 7px 8px; text-align: center; color: var(--muted); cursor: pointer; margin-bottom: 8px; }
-  #drop.over { border-color: var(--accent); color: var(--text); background: #2a2415; }
-  #drop b { color: var(--text); }
   .box { margin-top: 6px; padding: 6px 7px; border: 1px solid var(--line); border-radius: 4px; background: #11151a; color: var(--muted); font-variant-numeric: tabular-nums; }
   .box b { color: var(--ok); }
   .box .bad { color: var(--bad); }
@@ -247,8 +256,17 @@
 
 <div id="wrap">
 <div id="left">
-  <div id="drop" data-en="Drop files here or <b>click to browse</b> (.stl, .obj, .mrtl)">Kéo thả nhiều file vào đây hoặc <b>bấm để chọn</b> (.stl, .obj, .mrtl)</div>
+  <div id="leftTop"><div class="bg" id="expBox"><div class="bgt" data-en="Open / Export">Mở / Xuất file</div>
+    <div class="eg">
+      <button id="drop" class="lb" title="Mở file (.stl, .obj, .mrtl) — hoặc kéo thả file vào cửa sổ" data-en-title="Open files (.stl, .obj, .mrtl) — or drop files on the window"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5V13h12V6H8L6.5 4.5z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 12V8m-2 2l2-2 2 2" stroke="#f0a030" stroke-width="1.5"/></svg><span data-en="Open / drop files">Mở / thả file</span></button>
+      <button id="bStl" class="lb" title="Tải STL body tick" data-en-title="Download ticked STL"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m-3-3l3 3 3-3" stroke="#f0a030" stroke-width="1.6"/><path d="M2.5 11v2.5h11V11" stroke="#9cc4ee"/></svg><span data-en="Ticked STL">Tải STL tick</span></button>
+      <button id="bZip" class="lb" title="Tải tất cả (.zip)" data-en-title="Download all (.zip)"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2h7l3 3v9H3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M7 3v1M8 4.5v1M7 6v1M8 7.5v1" stroke="#f0a030"/><rect x="6.5" y="9" width="2" height="2.5" stroke="#f0a030"/></svg><span data-en="All (.zip)">Tất cả (.zip)</span></button>
+      <button id="bMerge" class="lb" title="Tải gộp 1 STL" data-en-title="Download as 1 STL"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l5 4 5-4M8 7v6m-2.5-2.5L8 13l2.5-2.5" stroke="#f0a030" stroke-width="1.5"/></svg><span data-en="As 1 STL">Gộp 1 STL</span></button>
+      <button id="bStep" class="lb" title="Tải STEP khối solid tick" data-en-title="Download ticked solids as STEP"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l5 2.8v5.4L8 13.5l-5-2.8V5.3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 5.3l5 2.8 5-2.8M8 8.1v5.4" stroke="#f0a030"/></svg><span data-en="STEP (solid)">STEP (solid)</span></button>
+    </div>
+  </div></div>
   <input type="file" id="file" accept=".stl,.obj,.mrtl" multiple hidden>
+  <div id="leftScroll">
 
   <div class="sec"><div class="hd" data-en="Bodies">Danh sách body</div><div class="c">
     <div class="list" id="bodyList"></div>
@@ -267,17 +285,10 @@
         <button id="bDup" class="lb" title="Ctrl+C, Ctrl+V"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="9" height="9" rx="1.5" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M11 3V2.5A.5.5 0 0 0 10.5 2h-8a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 .5.5H3" stroke="#9cc4ee"/></svg><span data-en="Duplicate">Nhân bản</span></button>
         <button id="bDel" class="lb" title="Delete"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.7 9h5.6l.7-9" stroke="#ff8a7e"/></svg><span data-en="Delete">Xóa</span></button>
       </div>
-      <div class="bg"><div class="bgt" data-en="Export">Xuất file</div>
-        <button id="bStl" class="lb" title="Tải STL body tick" data-en-title="Download ticked STL"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m-3-3l3 3 3-3" stroke="#f0a030" stroke-width="1.6"/><path d="M2.5 11v2.5h11V11" stroke="#9cc4ee"/></svg><span data-en="Ticked STL">Tải STL tick</span></button>
-        <button id="bZip" class="lb" title="Tải tất cả (.zip)" data-en-title="Download all (.zip)"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2h7l3 3v9H3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M7 3v1M8 4.5v1M7 6v1M8 7.5v1" stroke="#f0a030"/><rect x="6.5" y="9" width="2" height="2.5" stroke="#f0a030"/></svg><span data-en="All (.zip)">Tất cả (.zip)</span></button>
-        <button id="bMerge" class="lb" title="Tải gộp 1 STL" data-en-title="Download as 1 STL"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l5 4 5-4M8 7v6m-2.5-2.5L8 13l2.5-2.5" stroke="#f0a030" stroke-width="1.5"/></svg><span data-en="As 1 STL">Gộp 1 STL</span></button>
-        <button id="bStep" class="lb" title="Tải STEP khối solid tick" data-en-title="Download ticked solids as STEP"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l5 2.8v5.4L8 13.5l-5-2.8V5.3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 5.3l5 2.8 5-2.8M8 8.1v5.4" stroke="#f0a030"/></svg><span data-en="STEP (solid)">STEP (solid)</span></button>
-        <label class="lb" title="Mỗi điểm xuất thêm dấu + gồm 3 đoạn thẳng ngắn (Onshape không đọc điểm rời)" data-en-title="Each point also gets a + of 3 short lines (Onshape does not read loose points)" style="font-size:11px;gap:4px"><input type="checkbox" id="cStepCross" checked><span data-en="Points as + (Onshape)">Điểm dạng + (Onshape)</span></label>
-      </div>
     </div>
   </div></div>
 
-  <div class="sec"><div class="hd" data-en="Sketches / Geos">Sketches / Geos</div><div class="c">
+  <div class="sec"><div class="hd hdx"><span data-en="Sketches / Geos">Sketches / Geos</span><span class="hda"><button id="bGeoVis" class="hb" title="Ẩn / hiện toàn bộ sketch và geometry" data-en-title="Hide / show all sketches and geometry"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z" stroke="#9cc4ee"/><circle cx="8" cy="8" r="2.2" fill="#f0a030"/><path class="sl" d="M3 13L13 3" stroke="#ff6b5e" stroke-width="1.6"/></svg></button><button id="bGeoStep" class="hb" title="Xuất STEP các sketch / geometry đang hiện" data-en-title="Export the visible sketches / geometry as STEP"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5l5 2.8v5.4L8 13.5l-5-2.8V5.3z" stroke="#9cc4ee"/><path d="M5 10.5l6-5M5 6h0M11 10.5h0" stroke="#f0a030" stroke-width="1.6"/></svg><span>STEP</span></button><label class="hc" title="Điểm dạng + (cho Onshape): mỗi điểm xuất thêm dấu + gồm 3 đoạn thẳng ngắn (Onshape không đọc điểm rời)" data-en-title="Points as + (for Onshape): each point also gets a + of 3 short lines (Onshape does not read loose points)" ><input type="checkbox" id="cStepCross" checked><span>+</span></label></span></div><div class="c">
     <div class="list" id="sketchList"></div>
   </div></div>
 
@@ -302,6 +313,7 @@
     <div class="btns"><button class="primary" id="bApply">Apply</button><button id="bReset" data-en="Back to original mesh">Về mesh gốc</button></div>
     <div class="box" id="result" data-en="Applies only to the ticked bodies.">Chỉ áp dụng cho các body đang tick.</div>
   </div></div>
+  </div>
 </div>
 
 <div id="main">
@@ -4765,9 +4777,10 @@ var wasm_bindgen = (function(exports) {
       }
     }
     if (S.show.box && tick.length) drawBBox(tick);
-    drawGeos(); drawMeasures();
+    drawGeos(); drawMeasures(); updGeoVisBtn();
     drawSketch(); drawDlgSel();
     for (const p of S.tmp) dot2(project(p), '#ffcf5a', 4.5);
+    drawSkHov();
     if (S.hovEnt) {                                          // what a click would take, in the measuring tools
       const e = S.hovEnt, HC = '#ffe14a';
       for (const pl of e.lines || []) poly2(pl.map(project), HC, e.kind === 'edge' ? 4.5 : 2.5);
@@ -5117,7 +5130,7 @@ var wasm_bindgen = (function(exports) {
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick') { openPop('measure', true); updateMeasPanel(); }
     $('tpMove').style.display = t === 'move' ? 'flex' : 'none'; $('tpRot').style.display = t === 'rotate' ? 'flex' : 'none';
     $('tpScale').style.display = t === 'scale' ? 'flex' : 'none'; $('tpPivot').style.display = xf ? 'flex' : 'none';
-    canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null; S.hovEnt = null;
+    canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null; S.hovEnt = null; S.skHov = null;
     if ((t === 'move' || t === 'rotate' || t === 'scale') && !S.sel.size) flash(L('Hãy tick chọn body trước', 'Tick a body first'));
     else flash(toolHint(t), !!toolHint(t));
     dirty = true;
@@ -5536,6 +5549,7 @@ var wasm_bindgen = (function(exports) {
   function hover(px, py) {
     cam = camAt(px);
     if (S.sk) { skHover(px, py); cam = mainCam; return; }
+    if (S.tool === 'skplane') { S.skHov = skPlaneEnt(px, py); cam = mainCam; canvas.style.cursor = 'crosshair'; dirty = true; return; }
     const lh = labAt(px, py);
     if (lh || S.hovLab) {
       if (!lh || !S.hovLab || lh.i !== S.hovLab.i || lh.row !== S.hovLab.row) { S.hovLab = lh; dirty = true; }
@@ -5554,7 +5568,7 @@ var wasm_bindgen = (function(exports) {
     if (h !== S.hov || c !== S.hovCom || ent || S.hovEnt) { S.hov = h; S.hovCom = c; S.hovEnt = ent; dirty = true; }
     canvas.style.cursor = h !== null ? 'grab' : toolCursor();
   }
-  canvas.addEventListener('pointerleave', function () { if (!drag && (S.hov !== null || S.hovCom || S.hovEnt || S.hovLab)) { S.hov = null; S.hovCom = null; S.hovEnt = null; S.hovLab = null; dirty = true; } });
+  canvas.addEventListener('pointerleave', function () { if (!drag && (S.hov !== null || S.hovCom || S.hovEnt || S.hovLab)) { S.hov = null; S.hovCom = null; S.hovEnt = null; S.hovLab = null; S.skHov = null; dirty = true; } });
   canvas.addEventListener('pointermove', function (e) {
     const p = evPos(e);
     if (!drag) { hover(p[0], p[1]); return; }
@@ -6709,6 +6723,7 @@ var wasm_bindgen = (function(exports) {
   function updateSketchList() {
     const box = $('sketchList');
     if (!box) return;
+    updGeoVisBtn();
     box.innerHTML = '';
     if (!S.sketches.length && !(S.geos && S.geos.length)) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = L('Chưa có sketch / geometry. Bấm "✏ Sketch" hoặc nhóm Geometry để tạo.', 'No sketch / geometry yet. Press "✏ Sketch" or use the Geometry group.'); box.appendChild(e); return; }
     for (const s of S.sketches) {
@@ -7354,14 +7369,15 @@ var wasm_bindgen = (function(exports) {
     dirty = true;
   }
   function skPickPlane(px, py) {
-    const h = pickNear(px, py);
-    if (!h) { flash(L('Không trúng mesh nào', 'No mesh under the cursor')); return; }
-    const e = entityAt(h, px, py, false);
-    let n = e.kind === 'plane' ? V.norm(e.n) : h.normal;
+    const e = skPlaneEnt(px, py);
+    if (!e) { flash(L('Không trúng mặt phẳng nào', 'No flat face under the cursor')); return; }
+    if (e.bad) { flash(L('Hãy bấm một mặt phẳng (hoặc Plane của Geometry)', 'Click a flat face (or a Geometry plane)')); return; }
+    let n = V.norm(e.n);
     if (V.dot(n, viewer()) < 0) n = V.mul(n, -1);
-    const u = V.norm(V.cross(Math.abs(n[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0], n));
-    setTool('select');
-    skEnter({ o: h.point.slice(), u: u, v: V.cross(n, u), n: n });
+    let u = e.u ? V.norm(V.sub(e.u, V.mul(n, V.dot(e.u, n)))) : null;
+    if (!u || !isFinite(u[0])) u = V.norm(V.cross(Math.abs(n[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0], n));
+    S.skHov = null; setTool('select');
+    skEnter({ o: e.o.slice(), u: u, v: V.cross(n, u), n: n });
   }
   // ---------- drawing ----------
   const SKC = { free: '#6fc3ff', fixed: '#ffffff', cons: '#c58bff', sel: '#ffa726', hov: '#ffe14a', pre: '#ffcf5a' };
@@ -8591,27 +8607,23 @@ var wasm_bindgen = (function(exports) {
     else flash(L('Khối dựng bằng lưới — ', 'Built as a mesh — ') + (brLast || L('lõi B-rep không chạy', 'the B-rep engine did not run')), true);
   }
   async function exportStep() {
-    const l = selBodies(), geos = S.geos.filter(function (g) { return g.vis !== false; });
-    if (!l.length && !geos.length) { needSel(); return; }
+    const l = selBodies();
+    if (!l.length) { needSel(); return; }
     const solids = l.filter(function (b) { return b.solid && brCan(b.solid); });
-    if (!solids.length && !geos.length) { flash(L('STEP chỉ xuất được khối solid dựng từ sketch và đang là B-rep, cùng các geometry (điểm / đường / mặt / trục)', 'STEP is only for B-rep solids built from sketches, and geometry (points / lines / planes / axes)'), true); return; }
+    if (!solids.length) { flash(L('STEP (solid) chỉ xuất khối solid dựng từ sketch và đang là B-rep. Sketch / geometry xuất bằng nút STEP ở danh sách Sketches / Geos', 'STEP (solid) is only for B-rep solids built from sketches. Sketches / geometry go out with the STEP button on the Sketches / Geos list'), true); return; }
     showError(null); setBusy(true, 'STEP...');
     try {
-      let txt;
-      if (solids.length) {
-        const ids = [];
-        for (const b of solids) {
-          const id = await brepSolid(b.solid);
-          if (id === null) throw new Error(L('Không khởi động được lõi B-rep', 'The B-rep engine could not start'));
-          ids.push(brCall({ op: 'transform', id: id, m: Array.from(b.matrix) }).id);   // both column-major
-        }
-        txt = brCall({ op: 'step', ids: ids }).step;
-        for (const id of ids) brCall({ op: 'free', id: id });
-        txt = stepAddGeos(txt, geos);
-      } else txt = stepGeosOnly(geos);
-      download([txt], (solids.length === 1 ? safe(solids[0].name) : solids.length ? 'solids' : 'geometry') + '.step');
+      const ids = [];
+      for (const b of solids) {
+        const id = await brepSolid(b.solid);
+        if (id === null) throw new Error(L('Không khởi động được lõi B-rep', 'The B-rep engine could not start'));
+        ids.push(brCall({ op: 'transform', id: id, m: Array.from(b.matrix) }).id);   // both column-major
+      }
+      const txt = brCall({ op: 'step', ids: ids }).step;
+      for (const id of ids) brCall({ op: 'free', id: id });
+      download([txt], (solids.length === 1 ? safe(solids[0].name) : 'solids') + '.step');
       const skip = l.length - solids.length;
-      flash(L('Đã xuất STEP: ', 'STEP written: ') + solids.length + L(' khối', ' solids') + (geos.length ? ', ' + geos.length + ' geometry' : '') + (skip ? L(' · bỏ qua ', ' · skipped ') + skip + L(' body không phải B-rep', ' non-B-rep bodies') : ''), true);
+      flash(L('Đã xuất STEP: ', 'STEP written: ') + solids.length + L(' khối', ' solids') + (skip ? L(' · bỏ qua ', ' · skipped ') + skip + L(' body không phải B-rep', ' non-B-rep bodies') : ''), true);
     } catch (e) { showError(e); }
     setBusy(false);
   }
@@ -8904,6 +8916,18 @@ var wasm_bindgen = (function(exports) {
         continue;
       }
       if (g.type === 'plane') { const c = planeCorners(g); for (let k = 0; k < 4; k++) seg(c[k], c[(k + 1) % 4], g.name + '_' + (k + 1)); continue; }
+      if (g.type === 'circle' || g.type === 'arc') {         // sketch circles / arcs: a CIRCLE, trimmed for an arc
+        const c0 = cp(g.c, ''), dn = n++, du = n++, ax = n++, ci = n++;
+        out.push('#' + dn + "=DIRECTION('',(" + g.n.map(stepNum).join(',') + '));');
+        out.push('#' + du + "=DIRECTION('',(" + g.u.map(stepNum).join(',') + '));');
+        out.push('#' + ax + "=AXIS2_PLACEMENT_3D('',#" + c0 + ',#' + dn + ',#' + du + ');');
+        out.push('#' + ci + "=CIRCLE('" + (g.type === 'circle' ? nm(g.name) : '') + "',#" + ax + ',' + stepNum(g.r) + ');');
+        if (g.type === 'circle') { items.push(ci); continue; }
+        const v = V.cross(g.n, g.u), at = function (a) { return V.add(g.c, V.add(V.mul(g.u, g.r * Math.cos(a)), V.mul(v, g.r * Math.sin(a)))); };
+        const pa = cp(at(g.a0), ''), pb = cp(at(g.a1), ''), tc = n++;
+        out.push('#' + tc + "=TRIMMED_CURVE('" + nm(g.name) + "',#" + ci + ',(#' + pa + '),(#' + pb + '),.T.,.CARTESIAN.);');
+        items.push(tc); continue;
+      }
       seg(g.p, g.p2, g.name);
     }
     if (!items.length) return txt;
@@ -8931,6 +8955,90 @@ var wasm_bindgen = (function(exports) {
       "#20=PRODUCT_RELATED_PRODUCT_CATEGORY('part','',(#14));", 'ENDSEC;', 'END-ISO-10303-21;'];
     return stepAddGeos(head.join('\n') + '\n', geos);
   }
+  // ---------- sketch "pick a plane": light up the flat face (or Geometry plane) the cursor snaps to ----------
+  function skRegTris(b, f, ri) {
+    if (!b.feat.rt) b.feat.rt = new Map();
+    let t = b.feat.rt.get(ri);
+    if (!t) { t = []; for (let i = 0; i < f.reg.length; i++) if (f.reg[i] === ri) t.push(i); b.feat.rt.set(ri, t); }
+    return t;
+  }
+  function skPlaneEnt(px, py) {
+    const ray = screenRay(px, py), h = pickNear(px, py);
+    let best = null, bt = h ? h.t : Infinity;
+    for (const g of S.geos) {                                // Geometry planes, whichever is in front of the mesh
+      if (g.vis === false || g.type !== 'plane') continue;
+      const dn = V.dot(ray.d, g.n);
+      if (Math.abs(dn) < 1e-9) continue;
+      const t = V.dot(V.sub(g.p, ray.o), g.n) / dn, at = V.add(ray.o, V.mul(ray.d, t)), u = g.u, v = V.cross(g.n, u), r = V.sub(at, g.p), s = g.size / 2 * 1.02;
+      if (Math.abs(V.dot(r, u)) > s || Math.abs(V.dot(r, v)) > s || t > bt) continue;
+      bt = t; best = { geo: g, n: g.n.slice(), o: g.p.slice(), u: g.u.slice(), poly: planeCorners(g), text: g.name };
+    }
+    if (best || !h) return best;
+    const b = h.body, f = featOf(b), ri = f.reg[h.tri], R = f.regions[ri];
+    if (!R || R.type !== 'plane') return { bad: true, at: h.point };
+    const off = S.cmp ? [0, 0, 0] : b.off, wm = worldMesh(b);
+    return { body: b, n: R.n.slice(), o: h.point.slice(), tris: skRegTris(b, f, ri), pos: wm.positions, idx: wm.indices, off: off, text: L('Mặt phẳng', 'Flat face') };
+  }
+  function drawSkHov() {
+    const e = S.skHov;
+    if (!e) return;
+    const HC = '#ffe14a';
+    if (e.bad) { const q = project(e.at); tag(q[0], q[1] - 20, L('Không phải mặt phẳng', 'Not a flat face'), '#ffffff', '#e05050'); return; }
+    ctx.fillStyle = 'rgba(255,225,74,0.38)';
+    if (e.poly) {
+      const q = e.poly.map(project);
+      ctx.beginPath(); q.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }); ctx.closePath(); ctx.fill();
+      poly2(q.concat([q[0]]), HC, 2.5);
+    } else {
+      const P = e.pos, I = e.idx, o = e.off, pr = function (k) { return project([P[k * 3] + o[0], P[k * 3 + 1] + o[1], P[k * 3 + 2] + o[2]]); };
+      ctx.beginPath();
+      for (const t of e.tris) { const a = pr(I[t * 3]), b = pr(I[t * 3 + 1]), c = pr(I[t * 3 + 2]); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.closePath(); }
+      ctx.fill();
+    }
+    const c = project(e.o), tip = project(V.add(e.o, V.mul(e.n, sceneSize() * 0.08)));
+    line2(c, tip, HC, 2); dot2(c, HC, 4);
+    tag(c[0], c[1] - 22, e.text, '#ffffff', HC);
+  }
+
+  // ---------- the Sketches / Geos list: export them as STEP, hide / show them all ----------
+  function sketchGeos() {                                    // visible sketches as STEP items (construction left out)
+    const out = [];
+    for (const s of S.sketches) {
+      if (!s.visible) continue;
+      const f = s.frame, m = s.m, u = V.norm(f.u);
+      let n = V.norm(f.n);
+      if (V.dot(V.cross(n, u), f.v) < 0) n = V.mul(n, -1);    // so that angles in the sketch turn the same way in 3D
+      let k = 0;
+      for (const e of m.ents) {
+        if (e.cons) continue;
+        const g = skGeo(m, e), nm = s.name + '_' + (++k);
+        if (g.t === 'line') out.push({ type: 'line', p: sk3(f, g.a), p2: sk3(f, g.b), name: nm });
+        else if (g.t === 'point') out.push({ type: 'point', p: sk3(f, g.p), name: nm });
+        else if (g.t === 'circle') out.push({ type: 'circle', c: sk3(f, g.c), n: n, u: u, r: g.r, name: nm });
+        else if (g.t === 'arc') out.push({ type: 'arc', c: sk3(f, g.c), n: n, u: u, r: g.r, a0: g.a0, a1: g.a1, name: nm });
+      }
+    }
+    return out;
+  }
+  function exportGeoStep() {
+    if (blocked()) return;
+    const geos = S.geos.filter(function (g) { return g.vis !== false; }), sks = sketchGeos();
+    if (!geos.length && !sks.length) { flash(L('Không có sketch / geometry nào đang hiện để xuất', 'No visible sketch / geometry to export')); return; }
+    download([stepGeosOnly(geos.concat(sks))], 'geometry.step');
+    flash(L('Đã xuất STEP: ', 'STEP written: ') + geos.length + ' geometry, ' + S.sketches.filter(function (s) { return s.visible; }).length + ' sketch', true);
+  }
+  function geoAllVisible() { return S.sketches.some(function (s) { return s.visible; }) || S.geos.some(function (g) { return g.vis !== false; }); }
+  function toggleGeoVis() {
+    if (!S.sketches.length && !S.geos.length) return;
+    const show = !geoAllVisible();
+    pushUndo();
+    for (const s of S.sketches) s.visible = show;
+    for (const g of S.geos) g.vis = show;
+    updateSketchList(); dirty = true;
+  }
+  function updGeoVisBtn() { const b = $('bGeoVis'); if (b) b.classList.toggle('off', !geoAllVisible()); }
+  $('bGeoStep').addEventListener('click', exportGeoStep);
+  $('bGeoVis').addEventListener('click', toggleGeoVis);
 
   applyLang(); updateHistBtns(); sceneChanged(true);
   requestAnimationFrame(frame);
