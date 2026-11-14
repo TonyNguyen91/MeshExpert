@@ -414,7 +414,7 @@
   const right = function () { return [cam.R[0], cam.R[1], cam.R[2]]; };
   const up = function () { return [cam.R[3], cam.R[4], cam.R[5]]; };
   const viewer = function () { return [cam.R[6], cam.R[7], cam.R[8]]; };
-  function depthRange() { return Math.max(V.len(V.sub(cam.target, cam.center)) + cam.radius * 1.5 + 1e-6, slaDepthNeed()); }
+  function depthRange() { return V.len(V.sub(cam.target, cam.center)) + cam.radius * 1.5 + 1e-6; }
   function project(p) {
     const d = V.sub(p, cam.target), R = cam.R;
     const vx = R[0] * d[0] + R[1] * d[1] + R[2] * d[2], vy = R[3] * d[0] + R[4] * d[1] + R[5] * d[2];
@@ -566,7 +566,6 @@
         setCamUniforms();
         const opaque = [], trans = [];
         for (const b of S.bodies) if (b.visible && !S.ghostHide.has(b)) (alphaOf(b) >= 0.999 ? opaque : trans).push(b);
-        drawSlaTable();
         for (const b of opaque) drawBody(b, edges, false);
         if (trans.length) {
           const w = viewer();
@@ -850,7 +849,7 @@
       }
     }
     if (S.show.box && tick.length) drawBBox(tick);
-    drawSla(); drawGeos(); drawUcDir(); drawMeasures(); updGeoVisBtn();
+    drawSla(); drawUcHov(); drawGeos(); drawUcDir(); drawMeasures(); updGeoVisBtn();
     drawSketch(); drawDlgSel();
     for (const p of S.tmp) dot2(project(p), '#ffcf5a', 4.5);
     drawSkHov();
@@ -1235,13 +1234,28 @@
     return b.stats;
   }
 
+  // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
+  const BL_DEF = { cn: 120, ct: 58, cm: 58 };
+  let blCols = Object.assign({}, BL_DEF);
+  try { Object.assign(blCols, JSON.parse(localStorage.getItem('mx.blCols') || '{}')); } catch (e) { }
+  function blColApply() { const el = $('bodyList'); for (const k in blCols) el.style.setProperty('--' + k, blCols[k] + 'px'); }
+  function blColSet(k, v) { blCols[k] = v === null ? BL_DEF[k] : Math.max(30, Math.min(900, v)); blColApply(); try { localStorage.setItem('mx.blCols', JSON.stringify(blCols)); } catch (e) { } }
+  function blColDrag(e) {
+    e.preventDefault(); e.stopPropagation();
+    const k = e.target.dataset.col, x0 = e.clientX, w0 = blCols[k];
+    const mv = function (ev) { blColSet(k, w0 + ev.clientX - x0); };
+    const up = function () { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+  }
+  blColApply();
   function updateList() {
     const box = $('bodyList');
     box.innerHTML = '';
-    $('bSaveSes').disabled = $('bClear').disabled = !S.bodies.length;
+    $('bSaveSes').disabled = $('bSaveAs').disabled = $('bClear').disabled = !S.bodies.length;
     const hd = document.createElement('div'); hd.className = 'brow hd';
-    hd.innerHTML = '<span title="Highlight">☑</span><span title="' + L('Ẩn / hiện', 'Show / hide') + '">👁</span><span></span><span>' + L('Tên', 'Name') +
-      '</span><span class="num">' + L('Tam giác', 'Tris') + '</span><span class="num">' + L('K.lượng', 'Mass') + '</span>';
+    hd.innerHTML = '<span title="Highlight">☑</span><span title="' + L('Ẩn / hiện', 'Show / hide') + '">👁</span><span></span><span class="rzc">' + L('Tên', 'Name') +
+      '<i class="rz" data-col="cn"></i></span><span class="num rzc">' + L('Tam giác', 'Tris') + '<i class="rz" data-col="ct"></i></span><span class="num rzc">' + L('K.lượng', 'Mass') + '<i class="rz" data-col="cm"></i></span>';
+    hd.querySelectorAll('.rz').forEach(function (z) { z.addEventListener('pointerdown', blColDrag); z.addEventListener('dblclick', function (e) { e.stopPropagation(); blColSet(z.dataset.col, null); }); });
     box.appendChild(hd);
     if (!S.bodies.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = L('Chưa có mesh nào.', 'No mesh loaded.'); box.appendChild(e); return; }
     const frag = document.createDocumentFragment(), shown = Math.min(S.bodies.length, 400);
@@ -1647,7 +1661,7 @@
   canvas.addEventListener('pointerleave', function () { if (!drag && (S.hov !== null || S.hovCom || S.hovEnt || S.hovLab)) { S.hov = null; S.hovCom = null; S.hovEnt = null; S.hovLab = null; S.skHov = null; dirty = true; } });
   canvas.addEventListener('pointermove', function (e) {
     const p = evPos(e);
-    if (!drag) { hover(p[0], p[1]); return; }
+    if (!drag) { hover(p[0], p[1]); ucHover(p[0], p[1]); return; }
     cam = drag.cam;
     if (drag.type === 'rot') {
       const ax = (p[0] - drag.x) * 0.008, ay = (p[1] - drag.y) * 0.008;
@@ -2330,7 +2344,7 @@
     let dir = ax === 'x' ? [1, 0, 0] : ax === 'y' ? [0, 1, 0] : ax === 'z' ? [0, 0, 1] : ax === 'view' ? viewer() : S.ucDir ? (S.ucDir.flip ? V.mul(S.ucDir.d, -1) : S.ucDir.d) : null;
     if (!dir || V.len(dir) < 1e-12) { ucPickStart(); flash(L('Hãy chọn hướng mở khuôn: bấm một mặt phẳng, cạnh thẳng hoặc trục', 'Pick the pull direction: click a plane, a straight edge or an axis'), true); return; }
     ucPickStop();
-    dir = V.norm(dir);
+    dir = V.norm(dir); S.ucDirUsed = dir.slice(); S.ucMin = +$('ucDraft').value || 0;
     showError(null); setBusy(true, L('Đang phân tích undercut...', 'Analysing undercuts...'));
     const tot = [0, 0, 0, 0], withUc = [];
     try {
@@ -2610,7 +2624,7 @@
   });
 
   // ================= session (.mrtl) =================
-  function saveSession() {
+  function sessionParts() {
     const vis = S.cmp ? new Map(S.cmp.vis) : null;
     const meta = { app: 'MeshExpert', format: 2, view: { R: mainCam.R, target: mainCam.target, zoom: mainCam.zoom }, explode: S.explode, sketches: S.sketches, skSeq: S.skSeq, geos: S.geos, geoSeq: S.geoSeq,
       section: { on: S.sec.on, flip: S.sec.flip, axis: S.sec.axis, s: S.sec.s, nView: S.sec.nView, nPick: S.sec.nPick }, measures: S.measures, bodies: [] };
@@ -2633,7 +2647,7 @@
     const head = new DataView(new ArrayBuffer(12));
     head.setUint8(0, 77); head.setUint8(1, 82); head.setUint8(2, 84); head.setUint8(3, 76); // "MRTL"
     head.setUint32(4, 2, true); head.setUint32(8, bytes.length, true);
-    download([head.buffer, bytes].concat(blobs), 'session.mrtl');
+    return [head.buffer, bytes].concat(blobs);
   }
   function loadSession(buf) {
     const dv = new DataView(buf);
@@ -2665,15 +2679,67 @@
     S.measures = []; S.tmp = []; S.clip = []; S.colorSeq = 0; S.col = null; S.spl = null; S.sketches = []; S.skSel = null; S.geos = []; S.geoSel = null; S.geoSeq = 1;
     resetBox('colRes'); resetBox('splitRes'); resetBox('holeRes'); updateMeasList();
   }
-  $('bSaveSes').addEventListener('click', function () { try { saveSession(); } catch (e) { showError(e); } });
-  $('bOpen').addEventListener('click', function () { $('file').click(); });
+  // ---- the session file: Save writes over the .mrtl that was opened / saved last, Save as asks for a name ----
+  S.sesHandle = null; S.sesName = '';
+  function sesShow() {
+    const n = S.sesName || L('(phiên mới)', '(new session)');
+    $('sesName').textContent = n; $('sesName').title = n;
+    document.title = (S.sesName ? S.sesName + ' · ' : '') + 'MeshExpert';
+  }
+  const MRTL_TYPES = [{ description: 'MeshExpert session', accept: { 'application/octet-stream': ['.mrtl'] } }];
+  async function sesWrite(handle) {
+    const w = await handle.createWritable();
+    await w.write(new Blob(sessionParts(), { type: 'application/octet-stream' })); await w.close();
+  }
+  async function saveSessionAs() {
+    if (blocked()) return;
+    const name = S.sesName || 'session.mrtl';
+    if (window.showSaveFilePicker) {
+      let h;
+      try { h = await window.showSaveFilePicker({ suggestedName: name, types: MRTL_TYPES }); } catch (e) { if (e && e.name === 'AbortError') return; throw e; }
+      await sesWrite(h); S.sesHandle = h; S.sesName = h.name || name; sesShow();
+      flash(L('Đã lưu phiên vào ', 'Session saved to ') + S.sesName);
+    } else {
+      const n = prompt(L('Tên file phiên:', 'Session file name:'), name); if (!n) return;
+      S.sesName = /\.mrtl$/i.test(n) ? n : n + '.mrtl'; download(sessionParts(), S.sesName); sesShow();
+    }
+  }
+  async function saveSession() {
+    if (blocked()) return;
+    if (!S.sesHandle) return saveSessionAs();
+    try { await sesWrite(S.sesHandle); flash(L('Đã lưu đè ', 'Saved over ') + S.sesName); }
+    catch (e) { if (e && e.name === 'NotAllowedError') return saveSessionAs(); throw e; }
+  }
+  function newSession() {
+    if (blocked()) return;
+    if (S.bodies.length && !confirm(L('Bắt đầu phiên mới? Phiên hiện tại chưa lưu sẽ mất.', 'Start a new session? Unsaved work in the current one is lost.'))) return;
+    clearAll(); hist.undo.length = 0; hist.redo.length = 0; updateHistBtns();
+    S.sesHandle = null; S.sesName = ''; sesShow(); sceneChanged(true); refresh();
+  }
+  $('bSaveSes').addEventListener('click', function () { saveSession().catch(showError); });
+  $('bSaveAs').addEventListener('click', function () { saveSessionAs().catch(showError); });
+  $('bNew').addEventListener('click', newSession);
+  window.addEventListener('keydown', function (e) {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || (e.key || '').toLowerCase() !== 's') return;
+    e.preventDefault(); (e.shiftKey ? saveSessionAs() : saveSession()).catch(showError);
+  });
+  async function openFiles() {
+    if (!window.showOpenFilePicker) { $('file').click(); return; }
+    let hs;
+    try { hs = await window.showOpenFilePicker({ multiple: true, types: [{ description: 'Mesh / MeshExpert session', accept: { 'application/octet-stream': ['.stl', '.obj', '.mrtl'] } }] }); }
+    catch (e) { if (e && e.name === 'AbortError') return; $('file').click(); return; }
+    const files = [], handles = [];
+    for (const h of hs) { files.push(await h.getFile()); handles.push(h); }
+    handleFiles(files, handles);
+  }
+  $('bOpen').addEventListener('click', function () { openFiles(); });
   $('bClear').addEventListener('click', function () {
     if (blocked() || !confirm(L('Xóa toàn bộ body và phép đo trong phiên này?', 'Remove every body and measurement in this session?'))) return;
     pushUndo(); clearAll(); sceneChanged(true); refresh();
   });
 
   // ================= file loading =================
-  async function handleFiles(files) {
+  async function handleFiles(files, handles) {
     if (!files.length || blocked()) return;
     showError(null);
     setBusy(true, L('Đang đọc file...', 'Reading files...'));
@@ -2686,6 +2752,7 @@
         if (ext === 'mrtl') {
           if (S.bodies.length && !confirm(L('Mở phiên "' + file.name + '" sẽ thay thế phiên hiện tại. Tiếp tục?', 'Opening session "' + file.name + '" replaces the current one. Continue?'))) continue;
           loadSession(buffer); added = 0; pushed = true;
+          S.sesHandle = handles && handles[i] && handles[i].createWritable ? handles[i] : null; S.sesName = file.name; sesShow();
         } else if (ext === 'stl' || ext === 'obj') {
           const m = await run('parse', { name: file.name, buffer: buffer });
           if (!pushed) { pushUndo(); pushed = true; }
@@ -2706,10 +2773,16 @@
   $('file').addEventListener('change', function () { const f = Array.from(this.files); this.value = ''; handleFiles(f); });
   window.addEventListener('dragover', function (e) { e.preventDefault(); $('leftTop').classList.add('over'); });
   window.addEventListener('dragleave', function () { $('leftTop').classList.remove('over'); });
-  window.addEventListener('drop', function (e) { e.preventDefault(); $('leftTop').classList.remove('over'); handleFiles(Array.from(e.dataTransfer.files)); });
+  window.addEventListener('drop', async function (e) {
+    e.preventDefault(); $('leftTop').classList.remove('over');
+    const files = Array.from(e.dataTransfer.files), its = Array.from(e.dataTransfer.items || []), hp = its.map(function (it) { return it.kind === 'file' && it.getAsFileSystemHandle ? it.getAsFileSystemHandle().catch(function () { return null; }) : Promise.resolve(null); });
+    let handles = [];
+    try { handles = await Promise.all(hp); } catch (er) { handles = []; }
+    handleFiles(files, handles.length === files.length ? handles : null);
+  });
 
 /*MODEL*/
-  applyLang(); updateHistBtns(); sceneChanged(true);
+  applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
   window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();

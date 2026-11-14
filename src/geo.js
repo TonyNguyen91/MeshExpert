@@ -607,6 +607,35 @@
 
   // ---------- tooling analysis: the pull direction from a plane / line / axis, and hiding the bodies not analysed ----------
   S.ucPick = false; S.ucDir = null; S.ucList = null; S.ucHid = null;
+  // draft angle of the face under the cursor while an undercut analysis is shown
+  S.ucHov = null;
+  function ucHover(px, py) {
+    const was = S.ucHov;
+    S.ucHov = null;
+    if (S.ucList && S.ucDirUsed && !S.sk && !busy && S.ucList.some(function (b) { return b.ana && b.visible; })) {
+      const h = pick(px, py, S.ucList.filter(function (b) { return b.ana && b.visible; }));
+      if (h && h.normal) {
+        const c = Math.max(-1, Math.min(1, V.dot(V.norm(h.normal), S.ucDirUsed))), deg = Math.asin(c) * 180 / Math.PI;
+        S.ucHov = { x: px, y: py, deg: deg, body: h.body ? h.body.name : '' };
+      }
+    }
+    if (was || S.ucHov) dirty = true;
+  }
+  function drawUcHov() {
+    const u = S.ucHov; if (!u || !S.ucList) return;
+    const a = Math.abs(u.deg), side = u.deg > 0.05 ? L('phía +', '+ half') : u.deg < -0.05 ? L('phía −', '− half') : L('thẳng đứng', 'vertical');
+    const low = a < (S.ucMin || 0) - 1e-9;
+    const t1 = 'Draft ' + f2(a) + '°  ·  ' + side, t2 = low ? L('Thiếu góc thoát (< ', 'Draft too small (< ') + f2(S.ucMin) + '°)' : '';
+    ctx.font = 'bold 12px Arial';
+    const w = Math.max(ctx.measureText(t1).width, t2 ? ctx.measureText(t2).width : 0) + 14, hh = t2 ? 36 : 21;
+    let x = u.x + 16, y = u.y + 14;
+    if (x + w > ov.width) x = u.x - w - 10;
+    ctx.fillStyle = 'rgba(14,18,23,.92)'; ctx.strokeStyle = low ? '#ffdc28' : '#9cc4ee'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.rect(x, y, w, hh); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e8eef5'; ctx.fillText(t1, x + 7, y + 15);
+    if (t2) { ctx.fillStyle = '#ffdc28'; ctx.font = '11px Arial'; ctx.fillText(t2, x + 7, y + 30); }
+  }
+  canvas.addEventListener('pointerleave', function () { if (S.ucHov) { S.ucHov = null; dirty = true; } });
   function ucPickEnt(px, py) { const e = lineOfVtx(pickEnt(px, py, false)); return e && axDir(e) ? e : null; }
   function ucPickStart() { S.ucPick = true; S.axPick = null; $('bUcPick').classList.add('primary'); canvas.style.cursor = 'crosshair'; flash(L('Bấm một mặt phẳng (lấy pháp tuyến), cạnh thẳng, đường hoặc trục làm hướng mở khuôn (theo bộ lọc)', 'Click a plane (its normal), a straight edge, a line or an axis for the pull direction (as the filter allows)'), true); dirty = true; }
   function ucPickStop() { if (!S.ucPick) return; S.ucPick = false; $('bUcPick').classList.remove('primary'); canvas.style.cursor = toolCursor(); S.hovEnt = null; dirty = true; }

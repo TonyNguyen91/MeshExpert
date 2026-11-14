@@ -72,7 +72,15 @@
   .box .pair:hover { background: #2c3642; }
   .box .pair.sel { background: #5a2326; }
   .list { max-height: 300px; overflow-y: auto; border: 1px solid var(--line); border-radius: 4px; background: #11151a; }
-  .brow { display: grid; grid-template-columns: 16px 16px 11px 1fr 50px 52px; align-items: center; gap: 4px; padding: 3px 5px; border-bottom: 1px solid #1d242c; cursor: pointer; }
+  .brow { display: grid; grid-template-columns: 16px 16px 11px var(--cn, 120px) var(--ct, 58px) var(--cm, 58px); align-items: center; gap: 4px; padding: 3px 5px; border-bottom: 1px solid #1d242c; cursor: pointer; min-width: max-content; }
+  #bodyList { overflow-x: auto; }
+  #bodyList > .brow, #bodyList > .empty { width: max-content; min-width: 100%; box-sizing: border-box; }
+  .brow .rzc { position: relative; padding-right: 6px; }
+  .brow .rz { position: absolute; right: -4px; top: -3px; bottom: -3px; width: 7px; cursor: col-resize; border-right: 1px solid #3a4552; }
+  .brow .rz:hover { border-right: 2px solid var(--accent); }
+  button.tbi { display: inline-flex; align-items: center; gap: 5px; }
+  button.tbi svg { flex: none; }
+  .sesn { color: var(--muted); font-size: 11.5px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center; }
   .brow.hd { cursor: default; color: var(--muted); font-size: 11px; position: sticky; top: 0; background: #171c22; z-index: 1; }
   .brow.sel { background: #4a3410; }
   .brow .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -255,14 +263,17 @@
   <h1><span>Mesh</span>Expert</h1>
   <div id="rtabs"><button class="rtab on" data-tab="home">Home</button></div>
   <span class="grow"></span>
-  <button id="bOpen" data-en="Open file / session">Mở file / phiên</button>
-  <button id="bSaveSes" data-en="Save session (.mrtl)">Lưu phiên (.mrtl)</button>
-  <button id="bClear" data-en="Clear all">Xóa hết</button>
+  <button id="bNew" class="tbi" title="Phiên mới (bỏ phiên hiện tại)" data-en-title="New session (drops the current one)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z" stroke="#9cc4ee"/><path d="M14 3v4h4" stroke="#9cc4ee"/><path d="M12 11v6M9 14h6" stroke="#52d06a"/></svg><span data-en="New session">Phiên mới</span></button>
+  <button id="bOpen" class="tbi"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5h6l2 2h10v3" stroke="#9cc4ee"/><path d="M3 7v12h15l3-9H6L3 19" fill="rgba(240,160,48,.25)" stroke="#f0a030"/></svg><span data-en="Open file / session">Mở file / phiên</span></button>
+  <button id="bSaveSes" class="tbi" title="Lưu phiên (Ctrl+S): ghi đè file .mrtl đang mở" data-en-title="Save session (Ctrl+S): writes over the open .mrtl file"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z" stroke="#9cc4ee"/><path d="M8 3v5h7V3" stroke="#9cc4ee"/><rect x="8" y="13" width="8" height="5" stroke="#f0a030"/></svg><span data-en="Save session">Lưu phiên</span></button>
+  <button id="bSaveAs" class="tbi" title="Lưu phiên ra file mới (Ctrl+Shift+S)" data-en-title="Save the session to a new file (Ctrl+Shift+S)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v6M5 3v18h7" stroke="#9cc4ee"/><path d="M8 3v5h7V3" stroke="#9cc4ee"/><path d="M14 21l1-3.5 5-5 2.5 2.5-5 5z" stroke="#f0a030"/></svg><span data-en="Save as…">Lưu thành…</span></button>
+  <span id="sesName" class="sesn"></span>
+  <button id="bClear" class="tbi"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13M10 11v6M14 11v6" stroke="#ff6b5e"/></svg><span data-en="Clear all">Xóa hết</span></button>
   <span class="sep"></span>
-  <button id="bUndo" title="Ctrl+Z" data-en="↶ Undo">↶ Lùi</button>
-  <button id="bRedo" title="Ctrl+Y" data-en="↷ Redo">↷ Tiến</button>
+  <button id="bUndo" class="tbi" title="Ctrl+Z"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5L4 10l5 5" stroke="#f0a030"/><path d="M4 10h10a6 6 0 0 1 0 12h-3" stroke="#9cc4ee"/></svg><span data-en="Undo">Lùi</span></button>
+  <button id="bRedo" class="tbi" title="Ctrl+Y"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l5 5-5 5" stroke="#f0a030"/><path d="M20 10H10a6 6 0 0 0 0 12h3" stroke="#9cc4ee"/></svg><span data-en="Redo">Tiến</span></button>
   <span class="sep"></span>
-  <button id="bHome" data-en="⟲ Import position" data-en-title="Put the ticked bodies back where they were when imported" title="Đưa các body đang tick về vị trí lúc import">⟲ Vị trí lúc import</button>
+  <button id="bHome" class="tbi" data-en-title="Put the ticked bodies back where they were when imported" title="Đưa các body đang tick về vị trí lúc import"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7" stroke="#9cc4ee"/><path d="M6 10v10h12V10" stroke="#9cc4ee"/><path d="M10 20v-5h4v5" stroke="#f0a030"/></svg><span data-en="Import position">Vị trí lúc import</span></button>
   <span class="sep"></span>
   <span id="msg"></span>
   <button id="bVi" class="on">Việt</button><button id="bEn">EN</button>
@@ -274,7 +285,7 @@
       <div class="rgrp"><div class="rbody"><div class="rcol"><button data-tool="gpoint" class="sb" title="Point: đặt điểm trên mesh / theo bộ lọc" data-en-title="Point: place a point on the mesh / as the filter allows"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12h10M12 7v10" stroke="#ff7ad9"/><circle cx="12" cy="12" r="2.6" fill="#ff7ad9" stroke="#ffd2f2"/></svg><span>Point</span></button><button data-tool="gline" class="sb" title="Line: điểm–điểm hoặc điểm–mặt" data-en-title="Line: point–point or point–plane"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19L20 5" stroke="#ffd166" stroke-width="2"/><circle cx="4" cy="19" r="2" fill="#ffd166"/><circle cx="20" cy="5" r="2" fill="#ffd166"/></svg><span>Line</span></button></div><div class="rcol"><button data-tool="gplane" class="sb" title="Plane: theo mặt (offset, đảo chiều) hoặc 3 điểm" data-en-title="Plane: on a face (offset, flip) or 3 points"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16l5-9h13l-5 9z" fill="rgba(120,200,255,.25)" stroke="#78c8ff"/><path d="M12 11.5V4" stroke="#78c8ff"/></svg><span>Plane</span></button><button data-tool="gaxis" class="sb" title="Axis: trục từ mặt trụ / cạnh hoặc 2 điểm" data-en-title="Axis: from a cylinder / edge or 2 points"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20" stroke="#c58bff" stroke-width="1.8" stroke-dasharray="4 2 1 2"/><ellipse cx="12" cy="12" rx="6" ry="2.4" stroke="#6f8aa8"/></svg><span>Axis</span></button></div></div><div class="rtitle" data-en="Geometry">Geometry</div></div>
 <div class="rgrp"><div class="rbody"><div class="rcol"><button id="bExtrude" class="sb" title="Extrude: đùn biên dạng kín của sketch" data-en-title="Extrude: push closed sketch profiles out"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 16l6 3 10-5-6-3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 16V8l6 3v8M10 11l10-5v8M4 8l10-5 6 3" fill="none" stroke="#dfe6ee"/><path d="M15 12V3m-2 2l2-2 2 2" stroke="#f0a030" fill="none"/></svg><span>Extrude</span></button><button id="bRevolve" class="sb" title="Revolve: xoay biên dạng quanh trục" data-en-title="Revolve: turn profiles about an axis"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M7 2v20" stroke="#c58bff" stroke-dasharray="2 2"/><path d="M10 5h6v11h-6z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2.5 16.5a9.5 3.5 0 0 0 19 0" fill="none" stroke="#f0a030" stroke-width="1.8"/><path d="M21.5 16.5l-2.6-.4m2.6.4l.8-2.5" stroke="#f0a030" stroke-width="1.8" fill="none"/></svg><span>Revolve</span></button><button id="b_boolean" class="sb" title="Boolean: gộp / trừ / giao các body" data-en-title="Boolean: union / subtract / intersect"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><circle cx="9" cy="12" r="6" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="15" cy="12" r="6" fill="rgba(240,160,48,.55)" stroke="#ffd28a"/></svg><span>Boolean</span></button></div><div class="rcol"><button id="b_fillet" class="sb" title="Fillet: bo tròn cạnh" data-en-title="Fillet: round edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10a6 6 0 0 1 6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10a6 6 0 0 1 6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Fillet</span></button><button id="b_chamfer" class="sb" title="Chamfer: vát cạnh" data-en-title="Chamfer: bevel edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10l6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10l6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Chamfer</span></button><button id="b_shell" class="sb" title="Shell: làm rỗng khối thành vỏ" data-en-title="Shell: hollow out a solid"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M3 8l9-4 9 4v10l-9 4-9-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 9l6-2.7L18 9v7.5l-6 2.7-6-2.7z" fill="#14181d" stroke="#f0a030"/></svg><span>Shell</span></button></div><div class="rcol"><button id="b_draft" class="sb" title="Draft: nghiêng mặt để thoát khuôn" data-en-title="Draft: tilt faces for mould release"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M6 20l3-16h9v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 20l3-16" stroke="#f0a030" stroke-width="2.2"/><path d="M6 20V6" stroke="#dfe6ee" stroke-dasharray="2 2"/><path d="M6 10a4 4 0 0 1 1.9.3" stroke="#ffd28a" fill="none"/></svg><span>Draft</span></button></div></div><div class="rtitle" data-en="Feature">Feature</div></div>
    <div class="rgrp"><div class="rbody"><div class="rcol"><button id="b_moveface" class="sb" title="Move face: dời mặt phẳng / mặt trụ" data-en-title="Move face: move flat / cylindrical faces"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V11h12v9z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 11h12" stroke="#f0a030" stroke-width="2.2"/><path d="M10 9V3m-2 2l2-2 2 2" stroke="#f0a030" fill="none"/><path d="M4 7h12" stroke="#f0a030" stroke-dasharray="2 2"/></svg><span>Move face</span></button><button id="b_replace" class="sb" title="Replace face: đưa mặt về mặt phẳng của mặt khác" data-en-title="Replace face: put faces onto another face"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M3 20V13h10v7z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 13h10" stroke="#f0a030" stroke-width="2.2"/><path d="M14 6h7v14h-7z" fill="#5a6676" stroke="#b8c4d2"/><path d="M8 11V6h4m-2-2l2 2-2 2" stroke="#f0a030" fill="none"/></svg><span>Replace face</span></button></div></div><div class="rtitle" data-en="Synchronous Modeling">Synchronous Modeling</div></div>
-   <div class="rgrp"><div class="rbody"><div class="rcol"><label class="mini" data-en-title="Colour and opacity of the ticked bodies" title="Màu và độ đục của các body đang tick"><input type="color" id="col" value="#92aac8"><input type="range" id="opa" min="5" max="100" value="100"><span class="unit" id="opaV">100%</span></label><button class="sb popb" data-pop="explode" title="Tách xa các body để nhìn" data-en-title="Spread the bodies apart"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="6" height="6" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 3l4 4M21 3l-4 4M3 21l4-4M21 21l-4-4" stroke="#f0a030"/></svg><span data-en="Explode">Explode</span></button><button class="sb popb" data-pop="section" title="Mặt cắt (section)" data-en-title="Section view"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l8-4 8 4v8l-8 4-8-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2 12h20" stroke="#ff6b5e" stroke-width="2"/></svg><span data-en="Section">Mặt cắt</span></button></div><div class="tgrid"><label class="tg" title="Cạnh lưới" data-en-title="Edges"><input type="checkbox" id="cWire" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L12 4l9 16zM7.5 12h9M12 4v16" stroke="#9cc4ee"/></svg></label><label class="tg" title="Viền hở (đỏ)" data-en-title="Open borders (red)"><input type="checkbox" id="cHoles" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="12" r="5" fill="#14181d" stroke="#ff3b30" stroke-width="2"/></svg></label><label class="tg" title="Hệ trục XYZ" data-en-title="XYZ axes"><input type="checkbox" id="cAxes" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V5M5 19h14M5 19l9-6" stroke-width="2"/><path d="M5 19V5" stroke="#4f9bff" stroke-width="2"/><path d="M5 19h14" stroke="#ff5a52" stroke-width="2"/><path d="M5 19l9-6" stroke="#52d06a" stroke-width="2"/></svg></label><label class="tg" title="Bảng thông tin" data-en-title="Info panel"><input type="checkbox" id="cInfo" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke="#9cc4ee"/><path d="M12 11v6" stroke="#f0a030" stroke-width="2"/><circle cx="12" cy="7.5" r="1.2" fill="#f0a030"/></svg></label><label class="tg" title="Đảo chiều zoom" data-en-title="Invert zoom"><input type="checkbox" id="cZoomInv"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6" stroke="#9cc4ee"/><path d="M15 15l5 5" stroke="#9cc4ee" stroke-width="2"/><path d="M7 10h6M10 7l-3 3 3 3" stroke="#f0a030"/></svg></label></div></div><div class="rtitle" data-en="Display">Hiển thị</div></div>
+   <div class="rgrp"><div class="rbody"><div class="rcol"><label class="mini" data-en-title="Colour and opacity of the ticked bodies" title="Màu và độ đục của các body đang tick"><input type="color" id="col" value="#92aac8"><input type="range" id="opa" min="5" max="100" value="100"><span class="unit" id="opaV">100%</span></label><button class="sb popb" data-pop="explode" title="Tách xa các body để nhìn" data-en-title="Spread the bodies apart"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="6" height="6" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 3l4 4M21 3l-4 4M3 21l4-4M21 21l-4-4" stroke="#f0a030"/></svg><span data-en="Explode">Explode</span></button><button class="sb popb" data-pop="section" title="Mặt cắt (section)" data-en-title="Section view"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l8-4 8 4v8l-8 4-8-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2 12h20" stroke="#ff6b5e" stroke-width="2"/></svg><span data-en="Section">Mặt cắt</span></button></div><div class="tgrid"><label class="tg" title="Cạnh lưới" data-en-title="Edges"><input type="checkbox" id="cWire"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L12 4l9 16zM7.5 12h9M12 4v16" stroke="#9cc4ee"/></svg></label><label class="tg" title="Viền hở (đỏ)" data-en-title="Open borders (red)"><input type="checkbox" id="cHoles" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="12" r="5" fill="#14181d" stroke="#ff3b30" stroke-width="2"/></svg></label><label class="tg" title="Hệ trục XYZ" data-en-title="XYZ axes"><input type="checkbox" id="cAxes" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V5M5 19h14M5 19l9-6" stroke-width="2"/><path d="M5 19V5" stroke="#4f9bff" stroke-width="2"/><path d="M5 19h14" stroke="#ff5a52" stroke-width="2"/><path d="M5 19l9-6" stroke="#52d06a" stroke-width="2"/></svg></label><label class="tg" title="Bảng thông tin" data-en-title="Info panel"><input type="checkbox" id="cInfo" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke="#9cc4ee"/><path d="M12 11v6" stroke="#f0a030" stroke-width="2"/><circle cx="12" cy="7.5" r="1.2" fill="#f0a030"/></svg></label><label class="tg" title="Đảo chiều zoom" data-en-title="Invert zoom"><input type="checkbox" id="cZoomInv"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6" stroke="#9cc4ee"/><path d="M15 15l5 5" stroke="#9cc4ee" stroke-width="2"/><path d="M7 10h6M10 7l-3 3 3 3" stroke="#f0a030"/></svg></label></div></div><div class="rtitle" data-en="Display">Hiển thị</div></div>
    <div class="rgrp"><div class="rbody"><button id="bNormal" class="bb hl" title="Nhìn thẳng theo hướng chuẩn gần nhất (X / Y / Z)" data-en-title="Look straight along the nearest standard direction (X / Y / Z)"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.5"><rect x="4" y="6" width="16" height="13" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M12 1v9m-3-3l3 3 3-3" stroke="#f0a030" fill="none" stroke-width="2"/><circle cx="12" cy="12.5" r="1.6" fill="#f0a030"/></svg><span>Normal</span></button><div class="rcol"><button id="bFit" class="sb" title="Thu vừa màn hình" data-en-title="Fit the view"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" stroke="#9cc4ee"/><rect x="8" y="8" width="8" height="8" fill="#3d6fa8" stroke="#dfe6ee"/></svg><span>Fit</span></button><button id="bIso" class="sb" title="Hướng nhìn Iso" data-en-title="Isometric view"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.3" stroke-linejoin="round"><path d="M12 3l8 4.5-8 4.5-8-4.5z" fill="#5d8fc8" stroke="#dfe6ee"/><path d="M4 7.5V16l8 4.5V12z" fill="#3d6fa8" stroke="#dfe6ee"/><path d="M20 7.5V16l-8 4.5V12z" fill="#2c5486" stroke="#dfe6ee"/></svg><span>Iso</span></button></div></div><div class="rtitle" data-en="Orient">Hướng nhìn</div></div>
    <div class="rgrp"><div class="rbody"><div class="rcol"><button class="sb" data-tool="dist" title="Đo khoảng cách" data-en-title="Distance"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M6 9l-3 3 3 3M18 9l3 3-3 3" stroke="#f0a030" stroke-width="1.8"/><path d="M3 6v12M21 6v12" stroke="#9cc4ee"/></svg><span data-en="Distance">Khoảng cách</span></button><button class="sb" data-tool="angle" title="Đo góc" data-en-title="Angle"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M4 20L16 6" stroke="#9cc4ee" stroke-width="1.8"/><path d="M11 20a7 7 0 0 0-2.3-5.2" stroke="#f0a030" stroke-width="1.8"/></svg><span data-en="Angle">Góc</span></button><button class="sb" data-tool="radius" title="Đo bán kính" data-en-title="Radius"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" stroke="#9cc4ee"/><path d="M12 12l6-6" stroke="#f0a030" stroke-width="1.8"/><circle cx="12" cy="12" r="1.3" fill="#f0a030"/></svg><span data-en="Radius">Bán kính</span></button></div><div class="rcol"><button class="sb" data-tool="thick" title="Đo bề dày" data-en-title="Wall thickness"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16M10 4v16" stroke="#9cc4ee" stroke-width="2"/><path d="M14 12h7M14 12l2.5-2.5M14 12l2.5 2.5M4 12h6" stroke="#f0a030"/></svg><span data-en="Wall thickness">Bề dày</span></button><button class="sb popb" data-pop="undercut" title="Tooling analysis (undercut)" data-en-title="Tooling analysis (undercut)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20V9h12v11" stroke="#9cc4ee"/><path d="M6 9l6-5 6 5" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M9 14h3v6" stroke="#ff6b5e" stroke-width="2"/><path d="M12 2v3" stroke="#f0a030"/></svg><span data-en="Undercut">Undercut</span></button><button class="sb popb" data-pop="collide" title="Kiểm tra va chạm" data-en-title="Collision check"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="10" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="11" y="4" width="10" height="10" fill="rgba(240,160,48,.5)" stroke="#ffd28a"/><path d="M11 7h2v7h-2z" fill="#ff3b30"/></svg><span data-en="Collision">Va chạm</span></button></div><div class="rcol"><button class="sb popb" data-pop="compare" title="So sánh mesh" data-en-title="Compare meshes"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-8 6-8 9-4s6 4 9-4" stroke="#9cc4ee" stroke-width="1.8"/><path d="M3 19c3-8 6-8 9-4s6 4 9-4" stroke="#f0a030" stroke-width="1.8" stroke-dasharray="2 2"/></svg><span data-en="Compare">So sánh mesh</span></button></div></div><div class="rtitle" data-en="Analysis">Analysis</div></div>
    <div class="rgrp"><div class="rbody"><button class="bb popb" data-pop="sla" title="SLA control panel: xoay tối ưu, dàn đều, nâng, khối chắn" data-en-title="SLA control panel: orient, lay out, lift, guard blocks"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15l10 5 10-5-10-5z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 13.5V6.5l2 1v7M13 15V4l2.2 1v11" fill="#f0a030" stroke="#ffd28a"/><path d="M4.5 13.6l2.2-1.1" stroke="#eb783c" stroke-width="2.2"/><path d="M17.3 17.4l2.2-1.1" stroke="#eb783c" stroke-width="2.2"/><path d="M2 21.5h20" stroke="#52d06a" stroke-width="1.8"/></svg><span data-en="SLA control panel">SLA control panel</span></button><div class="rcol"><button id="bSlaTable" class="sb" title="Hiện / ẩn bàn in trong 3D" data-en-title="Show / hide the print table in 3D"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l10 5 10-5-10-5z" fill="#9ea8b5" stroke="#dfe6ee"/><path d="M2 12v3l10 5 10-5v-3" fill="#5a6676" stroke="#b8c4d2"/><path d="M7 11.5l10-5M9.5 13l10-5" stroke="#3d6fa8" stroke-width="1"/></svg><span>SLA table</span></button></div></div><div class="rtitle" data-en="Print plate">Bàn in</div></div>
@@ -4391,7 +4402,7 @@ var wasm_bindgen = (function(exports) {
   const right = function () { return [cam.R[0], cam.R[1], cam.R[2]]; };
   const up = function () { return [cam.R[3], cam.R[4], cam.R[5]]; };
   const viewer = function () { return [cam.R[6], cam.R[7], cam.R[8]]; };
-  function depthRange() { return Math.max(V.len(V.sub(cam.target, cam.center)) + cam.radius * 1.5 + 1e-6, slaDepthNeed()); }
+  function depthRange() { return V.len(V.sub(cam.target, cam.center)) + cam.radius * 1.5 + 1e-6; }
   function project(p) {
     const d = V.sub(p, cam.target), R = cam.R;
     const vx = R[0] * d[0] + R[1] * d[1] + R[2] * d[2], vy = R[3] * d[0] + R[4] * d[1] + R[5] * d[2];
@@ -4543,7 +4554,6 @@ var wasm_bindgen = (function(exports) {
         setCamUniforms();
         const opaque = [], trans = [];
         for (const b of S.bodies) if (b.visible && !S.ghostHide.has(b)) (alphaOf(b) >= 0.999 ? opaque : trans).push(b);
-        drawSlaTable();
         for (const b of opaque) drawBody(b, edges, false);
         if (trans.length) {
           const w = viewer();
@@ -4827,7 +4837,7 @@ var wasm_bindgen = (function(exports) {
       }
     }
     if (S.show.box && tick.length) drawBBox(tick);
-    drawSla(); drawGeos(); drawUcDir(); drawMeasures(); updGeoVisBtn();
+    drawSla(); drawUcHov(); drawGeos(); drawUcDir(); drawMeasures(); updGeoVisBtn();
     drawSketch(); drawDlgSel();
     for (const p of S.tmp) dot2(project(p), '#ffcf5a', 4.5);
     drawSkHov();
@@ -5212,13 +5222,28 @@ var wasm_bindgen = (function(exports) {
     return b.stats;
   }
 
+  // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
+  const BL_DEF = { cn: 120, ct: 58, cm: 58 };
+  let blCols = Object.assign({}, BL_DEF);
+  try { Object.assign(blCols, JSON.parse(localStorage.getItem('mx.blCols') || '{}')); } catch (e) { }
+  function blColApply() { const el = $('bodyList'); for (const k in blCols) el.style.setProperty('--' + k, blCols[k] + 'px'); }
+  function blColSet(k, v) { blCols[k] = v === null ? BL_DEF[k] : Math.max(30, Math.min(900, v)); blColApply(); try { localStorage.setItem('mx.blCols', JSON.stringify(blCols)); } catch (e) { } }
+  function blColDrag(e) {
+    e.preventDefault(); e.stopPropagation();
+    const k = e.target.dataset.col, x0 = e.clientX, w0 = blCols[k];
+    const mv = function (ev) { blColSet(k, w0 + ev.clientX - x0); };
+    const up = function () { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+  }
+  blColApply();
   function updateList() {
     const box = $('bodyList');
     box.innerHTML = '';
-    $('bSaveSes').disabled = $('bClear').disabled = !S.bodies.length;
+    $('bSaveSes').disabled = $('bSaveAs').disabled = $('bClear').disabled = !S.bodies.length;
     const hd = document.createElement('div'); hd.className = 'brow hd';
-    hd.innerHTML = '<span title="Highlight">☑</span><span title="' + L('Ẩn / hiện', 'Show / hide') + '">👁</span><span></span><span>' + L('Tên', 'Name') +
-      '</span><span class="num">' + L('Tam giác', 'Tris') + '</span><span class="num">' + L('K.lượng', 'Mass') + '</span>';
+    hd.innerHTML = '<span title="Highlight">☑</span><span title="' + L('Ẩn / hiện', 'Show / hide') + '">👁</span><span></span><span class="rzc">' + L('Tên', 'Name') +
+      '<i class="rz" data-col="cn"></i></span><span class="num rzc">' + L('Tam giác', 'Tris') + '<i class="rz" data-col="ct"></i></span><span class="num rzc">' + L('K.lượng', 'Mass') + '<i class="rz" data-col="cm"></i></span>';
+    hd.querySelectorAll('.rz').forEach(function (z) { z.addEventListener('pointerdown', blColDrag); z.addEventListener('dblclick', function (e) { e.stopPropagation(); blColSet(z.dataset.col, null); }); });
     box.appendChild(hd);
     if (!S.bodies.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = L('Chưa có mesh nào.', 'No mesh loaded.'); box.appendChild(e); return; }
     const frag = document.createDocumentFragment(), shown = Math.min(S.bodies.length, 400);
@@ -5624,7 +5649,7 @@ var wasm_bindgen = (function(exports) {
   canvas.addEventListener('pointerleave', function () { if (!drag && (S.hov !== null || S.hovCom || S.hovEnt || S.hovLab)) { S.hov = null; S.hovCom = null; S.hovEnt = null; S.hovLab = null; S.skHov = null; dirty = true; } });
   canvas.addEventListener('pointermove', function (e) {
     const p = evPos(e);
-    if (!drag) { hover(p[0], p[1]); return; }
+    if (!drag) { hover(p[0], p[1]); ucHover(p[0], p[1]); return; }
     cam = drag.cam;
     if (drag.type === 'rot') {
       const ax = (p[0] - drag.x) * 0.008, ay = (p[1] - drag.y) * 0.008;
@@ -6307,7 +6332,7 @@ var wasm_bindgen = (function(exports) {
     let dir = ax === 'x' ? [1, 0, 0] : ax === 'y' ? [0, 1, 0] : ax === 'z' ? [0, 0, 1] : ax === 'view' ? viewer() : S.ucDir ? (S.ucDir.flip ? V.mul(S.ucDir.d, -1) : S.ucDir.d) : null;
     if (!dir || V.len(dir) < 1e-12) { ucPickStart(); flash(L('Hãy chọn hướng mở khuôn: bấm một mặt phẳng, cạnh thẳng hoặc trục', 'Pick the pull direction: click a plane, a straight edge or an axis'), true); return; }
     ucPickStop();
-    dir = V.norm(dir);
+    dir = V.norm(dir); S.ucDirUsed = dir.slice(); S.ucMin = +$('ucDraft').value || 0;
     showError(null); setBusy(true, L('Đang phân tích undercut...', 'Analysing undercuts...'));
     const tot = [0, 0, 0, 0], withUc = [];
     try {
@@ -6587,7 +6612,7 @@ var wasm_bindgen = (function(exports) {
   });
 
   // ================= session (.mrtl) =================
-  function saveSession() {
+  function sessionParts() {
     const vis = S.cmp ? new Map(S.cmp.vis) : null;
     const meta = { app: 'MeshExpert', format: 2, view: { R: mainCam.R, target: mainCam.target, zoom: mainCam.zoom }, explode: S.explode, sketches: S.sketches, skSeq: S.skSeq, geos: S.geos, geoSeq: S.geoSeq,
       section: { on: S.sec.on, flip: S.sec.flip, axis: S.sec.axis, s: S.sec.s, nView: S.sec.nView, nPick: S.sec.nPick }, measures: S.measures, bodies: [] };
@@ -6610,7 +6635,7 @@ var wasm_bindgen = (function(exports) {
     const head = new DataView(new ArrayBuffer(12));
     head.setUint8(0, 77); head.setUint8(1, 82); head.setUint8(2, 84); head.setUint8(3, 76); // "MRTL"
     head.setUint32(4, 2, true); head.setUint32(8, bytes.length, true);
-    download([head.buffer, bytes].concat(blobs), 'session.mrtl');
+    return [head.buffer, bytes].concat(blobs);
   }
   function loadSession(buf) {
     const dv = new DataView(buf);
@@ -6642,15 +6667,67 @@ var wasm_bindgen = (function(exports) {
     S.measures = []; S.tmp = []; S.clip = []; S.colorSeq = 0; S.col = null; S.spl = null; S.sketches = []; S.skSel = null; S.geos = []; S.geoSel = null; S.geoSeq = 1;
     resetBox('colRes'); resetBox('splitRes'); resetBox('holeRes'); updateMeasList();
   }
-  $('bSaveSes').addEventListener('click', function () { try { saveSession(); } catch (e) { showError(e); } });
-  $('bOpen').addEventListener('click', function () { $('file').click(); });
+  // ---- the session file: Save writes over the .mrtl that was opened / saved last, Save as asks for a name ----
+  S.sesHandle = null; S.sesName = '';
+  function sesShow() {
+    const n = S.sesName || L('(phiên mới)', '(new session)');
+    $('sesName').textContent = n; $('sesName').title = n;
+    document.title = (S.sesName ? S.sesName + ' · ' : '') + 'MeshExpert';
+  }
+  const MRTL_TYPES = [{ description: 'MeshExpert session', accept: { 'application/octet-stream': ['.mrtl'] } }];
+  async function sesWrite(handle) {
+    const w = await handle.createWritable();
+    await w.write(new Blob(sessionParts(), { type: 'application/octet-stream' })); await w.close();
+  }
+  async function saveSessionAs() {
+    if (blocked()) return;
+    const name = S.sesName || 'session.mrtl';
+    if (window.showSaveFilePicker) {
+      let h;
+      try { h = await window.showSaveFilePicker({ suggestedName: name, types: MRTL_TYPES }); } catch (e) { if (e && e.name === 'AbortError') return; throw e; }
+      await sesWrite(h); S.sesHandle = h; S.sesName = h.name || name; sesShow();
+      flash(L('Đã lưu phiên vào ', 'Session saved to ') + S.sesName);
+    } else {
+      const n = prompt(L('Tên file phiên:', 'Session file name:'), name); if (!n) return;
+      S.sesName = /\.mrtl$/i.test(n) ? n : n + '.mrtl'; download(sessionParts(), S.sesName); sesShow();
+    }
+  }
+  async function saveSession() {
+    if (blocked()) return;
+    if (!S.sesHandle) return saveSessionAs();
+    try { await sesWrite(S.sesHandle); flash(L('Đã lưu đè ', 'Saved over ') + S.sesName); }
+    catch (e) { if (e && e.name === 'NotAllowedError') return saveSessionAs(); throw e; }
+  }
+  function newSession() {
+    if (blocked()) return;
+    if (S.bodies.length && !confirm(L('Bắt đầu phiên mới? Phiên hiện tại chưa lưu sẽ mất.', 'Start a new session? Unsaved work in the current one is lost.'))) return;
+    clearAll(); hist.undo.length = 0; hist.redo.length = 0; updateHistBtns();
+    S.sesHandle = null; S.sesName = ''; sesShow(); sceneChanged(true); refresh();
+  }
+  $('bSaveSes').addEventListener('click', function () { saveSession().catch(showError); });
+  $('bSaveAs').addEventListener('click', function () { saveSessionAs().catch(showError); });
+  $('bNew').addEventListener('click', newSession);
+  window.addEventListener('keydown', function (e) {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || (e.key || '').toLowerCase() !== 's') return;
+    e.preventDefault(); (e.shiftKey ? saveSessionAs() : saveSession()).catch(showError);
+  });
+  async function openFiles() {
+    if (!window.showOpenFilePicker) { $('file').click(); return; }
+    let hs;
+    try { hs = await window.showOpenFilePicker({ multiple: true, types: [{ description: 'Mesh / MeshExpert session', accept: { 'application/octet-stream': ['.stl', '.obj', '.mrtl'] } }] }); }
+    catch (e) { if (e && e.name === 'AbortError') return; $('file').click(); return; }
+    const files = [], handles = [];
+    for (const h of hs) { files.push(await h.getFile()); handles.push(h); }
+    handleFiles(files, handles);
+  }
+  $('bOpen').addEventListener('click', function () { openFiles(); });
   $('bClear').addEventListener('click', function () {
     if (blocked() || !confirm(L('Xóa toàn bộ body và phép đo trong phiên này?', 'Remove every body and measurement in this session?'))) return;
     pushUndo(); clearAll(); sceneChanged(true); refresh();
   });
 
   // ================= file loading =================
-  async function handleFiles(files) {
+  async function handleFiles(files, handles) {
     if (!files.length || blocked()) return;
     showError(null);
     setBusy(true, L('Đang đọc file...', 'Reading files...'));
@@ -6663,6 +6740,7 @@ var wasm_bindgen = (function(exports) {
         if (ext === 'mrtl') {
           if (S.bodies.length && !confirm(L('Mở phiên "' + file.name + '" sẽ thay thế phiên hiện tại. Tiếp tục?', 'Opening session "' + file.name + '" replaces the current one. Continue?'))) continue;
           loadSession(buffer); added = 0; pushed = true;
+          S.sesHandle = handles && handles[i] && handles[i].createWritable ? handles[i] : null; S.sesName = file.name; sesShow();
         } else if (ext === 'stl' || ext === 'obj') {
           const m = await run('parse', { name: file.name, buffer: buffer });
           if (!pushed) { pushUndo(); pushed = true; }
@@ -6683,7 +6761,13 @@ var wasm_bindgen = (function(exports) {
   $('file').addEventListener('change', function () { const f = Array.from(this.files); this.value = ''; handleFiles(f); });
   window.addEventListener('dragover', function (e) { e.preventDefault(); $('leftTop').classList.add('over'); });
   window.addEventListener('dragleave', function () { $('leftTop').classList.remove('over'); });
-  window.addEventListener('drop', function (e) { e.preventDefault(); $('leftTop').classList.remove('over'); handleFiles(Array.from(e.dataTransfer.files)); });
+  window.addEventListener('drop', async function (e) {
+    e.preventDefault(); $('leftTop').classList.remove('over');
+    const files = Array.from(e.dataTransfer.files), its = Array.from(e.dataTransfer.items || []), hp = its.map(function (it) { return it.kind === 'file' && it.getAsFileSystemHandle ? it.getAsFileSystemHandle().catch(function () { return null; }) : Promise.resolve(null); });
+    let handles = [];
+    try { handles = await Promise.all(hp); } catch (er) { handles = []; }
+    handleFiles(files, handles.length === files.length ? handles : null);
+  });
 
   // ================= sketches (parametric, with constraints) =================
   // A sketch lives on a plane {o, u, v, n}. Its model (see core_sketch.js) holds points shared by lines, circles and
@@ -9344,6 +9428,35 @@ var wasm_bindgen = (function(exports) {
 
   // ---------- tooling analysis: the pull direction from a plane / line / axis, and hiding the bodies not analysed ----------
   S.ucPick = false; S.ucDir = null; S.ucList = null; S.ucHid = null;
+  // draft angle of the face under the cursor while an undercut analysis is shown
+  S.ucHov = null;
+  function ucHover(px, py) {
+    const was = S.ucHov;
+    S.ucHov = null;
+    if (S.ucList && S.ucDirUsed && !S.sk && !busy && S.ucList.some(function (b) { return b.ana && b.visible; })) {
+      const h = pick(px, py, S.ucList.filter(function (b) { return b.ana && b.visible; }));
+      if (h && h.normal) {
+        const c = Math.max(-1, Math.min(1, V.dot(V.norm(h.normal), S.ucDirUsed))), deg = Math.asin(c) * 180 / Math.PI;
+        S.ucHov = { x: px, y: py, deg: deg, body: h.body ? h.body.name : '' };
+      }
+    }
+    if (was || S.ucHov) dirty = true;
+  }
+  function drawUcHov() {
+    const u = S.ucHov; if (!u || !S.ucList) return;
+    const a = Math.abs(u.deg), side = u.deg > 0.05 ? L('phía +', '+ half') : u.deg < -0.05 ? L('phía −', '− half') : L('thẳng đứng', 'vertical');
+    const low = a < (S.ucMin || 0) - 1e-9;
+    const t1 = 'Draft ' + f2(a) + '°  ·  ' + side, t2 = low ? L('Thiếu góc thoát (< ', 'Draft too small (< ') + f2(S.ucMin) + '°)' : '';
+    ctx.font = 'bold 12px Arial';
+    const w = Math.max(ctx.measureText(t1).width, t2 ? ctx.measureText(t2).width : 0) + 14, hh = t2 ? 36 : 21;
+    let x = u.x + 16, y = u.y + 14;
+    if (x + w > ov.width) x = u.x - w - 10;
+    ctx.fillStyle = 'rgba(14,18,23,.92)'; ctx.strokeStyle = low ? '#ffdc28' : '#9cc4ee'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.rect(x, y, w, hh); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e8eef5'; ctx.fillText(t1, x + 7, y + 15);
+    if (t2) { ctx.fillStyle = '#ffdc28'; ctx.font = '11px Arial'; ctx.fillText(t2, x + 7, y + 30); }
+  }
+  canvas.addEventListener('pointerleave', function () { if (S.ucHov) { S.ucHov = null; dirty = true; } });
   function ucPickEnt(px, py) { const e = lineOfVtx(pickEnt(px, py, false)); return e && axDir(e) ? e : null; }
   function ucPickStart() { S.ucPick = true; S.axPick = null; $('bUcPick').classList.add('primary'); canvas.style.cursor = 'crosshair'; flash(L('Bấm một mặt phẳng (lấy pháp tuyến), cạnh thẳng, đường hoặc trục làm hướng mở khuôn (theo bộ lọc)', 'Click a plane (its normal), a straight edge, a line or an axis for the pull direction (as the filter allows)'), true); dirty = true; }
   function ucPickStop() { if (!S.ucPick) return; S.ucPick = false; $('bUcPick').classList.remove('primary'); canvas.style.cursor = toolCursor(); S.hovEnt = null; dirty = true; }
@@ -9557,32 +9670,6 @@ var wasm_bindgen = (function(exports) {
   // ---------- the 3D print table ----------
   S.sla.table = false;
   try { S.sla.table = localStorage.getItem('mx.slaTable') === '1'; } catch (e) { }
-  let slaTabGeo = null, slaTabKey = '';
-  function slaTableGeo() {
-    const o = slaOpt(), k = o.W + 'x' + o.D;
-    if (slaTabGeo && slaTabKey === k) return slaTabGeo;
-    if (slaTabGeo) { const g = slaTabGeo; slaTabGeo = null; releaseGeo(g); }
-    const T = 8, g = slaBoxGeo(o.W, o.D, T);
-    for (let i = 2; i < g.positions.length; i += 3) g.positions[i] -= T + 0.05;
-    g.min[2] -= T + 0.05; g.max[2] -= T + 0.05;
-    slaTabGeo = g; slaTabKey = k; return g;
-  }
-  function drawSlaTable() {
-    if (!S.sla.table || S.sk || !gl) return;
-    const g = slaTableGeo(), b = ensureGL(g);
-    gl.uniformMatrix4fv(U.uM, false, M.ident()); gl.frontFace(gl.CCW);
-    gl.uniform4f(U.uColor, 0.62, 0.66, 0.71, 1); gl.uniform1f(U.uSel, 0); gl.uniform1i(U.uMode, 0);
-    gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(2, 2);
-    gl.bindVertexArray(b.vao); gl.drawElements(gl.TRIANGLES, g.indices.length, gl.UNSIGNED_INT, 0);
-    gl.disable(gl.POLYGON_OFFSET_FILL);
-  }
-  // how deep the view must reach so the table is not clipped
-  function slaDepthNeed() {
-    if (!S.sla || !S.sla.table) return 0;
-    const o = slaOpt(); let m = 0;
-    for (let c = 0; c < 8; c++) { const p = [c & 1 ? o.W : 0, c & 2 ? o.D : 0, c & 4 ? 0 : -9]; m = Math.max(m, V.len(V.sub(p, cam.target))); }
-    return m * 1.05;
-  }
   function slaTableUI() { $('bSlaTable').classList.toggle('on', S.sla.table); dirty = true; }
   $('bSlaTable').addEventListener('click', function () { S.sla.table = !S.sla.table; try { localStorage.setItem('mx.slaTable', S.sla.table ? '1' : '0'); } catch (e) { } slaTableUI(); });
   slaTableUI();
@@ -9692,7 +9779,7 @@ var wasm_bindgen = (function(exports) {
     const t = P(o.W + 4, -6); ctx.font = '11px Arial'; ctx.fillText(L('Dao gạt → Y', 'Blade → Y'), t[0] + 4, t[1] + 4);
   }
 
-  applyLang(); updateHistBtns(); sceneChanged(true);
+  applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
   window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();

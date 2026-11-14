@@ -84,8 +84,22 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Lõi B-rep nạp lần đầu mất khoảng 1–2 giây (khi mở Extrude / Revolve hoặc một lệnh solid). File index.html nặng khoảng 10,7 MB vì có lõi này.
 - Mã nguồn lớp bọc lõi B-rep ở thư mục `brep/` (cách biên dịch lại xem `brep/README.md`).
 
+## Phiên làm việc (.mrtl)
+- Các nút trên cùng có biểu tượng: Phiên mới, Mở file / phiên, Lưu phiên, Lưu thành…, Xóa hết, Lùi, Tiến, Vị trí lúc import. Tên file phiên đang mở hiện ngay cạnh nút lưu.
+- Phiên mới: xóa sạch và bắt đầu phiên chưa có tên.
+- Lưu phiên (Ctrl+S): lần đầu hỏi tên file; các lần sau (hoặc sau khi mở một file .mrtl bằng nút Mở hay kéo thả) thì ghi đè thẳng vào file đó, không hỏi lại.
+- Lưu thành… (Ctrl+Shift+S): luôn hỏi tên file mới, từ đó Lưu phiên ghi vào file mới này.
+- Trình duyệt quá cũ không ghi đè được file thì app tải file xuống như trước.
+
+## Danh sách body và hiển thị
+- Danh sách body có thanh cuộn ngang; kéo mép phải của tiêu đề cột (Tên, Tam giác, K.lượng) để nới rộng / thu hẹp, bấm đúp mép để về độ rộng mặc định. Độ rộng được nhớ cho lần sau.
+- Nút Edges (cạnh lưới) trong nhóm Hiển thị mặc định tắt.
+
+## Undercut: góc draft dưới con trỏ
+- Sau khi bấm "Phân tích" trong Tooling analysis (undercut), rê chuột lên body đã phân tích sẽ hiện nhãn góc draft của mặt dưới con trỏ (so với hướng mở khuôn), cho biết mặt thoát về phía + hay −, và cảnh báo vàng khi nhỏ hơn "Góc thoát khuôn tối thiểu". Xóa màu phân tích thì nhãn tắt.
+
 ## Bàn in SLA
-- Nhóm "Bàn in" trên ribbon: nút "SLA control panel" mở bảng điều khiển; nút "SLA table" (sáng lên khi bật) hiện bàn in dạng tấm kim loại trong 3D kèm lưới và dao gạt.
+- Nhóm "Bàn in" trên ribbon: nút "SLA control panel" mở bảng điều khiển; nút "SLA table" (sáng lên khi bật) hiện khung bàn in trong suốt (viền, lưới 50 mm, lề, tâm, dao gạt) ngay cả khi bảng đóng.
 - Bảng SLA nổi trên màn hình 3D, mặc định nằm sát bên trái; kéo thanh tiêu đề để dời, bấm đúp thanh tiêu đề để đưa về chỗ cũ.
 - Bàn in mặc định 400 × 400 mm, gốc bàn trùng gốc tọa độ, mặt in là mặt XY phía X, Y dương; dao gạt nằm dọc trục X và chạy theo chiều Y.
 - Xoay tối ưu: tìm hộp bao sát nhất của từng body; cạnh dài nhất dựng đứng theo Z (vật in cao nhất), cạnh trung bình theo Y (chiều dao chạy), cạnh mỏng nhất theo X (dọc lưỡi dao) để mỗi lớp dao chỉ chạm một bề rộng nhỏ nhất, gần như vuông góc 90°. Đầu có nhiều diện tích bề mặt hơn được quay xuống phía bàn.

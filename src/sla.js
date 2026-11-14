@@ -151,32 +151,6 @@
   // ---------- the 3D print table ----------
   S.sla.table = false;
   try { S.sla.table = localStorage.getItem('mx.slaTable') === '1'; } catch (e) { }
-  let slaTabGeo = null, slaTabKey = '';
-  function slaTableGeo() {
-    const o = slaOpt(), k = o.W + 'x' + o.D;
-    if (slaTabGeo && slaTabKey === k) return slaTabGeo;
-    if (slaTabGeo) { const g = slaTabGeo; slaTabGeo = null; releaseGeo(g); }
-    const T = 8, g = slaBoxGeo(o.W, o.D, T);
-    for (let i = 2; i < g.positions.length; i += 3) g.positions[i] -= T + 0.05;
-    g.min[2] -= T + 0.05; g.max[2] -= T + 0.05;
-    slaTabGeo = g; slaTabKey = k; return g;
-  }
-  function drawSlaTable() {
-    if (!S.sla.table || S.sk || !gl) return;
-    const g = slaTableGeo(), b = ensureGL(g);
-    gl.uniformMatrix4fv(U.uM, false, M.ident()); gl.frontFace(gl.CCW);
-    gl.uniform4f(U.uColor, 0.62, 0.66, 0.71, 1); gl.uniform1f(U.uSel, 0); gl.uniform1i(U.uMode, 0);
-    gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(2, 2);
-    gl.bindVertexArray(b.vao); gl.drawElements(gl.TRIANGLES, g.indices.length, gl.UNSIGNED_INT, 0);
-    gl.disable(gl.POLYGON_OFFSET_FILL);
-  }
-  // how deep the view must reach so the table is not clipped
-  function slaDepthNeed() {
-    if (!S.sla || !S.sla.table) return 0;
-    const o = slaOpt(); let m = 0;
-    for (let c = 0; c < 8; c++) { const p = [c & 1 ? o.W : 0, c & 2 ? o.D : 0, c & 4 ? 0 : -9]; m = Math.max(m, V.len(V.sub(p, cam.target))); }
-    return m * 1.05;
-  }
   function slaTableUI() { $('bSlaTable').classList.toggle('on', S.sla.table); dirty = true; }
   $('bSlaTable').addEventListener('click', function () { S.sla.table = !S.sla.table; try { localStorage.setItem('mx.slaTable', S.sla.table ? '1' : '0'); } catch (e) { } slaTableUI(); });
   slaTableUI();
