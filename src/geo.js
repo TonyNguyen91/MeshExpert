@@ -270,6 +270,44 @@
     const g = glPreview();
     if (g) { const a = project(g.p), b = project(g.p2); ctx.setLineDash([7, 4]); line2(a, b, '#ffe14a', 2.2); ctx.setLineDash([]); dot2(a, '#ffe14a', 3); dot2(b, '#ffe14a', 3); const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; tag(m[0], m[1] - 14, f2(V.len(V.sub(g.p2, g.p))) + ' mm', '#14181d', '#ffe14a'); }
   }
+  // title bar of the small tool panel: drag it anywhere, collapse it, double-click to put it back
+  function tpHead(t) {
+    const n = { move: ['Di chuyển', 'Move'], rotate: ['Xoay', 'Rotate'], scale: ['Tỉ lệ', 'Scale'], mate: ['Ghép mặt / trục', 'Mate'], gpoint: ['Point', 'Point'], gline: ['Line', 'Line'], gplane: ['Plane', 'Plane'], gaxis: ['Axis', 'Axis'] }[t];
+    if (n) $('tpTitle').textContent = L(n[0], n[1]);
+    tpClamp();
+  }
+  function tpSave() {
+    const p = $('tpop');
+    try { localStorage.setItem('mx.tpop', JSON.stringify({ l: p.style.left, t: p.style.top, m: p.classList.contains('min') })); } catch (e) { }
+  }
+  function tpClamp() {
+    const p = $('tpop'), par = p.offsetParent; if (!par || p.style.display === 'none') return;
+    const l = Math.max(0, Math.min(par.clientWidth - p.offsetWidth - 2, p.offsetLeft)), t = Math.max(0, Math.min(par.clientHeight - 24, p.offsetTop));
+    p.style.left = l + 'px'; p.style.top = t + 'px';
+  }
+  (function () {
+    const p = $('tpop'), hd = $('tpHd'), mb = $('tpMin');
+    try { const s = JSON.parse(localStorage.getItem('mx.tpop') || 'null'); if (s) { if (s.l) p.style.left = s.l; if (s.t) p.style.top = s.t; p.classList.toggle('min', !!s.m); } } catch (e) { }
+    mb.textContent = p.classList.contains('min') ? '▸' : '▾';
+    mb.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+    mb.addEventListener('click', function (e) {
+      e.stopPropagation(); p.classList.toggle('min'); mb.textContent = p.classList.contains('min') ? '▸' : '▾'; tpSave();
+    });
+    let dr = null;
+    hd.addEventListener('mousedown', function (e) {
+      if (e.button !== 0) return; e.preventDefault(); e.stopPropagation();
+      dr = { x: e.clientX, y: e.clientY, l: p.offsetLeft, t: p.offsetTop, w: p.offsetWidth };
+    });
+    window.addEventListener('mousemove', function (e) {
+      if (!dr) return;
+      const par = p.offsetParent, W = par ? par.clientWidth : innerWidth, H = par ? par.clientHeight : innerHeight;
+      p.style.left = Math.max(0, Math.min(W - dr.w - 2, dr.l + e.clientX - dr.x)) + 'px';
+      p.style.top = Math.max(0, Math.min(H - 24, dr.t + e.clientY - dr.y)) + 'px';
+    });
+    window.addEventListener('mouseup', function () { if (dr) { dr = null; tpSave(); } });
+    hd.addEventListener('dblclick', function (e) { if (e.target === mb) return; p.style.left = ''; p.style.top = ''; tpSave(); });
+    window.addEventListener('resize', tpClamp);
+  })();
   // the pick boxes of the Line panel
   function glPanel() {
     const box = $('geoSlots'); if (!box) return;
@@ -277,16 +315,17 @@
     glSlots().forEach(function (q, i) {
       const x = S.gl.v[q[0]], d = document.createElement('div');
       d.className = 'gslot' + (S.gl.act === i ? ' act' : '') + (x ? ' ok' : ''); d.dataset.slot = i;
-      d.innerHTML = '<span class="gn">' + (i + 1) + '</span><span style="display:flex;flex-direction:column;flex:1"><span class="gk"></span><span class="gv' + (x ? '' : ' empty') + '"></span></span>' + (x ? '<span class="gx" title="Bỏ">✕</span>' : '');
+      d.innerHTML = '<span class="gn">' + (i + 1) + '</span><span class="gk"></span><span class="gv' + (x ? '' : ' empty') + '"></span>' + (x ? '<span class="gx" title="Bỏ">✕</span>' : '');
       d.querySelector('.gk').textContent = L(q[2], q[3]);
       d.querySelector('.gv').textContent = x ? x.text : (S.gl.act === i ? L('← bấm trên màn hình 3D', '← click in the 3D view') : L('(chưa chọn)', '(not picked)'));
+      d.title = d.querySelector('.gk').textContent + ': ' + d.querySelector('.gv').textContent;
       d.addEventListener('click', function (ev) {
         if (ev.target.classList.contains('gx')) delete S.gl.v[q[0]];
         S.gl.act = i; glPanel(); dirty = true;
       });
       box.appendChild(d);
     });
-    $('geoLHint').textContent = L.apply(null, GL_HINT[S.geoMode.gline] || GL_HINT.pp);
+    $('geoLenRow').title = L.apply(null, GL_HINT[S.geoMode.gline] || GL_HINT.pp);
     $('geoMake').disabled = !glReady();
   }
   $('geoMake').addEventListener('click', glMake);

@@ -95,6 +95,13 @@
   input, textarea { -webkit-user-select: text; user-select: text; }
   #tpop { position: absolute; left: 10px; top: 36px; display: none; background: rgba(20,24,29,.92); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
   #tpop .row { margin: 3px 0; }
+  #tpHd { display: flex; align-items: center; gap: 6px; margin: -2px -4px 3px; padding: 1px 2px 3px; border-bottom: 1px solid var(--line); cursor: move; user-select: none; }
+  #tpHd .grip { color: #6f7f92; letter-spacing: -2px; font-size: 12px; }
+  #tpHd b { color: var(--accent); font-size: 12px; }
+  #tpHd .grow { flex: 1; }
+  #tpHd button { padding: 0 6px; line-height: 16px; min-width: 0; cursor: pointer; }
+  #tpop.min #tpHd { margin-bottom: -2px; border-bottom: 0; }
+  #tpop.min > :not(#tpHd) { display: none !important; }
   #sktools { position: absolute; left: 0; top: 0; display: none; gap: 4px; flex-wrap: wrap; align-items: center; background: rgba(20,24,29,.92); border: 1px solid var(--accent); border-radius: 6px; padding: 5px; max-width: calc(100% - 120px); }
   #sktools .sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 3px; }
   #sktools input[type=number] { width: 62px; }
@@ -110,16 +117,15 @@
   .seg button.on { background: var(--accent); color: #111; border-color: var(--accent); }
   #tpop input.s { width: 64px; }
   #geoModes { display: flex; gap: 4px; flex-wrap: wrap; flex-basis: 100%; }
-  .glbox { flex-basis: 100%; width: 372px; max-width: 372px; }
+  .glbox { flex-basis: 100%; width: 330px; max-width: 330px; margin-top: 3px; }
   .glbox .gslot { min-width: 0; }
-  .glk { font-size: 11px; color: var(--muted); margin: 4px 0 3px; }
-  .glslots { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
-  .gslot { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; background: #11151a; cursor: pointer; min-width: 280px; }
+  .glslots { display: flex; flex-direction: column; gap: 3px; margin-bottom: 2px; }
+  .gslot { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; background: #11151a; cursor: pointer; min-width: 280px; }
   .gslot.act { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-  .gslot .gn { width: 18px; height: 18px; border-radius: 50%; background: #2c3642; color: var(--text); font-size: 11px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .gslot .gn { width: 16px; height: 16px; border-radius: 50%; background: #2c3642; color: var(--text); font-size: 11px; display: flex; align-items: center; justify-content: center; flex: none; }
   .gslot.ok .gn { background: #3f8f55; }
-  .gslot .gk { font-size: 10.5px; color: var(--muted); }
-  .gslot .gv { flex: 1; color: var(--text); font-size: 12px; }
+  .gslot .gk { font-size: 10.5px; color: var(--muted); flex: none; width: 92px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gslot .gv { flex: 1; color: var(--text); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .gslot .gv.empty { color: #6f7f92; font-style: italic; }
   .gslot .gx { color: #ff8a7e; padding: 0 3px; }
   #cubeWrap { position: absolute; right: 6px; top: 4px; width: 120px; height: 120px; perspective: 600px; }
@@ -425,6 +431,7 @@
     <div class="btns"><button id="setReset" data-en="Back to defaults">Về mặc định</button></div>
   </div>
   <div id="tpop">
+    <div id="tpHd"><span class="grip">⋮⋮</span><b id="tpTitle"></b><span class="grow"></span><button id="tpMin" title="Thu gọn / mở rộng" data-en-title="Collapse / expand">▾</button></div>
     <div id="tpMove" class="row"><span data-en="Move">Di chuyển</span> X <input type="number" id="mvX" class="s" value="0"> Y <input type="number" id="mvY" class="s" value="0"> Z <input type="number" id="mvZ" class="s" value="0"> <span class="unit">mm</span><button id="bMove" class="primary" data-en="Apply">Áp dụng</button></div>
     <div id="tpRot" class="row"><span data-en="Rotate about">Xoay quanh</span>
       <select id="rotAx" style="width:50px"><option value="0">X</option><option value="1">Y</option><option value="2" selected>Z</option></select>
@@ -436,10 +443,8 @@
       <button id="bMateFlip" data-en="Flip the last mate">Đảo lần ghép vừa rồi</button></div>
     <div id="tpAxes" class="row"><span class="lbl" data-en="X axis">Trục X</span><button id="bAxPick" title="Bấm cạnh / trục / mặt phẳng hoặc 2 điểm" data-en-title="Click an edge / axis / plane or 2 points" data-en="Pick…">Chọn…</button> <input type="number" id="axX" class="s" value="1" step="0.1"> <input type="number" id="axY" class="s" value="0" step="0.1"> <input type="number" id="axZ" class="s" value="0" step="0.1"><button id="bAxSet" data-en="Set">Đặt</button><button id="bAxReset" title="Về trục thế giới" data-en-title="Back to the world axes" data-en="World">Thế giới</button></div>
     <div id="tpGeo" class="row" style="flex-wrap:wrap"><span id="geoModes"></span><span id="geoPlaneOpt" style="display:flex;align-items:center;gap:4px"><span data-en="Offset">Offset</span> <input type="range" id="geoOffR" min="-50" max="50" step="0.5" value="0" style="width:110px"> <input type="number" id="geoOff" class="s" value="0" step="0.5"><span class="unit">mm</span> <label><input type="checkbox" id="geoFlip"> <span data-en="Flip">Đảo chiều</span></label></span><div id="geoLineOpt" class="glbox" style="display:none">
-      <div class="glk" data-en="Pick (click a box to choose what the next click fills)">Chọn đối tượng (bấm vào ô để chọn ô sẽ nhận cú bấm tiếp theo)</div>
       <div id="geoSlots" class="glslots"></div>
-      <div class="row"><span data-en="Length">Dài</span> <input type="range" id="geoLenR" min="0" max="200" step="0.5" value="0" style="width:120px"> <input type="number" id="geoLen" class="s" value="0" min="0" step="0.5"><span class="unit">mm</span> <label><input type="checkbox" id="geoLFlip"> <span data-en="Flip">Đảo chiều</span></label></div>
-      <div class="note" id="geoLHint" style="margin:0 0 4px"></div>
+      <div class="row" id="geoLenRow"><span data-en="Length">Dài</span> <input type="range" id="geoLenR" min="0" max="200" step="0.5" value="0" style="width:120px"> <input type="number" id="geoLen" class="s" value="0" min="0" step="0.5"><span class="unit">mm</span> <label><input type="checkbox" id="geoLFlip"> <span data-en="Flip">Đảo chiều</span></label></div>
       <div class="row"><button id="geoMake" class="primary" data-en="Create line (Enter)">Tạo line (Enter)</button><button id="geoClr" data-en="Clear picks">Bỏ chọn</button></div>
     </div></div>
     <div id="tpPivot" class="row"><span class="lbl" data-en="About">Tâm</span>
