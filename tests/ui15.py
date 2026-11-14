@@ -60,7 +60,14 @@ with sync_playwright() as p:
         return False
     ok('Footprints do not overlap',not overl(B))
     vol=[e[0]*e[1]*e[2] for e in E]; small=vol.index(min(vol)); big=vol.index(max(vol))
-    ok('Smallest part sits in the corner at the origin',abs(B[small][0][0]-5)<1e-6 and abs(B[small][0][1]-5)<1e-6,B[small][0])
+    ok('Smallest part starts the first row (corner of the block nearest the origin)',abs(B[small][0][0]-min(mn[0] for mn,mx in B))<1e-6 and abs(B[small][0][1]-min(mn[1] for mn,mx in B))<1e-6,B[small][0])
+    cx=(min(mn[0] for mn,mx in B)+max(mx[0] for mn,mx in B))/2; cy=(min(mn[1] for mn,mx in B)+max(mx[1] for mn,mx in B))/2
+    ok('The block is centred on the plate',abs(cx-200)<1 and abs(cy-200)<1,(cx,cy))
+    pb_=pg.locator('#pop_sla').bounding_box(); gb_=pg.locator('#gl').bounding_box()
+    ok('SLA panel opens at the left of the 3D view',pb_['x']<gb_['x']+40,(pb_['x'],gb_['x']))
+    hd=pg.locator('#pop_sla .pophd b').bounding_box(); pg.mouse.move(hd['x']+5,hd['y']+5); pg.mouse.down(); pg.mouse.move(hd['x']+205,hd['y']+45,steps=5); pg.mouse.up()
+    pb2=pg.locator('#pop_sla').bounding_box(); ok('SLA panel can be dragged',abs(pb2['x']-pb_['x']-200)<3 and abs(pb2['y']-pb_['y']-40)<3,(pb_,pb2))
+    pg.dblclick('#pop_sla .pophd b'); pg.wait_for_timeout(100)
     ok('The biggest part is furthest along Y',B[big][0][1]>=max(mn[1] for mn,mx in B)-1e-6)
     rows=sorted(set(round(mn[1],3) for mn,mx in B))
     ok('Rows filled across X first (first row wider than the parts in later rows need)',len(rows)<len(B))
@@ -82,8 +89,12 @@ with sync_playwright() as p:
     Ball=pg.evaluate(BOX); names=pg.evaluate("__mrt.S.bodies.map(b=>b.name)")
     gb=[Ball[i] for i,n in enumerate(names) if n.startswith('SLA_guard_')]; pb=[Ball[i] for i,n in enumerate(names) if not n.startswith('SLA_guard_')]
     top=max(mx[2] for mn,mx in pb)
-    ok('Two guard blocks 20 x 20, as tall as the tallest part',len(G)==2 and all(abs(mx[0]-mn[0]-20)<1e-6 and abs(mx[1]-mn[1]-20)<1e-6 and abs(mx[2]-top)<1e-6 and abs(mn[2])<1e-6 for mn,mx in gb),G)
-    ok('Guards are the outermost along Y (one at each end)',min(g[0][1] for g in gb)<min(mn[1] for mn,mx in pb) and max(g[1][1] for g in gb)>max(mx[1] for mn,mx in pb))
+    ok('Two guard plates 20 x 20 x 2, raised so their top is level with the tallest part',len(G)==2 and all(abs(mx[0]-mn[0]-20)<1e-6 and abs(mx[1]-mn[1]-20)<1e-6 and abs(mx[2]-top)<1e-6 and abs(mx[2]-mn[2]-2)<1e-6 for mn,mx in gb),[(mn,mx) for mn,mx in gb])
+    y0=min(mn[1] for mn,mx in pb); y1=max(mx[1] for mn,mx in pb)
+    ok('Guards 30 mm beyond the outermost parts, one at each end along Y',sorted([round(y0-g[1][1],3) for g in gb if g[1][1]<=y0]+[round(g[0][1]-y1,3) for g in gb if g[0][1]>=y1])==[30,30],[g for g in gb])
+    pg.fill('#slaGD','40'); pg.dispatch_event('#slaGD','input'); pg.dispatch_event('#slaGD','change'); pg.wait_for_timeout(200)
+    Ball=pg.evaluate(BOX); names=pg.evaluate("__mrt.S.bodies.map(b=>b.name)"); gb=[Ball[i] for i,n in enumerate(names) if n.startswith('SLA_guard_')]
+    ok('Guard distance slider moves them to 40 mm',any(abs(g[0][1]-y1-40)<1e-6 for g in gb) and any(abs(y0-g[1][1]-40)<1e-6 for g in gb))
     pg.click('#slaGoA'); idle()
     ok('Re-layout keeps two guards, still outermost',pg.evaluate("__mrt.S.bodies.filter(b=>/^SLA_guard_/.test(b.name)).length")==2)
     pg.uncheck('#slaGuardOn'); pg.wait_for_timeout(200)
@@ -93,9 +104,12 @@ with sync_playwright() as p:
     Bt=pg.evaluate(BOX); Et=[[mx[i]-mn[i] for i in range(3)] for mn,mx in Bt]
     ok('Tilt 30°: X width kept, parts lean along Y',all(abs(a[0]-b2[0])<0.6 and b2[1]>a[1]+1 for a,b2 in zip(E,Et)) and all(abs(mn[2]-8)<1e-6 for mn,mx in Bt),[[round(x,1) for x in e] for e in Et])
     pg.uncheck('#slaTiltOn')
-    for _ in range(9): pg.click('#bUndo'); pg.wait_for_timeout(150)   # tilt, guard off, lay out, guard on, 2 x lift selected, lay out, spread, orient
+    for _ in range(10): pg.click('#bUndo'); pg.wait_for_timeout(150)   # tilt, guard off, lay out, guard distance, guard on, 2 x lift selected, lay out, spread, orient
     ok('Undo goes back to the original placement',pg.evaluate("__mrt.S.bodies.map(b=>Array.from(b.matrix))")==before)
     ok('One ribbon button for the SLA panel',pg.locator('#bSlaOrient').count()==0 and pg.locator('button.popb[data-pop=sla]').count()==1)
+    pg.click('#bSlaTable'); pg.wait_for_timeout(200)
+    ok('SLA table button lights up and shows the table',pg.evaluate("document.getElementById('bSlaTable').classList.contains('on') && __mrt.S.sla.table===true"))
+    pg.click('#bSlaTable'); pg.wait_for_timeout(100)
     ok('No page errors',not errs,errs)
     b.close()
 print('ALL OK' if not fails else '%d FAIL'%fails); sys.exit(1 if fails else 0)

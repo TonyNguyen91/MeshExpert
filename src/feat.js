@@ -852,6 +852,6 @@
     el.classList.toggle('on', show);
     if (k === 'undercut' && !show) ucPickStop();
     document.querySelectorAll('.popb[data-pop="' + k + '"]').forEach(function (b) { b.classList.toggle('on', show); });
-    if (show) el.scrollIntoView({ block: 'nearest' });
+    if (show && el.parentNode && el.parentNode.id === 'dock') el.scrollIntoView({ block: 'nearest' });
   }
   document.querySelectorAll('[data-pop]').forEach(function (b) { b.addEventListener('click', function () { openPop(b.dataset.pop, b.classList.contains('popx') ? false : undefined); }); });

@@ -25,7 +25,7 @@ with sync_playwright() as p:
     def row(i): return f'#bodyList .brow:nth-child({i+1})'
     def slider(v):
         pg.evaluate("v=>{const e=document.getElementById('splitLv');e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}",v); pg.wait_for_timeout(100); idle()
-    pg.evaluate("document.querySelectorAll('.pop').forEach(d=>d.classList.add('on'))"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
+    pg.evaluate("document.querySelectorAll('#dock .pop').forEach(d=>d.classList.add('on'))"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
     ok('initial option label',lv()=='1/10' and 'rời' in pg.inner_text('#splitLvName'),pg.inner_text('#splitLvName'))
     pg.click('#bSplitNext'); pg.wait_for_timeout(200); ok('next with nothing ticked only warns',nb()==0 and lv()=='1/10',pg.inner_text('#status'))
 

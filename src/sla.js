@@ -6,7 +6,7 @@
   const slaNum = function (id, d) { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
   function slaOpt() {
     return { W: Math.max(10, slaNum('slaW', 400)), D: Math.max(10, slaNum('slaD', 400)), lift: Math.max(0, slaNum('slaLift', 5)), margin: Math.max(0, slaNum('slaMargin', 5)), gap: Math.max(0, slaNum('slaGap', 2)), spread: Math.max(0, Math.min(100, slaNum('slaSpread', 0))),
-      tilt: $('slaTiltOn').checked ? Math.max(10, Math.min(45, slaNum('slaTilt', 15))) : 0, guard: $('slaGuardOn').checked, gx: Math.max(0.5, slaNum('slaGX', 20)), gy: Math.max(0.5, slaNum('slaGY', 20)) };
+      tilt: $('slaTiltOn').checked ? Math.max(10, Math.min(45, slaNum('slaTilt', 15))) : 0, guard: $('slaGuardOn').checked, gx: Math.max(0.5, slaNum('slaGX', 20)), gy: Math.max(0.5, slaNum('slaGY', 20)), gt: Math.max(0.2, slaNum('slaGT', 2)), gd: Math.max(0, slaNum('slaGD', 30)) };
   }
   // world vertices of a body, thinned out for very large meshes
   function slaVerts(b, maxN) {
@@ -91,32 +91,33 @@
     if (zc > zm + 1e-9 * (ext[2].e + 1)) { Z = V.mul(Z, -1); X = V.mul(X, -1); }
     const R = [X[0], Y[0], Z[0], 0, X[1], Y[1], Z[1], 0, X[2], Y[2], Z[2], 0, 0, 0, 0, 1];   // rows X, Y, Z
     const tilt = slaOpt().tilt;                              // lean about X: the thin side stays across the blade, big faces no longer lie flat
-    return M.about(mom.c, tilt ? M.mul(M.rot([1, 0, 0], tilt * Math.PI / 180), R) : R);
+    return M.about(mom.c, tilt ? M.mul(M.rot([1, 0, 0], -tilt * Math.PI / 180), R) : R);
   }
-  // rows along X from the plate corner at the origin: small parts first, a row is filled across X before the next one starts (further along Y);
-  // parts of the same size stay in the same row. Items {w, d, h} → {x, y} (min corners).
+  // rows along X: small parts first, a row is filled across X before the next one starts (further along Y); parts of the same size stay in the same row.
+  // The whole block is then centred on the plate. Items {w, d, h} → {x, y} (min corners).
   function slaRows(items, gap, o) {
-    const x0 = o.margin, x1 = o.W - o.margin, y0 = o.margin + (o.guard ? o.gy + gap : 0);
+    const aw = o.W - 2 * o.margin, ad = o.D - 2 * o.margin, res = o.guard ? 2 * (o.gd + o.gy) : 0;
     const vol = function (it) { return Math.max(1e-9, it.w * it.d * it.h); };
     const ord = items.map(function (it, i) { return i; }).sort(function (a, b) { return vol(items[a]) - vol(items[b]) || items[a].d - items[b].d; });
     const groups = [];
     for (const i of ord) { const g = groups[groups.length - 1]; if (g && vol(items[i]) <= vol(items[g[0]]) * 1.03) g.push(i); else groups.push([i]); }
     const pos = new Array(items.length), rows = [];
     let row = null;
-    const newRow = function () { const y = rows.length ? rows[rows.length - 1].y + rows[rows.length - 1].d + gap : y0; row = { y: y, x: x0, d: 0, n: 0 }; rows.push(row); };
+    const newRow = function () { const y = rows.length ? rows[rows.length - 1].y + rows[rows.length - 1].d + gap : 0; row = { y: y, x: 0, d: 0, n: 0 }; rows.push(row); };
     const groupW = function (g) { return g.reduce(function (s, i) { return s + items[i].w; }, 0) + gap * (g.length - 1); };
     for (const g of groups) {
-      if (row && row.n && row.x + groupW(g) > x1 + 1e-9 && groupW(g) <= x1 - x0 + 1e-9) newRow();   // keep a same-size group together when it fits in a fresh row
+      if (row && row.n && row.x + groupW(g) > aw + 1e-9 && groupW(g) <= aw + 1e-9) newRow();   // keep a same-size group together when it fits in a fresh row
       for (const i of g) {
         const it = items[i];
-        if (!row || (row.n && row.x + it.w > x1 + 1e-9)) newRow();
+        if (!row || (row.n && row.x + it.w > aw + 1e-9)) newRow();
         pos[i] = [row.x, row.y]; row.x += it.w + gap; row.n++; row.d = Math.max(row.d, it.d);
       }
     }
-    const top = rows.length ? rows[rows.length - 1].y + rows[rows.length - 1].d : y0;
-    const W = Math.max.apply(null, items.map(function (it, i) { return pos[i][0] + it.w; })) - x0;
-    const wide = items.some(function (it) { return it.w > x1 - x0 + 1e-9; });
-    return { pos: pos, top: top, W: W, H: top - y0, fits: !wide && top + (o.guard ? gap + o.gy : 0) <= o.D - o.margin + 1e-9 };
+    const W = Math.max.apply(null, items.map(function (it, i) { return pos[i][0] + it.w; })), Hh = rows.length ? rows[rows.length - 1].y + rows[rows.length - 1].d : 0;
+    const ox = o.W / 2 - W / 2, oy = o.D / 2 - Hh / 2;
+    for (const p of pos) { p[0] += ox; p[1] += oy; }
+    const wide = items.some(function (it) { return it.w > aw + 1e-9; });
+    return { pos: pos, W: W, H: Hh, fits: !wide && W <= aw + 1e-9 && Hh + res <= ad + 1e-9 };
   }
   // spread 0..100 % goes from the smallest gap to the largest one that still fits on the plate
   function slaLayout(items, o) {
@@ -138,15 +139,66 @@
     for (const b of old) removeBody(b);
     if (!o.guard) return null;
     const parts = slaBodies(); if (!parts.length) return null;
-    const bb = parts.map(tightBox), g = S.sla.gap === undefined ? o.gap : S.sla.gap;
+    const bb = parts.map(tightBox);
     const y0 = Math.min.apply(null, bb.map(function (t) { return t.min[1]; })), y1 = Math.max.apply(null, bb.map(function (t) { return t.max[1]; })), h = Math.max.apply(null, bb.map(function (t) { return t.max[2]; }));
     if (!(h > 0)) return null;
-    const geo = slaBoxGeo(o.gx, o.gy, h), out = [];
-    [[o.W - o.margin - o.gx, y0 - g - o.gy], [o.margin, y1 + g]].forEach(function (p, i) {
-      out.push(addBody('SLA_guard_' + (i + 1), i ? slaBoxGeo(o.gx, o.gy, h) : geo, { matrix: M.trans([p[0], p[1], 0]), color: [235, 120, 60] }));
+    const z0 = Math.max(0, h - o.gt), out = [];
+    [[o.W - o.margin - o.gx, y0 - o.gd - o.gy], [o.margin, y1 + o.gd]].forEach(function (p, i) {
+      out.push(addBody('SLA_guard_' + (i + 1), slaBoxGeo(o.gx, o.gy, h - z0), { matrix: M.trans([p[0], p[1], z0]), color: [235, 120, 60] }));
     });
     return out;
   }
+  // ---------- the 3D print table ----------
+  S.sla.table = false;
+  try { S.sla.table = localStorage.getItem('mx.slaTable') === '1'; } catch (e) { }
+  let slaTabGeo = null, slaTabKey = '';
+  function slaTableGeo() {
+    const o = slaOpt(), k = o.W + 'x' + o.D;
+    if (slaTabGeo && slaTabKey === k) return slaTabGeo;
+    if (slaTabGeo) { const g = slaTabGeo; slaTabGeo = null; releaseGeo(g); }
+    const T = 8, g = slaBoxGeo(o.W, o.D, T);
+    for (let i = 2; i < g.positions.length; i += 3) g.positions[i] -= T + 0.05;
+    g.min[2] -= T + 0.05; g.max[2] -= T + 0.05;
+    slaTabGeo = g; slaTabKey = k; return g;
+  }
+  function drawSlaTable() {
+    if (!S.sla.table || S.sk || !gl) return;
+    const g = slaTableGeo(), b = ensureGL(g);
+    gl.uniformMatrix4fv(U.uM, false, M.ident()); gl.frontFace(gl.CCW);
+    gl.uniform4f(U.uColor, 0.62, 0.66, 0.71, 1); gl.uniform1f(U.uSel, 0); gl.uniform1i(U.uMode, 0);
+    gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(2, 2);
+    gl.bindVertexArray(b.vao); gl.drawElements(gl.TRIANGLES, g.indices.length, gl.UNSIGNED_INT, 0);
+    gl.disable(gl.POLYGON_OFFSET_FILL);
+  }
+  // how deep the view must reach so the table is not clipped
+  function slaDepthNeed() {
+    if (!S.sla || !S.sla.table) return 0;
+    const o = slaOpt(); let m = 0;
+    for (let c = 0; c < 8; c++) { const p = [c & 1 ? o.W : 0, c & 2 ? o.D : 0, c & 4 ? 0 : -9]; m = Math.max(m, V.len(V.sub(p, cam.target))); }
+    return m * 1.05;
+  }
+  function slaTableUI() { $('bSlaTable').classList.toggle('on', S.sla.table); dirty = true; }
+  $('bSlaTable').addEventListener('click', function () { S.sla.table = !S.sla.table; try { localStorage.setItem('mx.slaTable', S.sla.table ? '1' : '0'); } catch (e) { } slaTableUI(); });
+  slaTableUI();
+  // the panel floats over the 3D view: drag it by its title, default at the left
+  (function () {
+    const p = $('pop_sla'), hd = p.querySelector('.pophd');
+    $('tpop').parentNode.appendChild(p);
+    try { const s = JSON.parse(localStorage.getItem('mx.slaPop') || 'null'); if (s) { p.style.left = s.l; p.style.top = s.t; } } catch (e) { }
+    let dr = null;
+    hd.addEventListener('mousedown', function (e) {
+      if (e.button !== 0 || e.target.closest('button')) return; e.preventDefault(); e.stopPropagation();
+      dr = { x: e.clientX, y: e.clientY, l: p.offsetLeft, t: p.offsetTop, w: p.offsetWidth };
+    });
+    window.addEventListener('mousemove', function (e) {
+      if (!dr) return;
+      const par = p.offsetParent, W = par ? par.clientWidth : innerWidth, H = par ? par.clientHeight : innerHeight;
+      p.style.left = Math.max(0, Math.min(W - dr.w - 2, dr.l + e.clientX - dr.x)) + 'px';
+      p.style.top = Math.max(0, Math.min(H - 30, dr.t + e.clientY - dr.y)) + 'px';
+    });
+    window.addEventListener('mouseup', function () { if (dr) { dr = null; try { localStorage.setItem('mx.slaPop', JSON.stringify({ l: p.style.left, t: p.style.top })); } catch (e) { } } });
+    hd.addEventListener('dblclick', function (e) { if (e.target.closest('button')) return; p.style.left = ''; p.style.top = ''; try { localStorage.removeItem('mx.slaPop'); } catch (er) { } });
+  })();
   function slaBodies() { return visibleBodies().filter(function (b) { return !slaIsGuard(b); }); }
   function slaApply(orient, undo) {
     if (blocked()) return;
@@ -199,7 +251,11 @@
   }
   $('slaLiftSel').addEventListener('click', slaLiftSel);
   $('slaGuardOn').addEventListener('change', function () { if (blocked()) return; pushUndo(); const gd = slaGuards() || []; commitTransform(gd); dirty = true; });
-  ['slaGX', 'slaGY'].forEach(function (id) { $(id).addEventListener('change', function () { if (!$('slaGuardOn').checked) return; pushUndo(); commitTransform(slaGuards() || []); }); });
+  ['slaGX', 'slaGY', 'slaGT'].forEach(function (id) { $(id).addEventListener('change', function () { if (!$('slaGuardOn').checked) return; pushUndo(); commitTransform(slaGuards() || []); }); });
+  (function () { const r = $('slaGDR'), n = $('slaGD'); let armed = true;
+    const go = function () { if (!$('slaGuardOn').checked) return; if (armed) { pushUndo(); armed = false; } commitTransform(slaGuards() || []); };
+    r.addEventListener('input', function () { n.value = r.value; go(); }); n.addEventListener('input', function () { r.value = n.value; go(); });
+    r.addEventListener('change', function () { armed = true; }); n.addEventListener('change', function () { armed = true; }); })();
   [['slaTiltR', 'slaTilt'], ['slaLiftR', 'slaLift']].forEach(function (p) { const r = $(p[0]), n = $(p[1]); r.addEventListener('input', function () { n.value = r.value; }); n.addEventListener('input', function () { r.value = n.value; }); });
   $('slaGo').addEventListener('click', function () { slaApply(true, true); });
   $('slaGoA').addEventListener('click', function () { slaApply(false, true); });
@@ -212,7 +268,7 @@
   ['slaW', 'slaD', 'slaMargin'].forEach(function (id) { $(id).addEventListener('change', function () { S.sla.armed = true; slaRespread(); S.sla.armed = true; dirty = true; }); });
   // the plate, its grid and the blade, drawn while the panel is open
   function drawSla() {
-    if (!$('pop_sla').classList.contains('on') || S.sk) return;
+    if ((!$('pop_sla').classList.contains('on') && !S.sla.table) || S.sk) return;
     const o = slaOpt(), P = function (x, y) { return project([x, y, 0]); };
     const ln = function (a, b, c, w, dash) { const p = P(a[0], a[1]), q = P(b[0], b[1]); ctx.strokeStyle = c; ctx.lineWidth = w; ctx.setLineDash(dash || []); ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke(); ctx.setLineDash([]); };
     const st = o.W > 200 || o.D > 200 ? 50 : 20;

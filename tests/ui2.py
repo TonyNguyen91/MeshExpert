@@ -15,7 +15,7 @@ with sync_playwright() as p:
     def scr(pt):
         r=pg.evaluate("p=>{const q=__mrt.project(p);const r=document.getElementById('gl').getBoundingClientRect();return [q[0]+r.left,q[1]+r.top]}",pt); return r
     def click3(pt,**k): x,y=scr(pt); pg.mouse.click(x,y,**k)
-    def openall(): pg.evaluate("document.querySelectorAll('.pop').forEach(d=>d.classList.add('on'))")
+    def openall(): pg.evaluate("document.querySelectorAll('#dock .pop').forEach(d=>d.classList.add('on'))")
     openall()
     # 12: multiple files
     pg.set_input_files('#file',[S+'/hollow.stl',S+'/cshape.stl',S+'/block.stl']); pg.wait_for_function("__mrt.S.bodies.length==3"); idle()

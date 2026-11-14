@@ -414,7 +414,7 @@
   const right = function () { return [cam.R[0], cam.R[1], cam.R[2]]; };
   const up = function () { return [cam.R[3], cam.R[4], cam.R[5]]; };
   const viewer = function () { return [cam.R[6], cam.R[7], cam.R[8]]; };
-  function depthRange() { return V.len(V.sub(cam.target, cam.center)) + cam.radius * 1.5 + 1e-6; }
+  function depthRange() { return Math.max(V.len(V.sub(cam.target, cam.center)) + cam.radius * 1.5 + 1e-6, slaDepthNeed()); }
   function project(p) {
     const d = V.sub(p, cam.target), R = cam.R;
     const vx = R[0] * d[0] + R[1] * d[1] + R[2] * d[2], vy = R[3] * d[0] + R[4] * d[1] + R[5] * d[2];
@@ -566,6 +566,7 @@
         setCamUniforms();
         const opaque = [], trans = [];
         for (const b of S.bodies) if (b.visible && !S.ghostHide.has(b)) (alphaOf(b) >= 0.999 ? opaque : trans).push(b);
+        drawSlaTable();
         for (const b of opaque) drawBody(b, edges, false);
         if (trans.length) {
           const w = viewer();

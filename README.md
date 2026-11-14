@@ -85,11 +85,12 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Mã nguồn lớp bọc lõi B-rep ở thư mục `brep/` (cách biên dịch lại xem `brep/README.md`).
 
 ## Bàn in SLA
-- Nút "SLA control panel" (nhóm "Bàn in" trên ribbon) mở bảng điều khiển: "Xoay tối ưu + dàn đều", "Chỉ dàn đều" (giữ hướng hiện tại), "Nâng body đang chọn", xoay nghiêng, khối chắn 2 đầu.
-- Bàn in mặc định 400 × 400 mm, gốc bàn trùng gốc tọa độ, mặt in là mặt XY phía X, Y dương; dao gạt nằm dọc trục X và chạy theo chiều Y. Khi bảng mở, màn hình 3D vẽ khung bàn, lưới 50 mm, lề, tâm bàn và dao gạt (xanh lá, mũi tên chiều chạy).
+- Nhóm "Bàn in" trên ribbon: nút "SLA control panel" mở bảng điều khiển; nút "SLA table" (sáng lên khi bật) hiện bàn in dạng tấm kim loại trong 3D kèm lưới và dao gạt.
+- Bảng SLA nổi trên màn hình 3D, mặc định nằm sát bên trái; kéo thanh tiêu đề để dời, bấm đúp thanh tiêu đề để đưa về chỗ cũ.
+- Bàn in mặc định 400 × 400 mm, gốc bàn trùng gốc tọa độ, mặt in là mặt XY phía X, Y dương; dao gạt nằm dọc trục X và chạy theo chiều Y.
 - Xoay tối ưu: tìm hộp bao sát nhất của từng body; cạnh dài nhất dựng đứng theo Z (vật in cao nhất), cạnh trung bình theo Y (chiều dao chạy), cạnh mỏng nhất theo X (dọc lưỡi dao) để mỗi lớp dao chỉ chạm một bề rộng nhỏ nhất, gần như vuông góc 90°. Đầu có nhiều diện tích bề mặt hơn được quay xuống phía bàn.
-- Xoay nghiêng (tick, 10–45°): sau khi dựng đứng, nghiêng thêm quanh trục X để các mặt lớn không nằm song song mặt bàn; bề mỏng theo X giữ nguyên.
+- Xoay nghiêng (tick, 10–45°): sau khi dựng đứng, nghiêng thêm quanh trục X, đỉnh part ngả về phía +Y; bề mỏng theo X giữ nguyên.
 - Mọi body được nâng để điểm thấp nhất cao hơn mặt bàn đúng "Nâng khỏi bàn" (mặc định 5 mm). Nút "Nâng body đang chọn" chỉ đặt lại độ cao Z cho các body đang tick theo số này.
-- Dàn đều: part nhỏ nằm gần gốc tọa độ, càng xa gốc càng to; xếp kín một hàng dọc theo X rồi mới sang hàng tiếp theo (xa hơn theo Y); các part to như nhau được giữ chung một hàng (cùng vị trí Y). Thanh "Độ dàn đều": 0 % = khe nhỏ nhất ("Khe tối thiểu"), 100 % = khe lớn nhất mà vẫn vừa bàn (chừa "Lề mép bàn"); kéo thanh là thấy ngay. Không đủ chỗ thì app báo và xếp sát nhất có thể.
-- Khối chắn 2 đầu (tick, mặc định 20 × 20 mm): tự tạo 2 khối SLA_guard_1 / SLA_guard_2 ở hai góc chéo của bàn, luôn nằm ngoài cùng theo chiều dao gạt (một khối trước tất cả part, một khối sau tất cả part), đứng từ mặt bàn lên cao bằng part cao nhất. Mỗi lần dàn lại, nâng hoặc đổi khe, 2 khối tự cập nhật; bỏ tick thì xóa.
+- Dàn đều: part nhỏ ở góc khối gần gốc tọa độ, càng xa càng to; xếp kín một hàng dọc theo X rồi mới sang hàng tiếp theo (theo +Y); các part to như nhau giữ chung một hàng. Cả khối part luôn được đặt giữa tâm bàn. Thanh "Độ dàn đều": 0 % = khe nhỏ nhất ("Khe tối thiểu"), 100 % = khe lớn nhất mà vẫn vừa bàn (chừa "Lề mép bàn" và chỗ cho khối chắn); kéo thanh là thấy ngay. Không đủ chỗ thì app báo và xếp sát nhất có thể.
+- Khối chắn 2 đầu (tick, mặc định 20 × 20 × 2 mm): tự tạo 2 tấm SLA_guard_1 / SLA_guard_2 ở hai góc chéo của bàn, luôn nằm ngoài cùng theo chiều dao gạt (một tấm trước tất cả part, một tấm sau tất cả part), cách part ngoài cùng "Cách part ngoài cùng" (mặc định 30 mm, có thanh kéo). Tấm dày 2 mm được nâng lên để mặt trên ngang với part cao nhất. Mỗi lần dàn lại, nâng hoặc đổi khoảng cách, 2 tấm tự cập nhật; bỏ tick thì xóa.
 - Mỗi thao tác đều Lùi (Ctrl+Z) được.

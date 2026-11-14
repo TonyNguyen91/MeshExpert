@@ -22,7 +22,7 @@ with sync_playwright() as p:
     def cls(i): return pg.evaluate("i=>document.getElementById(i).className",i)
     def last(): return pg.evaluate("(()=>{const m=__mrt.S.measures;if(!m.length)return null;const x=m[m.length-1];return {type:x.type,v:x.v,r:x.r}})()")
     def holes(i=0): return pg.evaluate("i=>{const b=__mrt.S.bodies[i];return __mrt.core.borderLoops(b.geo.positions,b.geo.indices)}",i)
-    pg.evaluate("document.querySelectorAll('.pop').forEach(d=>d.classList.add('on'))"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
+    pg.evaluate("document.querySelectorAll('#dock .pop').forEach(d=>d.classList.add('on'))"); pg.evaluate("(()=>{const e=document.getElementById('cInfo');if(e.checked!==false){e.click()}})()")
     # ---- layout ----
     ok('display tools sit in the Home tab of the ribbon',pg.evaluate("!!document.querySelector('#ribbon [data-page=home] #col')&&!!document.querySelector('#ribbon [data-page=home] #opa')&&!!document.querySelector('#ribbon [data-page=home] #cWire')&&!document.querySelector('#right #col')"))
     ok('split button is plain with nothing ticked','primary' not in cls('bSplit'),cls('bSplit'))
