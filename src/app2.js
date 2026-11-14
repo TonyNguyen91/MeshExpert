@@ -849,7 +849,7 @@
       }
     }
     if (S.show.box && tick.length) drawBBox(tick);
-    drawGeos(); drawUcDir(); drawMeasures(); updGeoVisBtn();
+    drawSla(); drawGeos(); drawUcDir(); drawMeasures(); updGeoVisBtn();
     drawSketch(); drawDlgSel();
     for (const p of S.tmp) dot2(project(p), '#ffcf5a', 4.5);
     drawSkHov();
@@ -1902,39 +1902,29 @@
     if (body && !S.sel.has(body)) select([body], false);
     const n = S.sel.size, items = [];
     if (body) {
-      items.push([L('Zoom vào body tick', 'Zoom to ticked'), function () { fitTo(selBodies().filter(function (b) { return b.visible; })); }],
-        [L('Ẩn', 'Hide'), function () { $('bHideSel').click(); }], [L('Chỉ hiện body tick', 'Show only ticked'), function () { $('bIsolate').click(); }], null,
-        [L('Di chuyển', 'Move'), function () { setTool('move'); }], [L('Xoay', 'Rotate'), function () { setTool('rotate'); }], [L('Tỉ lệ', 'Scale'), function () { setTool('scale'); }],
-        [L('Về vị trí lúc import', 'Back to import position'), homeSelected], null,
-        [L('Nhân bản', 'Duplicate'), function () { $('bDup').click(); }]);
-      if (n === 1) items.push([L('Đổi tên', 'Rename'), function () { renameBody(body); }]);
-      items.push([L('Xóa', 'Delete'), deleteSelected], null,
-        ['Decimate…', function () { $('bApply').scrollIntoView({ block: 'center' }); flash(L('Đặt tham số Decimate ở khung bên trái rồi bấm Apply', 'Set the Decimate options on the left, then press Apply')); }],
-        [L('Tách body', 'Split'), function () { openPop('split', true); $('bSplit').click(); }],
-        ...(body.solid ? [[L('Sửa khối solid…', 'Edit solid…'), function () { editSolid(body); }], [L('Chuyển solid → mesh', 'Convert solid → mesh'), function () { solidToMesh(body); }]] : []),
-        ...(body.solid && body.solid.feats && body.solid.feats.length ? [[L('Bỏ lệnh cuối của khối: ', 'Undo the last solid edit: ') + body.solid.feats[body.solid.feats.length - 1].type, function () { dropLastFeat(body); }]] : []),
-        [L('Fillet cạnh…', 'Fillet edges…'), function () { openDlg('fillet'); }], [L('Shell…', 'Shell…'), function () { openDlg('shell'); }], [L('Boolean…', 'Boolean…'), function () { openDlg('boolean'); }],
-        [L('Tách: phương án kế ▶', 'Split: next option ▶'), function () { openPop('split', true); $('bSplitNext').click(); }],
-        [L('Gộp body tick', 'Merge ticked bodies'), joinSelected],
-        [L('Phân tích undercut', 'Undercut analysis'), function () { openPop('undercut', true); $('bUc').click(); }]);
-      if (n >= 2) items.push([L('Kiểm tra va chạm', 'Collision check'), function () { openPop('collide', true); $('bCol').click(); }]);
-      if (n === 2) items.push([L('So sánh 2 mesh', 'Compare the 2 meshes'), startCompare]);
-      items.push(null, [L('Tải STL', 'Download STL'), function () { $('bStl').click(); }]);
+      items.push([L('Zoom vào body tick', 'Zoom to ticked'), function () { fitTo(selBodies().filter(function (b) { return b.visible; })); }, 'zoom'],
+        [L('Ẩn', 'Hide'), function () { $('bHideSel').click(); }, 'hide'], [L('Chỉ hiện body tick', 'Show only ticked'), function () { $('bIsolate').click(); }, 'iso1'], null,
+        [L('Di chuyển', 'Move'), function () { setTool('move'); }, 'move'], [L('Xoay', 'Rotate'), function () { setTool('rotate'); }, 'rot'], [L('Tỉ lệ', 'Scale'), function () { setTool('scale'); }, 'scale'],
+        [L('Về vị trí lúc import', 'Back to import position'), homeSelected, 'home'], null,
+        [L('Nhân bản', 'Duplicate'), function () { $('bDup').click(); }, 'dup']);
+      if (n === 1) items.push([L('Đổi tên', 'Rename'), function () { renameBody(body); }, 'ren']);
+      items.push([L('Xóa', 'Delete'), deleteSelected, 'del'], null,
+        ['Decimate…', function () { $('bApply').scrollIntoView({ block: 'center' }); flash(L('Đặt tham số Decimate ở khung bên trái rồi bấm Apply', 'Set the Decimate options on the left, then press Apply')); }, 'dec'],
+        [L('Tách body', 'Split'), function () { openPop('split', true); $('bSplit').click(); }, 'split'],
+        ...(body.solid ? [[L('Sửa khối solid…', 'Edit solid…'), function () { editSolid(body); }, 'edit'], [L('Chuyển solid → mesh', 'Convert solid → mesh'), function () { solidToMesh(body); }, 'mesh']] : []),
+        ...(body.solid && body.solid.feats && body.solid.feats.length ? [[L('Bỏ lệnh cuối của khối: ', 'Undo the last solid edit: ') + body.solid.feats[body.solid.feats.length - 1].type, function () { dropLastFeat(body); }, 'undo']] : []),
+        [L('Fillet cạnh…', 'Fillet edges…'), function () { openDlg('fillet'); }, 'fillet'], [L('Shell…', 'Shell…'), function () { openDlg('shell'); }, 'shell'], [L('Boolean…', 'Boolean…'), function () { openDlg('boolean'); }, 'bool'],
+        [L('Tách: phương án kế ▶', 'Split: next option ▶'), function () { openPop('split', true); $('bSplitNext').click(); }, 'next'],
+        [L('Gộp body tick', 'Merge ticked bodies'), joinSelected, 'merge'],
+        [L('Phân tích undercut', 'Undercut analysis'), function () { openPop('undercut', true); $('bUc').click(); }, 'uc']);
+      if (n >= 2) items.push([L('Kiểm tra va chạm', 'Collision check'), function () { openPop('collide', true); $('bCol').click(); }, 'col']);
+      if (n === 2) items.push([L('So sánh 2 mesh', 'Compare the 2 meshes'), startCompare, 'cmp']);
+      items.push(null, [L('Tải STL', 'Download STL'), function () { $('bStl').click(); }, 'stl']);
     } else {
-      items.push([L('Hiện tất cả', 'Show all'), function () { $('bShowAll').click(); }], [L('Chọn tất cả', 'Tick all'), function () { $('bSelAll').click(); }],
-        [L('Bỏ chọn tất cả', 'Untick all'), function () { $('bSelNone').click(); }], null, ['Fit', function () { sceneChanged(true); }], ['Iso', function () { setView('iso'); }]);
+      items.push([L('Hiện tất cả', 'Show all'), function () { $('bShowAll').click(); }, 'show'], [L('Chọn tất cả', 'Tick all'), function () { $('bSelAll').click(); }, 'tick'],
+        [L('Bỏ chọn tất cả', 'Untick all'), function () { $('bSelNone').click(); }, 'untick'], null, ['Fit', function () { sceneChanged(true); }, 'fit'], ['Iso', function () { setView('iso'); }, 'isov']);
     }
-    const m = $('ctx');
-    m.innerHTML = '';
-    for (const it of items) {
-      if (!it) { m.appendChild(document.createElement('hr')); continue; }
-      const d = document.createElement('div'); d.textContent = it[0];
-      d.addEventListener('click', function () { closeMenu(); it[1](); });
-      m.appendChild(d);
-    }
-    m.style.display = 'block';
-    m.style.left = Math.max(0, Math.min(x, window.innerWidth - m.offsetWidth - 6)) + 'px';
-    m.style.top = Math.max(0, Math.min(y, window.innerHeight - m.offsetHeight - 6)) + 'px';
+    showMenu(items, x, y);
   }
   window.addEventListener('pointerdown', function (e) { if (!$('ctx').contains(e.target)) closeMenu(); }, true);
   $('ctx').addEventListener('contextmenu', function (e) { e.preventDefault(); });

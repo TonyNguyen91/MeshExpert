@@ -31,6 +31,7 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - `app.js` cũ đã được thay bằng `app2.js` và không còn dùng.
 
 ## Thao tác trên màn hình 3D
+- Chuột phải vào body: menu lệnh có biểu tượng cho từng dòng.
 - Bấm lần lượt vào các body để tick thêm, bấm lại để bỏ tick; bấm khoảng trống hoặc nhấn Space để bỏ chọn hết.
 - Giữ chuột phải kéo: xoay hướng nhìn quanh đúng điểm vừa bấm trên mesh.
 - Công cụ Xoay: kéo mũi tên cong cùng màu với trục để xoay quanh trục đó; giữ Shift để xoay theo bước 1°.
@@ -44,6 +45,8 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 ## Sketch tham số
 - Nút "✏ Sketch": chọn mặt phẳng (Top / Front / Right hoặc một mặt phẳng trên mesh) rồi vẽ trong môi trường riêng.
 - Vẽ: Line, Rectangle, Rect. tâm, Circle, Arc 3 điểm, Cung tiếp tuyến, Polygon, Slot, Điểm; sửa: Fillet, Trim, Offset, Mirror, Nét dựng (construction), Xóa.
+- Thanh công cụ sketch dạng biểu tượng như Onshape; rê chuột vào nút để xem tên và phím tắt. Hàng dưới có nút bật / tắt bắt lưới và bộ lọc chọn (Body, Điểm, Tâm, Thẳng...).
+- Bắt điểm ngoài sketch: khi vẽ, ngoài điểm của chính sketch, con trỏ còn bắt được điểm geometry (point, đầu / giữa line, gốc O) và trên mesh theo bộ lọc: đỉnh (Điểm), tâm cung / lỗ (Tâm), điểm trên cạnh (Thẳng / Tròn). Điểm bắt được chiếu thẳng xuống mặt phẳng sketch (chấm hồng, nét đứt nối tới điểm 3D gốc nếu nó không nằm trên mặt vẽ). Tắt loại nào trong bộ lọc thì không bắt loại đó.
 - Ràng buộc: Kích thước (dài, ngang, dọc, điểm–đường, góc, bán kính, đường kính), Trùng, Đồng tâm, Song song, Vuông góc, Tiếp tuyến, Ngang, Dọc, Bằng, Trung điểm, Đối xứng, Cố định. Khi vẽ, app tự thêm ngang / dọc / trùng điểm / điểm trên nét / trung điểm.
 - Nét xanh = còn bậc tự do, nét trắng = đã ràng buộc đủ. Kéo điểm / nét để di chuyển phần còn tự do; nhấp đúp kích thước để sửa số. Ràng buộc xung đột hoặc thừa bị từ chối.
 - Sketch xong nằm trong "Danh sách sketch" bên trái: ẩn / hiện (Y), sửa (nhấp đúp), đổi tên, xóa. Sửa sketch thì các khối tạo từ nó tự dựng lại.
@@ -63,7 +66,7 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Nhóm Geometry (cạnh nhóm Sketch) tạo hình tham chiếu trực tiếp trên màn hình 3D, theo bộ lọc:
   - Point: bấm đỉnh, tâm đường tròn, điểm trên cạnh hoặc điểm trên mặt mesh.
   - Line có 3 kiểu, chọn ở bảng nhỏ: Điểm – Điểm, Điểm – Mặt (vuông góc với mặt), Điểm – Vector (theo hướng một cạnh thẳng / trục / pháp tuyến mặt). Mỗi kiểu có các ô chọn đánh số; ô viền cam là ô nhận cú bấm tiếp theo (bấm vào ô để đổi, ✕ để bỏ). Đủ ô thì hiện line xem trước nét đứt kèm độ dài; bấm "Tạo line" hoặc Enter để tạo. Ô Dài (thanh kéo / số): 0 = tới điểm cuối / tới mặt phẳng, số khác 0 = dài đúng số đó; Đảo chiều. Chọn line trong danh sách rồi đổi Dài / Đảo chiều là line cập nhật.
-  - Bảng nhỏ của các lệnh Point / Line / Plane / Axis, Di chuyển / Xoay / Tỉ lệ / Ghép có thanh tiêu đề: kéo thanh này để đưa bảng đi chỗ khác, nút ▾ / ▸ để thu gọn còn một dòng (Enter vẫn tạo line khi đang thu gọn), bấm đúp thanh tiêu đề để đưa bảng về góc trên trái. Vị trí và trạng thái thu gọn được nhớ cho lần mở sau.
+  - Bảng nhỏ của các lệnh Point / Line / Plane / Axis, Di chuyển / Xoay / Tỉ lệ / Ghép có thanh tiêu đề: kéo thanh này để đưa bảng đi chỗ khác, nút ✕ đóng bảng và quay về lệnh Chọn, bấm đúp thanh tiêu đề để đưa bảng về góc trên trái. Vị trí bảng được nhớ cho lần mở sau.
   - Gốc tọa độ (khi bật hiện trục ở nhóm Hiển thị) là geometry để bắt: điểm gốc O, trục X / Y / Z và 3 mặt gốc XY (Top), XZ (Front), YZ (Right) vẽ nhỏ cạnh gốc. Trục và mặt gốc luôn giữ cùng kích thước trên màn hình khi zoom, và bấm chọn được xuyên qua vật thể (Point, Line, Plane, Mate, chọn tâm xoay, mặt vẽ Sketch, Snap mặt cắt, hướng Undercut). Riêng các lệnh đo vẫn ưu tiên body ở phía trước.
   - Bắt điểm: mọi lệnh cần một điểm (Point, ô điểm của Line, chọn tâm xoay / pick centre, Mate...) bắt được điểm geometry, điểm đầu / cuối / giữa của line và trục, điểm gốc O, hoặc snap trên mesh (đỉnh, tâm cung, điểm trên mặt theo bộ lọc). Ở chỗ cần hướng (vector của Line, trục X tay nắm, hướng Undercut) thì bấm vào điểm giữa / đầu line vẫn lấy hướng của line đó.
   - Chọn geometry ngay trên màn hình 3D (công cụ Chọn): bấm hoặc quét chuột trái ưu tiên body; chỗ không có body thì mới lấy geometry. Delete để xóa, Y để ẩn, chuột phải để Ẩn / Đổi tên / Xóa.
@@ -80,3 +83,11 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Lệnh nào lõi B-rep không làm được (ví dụ Move face mặt trên đang tiếp xúc fillet, Replace face) thì app tự dựng lại khối bằng cách cũ trên lưới, như trước khi có B-rep.
 - Lõi B-rep nạp lần đầu mất khoảng 1–2 giây (khi mở Extrude / Revolve hoặc một lệnh solid). File index.html nặng khoảng 10,7 MB vì có lõi này.
 - Mã nguồn lớp bọc lõi B-rep ở thư mục `brep/` (cách biên dịch lại xem `brep/README.md`).
+
+## Bàn in SLA
+- Nhóm "Bàn in" trên ribbon: "Bàn in SLA" mở bảng thông số, "Xoay tối ưu" xoay rồi dàn đều mọi body đang hiện, "Dàn đều" chỉ dàn đều (giữ hướng hiện tại).
+- Bàn in mặc định 400 × 400 mm, gốc bàn trùng gốc tọa độ, mặt in là mặt XY phía X, Y dương; dao gạt nằm dọc trục X và chạy theo chiều Y. Khi bảng mở, màn hình 3D vẽ khung bàn, lưới 50 mm, lề, tâm bàn và dao gạt (xanh lá, mũi tên chiều chạy).
+- Xoay tối ưu: tìm hộp bao sát nhất của từng body; cạnh dài nhất dựng đứng theo Z (vật in cao nhất), cạnh trung bình theo Y (chiều dao chạy), cạnh mỏng nhất theo X (dọc lưỡi dao) để mỗi lớp dao chỉ chạm một bề rộng nhỏ nhất, gần như vuông góc 90°. Đầu có nhiều diện tích bề mặt hơn được quay xuống phía bàn.
+- Mọi body được nâng để điểm thấp nhất cao hơn mặt bàn đúng "Nâng khỏi bàn" (mặc định 5 mm).
+- Dàn đều: xếp thành các hàng quanh tâm bàn, các hàng và từng hàng đều căn giữa. Thanh "Độ dàn đều (từ tâm)": 0 % = xếp sát nhau với "Khe tối thiểu", 100 % = tỏa ra kín bàn (vẫn chừa "Lề mép bàn"); kéo thanh là thấy ngay. Không đủ chỗ thì app báo và xếp sát nhất có thể.
+- Mỗi lần xếp lưu được bằng Lùi (Ctrl+Z).

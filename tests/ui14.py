@@ -1,4 +1,4 @@
-# Browser test: the small tool panel (Line, Move...) has a title bar: drag it, collapse it, double-click to put it back.
+# Browser test: the small tool panel (Line, Move...) has a title bar: drag it, ✕ closes it (back to Select), double-click puts it back.
 # Run: python3 ui14.py <folder with block.stl> [path to index.html]
 import sys,os
 from playwright.sync_api import sync_playwright
@@ -24,11 +24,11 @@ with sync_playwright() as p:
     ok('Drag did not pick anything in the view',pg.locator('#geoSlots .gslot.ok').count()==0)
     pg.mouse.move(x+250,y+200); pg.mouse.down(); pg.mouse.move(5000,5000,steps=4); pg.mouse.up()
     d=pos(); ok('Kept inside the view, not squeezed',d[0]+pg.evaluate("document.getElementById('tpop').offsetWidth")<=1456-280 and d[1]<819 and d[2]==a[2],d)
-    pg.click('#tpMin'); pg.wait_for_timeout(100)
-    ok('Collapsed to the title bar',pos()[2]<36 and not pg.is_visible('#geoMake'))
     pg.click('[data-tool=move]'); pg.wait_for_timeout(100)
-    ok('Title follows the tool, stays collapsed',pg.inner_text('#tpTitle')=='Di chuyển' and not pg.is_visible('#mvX'))
-    pg.click('#tpMin'); pg.wait_for_timeout(100); ok('Expanded again',pg.is_visible('#mvX'))
+    ok('Title follows the tool',pg.inner_text('#tpTitle')=='Di chuyển')
+    pg.click('#tpX'); pg.wait_for_timeout(100)
+    ok('X closes the panel and goes back to Select',not pg.is_visible('#tpop') and pg.evaluate("__mrt.S.tool")=='select')
+    pg.click('[data-tool=gline]'); pg.wait_for_timeout(100)
     pg.dblclick('#tpTitle'); pg.wait_for_timeout(100); e=pos(); ok('Double-click puts it back',e[0]==a[0] and e[1]==a[1],e)
     pg.mouse.move(x,y); pg.mouse.down(); pg.mouse.move(x+100,y+60,steps=4); pg.mouse.up()
     pg2=ctx.new_page(); pg2.goto('file://'+os.path.abspath(PAGE)); pg2.wait_for_timeout(300)

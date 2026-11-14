@@ -270,7 +270,7 @@
     const g = glPreview();
     if (g) { const a = project(g.p), b = project(g.p2); ctx.setLineDash([7, 4]); line2(a, b, '#ffe14a', 2.2); ctx.setLineDash([]); dot2(a, '#ffe14a', 3); dot2(b, '#ffe14a', 3); const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; tag(m[0], m[1] - 14, f2(V.len(V.sub(g.p2, g.p))) + ' mm', '#14181d', '#ffe14a'); }
   }
-  // title bar of the small tool panel: drag it anywhere, collapse it, double-click to put it back
+  // title bar of the small tool panel: drag it anywhere, ✕ closes it (back to Select), double-click puts it back
   function tpHead(t) {
     const n = { move: ['Di chuyển', 'Move'], rotate: ['Xoay', 'Rotate'], scale: ['Tỉ lệ', 'Scale'], mate: ['Ghép mặt / trục', 'Mate'], gpoint: ['Point', 'Point'], gline: ['Line', 'Line'], gplane: ['Plane', 'Plane'], gaxis: ['Axis', 'Axis'] }[t];
     if (n) $('tpTitle').textContent = L(n[0], n[1]);
@@ -278,7 +278,7 @@
   }
   function tpSave() {
     const p = $('tpop');
-    try { localStorage.setItem('mx.tpop', JSON.stringify({ l: p.style.left, t: p.style.top, m: p.classList.contains('min') })); } catch (e) { }
+    try { localStorage.setItem('mx.tpop', JSON.stringify({ l: p.style.left, t: p.style.top })); } catch (e) { }
   }
   function tpClamp() {
     const p = $('tpop'), par = p.offsetParent; if (!par || p.style.display === 'none') return;
@@ -286,13 +286,10 @@
     p.style.left = l + 'px'; p.style.top = t + 'px';
   }
   (function () {
-    const p = $('tpop'), hd = $('tpHd'), mb = $('tpMin');
-    try { const s = JSON.parse(localStorage.getItem('mx.tpop') || 'null'); if (s) { if (s.l) p.style.left = s.l; if (s.t) p.style.top = s.t; p.classList.toggle('min', !!s.m); } } catch (e) { }
-    mb.textContent = p.classList.contains('min') ? '▸' : '▾';
-    mb.addEventListener('mousedown', function (e) { e.stopPropagation(); });
-    mb.addEventListener('click', function (e) {
-      e.stopPropagation(); p.classList.toggle('min'); mb.textContent = p.classList.contains('min') ? '▸' : '▾'; tpSave();
-    });
+    const p = $('tpop'), hd = $('tpHd'), xb = $('tpX');
+    try { const s = JSON.parse(localStorage.getItem('mx.tpop') || 'null'); if (s) { if (s.l) p.style.left = s.l; if (s.t) p.style.top = s.t; } } catch (e) { }
+    xb.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+    xb.addEventListener('click', function (e) { e.stopPropagation(); setTool('select'); });
     let dr = null;
     hd.addEventListener('mousedown', function (e) {
       if (e.button !== 0) return; e.preventDefault(); e.stopPropagation();
@@ -305,7 +302,7 @@
       p.style.top = Math.max(0, Math.min(H - 24, dr.t + e.clientY - dr.y)) + 'px';
     });
     window.addEventListener('mouseup', function () { if (dr) { dr = null; tpSave(); } });
-    hd.addEventListener('dblclick', function (e) { if (e.target === mb) return; p.style.left = ''; p.style.top = ''; tpSave(); });
+    hd.addEventListener('dblclick', function (e) { if (e.target === xb) return; p.style.left = ''; p.style.top = ''; tpSave(); });
     window.addEventListener('resize', tpClamp);
   })();
   // the pick boxes of the Line panel

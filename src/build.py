@@ -12,7 +12,7 @@ core = r('core_base.js') + r('core_sketch.js') + r('core_dress.js') + r('core_ex
 with open(os.path.join(HERE, 'core.js'), 'w', encoding='utf8') as f:
     f.write(core)
 out = (r('head.html') + '\n<script>\n/*CORE_BEGIN*/' + core + '/*CORE_END*/\n</script>\n\n'
-       '<script>\n' + r('manifold_embed.js') + '</script>\n\n<script>\n' + r('brep_embed.js') + '</script>\n\n<script>\n' + r('app2.js').replace('/*MODEL*/', r('model.js') + r('feat.js') + r('brep.js') + r('geo.js')) + '</script>\n</body>\n</html>\n')
+       '<script>\n' + r('manifold_embed.js') + '</script>\n\n<script>\n' + r('brep_embed.js') + '</script>\n\n<script>\n' + r('app2.js').replace('/*MODEL*/', r('model.js') + r('feat.js') + r('brep.js') + r('geo.js') + r('sla.js')) + '</script>\n</body>\n</html>\n')
 with open(OUT, 'w', encoding='utf8') as f:
     f.write(out)
 print(len(out), 'bytes ->', os.path.normpath(OUT))

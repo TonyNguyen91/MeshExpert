@@ -207,6 +207,7 @@
     S.sk = { id: id || null, name: name || '', frame: frame, m: m, tool: 'line', pts: [], cur: null, sel: new Set(), hov: null, hist: [], snap: null, an: null, pend: [], cmode: null, hits: [], dimPrev: null };
     skAnalyseNow();
     $('tools').style.display = 'none'; $('sktools').style.display = 'flex'; $('skplane').style.display = 'none';
+    $('skFltSlot').appendChild($('selFlt'));
     mainCam.R = [frame.u[0], frame.u[1], frame.u[2], frame.v[0], frame.v[1], frame.v[2], frame.n[0], frame.n[1], frame.n[2]];
     if (!S.bodies.length && !m.ents.length) { mainCam.target = frame.o.slice(); mainCam.zoom = 60; }
     canvas.style.cursor = 'crosshair';
@@ -218,6 +219,7 @@
     skFlush(); skDimEditEnd(false);
     S.sk = null;
     $('tools').style.display = 'flex'; $('sktools').style.display = 'none';
+    $('fltHome').after($('selFlt'));
     canvas.style.cursor = toolCursor();
     if (keep) {
       pushUndo();
@@ -247,11 +249,24 @@
     if (best) return best;
     m.ents.forEach(function (e, i) { if (e.t !== 'line') return; const q = [(m.pts[e.a][0] + m.pts[e.b][0]) / 2, (m.pts[e.a][1] + m.pts[e.b][1]) / 2], d = scr(q); if (d < bd) { bd = d; best = { p: q, pid: -1, mid: i, kind: 'mid' }; } });
     if (best) return best;
+    const xs = skExtSnap(px, py);                             // a geometry point, or what the selection filter allows on the meshes
+    if (xs) return xs;
     bd = 7;
     m.ents.forEach(function (e, i) { if (e.t === 'point') return; const q = nearestOn(skGeo(m, e), p, false); if (!q) return; const d = scr(q); if (d < bd) { bd = d; best = { p: q, pid: -1, on: i, kind: 'on' }; } });
     if (best) return best;
     if ($('skGrid').checked) { const st = skGridStep() / 5; return { p: [Math.round(p[0] / st) * st, Math.round(p[1] / st) * st], pid: -1, kind: 'grid' }; }
     return { p: p, pid: -1, kind: '' };
+  }
+  // snap outside the sketch: geometry points / line ends, the world origin, or mesh corners, edges, arc centres as the filter allows; projected onto the sketch plane
+  function skExtSnap(px, py) {
+    const f = S.sk.frame;
+    let e = null;
+    try { e = pickEnt(px, py, false); } catch (er) { e = null; }
+    if (!e || e.kind === 'plane' || e.kind === 'cyl' || e.kind === 'sphere' || e.free || e.blocked) return null;
+    const P = entPoint(e); if (!P) return null;
+    const s = project(P); if (Math.hypot(s[0] - px, s[1] - py) > 14) return null;
+    const w = V.sub(P, f.o);
+    return { p: [V.dot(w, f.u), V.dot(w, f.v)], pid: -1, kind: 'ext', p3: P.slice(), text: e.text || '' };
   }
   // a point for a snap: the existing one, or a new one with the inferred "on" / "midpoint" constraint
   function skPt(sn) {
@@ -907,6 +922,7 @@
     if (cur && sk.snap) {
       const q = P(cur), k = sk.snap.kind;
       if (k && k !== 'grid') { ctx.strokeStyle = '#ffe14a'; ctx.lineWidth = 2; ctx.strokeRect(q[0] - 6, q[1] - 6, 12, 12); if (k === 'mid' || k === 'on') { ctx.fillStyle = '#ffe14a'; ctx.font = 'bold 11px Arial'; ctx.fillText(k === 'mid' ? 'M' : '◦', q[0] + 9, q[1] - 8); } }
+      if (k === 'ext') { ctx.fillStyle = '#ff7ad9'; ctx.beginPath(); ctx.arc(q[0], q[1], 3, 0, 7); ctx.fill(); if (sk.snap.p3) { const r = project(sk.snap.p3); if (Math.hypot(r[0] - q[0], r[1] - q[1]) > 2) { ctx.setLineDash([3, 3]); ctx.strokeStyle = '#ff7ad9'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(r[0], r[1]); ctx.lineTo(q[0], q[1]); ctx.stroke(); ctx.setLineDash([]); } } }
       else { line2([q[0] - 6, q[1]], [q[0] + 6, q[1]], '#ffe14a', 1.5); line2([q[0], q[1] - 6], [q[0], q[1] + 6], '#ffe14a', 1.5); }
     }
     const an = sk.an, reg = skRegions(core.skFlat(m));
