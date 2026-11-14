@@ -101,6 +101,7 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 ## Bàn in SLA
 - Nhóm "Bàn in" trên ribbon: nút "SLA control panel" mở bảng điều khiển; nút "SLA table" (sáng lên khi bật) hiện khung bàn in trong suốt (viền, lưới 50 mm, lề, tâm, dao gạt) ngay cả khi bảng đóng.
 - Bảng SLA nổi trên màn hình 3D, mặc định nằm sát bên trái; kéo thanh tiêu đề để dời, bấm đúp thanh tiêu đề để đưa về chỗ cũ.
+- Mọi chức năng trong bảng SLA (xoay tối ưu, dàn đều, nâng, khối chắn) chỉ áp dụng cho các body đang được chọn (tick); các body khác giữ nguyên.
 - Bàn in mặc định 400 × 400 mm, gốc bàn trùng gốc tọa độ, mặt in là mặt XY phía X, Y dương; dao gạt nằm dọc trục X và chạy theo chiều Y.
 - Xoay tối ưu: tìm hộp bao sát nhất của từng body; cạnh dài nhất dựng đứng theo Z (vật in cao nhất), cạnh trung bình theo Y (chiều dao chạy), cạnh mỏng nhất theo X (dọc lưỡi dao) để mỗi lớp dao chỉ chạm một bề rộng nhỏ nhất, gần như vuông góc 90°. Đầu có nhiều diện tích bề mặt hơn được quay xuống phía bàn.
 - Xoay nghiêng (tick, 10–45°): sau khi dựng đứng, nghiêng thêm quanh trục X, đỉnh part ngả về phía +Y; bề mỏng theo X giữ nguyên.

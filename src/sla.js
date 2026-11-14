@@ -138,7 +138,8 @@
     const old = S.bodies.filter(slaIsGuard), o = slaOpt();
     for (const b of old) removeBody(b);
     if (!o.guard) return null;
-    const parts = slaBodies(); if (!parts.length) return null;
+    const last = (S.sla.last || []).filter(function (b) { return S.bodies.indexOf(b) >= 0 && b.visible; });
+    const parts = last.length ? last : slaBodies(); if (!parts.length) return null;
     const bb = parts.map(tightBox);
     const y0 = Math.min.apply(null, bb.map(function (t) { return t.min[1]; })), y1 = Math.max.apply(null, bb.map(function (t) { return t.max[1]; })), h = Math.max.apply(null, bb.map(function (t) { return t.max[2]; }));
     if (!(h > 0)) return null;
@@ -173,11 +174,12 @@
     window.addEventListener('mouseup', function () { if (dr) { dr = null; try { localStorage.setItem('mx.slaPop', JSON.stringify({ l: p.style.left, t: p.style.top })); } catch (e) { } } });
     hd.addEventListener('dblclick', function (e) { if (e.target.closest('button')) return; p.style.left = ''; p.style.top = ''; try { localStorage.removeItem('mx.slaPop'); } catch (er) { } });
   })();
-  function slaBodies() { return visibleBodies().filter(function (b) { return !slaIsGuard(b); }); }
+  // only the selected (ticked) bodies take part in the SLA plate tools
+  function slaBodies() { return selBodies().filter(function (b) { return b.visible && !slaIsGuard(b); }); }
   function slaApply(orient, undo) {
     if (blocked()) return;
     const list = slaBodies();
-    if (!list.length) { flash(L('Chưa có body nào để xếp', 'There are no bodies to lay out')); return; }
+    if (!list.length) { flash(L('Hãy tick hoặc bấm chọn các body cần xếp lên bàn in', 'Tick or click the bodies to lay out on the plate')); return; }
     const o = slaOpt();
     setBusy(true, L('Đang xếp lên bàn in…', 'Laying out on the plate…'));
     setTimeout(function () {
