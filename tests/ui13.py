@@ -147,7 +147,7 @@ with sync_playwright() as p:
     at([0,0,0]); PO=geos()[-1]
     ok('Point snaps onto the origin O',PO['type']=='point' and near(PO['p'],[0,0,0],1e-9),PO)
     # Line point - vector: from the block corner along the origin X axis, flipped, 15 long
-    Ln=pg.evaluate("Math.max(__mrt.cam().radius*0.225,1e-6)")
+    Ln=pg.evaluate("__mrt.originLn()")
     pg.click('[data-tool=gline]'); pg.wait_for_timeout(100); pg.click('#geoModes button[data-gm=pv]'); pg.wait_for_timeout(100)
     ok('Point – Vector mode: start point and direction boxes',pg.locator('#geoSlots .gslot').count()==3-1 and 'Hướng' in pg.inner_text('#geoSlots'))
     pg.fill('#geoLen','15'); pg.dispatch_event('#geoLen','input'); pg.check('#geoLFlip')
@@ -176,7 +176,7 @@ with sync_playwright() as p:
     # sketch on an origin base plane
     pg.evaluate("__mrt.S.bodies[0].visible=false"); pg.wait_for_timeout(100)
     pg.click('#bSketch'); pg.click('#skplane [data-pl=pick]'); pg.wait_for_timeout(100)
-    Ln=pg.evaluate("Math.max(__mrt.cam().radius*0.225,1e-6)")
+    Ln=pg.evaluate("__mrt.originLn()")
     q=scr([-Ln*0.25,-Ln*0.25,0]) if False else scr([Ln*0.3,Ln*0.3,0])
     pg.mouse.move(q[0],q[1]); pg.wait_for_timeout(120)
     hv=pg.evaluate("__mrt.S.skHov&&__mrt.S.skHov.geo&&__mrt.S.skHov.geo.id")
@@ -186,6 +186,27 @@ with sync_playwright() as p:
     ok('sketch on XY with its origin at O',fr and near(fr['o'],[0,0,0],1e-9) and abs(abs(fr['n'][2])-1)<1e-9,fr)
     pg.click('#skCancel'); pg.wait_for_timeout(150)
     pg.evaluate("(()=>{const s=__mrt.S;s.bodies[0].visible=true;s.bodies[1].visible=true;})()")
+    # origin keeps its size on screen when zooming
+    def olen(): return math.dist(scr([0,0,0]),scr([pg.evaluate("__mrt.originLn()"),0,0]))
+    o1=olen(); pg.evaluate("__mrt.cam().zoom*=2.5"); pg.wait_for_timeout(100); o2=olen(); pg.evaluate("__mrt.cam().zoom/=2.5"); pg.wait_for_timeout(100)
+    ok('origin axes keep the same size on screen when zooming',abs(o1-o2)<0.5 and abs(o1-90)<1,[o1,o2])
+    # a geometry point onto the midpoint of a line (vertex snap)
+    LL=[g for g in geos() if g['type']=='line'][0]; mid=[(LL['p'][i]+LL['p2'][i])/2 for i in range(3)]
+    pg.click('[data-tool=gpoint]'); pg.wait_for_timeout(100); at(mid); PM=geos()[-1]
+    ok('Point snaps onto the midpoint of a line',PM['type']=='point' and near(PM['p'],mid,1e-6),PM)
+    pg.keyboard.press('Control+z'); pg.wait_for_timeout(100)
+    # Section snap onto the origin XZ plane, picked through whatever is there
+    pg.evaluate("document.getElementById('pop_section')&&document.getElementById('pop_section').classList.add('on')")
+    pg.click('[data-tool=select]'); pg.mouse.move(900,800); pg.keyboard.press('Shift+Digit7'); pg.wait_for_timeout(150)
+    pg.select_option('#secAx','pick'); pg.wait_for_timeout(100)
+    OG=pg.evaluate("__mrt.originGeos().filter(g=>g.id==='oP1')[0]")
+    q=scr(OG['p']); pg.mouse.move(q[0],q[1]); pg.wait_for_timeout(120)
+    sh=pg.evaluate("__mrt.S.skHov&&__mrt.S.skHov.geo&&__mrt.S.skHov.geo.id")
+    pg.mouse.click(q[0],q[1]); pg.wait_for_timeout(150)
+    sn=pg.evaluate("__mrt.S.sec.nPick")
+    ok('Section Snap takes the origin XZ plane',sh=='oP1' and sn and abs(abs(sn[1])-1)<1e-9 and pg.evaluate("__mrt.S.sec.on"),[sh,sn])
+    pg.evaluate("(()=>{const e=document.getElementById('secOn');e.checked=false;e.dispatchEvent(new Event('change'));})()")
+    ok('app is called MeshExpert',pg.title()=='MeshExpert' and 'MeshExpert' in pg.inner_text('h1').replace(' ',''))
     # undercut: pull direction picked from the top face; hide the bodies not analysed
     pg.evaluate("(()=>{const s=__mrt.S;s.sel.clear();s.sel.add(s.bodies[0]);})()")
     pg.evaluate("document.querySelector('.popb[data-pop=undercut]')?document.querySelector('.popb[data-pop=undercut]').click():document.getElementById('pop_undercut').classList.add('on')"); pg.wait_for_timeout(100)

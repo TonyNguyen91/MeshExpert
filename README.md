@@ -1,4 +1,4 @@
-# MrT MeshExpert
+# MeshExpert
 
 Công cụ chỉnh sửa mesh STL/OBJ chạy offline trong trình duyệt. Mở trực tiếp `index.html` (Chrome/Edge), không cần cài đặt.
 
@@ -63,7 +63,8 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Nhóm Geometry (cạnh nhóm Sketch) tạo hình tham chiếu trực tiếp trên màn hình 3D, theo bộ lọc:
   - Point: bấm đỉnh, tâm đường tròn, điểm trên cạnh hoặc điểm trên mặt mesh.
   - Line có 3 kiểu, chọn ở bảng nhỏ: Điểm – Điểm, Điểm – Mặt (vuông góc với mặt), Điểm – Vector (theo hướng một cạnh thẳng / trục / pháp tuyến mặt). Mỗi kiểu có các ô chọn đánh số; ô viền cam là ô nhận cú bấm tiếp theo (bấm vào ô để đổi, ✕ để bỏ). Đủ ô thì hiện line xem trước nét đứt kèm độ dài; bấm "Tạo line" hoặc Enter để tạo. Ô Dài (thanh kéo / số): 0 = tới điểm cuối / tới mặt phẳng, số khác 0 = dài đúng số đó; Đảo chiều. Chọn line trong danh sách rồi đổi Dài / Đảo chiều là line cập nhật.
-  - Gốc tọa độ (khi bật hiện trục ở nhóm Hiển thị) là geometry để bắt: điểm gốc O, trục X / Y / Z và 3 mặt gốc XY (Top), XZ (Front), YZ (Right) vẽ nhỏ cạnh gốc. Dùng được trong mọi lệnh cần bắt điểm / đường / mặt (Point, Line, Plane, Mate, đo, mặt vẽ Sketch, hướng Undercut). Phần gốc nằm sau mesh thì không bắt.
+  - Gốc tọa độ (khi bật hiện trục ở nhóm Hiển thị) là geometry để bắt: điểm gốc O, trục X / Y / Z và 3 mặt gốc XY (Top), XZ (Front), YZ (Right) vẽ nhỏ cạnh gốc. Trục và mặt gốc luôn giữ cùng kích thước trên màn hình khi zoom, và bấm chọn được xuyên qua vật thể (Point, Line, Plane, Mate, chọn tâm xoay, mặt vẽ Sketch, Snap mặt cắt, hướng Undercut). Riêng các lệnh đo vẫn ưu tiên body ở phía trước.
+  - Bắt điểm: mọi lệnh cần một điểm (Point, ô điểm của Line, chọn tâm xoay / pick centre, Mate...) bắt được điểm geometry, điểm đầu / cuối / giữa của line và trục, điểm gốc O, hoặc snap trên mesh (đỉnh, tâm cung, điểm trên mặt theo bộ lọc). Ở chỗ cần hướng (vector của Line, trục X tay nắm, hướng Undercut) thì bấm vào điểm giữa / đầu line vẫn lấy hướng của line đó.
   - Chọn geometry ngay trên màn hình 3D (công cụ Chọn): bấm hoặc quét chuột trái ưu tiên body; chỗ không có body thì mới lấy geometry. Delete để xóa, Y để ẩn, chuột phải để Ẩn / Đổi tên / Xóa.
   - Plane: Theo mặt (bấm mặt phẳng, chỉnh Offset bằng thanh kéo / ô số, Đảo chiều; áp cho mặt đang chọn trong danh sách) hoặc 3 điểm.
   - Axis: từ mặt trụ, cạnh tròn, cạnh thẳng hoặc 2 điểm.
@@ -72,6 +73,7 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Mate face / axis có thêm điểm: điểm (đỉnh, tâm theo bộ lọc, hoặc điểm geometry) ghép vào điểm, mặt phẳng hoặc trục; mặt / trục ghép vào điểm. Lần bấm đầu phải trên body cần dời; đích có thể là geometry.
 - Move / Rotate / Scale: dòng "Trục X" trong bảng nhỏ đặt trục X của tay nắm theo cạnh thẳng, trục (mặt trụ / cạnh tròn), pháp tuyến mặt phẳng, 2 điểm hoặc vector nhập tay ("Thế giới" để về trục gốc). Số nhập ở Move / Rotate / Scale tính theo hệ trục này. Dòng "Tâm" chọn tâm (vùng chọn, gốc tọa độ, hoặc điểm bấm chọn) cho cả 3 lệnh.
 - Hộp "Xuất file" cố định ở đầu cột trái (không bị cuộn mất): Tải STL tick, Tất cả (.zip), Gộp 1 STL, STEP (solid). Mở file bằng nút "Mở file / phiên" trên cùng hoặc kéo thả file vào bất cứ đâu trên cửa sổ. Nhân bản / Xóa body: Ctrl+C, Ctrl+V, phím Delete hoặc chuột phải.
+- Mặt cắt (Section): Hướng mặt cắt chọn được trục X / Y / Z, hướng nhìn, hoặc "Snap (mặt mesh / plane)": rê chuột thấy mặt sáng lên, bấm vào mặt trên mesh, Plane của Geometry hoặc mặt gốc XY / XZ / YZ.
 - Tooling analysis (undercut): Hướng mở khuôn chọn được trục X / Y / Z, hướng nhìn, hoặc "Chọn trên màn hình": bấm một mặt phẳng (lấy pháp tuyến), cạnh thẳng, line hoặc trục (kể cả trục gốc); có Đảo chiều và mũi tên cam chỉ hướng trên màn hình. Ô "Ẩn các body không được phân tích" ẩn tạm các body khác để dễ nhìn, bỏ tick (hoặc Xóa màu phân tích) là hiện lại.
 - "STEP (solid)": tải các khối solid đang tick thành file STEP (mở được bằng CATIA, NX, Onshape...). Body chỉ là lưới (STL nhập vào, sau Boolean, hoặc có Replace face) không xuất STEP được.
 - Lệnh nào lõi B-rep không làm được (ví dụ Move face mặt trên đang tiếp xúc fillet, Replace face) thì app tự dựng lại khối bằng cách cũ trên lưới, như trước khi có B-rep.

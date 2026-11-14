@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:; worker-src blob:; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MrT Decimate Mesh</title>
+<title>MeshExpert</title>
 <style>
   :root {
     --bg: #14181d; --panel: #1c2229; --panel2: #232b34; --line: #323c48;
@@ -236,7 +236,7 @@
 <body>
 <div id="top">
  <div class="trow">
-  <h1><span>MrT</span> Decimate Mesh</h1>
+  <h1><span>Mesh</span>Expert</h1>
   <div id="rtabs"><button class="rtab on" data-tab="home">Home</button></div>
   <span class="grow"></span>
   <button id="bOpen" data-en="Open file / session">Mở file / phiên</button>
@@ -473,9 +473,9 @@
    <div class="pop" id="pop_section"><div class="pophd"><b data-en="Section">Mặt cắt (section)</b><span class="grow"></span><button class="popx" data-pop="section">✕</button></div><div class="c">
     <div class="row"><label><input type="checkbox" id="secOn"> <span data-en="Enable">Bật mặt cắt</span></label><span class="grow"></span><label><input type="checkbox" id="secFlip"> <span data-en="Flip side">Đảo phía</span></label></div>
     <div class="row"><span class="lbl" data-en="Plane normal">Pháp tuyến mặt cắt</span>
-      <select id="secAx" style="width:150px"><option value="x" data-en="X axis">Trục X</option><option value="y" data-en="Y axis">Trục Y</option><option value="z" selected data-en="Z axis">Trục Z</option><option value="view" data-en="Current view direction">Hướng nhìn hiện tại</option><option value="pick" data-en="Face picked on mesh">Mặt chọn trên mesh</option></select></div>
+      <select id="secAx" style="width:150px"><option value="x" data-en="X axis">Trục X</option><option value="y" data-en="Y axis">Trục Y</option><option value="z" selected data-en="Z axis">Trục Z</option><option value="view" data-en="Current view direction">Hướng nhìn hiện tại</option><option value="pick" data-en="Snap (mesh face / plane)">Snap (mặt mesh / plane)</option></select></div>
     <div class="row"><span class="lbl" data-en="Position">Vị trí</span><input type="range" id="secPos" min="0" max="1000" value="500"><span class="unit" id="secV" style="min-width:58px;text-align:right">-</span></div>
-    <div class="btns"><button id="bSecPick" data-en="Pick a face on the mesh">Chọn mặt trên mesh</button></div>
+    <div class="btns"><button id="bSecPick" data-en="Snap to a face / plane">Snap mặt / plane</button></div>
   </div></div>
    <div class="pop" id="pop_undercut"><div class="pophd"><b data-en="Tooling analysis (undercut)">Tooling analysis (undercut)</b><span class="grow"></span><button class="popx" data-pop="undercut">✕</button></div><div class="c">
     <div class="row"><span class="lbl" data-en="Pull direction">Hướng mở khuôn</span>

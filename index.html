@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:; worker-src blob:; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MrT Decimate Mesh</title>
+<title>MeshExpert</title>
 <style>
   :root {
     --bg: #14181d; --panel: #1c2229; --panel2: #232b34; --line: #323c48;
@@ -236,7 +236,7 @@
 <body>
 <div id="top">
  <div class="trow">
-  <h1><span>MrT</span> Decimate Mesh</h1>
+  <h1><span>Mesh</span>Expert</h1>
   <div id="rtabs"><button class="rtab on" data-tab="home">Home</button></div>
   <span class="grow"></span>
   <button id="bOpen" data-en="Open file / session">Mở file / phiên</button>
@@ -473,9 +473,9 @@
    <div class="pop" id="pop_section"><div class="pophd"><b data-en="Section">Mặt cắt (section)</b><span class="grow"></span><button class="popx" data-pop="section">✕</button></div><div class="c">
     <div class="row"><label><input type="checkbox" id="secOn"> <span data-en="Enable">Bật mặt cắt</span></label><span class="grow"></span><label><input type="checkbox" id="secFlip"> <span data-en="Flip side">Đảo phía</span></label></div>
     <div class="row"><span class="lbl" data-en="Plane normal">Pháp tuyến mặt cắt</span>
-      <select id="secAx" style="width:150px"><option value="x" data-en="X axis">Trục X</option><option value="y" data-en="Y axis">Trục Y</option><option value="z" selected data-en="Z axis">Trục Z</option><option value="view" data-en="Current view direction">Hướng nhìn hiện tại</option><option value="pick" data-en="Face picked on mesh">Mặt chọn trên mesh</option></select></div>
+      <select id="secAx" style="width:150px"><option value="x" data-en="X axis">Trục X</option><option value="y" data-en="Y axis">Trục Y</option><option value="z" selected data-en="Z axis">Trục Z</option><option value="view" data-en="Current view direction">Hướng nhìn hiện tại</option><option value="pick" data-en="Snap (mesh face / plane)">Snap (mặt mesh / plane)</option></select></div>
     <div class="row"><span class="lbl" data-en="Position">Vị trí</span><input type="range" id="secPos" min="0" max="1000" value="500"><span class="unit" id="secV" style="min-width:58px;text-align:right">-</span></div>
-    <div class="btns"><button id="bSecPick" data-en="Pick a face on the mesh">Chọn mặt trên mesh</button></div>
+    <div class="btns"><button id="bSecPick" data-en="Snap to a face / plane">Snap mặt / plane</button></div>
   </div></div>
    <div class="pop" id="pop_undercut"><div class="pophd"><b data-en="Tooling analysis (undercut)">Tooling analysis (undercut)</b><span class="grow"></span><button class="popx" data-pop="undercut">✕</button></div><div class="c">
     <div class="row"><span class="lbl" data-en="Pull direction">Hướng mở khuôn</span>
@@ -1045,7 +1045,7 @@ function MeshCore() {
     const P = mesh.positions, I = mesh.indices, nt = I.length / 3;
     const buf = new ArrayBuffer(84 + 50 * nt);
     const dv = new DataView(buf);
-    const head = (title || 'MrT Decimate Mesh').substring(0, 79);
+    const head = (title || 'MeshExpert').substring(0, 79);
     for (let i = 0; i < head.length; i++) dv.setUint8(i, head.charCodeAt(i) & 0x7f);
     dv.setUint32(80, nt, true);
     let o = 84;
@@ -1064,7 +1064,7 @@ function MeshCore() {
   }
   function writeOBJ(mesh) {
     const P = mesh.positions, I = mesh.indices;
-    const parts = ['# MrT Decimate Mesh\n'];
+    const parts = ['# MeshExpert\n'];
     let chunk = [];
     for (let i = 0; i < P.length; i += 3) {
       chunk.push('v ' + P[i] + ' ' + P[i + 1] + ' ' + P[i + 2]);
@@ -4770,7 +4770,7 @@ var wasm_bindgen = (function(exports) {
     }
     // world axes at the origin
     if ($('cAxes').checked) {
-      const Ln = Math.max(cam.radius * 0.225, 1e-6), o = project([0, 0, 0]);
+      const Ln = 90 * 2 * cam.zoom / H, o = project([0, 0, 0]);
       for (let i = 0; i < 3; i++) {
         const e = project(V.mul(AXES[i], Ln));
         line2(o, e, AXC[i], 2);
@@ -5131,7 +5131,7 @@ var wasm_bindgen = (function(exports) {
       angle: L('Bấm 2 mặt phẳng / cạnh thẳng, hoặc 3 điểm (điểm thứ hai là đỉnh góc)', 'Click 2 planes / straight edges, or 3 points (the second is the vertex)'),
       radius: L('Bấm 1 cung tròn, mặt trụ hoặc mặt cầu; hoặc 3 điểm trên cùng một cung', 'Click one arc, cylinder or sphere; or 3 points on the same arc'),
       thick: L('Bấm vào một điểm trên mesh để đo bề dày tại đó', 'Click a point on the mesh to measure the wall thickness there'),
-      secpick: L('Bấm vào một mặt trên mesh để lấy làm mặt cắt', 'Click a face on the mesh to use it as the section plane'),
+      secpick: L('Snap mặt cắt: bấm một mặt trên mesh, một Plane của Geometry hoặc mặt gốc XY / XZ / YZ', 'Section snap: click a face on a mesh, a Geometry plane or a base plane XY / XZ / YZ'),
       mate: L('Bấm mặt phẳng / mặt trụ / cạnh / điểm trên body cần dời, rồi bấm đích trên body khác hoặc geometry: mặt áp mặt, trục trùng trục, điểm vào điểm / mặt / trục', 'Click a face / cylinder / edge / point on the body to move, then the target on another body or a geometry: face to face, axis on axis, point onto point / face / axis'),
       gpoint: L('Bấm để đặt điểm: đỉnh, tâm, trung điểm hoặc điểm trên mesh (theo bộ lọc). Esc để thôi', 'Click to place a point: corner, centre or a point on the mesh (as the filter allows). Esc to stop'),
       gline: L('Line: chọn kiểu ở bảng nhỏ, bấm trên màn hình để điền từng ô (ô viền cam là ô đang nhận), rồi bấm Tạo line hoặc Enter', 'Line: pick the kind in the small panel, click in the view to fill each box (the orange box takes the click), then Create line or Enter'),
@@ -5569,6 +5569,7 @@ var wasm_bindgen = (function(exports) {
   function hover(px, py) {
     cam = camAt(px);
     if (S.sk) { skHover(px, py); cam = mainCam; return; }
+    if (S.tool === 'secpick') { S.skHov = secSnapEnt(px, py); cam = mainCam; canvas.style.cursor = 'crosshair'; dirty = true; return; }
     if (S.tool === 'skplane') { S.skHov = skPlaneEnt(px, py); cam = mainCam; canvas.style.cursor = 'crosshair'; dirty = true; return; }
     const lh = labAt(px, py);
     if (lh || S.hovLab) {
@@ -5584,7 +5585,7 @@ var wasm_bindgen = (function(exports) {
     else if (t === 'gpoint' || t === 'gline' || t === 'gplane' || t === 'gaxis') ent = geoToolEnt(t, px, py);
     else if (S.pivPick) ent = pivotSnap(px, py);
     else if (t === 'mate') { const g = S.mate && S.mate.a ? geoAt(px, py) : null, hit = g ? { body: null, geoEnt: g } : pickNear(px, py); if (hit) { ent = mateEnt(hit, px, py); } }
-    else if (meas && !c) { const g = geoAt(px, py); if (g) ent = g; else { const hit = pickNear(px, py); if (hit) { ent = entityAt(hit, px, py, false); if (ent.free) ent = null; } } }
+    else if (meas && !c) { const g = geoAt(px, py, { thru: false }); if (g) ent = g; else { const hit = pickNear(px, py); if (hit) { ent = entityAt(hit, px, py, false); if (ent.free) ent = null; } } }
     cam = mainCam;
     if (h !== S.hov || c !== S.hovCom || ent || S.hovEnt) { S.hov = h; S.hovCom = c; S.hovEnt = ent; dirty = true; }
     canvas.style.cursor = h !== null ? 'grab' : toolCursor();
@@ -5714,6 +5715,7 @@ var wasm_bindgen = (function(exports) {
     if (S.sk) { skClick(px, py, e); return; }
     if (S.tool === 'skplane') { skPickPlane(px, py); return; }
     if (S.ucPick) { ucPickClick(px, py); return; }
+    if (S.tool === 'secpick') { secSnapClick(px, py); return; }
     if (modelClick(px, py, e)) return;
     if (S.cmp && S.cmp.split) {
       const i = px < W / 2 ? 0 : 1, h = pickNear(px, py, [i ? S.cmp.b : S.cmp.a]);
@@ -5735,7 +5737,7 @@ var wasm_bindgen = (function(exports) {
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick' || t === 'secpick') {
       const cm = t === 'dist' || t === 'angle' || t === 'radius' ? comAt(px, py) : null;
       if (cm) { measurePick(t, { kind: 'point', p: cm, at: cm, text: L('Trọng tâm', 'Centre of mass') }); return; }   // a centre-of-mass mark is a point like any other
-      const gh = t === 'dist' || t === 'angle' ? geoAt(px, py) : null;
+      const gh = t === 'dist' || t === 'angle' ? geoAt(px, py, { thru: false }) : null;
       if (gh) { gh.bname = ''; measurePick(t, gh); return; }
       const h = pickNear(px, py);
       if (!h) {                                              // a click on empty space drops what is waiting to be measured
@@ -6566,7 +6568,7 @@ var wasm_bindgen = (function(exports) {
   // ================= session (.mrtl) =================
   function saveSession() {
     const vis = S.cmp ? new Map(S.cmp.vis) : null;
-    const meta = { app: 'MrT Decimate Mesh', format: 2, view: { R: mainCam.R, target: mainCam.target, zoom: mainCam.zoom }, explode: S.explode, sketches: S.sketches, skSeq: S.skSeq, geos: S.geos, geoSeq: S.geoSeq,
+    const meta = { app: 'MeshExpert', format: 2, view: { R: mainCam.R, target: mainCam.target, zoom: mainCam.zoom }, explode: S.explode, sketches: S.sketches, skSeq: S.skSeq, geos: S.geos, geoSeq: S.geoSeq,
       section: { on: S.sec.on, flip: S.sec.flip, axis: S.sec.axis, s: S.sec.s, nView: S.sec.nView, nPick: S.sec.nPick }, measures: S.measures, bodies: [] };
     const blobs = [], geos = new Map();
     let off = 0;
@@ -8718,14 +8720,15 @@ var wasm_bindgen = (function(exports) {
   const ORG_PL = [['XY (Top)', [0, 0, 1], [1, 0, 0]], ['XZ (Front)', [0, -1, 0], [1, 0, 0]], ['YZ (Right)', [1, 0, 0], [0, 1, 0]]];
   function originGeos() {
     if (!$('cAxes').checked) return [];
-    const Ln = Math.max(mainCam.radius * 0.225, 1e-6), out = [{ id: 'oO', origin: true, type: 'point', p: [0, 0, 0], name: L('Gốc O', 'Origin O') }];
+    const Ln = originLn(), out = [{ id: 'oO', origin: true, type: 'point', p: [0, 0, 0], name: L('Gốc O', 'Origin O') }];
     for (let i = 0; i < 3; i++) out.push({ id: 'oA' + i, origin: true, type: 'axis', p: [0, 0, 0], p2: V.mul(AXES[i], Ln), name: L('Trục ', 'Axis ') + 'XYZ'[i] });
     ORG_PL.forEach(function (q, i) {
-      const n = q[1], u = q[2], v = V.cross(n, u), sz = Ln * 0.42, c = Ln * 0.3;
+      const n = q[1], u = q[2], v = V.cross(n, u), sz = Ln * 0.46, c = Ln * 0.32;
       out.push({ id: 'oP' + i, origin: true, type: 'plane', n: n, u: u, size: sz, p: V.add(V.mul(u, c), V.mul(v, c)), org: [0, 0, 0], short: q[0].split(' ')[0], name: L('Mặt ', 'Plane ') + q[0] });
     });
     return out;
   }
+  function originLn() { return 90 * 2 * mainCam.zoom / H; }   // a fixed size on screen (90 px), whatever the zoom
   const snapGeos = function () { return S.geos.concat(originGeos()); };
   function planeCorners(g) {
     const u = g.u, v = V.cross(g.n, u), s = g.size / 2;
@@ -8766,16 +8769,22 @@ var wasm_bindgen = (function(exports) {
     if (S.tool === 'gline') drawGlPicks();
   }
   // ---------- picking a geometry under the cursor (as the selection filter allows) ----------
-  function geoAt(px, py) {
-    const F = S.flt;
+  // opt.thru === false: the origin items count only where no body is in front (the measuring tools)
+  function geoAt(px, py, opt) {
+    const F = S.flt, thru = !opt || opt.thru !== false;
     let best = null, bd = 9, mh;
     const GS = snapGeos(), w = viewer();
     // the origin items sit behind the meshes: a mesh in front of them at the cursor hides them
-    const hidden = function (g, p) { if (!g.origin) return false; if (mh === undefined) mh = pick(px, py) || null; return !!mh && V.dot(mh.point, w) > V.dot(p, w) + 1e-6 * (1 + Math.abs(V.dot(p, w))); };
+    const hidden = function (g, p) { if (!g.origin || thru) return false; if (mh === undefined) mh = pick(px, py) || null; return !!mh && V.dot(mh.point, w) > V.dot(p, w) + 1e-6 * (1 + Math.abs(V.dot(p, w))); };   // otherwise picked through the bodies
     for (const g of GS) {
       if (g.vis === false || g.type !== 'point' || !F.point) continue;
       const q = project(g.p), d = Math.hypot(q[0] - px, q[1] - py);
       if (d < bd && !hidden(g, g.p)) { bd = d; best = { kind: 'point', p: g.p.slice(), at: g.p.slice(), text: g.name, geo: g }; }
+    }
+    if (F.point) for (const g of S.geos) {                   // ends and midpoint of the lines / axes
+      if (g.vis === false || (g.type !== 'line' && g.type !== 'axis')) continue;
+      const cand = [[g.p, L(' · đầu', ' · start')], [g.p2, L(' · cuối', ' · end')], [V.mul(V.add(g.p, g.p2), 0.5), L(' · giữa', ' · mid')]];
+      for (const c of cand) { const q = project(c[0]), d = Math.hypot(q[0] - px, q[1] - py); if (d < Math.min(bd, 7)) { bd = d; best = { kind: 'point', p: c[0].slice(), at: c[0].slice(), text: g.name + c[1], geo: g, sub: 'vtx' }; } }
     }
     if (best) return best;
     bd = 6;
@@ -8797,7 +8806,7 @@ var wasm_bindgen = (function(exports) {
       for (let i = 0, j = 3; i < 4; j = i++) { const a = q[i], b = q[j]; if ((a[1] > py) !== (b[1] > py) && px < (b[0] - a[0]) * (py - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside; }
       let edge = false;                                     // inside the square: only where no mesh is in the way, or right on its border
       for (let i = 0, j = 3; i < 4; j = i++) { const a = q[j], b = q[i], ax = b[0] - a[0], ay = b[1] - a[1], l2 = ax * ax + ay * ay, t = l2 > 1e-9 ? Math.max(0, Math.min(1, ((px - a[0]) * ax + (py - a[1]) * ay) / l2)) : 0; if (Math.hypot(px - a[0] - t * ax, py - a[1] - t * ay) < 6) edge = true; }
-      if (!edge && (!inside || pick(px, py))) continue;
+      if (!edge && (!inside || ((!g.origin || !thru) && pick(px, py)))) continue;
       const r = screenRay(px, py), dn = V.dot(r.d, g.n);
       const at = Math.abs(dn) > 1e-9 ? V.add(r.o, V.mul(r.d, V.dot(V.sub(g.p, r.o), g.n) / dn)) : g.p.slice();
       if (hidden(g, at)) continue;
@@ -8886,6 +8895,7 @@ var wasm_bindgen = (function(exports) {
     if (!e) return null;
     if (kind === 'pt') { const q = ptEnt(e); return { val: { p: q.p.slice(), text: q.text || L('Điểm', 'Point') }, show: q }; }
     if (kind === 'plane') return e.kind === 'plane' ? { val: { p: e.p.slice(), n: V.norm(e.n), text: e.text || L('Mặt phẳng', 'Plane') }, show: e } : null;
+    e = lineOfVtx(e);
     const d = axDir(e);
     return d ? { val: { d: V.norm(d), at: (e.at || e.p).slice(), text: (e.text || L('Hướng', 'Direction')) + (e.kind === 'plane' ? L(' (pháp tuyến)', ' (normal)') : '') }, show: e } : null;
   }
@@ -9029,7 +9039,13 @@ var wasm_bindgen = (function(exports) {
     if (e.kind === 'plane') return e.n;
     return null;
   }
-  function axPickEnt(px, py) { const e = pickEnt(px, py, false); return e ? (axDir(e) ? e : ptEnt(e)) : null; }
+  // a pick on a line's end / midpoint stands for the line itself where a direction is wanted
+  function lineOfVtx(e) {
+    if (!e || e.sub !== 'vtx' || !e.geo) return e;
+    const g = e.geo;
+    return { kind: 'edge', sub: 'line', pts: [g.p.slice(), g.p2.slice()], dir: V.norm(V.sub(g.p2, g.p)), len: V.len(V.sub(g.p2, g.p)), p: g.p.slice(), at: e.p.slice(), lines: [[g.p, g.p2]], text: g.name, geo: g };
+  }
+  function axPickEnt(px, py) { const e = lineOfVtx(pickEnt(px, py, false)); return e ? (axDir(e) ? e : ptEnt(e)) : null; }
   function showGax() { const x = S.gax[0]; $('axX').value = +f2(x[0], 4); $('axY').value = +f2(x[1], 4); $('axZ').value = +f2(x[2], 4); $('bAxReset').classList.toggle('primary', !gaxWorld()); }
   function axPickClick(px, py) {
     const e = axPickEnt(px, py);
@@ -9134,7 +9150,7 @@ var wasm_bindgen = (function(exports) {
   $('cStepCross').addEventListener('change', function () { try { localStorage.setItem('mrt_stepcross', this.checked ? '1' : '0'); } catch (e) { /* no storage */ } });
   // a STEP file holding only the geometry
   function stepGeosOnly(geos) {
-    const head = ['ISO-10303-21;', 'HEADER;', "FILE_DESCRIPTION(('MrT MeshExpert geometry'),'2;1');", "FILE_NAME('','',(''),('MrT MeshExpert'),'MrT MeshExpert','MrT MeshExpert','');",
+    const head = ['ISO-10303-21;', 'HEADER;', "FILE_DESCRIPTION(('MeshExpert geometry'),'2;1');", "FILE_NAME('','',(''),('MeshExpert'),'MeshExpert','MeshExpert','');",
       "FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 1 1 4 }'));", 'ENDSEC;', 'DATA;',
       "#1=APPLICATION_CONTEXT('managed model based 3d engineering');", "#2=APPLICATION_PROTOCOL_DEFINITION('international standard','ap242_managed_model_based_3d_engineering',2014,#1);",
       "#3=PRODUCT_CONTEXT('',#1,'mechanical');", "#4=PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');", '#5=(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));',
@@ -9162,7 +9178,8 @@ var wasm_bindgen = (function(exports) {
       const dn = V.dot(ray.d, g.n);
       if (Math.abs(dn) < 1e-9) continue;
       const t = V.dot(V.sub(g.p, ray.o), g.n) / dn, at = V.add(ray.o, V.mul(ray.d, t)), u = g.u, v = V.cross(g.n, u), r = V.sub(at, g.p), s = g.size / 2 * 1.02;
-      if (Math.abs(V.dot(r, u)) > s || Math.abs(V.dot(r, v)) > s || t > bt) continue;
+      if (Math.abs(V.dot(r, u)) > s || Math.abs(V.dot(r, v)) > s || (t > bt && !(g.origin && !(best && best.geo.origin)))) continue;   // base planes: picked through anything
+      if (best && best.geo.origin && !g.origin) continue;
       bt = t; best = { geo: g, n: g.n.slice(), o: (g.org || g.p).slice(), u: g.u.slice(), poly: planeCorners(g), text: g.name };
     }
     if (best || !h) return best;
@@ -9243,7 +9260,7 @@ var wasm_bindgen = (function(exports) {
 
   // ---------- tooling analysis: the pull direction from a plane / line / axis, and hiding the bodies not analysed ----------
   S.ucPick = false; S.ucDir = null; S.ucList = null; S.ucHid = null;
-  function ucPickEnt(px, py) { const e = pickEnt(px, py, false); return e && axDir(e) ? e : null; }
+  function ucPickEnt(px, py) { const e = lineOfVtx(pickEnt(px, py, false)); return e && axDir(e) ? e : null; }
   function ucPickStart() { S.ucPick = true; S.axPick = null; $('bUcPick').classList.add('primary'); canvas.style.cursor = 'crosshair'; flash(L('Bấm một mặt phẳng (lấy pháp tuyến), cạnh thẳng, đường hoặc trục làm hướng mở khuôn (theo bộ lọc)', 'Click a plane (its normal), a straight edge, a line or an axis for the pull direction (as the filter allows)'), true); dirty = true; }
   function ucPickStop() { if (!S.ucPick) return; S.ucPick = false; $('bUcPick').classList.remove('primary'); canvas.style.cursor = toolCursor(); S.hovEnt = null; dirty = true; }
   function ucDirText() {
@@ -9285,9 +9302,28 @@ var wasm_bindgen = (function(exports) {
     ucIsoApply();
   });
 
+  // ---------- Section "Snap": a flat or curved face of a mesh, a Geometry plane or a base plane ----------
+  function secSnapEnt(px, py) {
+    const e = skPlaneEnt(px, py);
+    if (e && !e.bad) return e;
+    const h = pickNear(px, py);
+    return h ? { n: h.normal.slice(), o: h.point.slice(), tris: [], pos: null, idx: null, off: [0, 0, 0], text: L('Mặt trên mesh', 'Mesh face') } : null;
+  }
+  function secSnapClick(px, py) {
+    const e = secSnapEnt(px, py);
+    if (!e) { flash(L('Ở đây không có mặt mesh hay plane nào', 'No mesh face or plane here')); return; }
+    const sc = S.sec, n = V.norm(e.n);
+    sc.nPick = n; sc.axis = 'pick'; $('secAx').value = 'pick'; sc.on = true; $('secOn').checked = true;
+    updateSection();
+    sc.s = Math.max(0, Math.min(1, (V.dot(n, e.o) - sc.min) / (sc.max - sc.min)));
+    $('secPos').value = Math.round(sc.s * 1000);
+    S.skHov = null; updateSection(); setTool('select');
+    flash(L('Mặt cắt theo: ', 'Section on: ') + e.text, false);
+  }
+
   applyLang(); updateHistBtns(); sceneChanged(true);
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();
 </script>
 </body>

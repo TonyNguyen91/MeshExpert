@@ -502,7 +502,7 @@ function MeshCore() {
     const P = mesh.positions, I = mesh.indices, nt = I.length / 3;
     const buf = new ArrayBuffer(84 + 50 * nt);
     const dv = new DataView(buf);
-    const head = (title || 'MrT Decimate Mesh').substring(0, 79);
+    const head = (title || 'MeshExpert').substring(0, 79);
     for (let i = 0; i < head.length; i++) dv.setUint8(i, head.charCodeAt(i) & 0x7f);
     dv.setUint32(80, nt, true);
     let o = 84;
@@ -521,7 +521,7 @@ function MeshCore() {
   }
   function writeOBJ(mesh) {
     const P = mesh.positions, I = mesh.indices;
-    const parts = ['# MrT Decimate Mesh\n'];
+    const parts = ['# MeshExpert\n'];
     let chunk = [];
     for (let i = 0; i < P.length; i += 3) {
       chunk.push('v ' + P[i] + ' ' + P[i + 1] + ' ' + P[i + 2]);

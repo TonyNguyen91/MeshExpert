@@ -822,7 +822,7 @@
     }
     // world axes at the origin
     if ($('cAxes').checked) {
-      const Ln = Math.max(cam.radius * 0.225, 1e-6), o = project([0, 0, 0]);
+      const Ln = 90 * 2 * cam.zoom / H, o = project([0, 0, 0]);
       for (let i = 0; i < 3; i++) {
         const e = project(V.mul(AXES[i], Ln));
         line2(o, e, AXC[i], 2);
@@ -1183,7 +1183,7 @@
       angle: L('Bấm 2 mặt phẳng / cạnh thẳng, hoặc 3 điểm (điểm thứ hai là đỉnh góc)', 'Click 2 planes / straight edges, or 3 points (the second is the vertex)'),
       radius: L('Bấm 1 cung tròn, mặt trụ hoặc mặt cầu; hoặc 3 điểm trên cùng một cung', 'Click one arc, cylinder or sphere; or 3 points on the same arc'),
       thick: L('Bấm vào một điểm trên mesh để đo bề dày tại đó', 'Click a point on the mesh to measure the wall thickness there'),
-      secpick: L('Bấm vào một mặt trên mesh để lấy làm mặt cắt', 'Click a face on the mesh to use it as the section plane'),
+      secpick: L('Snap mặt cắt: bấm một mặt trên mesh, một Plane của Geometry hoặc mặt gốc XY / XZ / YZ', 'Section snap: click a face on a mesh, a Geometry plane or a base plane XY / XZ / YZ'),
       mate: L('Bấm mặt phẳng / mặt trụ / cạnh / điểm trên body cần dời, rồi bấm đích trên body khác hoặc geometry: mặt áp mặt, trục trùng trục, điểm vào điểm / mặt / trục', 'Click a face / cylinder / edge / point on the body to move, then the target on another body or a geometry: face to face, axis on axis, point onto point / face / axis'),
       gpoint: L('Bấm để đặt điểm: đỉnh, tâm, trung điểm hoặc điểm trên mesh (theo bộ lọc). Esc để thôi', 'Click to place a point: corner, centre or a point on the mesh (as the filter allows). Esc to stop'),
       gline: L('Line: chọn kiểu ở bảng nhỏ, bấm trên màn hình để điền từng ô (ô viền cam là ô đang nhận), rồi bấm Tạo line hoặc Enter', 'Line: pick the kind in the small panel, click in the view to fill each box (the orange box takes the click), then Create line or Enter'),
@@ -1621,6 +1621,7 @@
   function hover(px, py) {
     cam = camAt(px);
     if (S.sk) { skHover(px, py); cam = mainCam; return; }
+    if (S.tool === 'secpick') { S.skHov = secSnapEnt(px, py); cam = mainCam; canvas.style.cursor = 'crosshair'; dirty = true; return; }
     if (S.tool === 'skplane') { S.skHov = skPlaneEnt(px, py); cam = mainCam; canvas.style.cursor = 'crosshair'; dirty = true; return; }
     const lh = labAt(px, py);
     if (lh || S.hovLab) {
@@ -1636,7 +1637,7 @@
     else if (t === 'gpoint' || t === 'gline' || t === 'gplane' || t === 'gaxis') ent = geoToolEnt(t, px, py);
     else if (S.pivPick) ent = pivotSnap(px, py);
     else if (t === 'mate') { const g = S.mate && S.mate.a ? geoAt(px, py) : null, hit = g ? { body: null, geoEnt: g } : pickNear(px, py); if (hit) { ent = mateEnt(hit, px, py); } }
-    else if (meas && !c) { const g = geoAt(px, py); if (g) ent = g; else { const hit = pickNear(px, py); if (hit) { ent = entityAt(hit, px, py, false); if (ent.free) ent = null; } } }
+    else if (meas && !c) { const g = geoAt(px, py, { thru: false }); if (g) ent = g; else { const hit = pickNear(px, py); if (hit) { ent = entityAt(hit, px, py, false); if (ent.free) ent = null; } } }
     cam = mainCam;
     if (h !== S.hov || c !== S.hovCom || ent || S.hovEnt) { S.hov = h; S.hovCom = c; S.hovEnt = ent; dirty = true; }
     canvas.style.cursor = h !== null ? 'grab' : toolCursor();
@@ -1766,6 +1767,7 @@
     if (S.sk) { skClick(px, py, e); return; }
     if (S.tool === 'skplane') { skPickPlane(px, py); return; }
     if (S.ucPick) { ucPickClick(px, py); return; }
+    if (S.tool === 'secpick') { secSnapClick(px, py); return; }
     if (modelClick(px, py, e)) return;
     if (S.cmp && S.cmp.split) {
       const i = px < W / 2 ? 0 : 1, h = pickNear(px, py, [i ? S.cmp.b : S.cmp.a]);
@@ -1787,7 +1789,7 @@
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick' || t === 'secpick') {
       const cm = t === 'dist' || t === 'angle' || t === 'radius' ? comAt(px, py) : null;
       if (cm) { measurePick(t, { kind: 'point', p: cm, at: cm, text: L('Trọng tâm', 'Centre of mass') }); return; }   // a centre-of-mass mark is a point like any other
-      const gh = t === 'dist' || t === 'angle' ? geoAt(px, py) : null;
+      const gh = t === 'dist' || t === 'angle' ? geoAt(px, py, { thru: false }) : null;
       if (gh) { gh.bname = ''; measurePick(t, gh); return; }
       const h = pickNear(px, py);
       if (!h) {                                              // a click on empty space drops what is waiting to be measured
@@ -2618,7 +2620,7 @@
   // ================= session (.mrtl) =================
   function saveSession() {
     const vis = S.cmp ? new Map(S.cmp.vis) : null;
-    const meta = { app: 'MrT Decimate Mesh', format: 2, view: { R: mainCam.R, target: mainCam.target, zoom: mainCam.zoom }, explode: S.explode, sketches: S.sketches, skSeq: S.skSeq, geos: S.geos, geoSeq: S.geoSeq,
+    const meta = { app: 'MeshExpert', format: 2, view: { R: mainCam.R, target: mainCam.target, zoom: mainCam.zoom }, explode: S.explode, sketches: S.sketches, skSeq: S.skSeq, geos: S.geos, geoSeq: S.geoSeq,
       section: { on: S.sec.on, flip: S.sec.flip, axis: S.sec.axis, s: S.sec.s, nView: S.sec.nView, nPick: S.sec.nPick }, measures: S.measures, bodies: [] };
     const blobs = [], geos = new Map();
     let off = 0;
@@ -2717,5 +2719,5 @@
 /*MODEL*/
   applyLang(); updateHistBtns(); sceneChanged(true);
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();
