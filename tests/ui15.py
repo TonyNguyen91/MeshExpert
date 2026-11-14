@@ -47,7 +47,7 @@ with sync_playwright() as p:
     fs=['a.stl','boss.stl','cyl.stl','cshape.stl','m_peg.stl','m_plate.stl']
     pg.set_input_files('#file',[S+'/'+f for f in fs]); pg.wait_for_function("__mrt.S.bodies.length==%d"%(len(fs)+1)); idle()
     before=pg.evaluate("__mrt.S.bodies.map(b=>Array.from(b.matrix))")
-    pg.click('#bSlaOrient'); idle()
+    pg.click('[data-pop=sla]'); pg.wait_for_timeout(100); pg.click('#slaGo'); idle()
     B=pg.evaluate(BOX); E=[[mx[i]-mn[i] for i in range(3)] for mn,mx in B]
     ok('Thin along X, longer along Y, tallest along Z',all(e[0]<=e[1]+1e-6 and e[1]<=e[2]+1e-6 for e in E),[[round(x,1) for x in e] for e in E])
     ok('Every body sits 5 mm above the plate',all(abs(mn[2]-5)<1e-6 for mn,mx in B))
@@ -59,17 +59,43 @@ with sync_playwright() as p:
                 if a[0][0]<b2[1][0]-1e-6 and b2[0][0]<a[1][0]-1e-6 and a[0][1]<b2[1][1]-1e-6 and b2[0][1]<a[1][1]-1e-6: return True
         return False
     ok('Footprints do not overlap',not overl(B))
-    cx=(min(mn[0] for mn,mx in B)+max(mx[0] for mn,mx in B))/2; cy=(min(mn[1] for mn,mx in B)+max(mx[1] for mn,mx in B))/2
-    ok('Packed around the plate centre',abs(cx-200)<1 and abs(cy-200)<1,(cx,cy))
+    vol=[e[0]*e[1]*e[2] for e in E]; small=vol.index(min(vol)); big=vol.index(max(vol))
+    ok('Smallest part sits in the corner at the origin',abs(B[small][0][0]-5)<1e-6 and abs(B[small][0][1]-5)<1e-6,B[small][0])
+    ok('The biggest part is furthest along Y',B[big][0][1]>=max(mn[1] for mn,mx in B)-1e-6)
+    rows=sorted(set(round(mn[1],3) for mn,mx in B))
+    ok('Rows filled across X first (first row wider than the parts in later rows need)',len(rows)<len(B))
     w0=max(mx[0] for mn,mx in B)-min(mn[0] for mn,mx in B)
     pg.fill('#slaSpread','100'); pg.dispatch_event('#slaSpread','input'); pg.dispatch_event('#slaSpread','change'); pg.wait_for_timeout(200)
     B2=pg.evaluate(BOX); w1=max(mx[0] for mn,mx in B2)-min(mn[0] for mn,mx in B2)
     ok('Spread 100 % fills the plate, still inside and apart',w1>w0*2 and all(mn[0]>=4.99 and mx[0]<=395.01 and mn[1]>=4.99 and mx[1]<=395.01 for mn,mx in B2) and not overl(B2),(w0,w1))
     ok('Range and number stay in step',pg.input_value('#slaSpreadR')=='100')
-    pg.fill('#slaLift','8'); pg.dispatch_event('#slaLift','input'); pg.dispatch_event('#slaLift','change'); pg.wait_for_timeout(200)
-    ok('Lift field moves the bodies up',all(abs(mn[2]-8)<1e-6 for mn,mx in pg.evaluate(BOX)))
-    for _ in range(3): pg.click('#bUndo'); pg.wait_for_timeout(150)
+    pg.fill('#slaLift','8'); pg.click('#slaGoA'); idle()
+    ok('Lay out again with lift 8 mm',all(abs(mn[2]-8)<1e-6 for mn,mx in pg.evaluate(BOX)))
+    # lift only the selected body
+    pg.evaluate("(()=>{const S=__mrt.S;S.sel.clear();S.sel.add(S.bodies[0]);})()")
+    pg.fill('#slaLift','12'); pg.click('#slaLiftSel'); pg.wait_for_timeout(200)
+    Bz=pg.evaluate(BOX); ok('Lift selected: only that body moves',abs(Bz[0][0][2]-12)<1e-6 and all(abs(mn[2]-8)<1e-6 for mn,mx in Bz[1:]),[round(mn[2],2) for mn,mx in Bz])
+    pg.fill('#slaLift','8'); pg.click('#slaLiftSel'); pg.wait_for_timeout(200)
+    # guard blocks
+    pg.check('#slaGuardOn'); pg.wait_for_timeout(300)
+    G=pg.evaluate("__mrt.S.bodies.filter(b=>/^SLA_guard_/.test(b.name)).map(b=>b.name)")
+    Ball=pg.evaluate(BOX); names=pg.evaluate("__mrt.S.bodies.map(b=>b.name)")
+    gb=[Ball[i] for i,n in enumerate(names) if n.startswith('SLA_guard_')]; pb=[Ball[i] for i,n in enumerate(names) if not n.startswith('SLA_guard_')]
+    top=max(mx[2] for mn,mx in pb)
+    ok('Two guard blocks 20 x 20, as tall as the tallest part',len(G)==2 and all(abs(mx[0]-mn[0]-20)<1e-6 and abs(mx[1]-mn[1]-20)<1e-6 and abs(mx[2]-top)<1e-6 and abs(mn[2])<1e-6 for mn,mx in gb),G)
+    ok('Guards are the outermost along Y (one at each end)',min(g[0][1] for g in gb)<min(mn[1] for mn,mx in pb) and max(g[1][1] for g in gb)>max(mx[1] for mn,mx in pb))
+    pg.click('#slaGoA'); idle()
+    ok('Re-layout keeps two guards, still outermost',pg.evaluate("__mrt.S.bodies.filter(b=>/^SLA_guard_/.test(b.name)).length")==2)
+    pg.uncheck('#slaGuardOn'); pg.wait_for_timeout(200)
+    ok('Untick removes the guards',pg.evaluate("__mrt.S.bodies.filter(b=>/^SLA_guard_/.test(b.name)).length")==0)
+    # tilt
+    pg.check('#slaTiltOn'); pg.fill('#slaTilt','30'); pg.click('#slaGo'); idle()
+    Bt=pg.evaluate(BOX); Et=[[mx[i]-mn[i] for i in range(3)] for mn,mx in Bt]
+    ok('Tilt 30°: X width kept, parts lean along Y',all(abs(a[0]-b2[0])<0.6 and b2[1]>a[1]+1 for a,b2 in zip(E,Et)) and all(abs(mn[2]-8)<1e-6 for mn,mx in Bt),[[round(x,1) for x in e] for e in Et])
+    pg.uncheck('#slaTiltOn')
+    for _ in range(9): pg.click('#bUndo'); pg.wait_for_timeout(150)   # tilt, guard off, lay out, guard on, 2 x lift selected, lay out, spread, orient
     ok('Undo goes back to the original placement',pg.evaluate("__mrt.S.bodies.map(b=>Array.from(b.matrix))")==before)
+    ok('One ribbon button for the SLA panel',pg.locator('#bSlaOrient').count()==0 and pg.locator('button.popb[data-pop=sla]').count()==1)
     ok('No page errors',not errs,errs)
     b.close()
 print('ALL OK' if not fails else '%d FAIL'%fails); sys.exit(1 if fails else 0)

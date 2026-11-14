@@ -274,7 +274,7 @@
    <div class="rgrp"><div class="rbody"><div class="rcol"><label class="mini" data-en-title="Colour and opacity of the ticked bodies" title="Màu và độ đục của các body đang tick"><input type="color" id="col" value="#92aac8"><input type="range" id="opa" min="5" max="100" value="100"><span class="unit" id="opaV">100%</span></label><button class="sb popb" data-pop="explode" title="Tách xa các body để nhìn" data-en-title="Spread the bodies apart"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="6" height="6" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 3l4 4M21 3l-4 4M3 21l4-4M21 21l-4-4" stroke="#f0a030"/></svg><span data-en="Explode">Explode</span></button><button class="sb popb" data-pop="section" title="Mặt cắt (section)" data-en-title="Section view"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l8-4 8 4v8l-8 4-8-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2 12h20" stroke="#ff6b5e" stroke-width="2"/></svg><span data-en="Section">Mặt cắt</span></button></div><div class="tgrid"><label class="tg" title="Cạnh lưới" data-en-title="Edges"><input type="checkbox" id="cWire" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L12 4l9 16zM7.5 12h9M12 4v16" stroke="#9cc4ee"/></svg></label><label class="tg" title="Viền hở (đỏ)" data-en-title="Open borders (red)"><input type="checkbox" id="cHoles" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="12" r="5" fill="#14181d" stroke="#ff3b30" stroke-width="2"/></svg></label><label class="tg" title="Hệ trục XYZ" data-en-title="XYZ axes"><input type="checkbox" id="cAxes" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V5M5 19h14M5 19l9-6" stroke-width="2"/><path d="M5 19V5" stroke="#4f9bff" stroke-width="2"/><path d="M5 19h14" stroke="#ff5a52" stroke-width="2"/><path d="M5 19l9-6" stroke="#52d06a" stroke-width="2"/></svg></label><label class="tg" title="Bảng thông tin" data-en-title="Info panel"><input type="checkbox" id="cInfo" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke="#9cc4ee"/><path d="M12 11v6" stroke="#f0a030" stroke-width="2"/><circle cx="12" cy="7.5" r="1.2" fill="#f0a030"/></svg></label><label class="tg" title="Đảo chiều zoom" data-en-title="Invert zoom"><input type="checkbox" id="cZoomInv"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6" stroke="#9cc4ee"/><path d="M15 15l5 5" stroke="#9cc4ee" stroke-width="2"/><path d="M7 10h6M10 7l-3 3 3 3" stroke="#f0a030"/></svg></label></div></div><div class="rtitle" data-en="Display">Hiển thị</div></div>
    <div class="rgrp"><div class="rbody"><button id="bNormal" class="bb hl" title="Nhìn thẳng theo hướng chuẩn gần nhất (X / Y / Z)" data-en-title="Look straight along the nearest standard direction (X / Y / Z)"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.5"><rect x="4" y="6" width="16" height="13" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M12 1v9m-3-3l3 3 3-3" stroke="#f0a030" fill="none" stroke-width="2"/><circle cx="12" cy="12.5" r="1.6" fill="#f0a030"/></svg><span>Normal</span></button><div class="rcol"><button id="bFit" class="sb" title="Thu vừa màn hình" data-en-title="Fit the view"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" stroke="#9cc4ee"/><rect x="8" y="8" width="8" height="8" fill="#3d6fa8" stroke="#dfe6ee"/></svg><span>Fit</span></button><button id="bIso" class="sb" title="Hướng nhìn Iso" data-en-title="Isometric view"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.3" stroke-linejoin="round"><path d="M12 3l8 4.5-8 4.5-8-4.5z" fill="#5d8fc8" stroke="#dfe6ee"/><path d="M4 7.5V16l8 4.5V12z" fill="#3d6fa8" stroke="#dfe6ee"/><path d="M20 7.5V16l-8 4.5V12z" fill="#2c5486" stroke="#dfe6ee"/></svg><span>Iso</span></button></div></div><div class="rtitle" data-en="Orient">Hướng nhìn</div></div>
    <div class="rgrp"><div class="rbody"><div class="rcol"><button class="sb" data-tool="dist" title="Đo khoảng cách" data-en-title="Distance"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M6 9l-3 3 3 3M18 9l3 3-3 3" stroke="#f0a030" stroke-width="1.8"/><path d="M3 6v12M21 6v12" stroke="#9cc4ee"/></svg><span data-en="Distance">Khoảng cách</span></button><button class="sb" data-tool="angle" title="Đo góc" data-en-title="Angle"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M4 20L16 6" stroke="#9cc4ee" stroke-width="1.8"/><path d="M11 20a7 7 0 0 0-2.3-5.2" stroke="#f0a030" stroke-width="1.8"/></svg><span data-en="Angle">Góc</span></button><button class="sb" data-tool="radius" title="Đo bán kính" data-en-title="Radius"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" stroke="#9cc4ee"/><path d="M12 12l6-6" stroke="#f0a030" stroke-width="1.8"/><circle cx="12" cy="12" r="1.3" fill="#f0a030"/></svg><span data-en="Radius">Bán kính</span></button></div><div class="rcol"><button class="sb" data-tool="thick" title="Đo bề dày" data-en-title="Wall thickness"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16M10 4v16" stroke="#9cc4ee" stroke-width="2"/><path d="M14 12h7M14 12l2.5-2.5M14 12l2.5 2.5M4 12h6" stroke="#f0a030"/></svg><span data-en="Wall thickness">Bề dày</span></button><button class="sb popb" data-pop="undercut" title="Tooling analysis (undercut)" data-en-title="Tooling analysis (undercut)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20V9h12v11" stroke="#9cc4ee"/><path d="M6 9l6-5 6 5" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M9 14h3v6" stroke="#ff6b5e" stroke-width="2"/><path d="M12 2v3" stroke="#f0a030"/></svg><span data-en="Undercut">Undercut</span></button><button class="sb popb" data-pop="collide" title="Kiểm tra va chạm" data-en-title="Collision check"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="10" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="11" y="4" width="10" height="10" fill="rgba(240,160,48,.5)" stroke="#ffd28a"/><path d="M11 7h2v7h-2z" fill="#ff3b30"/></svg><span data-en="Collision">Va chạm</span></button></div><div class="rcol"><button class="sb popb" data-pop="compare" title="So sánh mesh" data-en-title="Compare meshes"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-8 6-8 9-4s6 4 9-4" stroke="#9cc4ee" stroke-width="1.8"/><path d="M3 19c3-8 6-8 9-4s6 4 9-4" stroke="#f0a030" stroke-width="1.8" stroke-dasharray="2 2"/></svg><span data-en="Compare">So sánh mesh</span></button></div></div><div class="rtitle" data-en="Analysis">Analysis</div></div>
-   <div class="rgrp"><div class="rbody"><div class="rcol"><button class="sb popb" data-pop="sla" title="Bàn in SLA: kích thước bàn, khe, độ dàn đều" data-en-title="SLA plate: plate size, gap, spread"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15l9 4.5 9-4.5-9-4.5z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 13V7h3v4.5M13 12V4h3v9.5" stroke="#f0a030"/><path d="M3 19.5h18" stroke="#52d06a" stroke-width="1.8"/></svg><span data-en="SLA plate">Bàn in SLA</span></button><button id="bSlaOrient" class="sb" title="Xoay tối ưu rồi dàn đều tất cả body lên bàn in" data-en-title="Orient for printing, then lay all bodies out on the plate"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20V5h4v15" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M19 9a7 7 0 0 0-5-4.6M5 9a7 7 0 0 1 5-4.6" stroke="#f0a030"/><path d="M19 9l-.3-3M19 9l-3 .4" stroke="#f0a030"/><path d="M3 21h18" stroke="#52d06a" stroke-width="1.8"/></svg><span data-en="Orient + lay out">Xoay tối ưu</span></button><button id="bSlaArrange" class="sb" title="Dàn đều từ tâm bàn in (giữ hướng hiện tại)" data-en-title="Spread out from the plate centre (keep the current orientation)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" stroke="#9cc4ee"/><rect x="10" y="10" width="4" height="4" fill="#f0a030" stroke="none"/><rect x="4.5" y="4.5" width="3.5" height="3.5" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="16" y="4.5" width="3.5" height="3.5" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="4.5" y="16" width="3.5" height="3.5" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="16" y="16" width="3.5" height="3.5" fill="#3d6fa8" stroke="#9cc4ee"/></svg><span data-en="Spread out">Dàn đều</span></button></div></div><div class="rtitle" data-en="Print plate">Bàn in</div></div>
+   <div class="rgrp"><div class="rbody"><button class="bb popb" data-pop="sla" title="SLA control panel: xoay tối ưu, dàn đều, nâng, khối chắn" data-en-title="SLA control panel: orient, lay out, lift, guard blocks"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15l10 5 10-5-10-5z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 13.5V6.5l2 1v7M13 15V4l2.2 1v11" fill="#f0a030" stroke="#ffd28a"/><path d="M4.5 13.6l2.2-1.1" stroke="#eb783c" stroke-width="2.2"/><path d="M17.3 17.4l2.2-1.1" stroke="#eb783c" stroke-width="2.2"/><path d="M2 21.5h20" stroke="#52d06a" stroke-width="1.8"/></svg><span data-en="SLA control panel">SLA control panel</span></button></div><div class="rtitle" data-en="Print plate">Bàn in</div></div>
    <div class="rgrp rcap"><div class="rbody"><button id="bShot" class="bb" title="Chép ảnh màn hình 3D vào clipboard" data-en-title="Copy a picture of the 3D view to the clipboard"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.5"><rect x="3" y="7" width="18" height="13" rx="2" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 7l1.5-3h5L16 7" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="13.5" r="4" fill="#14181d" stroke="#f0a030" stroke-width="1.8"/></svg><span data-en="Copy image">Chép ảnh</span></button></div><div class="rtitle" data-en="Capture">Chụp</div></div>
    <div class="rgrp rlast"><div class="rbody"><button class="bb popb" data-pop="split" title="Tách / gộp body" data-en-title="Split / merge bodies"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="8" height="14" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="13" y="5" width="8" height="14" fill="#5d8fc8" stroke="#9cc4ee"/><path d="M12 2v20" stroke="#f0a030" stroke-dasharray="2 2"/></svg><span data-en="Split / merge">Tách / gộp</span></button><button class="bb popb" data-pop="repair" title="Vá lưới hở" data-en-title="Repair open meshes"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M9 9h6v6H9z" fill="#14181d" stroke="#ff3b30"/><path d="M8 16l8-8" stroke="#f0a030" stroke-width="2"/></svg><span data-en="Repair">Vá lưới</span></button></div><div class="rtitle" data-en="Mesh">Mesh</div></div>
   </div>
@@ -506,9 +506,12 @@
   </div></div>
    <div class="pop" id="pop_sla"><div class="pophd"><b data-en="SLA print plate">Bàn in SLA</b><span class="grow"></span><button class="popx" data-pop="sla">✕</button></div><div class="c">
     <div class="row"><span class="lbl" data-en="Plate X × Y">Bàn X × Y</span><input type="number" id="slaW" class="s" value="400" min="10" step="1"> × <input type="number" id="slaD" class="s" value="400" min="10" step="1"><span class="unit">mm</span></div>
-    <div class="row"><span class="lbl" data-en="Spread (from centre)">Độ dàn đều (từ tâm)</span><input type="range" id="slaSpreadR" min="0" max="100" step="1" value="0" style="width:120px"><input type="number" id="slaSpread" class="s" value="0" min="0" step="1"><span class="unit">%</span></div>
+    <div class="row"><span class="lbl" data-en="Spread">Độ dàn đều</span><input type="range" id="slaSpreadR" min="0" max="100" step="1" value="0" style="width:120px"><input type="number" id="slaSpread" class="s" value="0" min="0" step="1"><span class="unit">%</span></div>
     <div class="row"><span class="lbl" data-en="Smallest gap">Khe tối thiểu</span><input type="range" id="slaGapR" min="0" max="30" step="0.5" value="2" style="width:120px"><input type="number" id="slaGap" class="s" value="2" min="0" step="0.5"><span class="unit">mm</span></div>
     <div class="row"><span class="lbl" data-en="Lift off the plate">Nâng khỏi bàn</span><input type="range" id="slaLiftR" min="0" max="30" step="0.5" value="5" style="width:120px"><input type="number" id="slaLift" class="s" value="5" min="0" step="0.5"><span class="unit">mm</span></div>
+    <div class="btns"><button id="slaLiftSel" title="Đặt các body đang chọn cách mặt bàn đúng độ nâng ở trên" data-en-title="Put the selected bodies at the lift height above the plate" data-en="Lift selected bodies">Nâng body đang chọn</button></div>
+    <div class="row"><label><input type="checkbox" id="slaTiltOn"> <span data-en="Tilt">Xoay nghiêng</span></label><input type="range" id="slaTiltR" min="10" max="45" step="1" value="15" style="width:110px"><input type="number" id="slaTilt" class="s" value="15" min="10" max="45" step="1"><span class="unit">°</span></div>
+    <div class="row"><label><input type="checkbox" id="slaGuardOn"> <span data-en="Guard blocks">Khối chắn 2 đầu</span></label><input type="number" id="slaGX" class="s" value="20" min="0.5" step="0.5"> × <input type="number" id="slaGY" class="s" value="20" min="0.5" step="0.5"><span class="unit">mm</span></div>
     <div class="row"><span class="lbl" data-en="Edge margin">Lề mép bàn</span><input type="number" id="slaMargin" class="s" value="5" min="0" step="1"><span class="unit">mm</span></div>
     <div class="btns"><button id="slaGo" class="primary" data-en="Orient + lay out">Xoay tối ưu + dàn đều</button><button id="slaGoA" data-en="Lay out only">Chỉ dàn đều</button></div>
     <div class="box" id="slaRes"></div>
@@ -9403,7 +9406,8 @@ var wasm_bindgen = (function(exports) {
   S.sla = { last: null, armed: true };
   const slaNum = function (id, d) { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
   function slaOpt() {
-    return { W: Math.max(10, slaNum('slaW', 400)), D: Math.max(10, slaNum('slaD', 400)), lift: Math.max(0, slaNum('slaLift', 5)), margin: Math.max(0, slaNum('slaMargin', 5)), gap: Math.max(0, slaNum('slaGap', 2)), spread: Math.max(0, Math.min(100, slaNum('slaSpread', 0))) };
+    return { W: Math.max(10, slaNum('slaW', 400)), D: Math.max(10, slaNum('slaD', 400)), lift: Math.max(0, slaNum('slaLift', 5)), margin: Math.max(0, slaNum('slaMargin', 5)), gap: Math.max(0, slaNum('slaGap', 2)), spread: Math.max(0, Math.min(100, slaNum('slaSpread', 0))),
+      tilt: $('slaTiltOn').checked ? Math.max(10, Math.min(45, slaNum('slaTilt', 15))) : 0, guard: $('slaGuardOn').checked, gx: Math.max(0.5, slaNum('slaGX', 20)), gy: Math.max(0.5, slaNum('slaGY', 20)) };
   }
   // world vertices of a body, thinned out for very large meshes
   function slaVerts(b, maxN) {
@@ -9487,46 +9491,64 @@ var wasm_bindgen = (function(exports) {
     const zc = V.dot(mom.c, Z), zm = (ext[2].lo + ext[2].hi) / 2;
     if (zc > zm + 1e-9 * (ext[2].e + 1)) { Z = V.mul(Z, -1); X = V.mul(X, -1); }
     const R = [X[0], Y[0], Z[0], 0, X[1], Y[1], Z[1], 0, X[2], Y[2], Z[2], 0, 0, 0, 0, 1];   // rows X, Y, Z
-    return M.about(mom.c, R);
+    const tilt = slaOpt().tilt;                              // lean about X: the thin side stays across the blade, big faces no longer lie flat
+    return M.about(mom.c, tilt ? M.mul(M.rot([1, 0, 0], tilt * Math.PI / 180), R) : R);
   }
-  // rows from the plate centre: items {w, d} → {x, y} (min corners), or null when they do not fit
-  function slaShelf(items, gap, rowW) {
-    const order = items.map(function (it, i) { return i; }).sort(function (a, b) { return items[b].d - items[a].d || items[b].w - items[a].w; });
-    const rows = []; let cur = null;
-    for (const i of order) {
-      const it = items[i];
-      if (!cur || (cur.w > 0 && cur.w + gap + it.w > rowW + 1e-9)) { cur = { ids: [], w: 0, d: 0 }; rows.push(cur); }
-      cur.w += (cur.ids.length ? gap : 0) + it.w; cur.d = Math.max(cur.d, it.d); cur.ids.push(i);
+  // rows along X from the plate corner at the origin: small parts first, a row is filled across X before the next one starts (further along Y);
+  // parts of the same size stay in the same row. Items {w, d, h} → {x, y} (min corners).
+  function slaRows(items, gap, o) {
+    const x0 = o.margin, x1 = o.W - o.margin, y0 = o.margin + (o.guard ? o.gy + gap : 0);
+    const vol = function (it) { return Math.max(1e-9, it.w * it.d * it.h); };
+    const ord = items.map(function (it, i) { return i; }).sort(function (a, b) { return vol(items[a]) - vol(items[b]) || items[a].d - items[b].d; });
+    const groups = [];
+    for (const i of ord) { const g = groups[groups.length - 1]; if (g && vol(items[i]) <= vol(items[g[0]]) * 1.03) g.push(i); else groups.push([i]); }
+    const pos = new Array(items.length), rows = [];
+    let row = null;
+    const newRow = function () { const y = rows.length ? rows[rows.length - 1].y + rows[rows.length - 1].d + gap : y0; row = { y: y, x: x0, d: 0, n: 0 }; rows.push(row); };
+    const groupW = function (g) { return g.reduce(function (s, i) { return s + items[i].w; }, 0) + gap * (g.length - 1); };
+    for (const g of groups) {
+      if (row && row.n && row.x + groupW(g) > x1 + 1e-9 && groupW(g) <= x1 - x0 + 1e-9) newRow();   // keep a same-size group together when it fits in a fresh row
+      for (const i of g) {
+        const it = items[i];
+        if (!row || (row.n && row.x + it.w > x1 + 1e-9)) newRow();
+        pos[i] = [row.x, row.y]; row.x += it.w + gap; row.n++; row.d = Math.max(row.d, it.d);
+      }
     }
-    const W = Math.max.apply(null, rows.map(function (r) { return r.w; })), H = rows.reduce(function (s, r) { return s + r.d; }, 0) + gap * (rows.length - 1);
-    return { rows: rows, W: W, H: H };
+    const top = rows.length ? rows[rows.length - 1].y + rows[rows.length - 1].d : y0;
+    const W = Math.max.apply(null, items.map(function (it, i) { return pos[i][0] + it.w; })) - x0;
+    const wide = items.some(function (it) { return it.w > x1 - x0 + 1e-9; });
+    return { pos: pos, top: top, W: W, H: top - y0, fits: !wide && top + (o.guard ? gap + o.gy : 0) <= o.D - o.margin + 1e-9 };
   }
-  function slaBestShelf(items, gap, aw, ad) {
-    const wmax = Math.max.apply(null, items.map(function (i) { return i.w; })), tot = items.reduce(function (s, i) { return s + i.w; }, 0) + gap * (items.length - 1);
-    let best = null;
-    for (let k = 0; k <= 80; k++) {
-      const rw = wmax + (Math.max(wmax, tot) - wmax) * k / 80, L1 = slaShelf(items, gap, rw), sc = Math.max(L1.W / aw, L1.H / ad);
-      if (!best || sc < best.sc - 1e-9) best = Object.assign(L1, { sc: sc });
-    }
-    return best;
-  }
-  // lay the items out centred on the plate; spread 0..100 % goes from the smallest gap to the largest that still fits
+  // spread 0..100 % goes from the smallest gap to the largest one that still fits on the plate
   function slaLayout(items, o) {
-    const aw = o.W - 2 * o.margin, ad = o.D - 2 * o.margin;
-    const fits = function (g) { return slaBestShelf(items, g, aw, ad).sc <= 1 + 1e-9; };
-    const ok = fits(o.gap);
+    const ok = slaRows(items, o.gap, o).fits;
     let gmax = o.gap;
-    if (ok) { let lo = o.gap, hi = o.gap + Math.max(aw, ad); for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (fits(mid)) lo = mid; else hi = mid; } gmax = lo; }
-    const g = o.gap + (gmax - o.gap) * o.spread / 100, L1 = slaBestShelf(items, g, aw, ad), pos = new Array(items.length);
-    let y = o.D / 2 - L1.H / 2;
-    for (const r of L1.rows) {
-      let x = o.W / 2 - r.w / 2;
-      for (const i of r.ids) { pos[i] = [x, y + (r.d - items[i].d) / 2]; x += items[i].w + g; }
-      y += r.d + g;
-    }
-    return { pos: pos, gap: g, fits: ok, W: L1.W, H: L1.H };
+    if (ok) { let lo = o.gap, hi = o.gap + Math.max(o.W, o.D); for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (slaRows(items, mid, o).fits) lo = mid; else hi = mid; } gmax = lo; }
+    const g = o.gap + (gmax - o.gap) * o.spread / 100, L1 = slaRows(items, g, o);
+    return { pos: L1.pos, gap: g, fits: ok, W: L1.W, H: L1.H };
   }
-  function slaBodies() { return visibleBodies(); }
+  // ---------- the two guard blocks: always the outermost parts along the blade travel (one at each end), as tall as the tallest part ----------
+  const slaIsGuard = function (b) { return /^SLA_guard_[12]$/.test(b.name); };
+  function slaBoxGeo(sx, sy, sz) {
+    const P = new Float32Array([0, 0, 0, sx, 0, 0, sx, sy, 0, 0, sy, 0, 0, 0, sz, sx, 0, sz, sx, sy, sz, 0, sy, sz]);
+    const I = new Uint32Array([0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5, 2, 3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7]);
+    return makeGeo(P, I);
+  }
+  function slaGuards() {
+    const old = S.bodies.filter(slaIsGuard), o = slaOpt();
+    for (const b of old) removeBody(b);
+    if (!o.guard) return null;
+    const parts = slaBodies(); if (!parts.length) return null;
+    const bb = parts.map(tightBox), g = S.sla.gap === undefined ? o.gap : S.sla.gap;
+    const y0 = Math.min.apply(null, bb.map(function (t) { return t.min[1]; })), y1 = Math.max.apply(null, bb.map(function (t) { return t.max[1]; })), h = Math.max.apply(null, bb.map(function (t) { return t.max[2]; }));
+    if (!(h > 0)) return null;
+    const geo = slaBoxGeo(o.gx, o.gy, h), out = [];
+    [[o.W - o.margin - o.gx, y0 - g - o.gy], [o.margin, y1 + g]].forEach(function (p, i) {
+      out.push(addBody('SLA_guard_' + (i + 1), i ? slaBoxGeo(o.gx, o.gy, h) : geo, { matrix: M.trans([p[0], p[1], 0]), color: [235, 120, 60] }));
+    });
+    return out;
+  }
+  function slaBodies() { return visibleBodies().filter(function (b) { return !slaIsGuard(b); }); }
   function slaApply(orient, undo) {
     if (blocked()) return;
     const list = slaBodies();
@@ -9537,11 +9559,12 @@ var wasm_bindgen = (function(exports) {
       try {
         if (undo) pushUndo();
         if (orient) for (const b of list) { const R = slaOrientMatrix(b); if (R) b.matrix = M.mul(R, b.matrix); }
-        const items = list.map(function (b) { const t = tightBox(b); return { w: t.max[0] - t.min[0], d: t.max[1] - t.min[1], t: t }; });
+        const items = list.map(function (b) { const t = tightBox(b); return { w: t.max[0] - t.min[0], d: t.max[1] - t.min[1], h: t.max[2] - t.min[2], t: t }; });
         const L1 = slaLayout(items, o);
         list.forEach(function (b, i) { const it = items[i]; b.matrix = M.mul(M.trans([L1.pos[i][0] - it.t.min[0], L1.pos[i][1] - it.t.min[1], o.lift - it.t.min[2]]), b.matrix); b.off = [0, 0, 0]; });
-        S.sla.last = list;
-        commitTransform(list);
+        S.sla.last = list; S.sla.gap = L1.gap;
+        const gd = slaGuards() || [];
+        commitTransform(list.concat(gd));
         { const c = mainCam.center, r = mainCam.radius, zt = Math.max.apply(null, list.map(function (b) { return tightBox(b).max[2]; })); fitCam(mainCam, { min: [-10, -16, 0], max: [o.W + 10, o.D + 10, zt] }); mainCam.center = c; mainCam.radius = r; }
         const hmax = Math.max.apply(null, list.map(function (b) { const t = tightBox(b); return t.max[2]; }));
         $('slaRes').textContent = (L1.fits ? L('Đã xếp ', 'Laid out ') + list.length + L(' body · khe ', ' bodies · gap ') + f2(L1.gap) + ' mm · ' + f2(L1.W) + ' × ' + f2(L1.H) + ' mm · ' + L('cao nhất ', 'tallest ') + f2(hmax) + ' mm'
@@ -9557,16 +9580,31 @@ var wasm_bindgen = (function(exports) {
     const list = (S.sla.last || []).filter(function (b) { return S.bodies.indexOf(b) >= 0; });
     if (!list.length) return;
     if (S.sla.armed) { pushUndo(); S.sla.armed = false; }
-    const o = slaOpt(), items = list.map(function (b) { const t = tightBox(b); return { w: t.max[0] - t.min[0], d: t.max[1] - t.min[1], t: t }; }), L1 = slaLayout(items, o);
+    const o = slaOpt(), items = list.map(function (b) { const t = tightBox(b); return { w: t.max[0] - t.min[0], d: t.max[1] - t.min[1], h: t.max[2] - t.min[2], t: t }; }), L1 = slaLayout(items, o);
     list.forEach(function (b, i) { const it = items[i]; b.matrix = M.mul(M.trans([L1.pos[i][0] - it.t.min[0], L1.pos[i][1] - it.t.min[1], o.lift - it.t.min[2]]), b.matrix); });
-    commitTransform(list);
+    S.sla.gap = L1.gap; const gd = slaGuards() || [];
+    commitTransform(list.concat(gd));
     $('slaRes').textContent = L('Khe ', 'Gap ') + f2(L1.gap) + ' mm · ' + f2(L1.W) + ' × ' + f2(L1.H) + ' mm';
   }
-  $('bSlaOrient').addEventListener('click', function () { openPop('sla', true); slaApply(true, true); });
-  $('bSlaArrange').addEventListener('click', function () { openPop('sla', true); slaApply(false, true); });
+  // lift only the ticked bodies to the "lift off the plate" height
+  function slaLiftSel() {
+    if (blocked()) return;
+    const list = selBodies().filter(function (b) { return !slaIsGuard(b); });
+    if (!list.length) { flash(L('Hãy tick hoặc bấm chọn body cần nâng', 'Tick or click the bodies to lift')); return; }
+    const o = slaOpt();
+    pushUndo();
+    for (const b of list) { const t = tightBox(b); b.matrix = M.mul(M.trans([0, 0, o.lift - t.min[2]]), b.matrix); }
+    const gd = S.bodies.some(slaIsGuard) || o.guard ? slaGuards() || [] : [];
+    commitTransform(list.concat(gd));
+    $('slaRes').textContent = L('Đã đặt ', 'Set ') + list.length + L(' body cách bàn ', ' bodies at ') + f2(o.lift) + ' mm';
+  }
+  $('slaLiftSel').addEventListener('click', slaLiftSel);
+  $('slaGuardOn').addEventListener('change', function () { if (blocked()) return; pushUndo(); const gd = slaGuards() || []; commitTransform(gd); dirty = true; });
+  ['slaGX', 'slaGY'].forEach(function (id) { $(id).addEventListener('change', function () { if (!$('slaGuardOn').checked) return; pushUndo(); commitTransform(slaGuards() || []); }); });
+  [['slaTiltR', 'slaTilt'], ['slaLiftR', 'slaLift']].forEach(function (p) { const r = $(p[0]), n = $(p[1]); r.addEventListener('input', function () { n.value = r.value; }); n.addEventListener('input', function () { r.value = n.value; }); });
   $('slaGo').addEventListener('click', function () { slaApply(true, true); });
   $('slaGoA').addEventListener('click', function () { slaApply(false, true); });
-  [['slaSpreadR', 'slaSpread'], ['slaLiftR', 'slaLift'], ['slaGapR', 'slaGap']].forEach(function (p) {
+  [['slaSpreadR', 'slaSpread'], ['slaGapR', 'slaGap']].forEach(function (p) {
     const r = $(p[0]), n = $(p[1]);
     r.addEventListener('input', function () { n.value = r.value; slaRespread(); });
     n.addEventListener('input', function () { r.value = n.value; slaRespread(); });

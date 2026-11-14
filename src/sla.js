@@ -5,7 +5,8 @@
   S.sla = { last: null, armed: true };
   const slaNum = function (id, d) { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
   function slaOpt() {
-    return { W: Math.max(10, slaNum('slaW', 400)), D: Math.max(10, slaNum('slaD', 400)), lift: Math.max(0, slaNum('slaLift', 5)), margin: Math.max(0, slaNum('slaMargin', 5)), gap: Math.max(0, slaNum('slaGap', 2)), spread: Math.max(0, Math.min(100, slaNum('slaSpread', 0))) };
+    return { W: Math.max(10, slaNum('slaW', 400)), D: Math.max(10, slaNum('slaD', 400)), lift: Math.max(0, slaNum('slaLift', 5)), margin: Math.max(0, slaNum('slaMargin', 5)), gap: Math.max(0, slaNum('slaGap', 2)), spread: Math.max(0, Math.min(100, slaNum('slaSpread', 0))),
+      tilt: $('slaTiltOn').checked ? Math.max(10, Math.min(45, slaNum('slaTilt', 15))) : 0, guard: $('slaGuardOn').checked, gx: Math.max(0.5, slaNum('slaGX', 20)), gy: Math.max(0.5, slaNum('slaGY', 20)) };
   }
   // world vertices of a body, thinned out for very large meshes
   function slaVerts(b, maxN) {
@@ -89,46 +90,64 @@
     const zc = V.dot(mom.c, Z), zm = (ext[2].lo + ext[2].hi) / 2;
     if (zc > zm + 1e-9 * (ext[2].e + 1)) { Z = V.mul(Z, -1); X = V.mul(X, -1); }
     const R = [X[0], Y[0], Z[0], 0, X[1], Y[1], Z[1], 0, X[2], Y[2], Z[2], 0, 0, 0, 0, 1];   // rows X, Y, Z
-    return M.about(mom.c, R);
+    const tilt = slaOpt().tilt;                              // lean about X: the thin side stays across the blade, big faces no longer lie flat
+    return M.about(mom.c, tilt ? M.mul(M.rot([1, 0, 0], tilt * Math.PI / 180), R) : R);
   }
-  // rows from the plate centre: items {w, d} → {x, y} (min corners), or null when they do not fit
-  function slaShelf(items, gap, rowW) {
-    const order = items.map(function (it, i) { return i; }).sort(function (a, b) { return items[b].d - items[a].d || items[b].w - items[a].w; });
-    const rows = []; let cur = null;
-    for (const i of order) {
-      const it = items[i];
-      if (!cur || (cur.w > 0 && cur.w + gap + it.w > rowW + 1e-9)) { cur = { ids: [], w: 0, d: 0 }; rows.push(cur); }
-      cur.w += (cur.ids.length ? gap : 0) + it.w; cur.d = Math.max(cur.d, it.d); cur.ids.push(i);
+  // rows along X from the plate corner at the origin: small parts first, a row is filled across X before the next one starts (further along Y);
+  // parts of the same size stay in the same row. Items {w, d, h} → {x, y} (min corners).
+  function slaRows(items, gap, o) {
+    const x0 = o.margin, x1 = o.W - o.margin, y0 = o.margin + (o.guard ? o.gy + gap : 0);
+    const vol = function (it) { return Math.max(1e-9, it.w * it.d * it.h); };
+    const ord = items.map(function (it, i) { return i; }).sort(function (a, b) { return vol(items[a]) - vol(items[b]) || items[a].d - items[b].d; });
+    const groups = [];
+    for (const i of ord) { const g = groups[groups.length - 1]; if (g && vol(items[i]) <= vol(items[g[0]]) * 1.03) g.push(i); else groups.push([i]); }
+    const pos = new Array(items.length), rows = [];
+    let row = null;
+    const newRow = function () { const y = rows.length ? rows[rows.length - 1].y + rows[rows.length - 1].d + gap : y0; row = { y: y, x: x0, d: 0, n: 0 }; rows.push(row); };
+    const groupW = function (g) { return g.reduce(function (s, i) { return s + items[i].w; }, 0) + gap * (g.length - 1); };
+    for (const g of groups) {
+      if (row && row.n && row.x + groupW(g) > x1 + 1e-9 && groupW(g) <= x1 - x0 + 1e-9) newRow();   // keep a same-size group together when it fits in a fresh row
+      for (const i of g) {
+        const it = items[i];
+        if (!row || (row.n && row.x + it.w > x1 + 1e-9)) newRow();
+        pos[i] = [row.x, row.y]; row.x += it.w + gap; row.n++; row.d = Math.max(row.d, it.d);
+      }
     }
-    const W = Math.max.apply(null, rows.map(function (r) { return r.w; })), H = rows.reduce(function (s, r) { return s + r.d; }, 0) + gap * (rows.length - 1);
-    return { rows: rows, W: W, H: H };
+    const top = rows.length ? rows[rows.length - 1].y + rows[rows.length - 1].d : y0;
+    const W = Math.max.apply(null, items.map(function (it, i) { return pos[i][0] + it.w; })) - x0;
+    const wide = items.some(function (it) { return it.w > x1 - x0 + 1e-9; });
+    return { pos: pos, top: top, W: W, H: top - y0, fits: !wide && top + (o.guard ? gap + o.gy : 0) <= o.D - o.margin + 1e-9 };
   }
-  function slaBestShelf(items, gap, aw, ad) {
-    const wmax = Math.max.apply(null, items.map(function (i) { return i.w; })), tot = items.reduce(function (s, i) { return s + i.w; }, 0) + gap * (items.length - 1);
-    let best = null;
-    for (let k = 0; k <= 80; k++) {
-      const rw = wmax + (Math.max(wmax, tot) - wmax) * k / 80, L1 = slaShelf(items, gap, rw), sc = Math.max(L1.W / aw, L1.H / ad);
-      if (!best || sc < best.sc - 1e-9) best = Object.assign(L1, { sc: sc });
-    }
-    return best;
-  }
-  // lay the items out centred on the plate; spread 0..100 % goes from the smallest gap to the largest that still fits
+  // spread 0..100 % goes from the smallest gap to the largest one that still fits on the plate
   function slaLayout(items, o) {
-    const aw = o.W - 2 * o.margin, ad = o.D - 2 * o.margin;
-    const fits = function (g) { return slaBestShelf(items, g, aw, ad).sc <= 1 + 1e-9; };
-    const ok = fits(o.gap);
+    const ok = slaRows(items, o.gap, o).fits;
     let gmax = o.gap;
-    if (ok) { let lo = o.gap, hi = o.gap + Math.max(aw, ad); for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (fits(mid)) lo = mid; else hi = mid; } gmax = lo; }
-    const g = o.gap + (gmax - o.gap) * o.spread / 100, L1 = slaBestShelf(items, g, aw, ad), pos = new Array(items.length);
-    let y = o.D / 2 - L1.H / 2;
-    for (const r of L1.rows) {
-      let x = o.W / 2 - r.w / 2;
-      for (const i of r.ids) { pos[i] = [x, y + (r.d - items[i].d) / 2]; x += items[i].w + g; }
-      y += r.d + g;
-    }
-    return { pos: pos, gap: g, fits: ok, W: L1.W, H: L1.H };
+    if (ok) { let lo = o.gap, hi = o.gap + Math.max(o.W, o.D); for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (slaRows(items, mid, o).fits) lo = mid; else hi = mid; } gmax = lo; }
+    const g = o.gap + (gmax - o.gap) * o.spread / 100, L1 = slaRows(items, g, o);
+    return { pos: L1.pos, gap: g, fits: ok, W: L1.W, H: L1.H };
   }
-  function slaBodies() { return visibleBodies(); }
+  // ---------- the two guard blocks: always the outermost parts along the blade travel (one at each end), as tall as the tallest part ----------
+  const slaIsGuard = function (b) { return /^SLA_guard_[12]$/.test(b.name); };
+  function slaBoxGeo(sx, sy, sz) {
+    const P = new Float32Array([0, 0, 0, sx, 0, 0, sx, sy, 0, 0, sy, 0, 0, 0, sz, sx, 0, sz, sx, sy, sz, 0, sy, sz]);
+    const I = new Uint32Array([0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5, 2, 3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7]);
+    return makeGeo(P, I);
+  }
+  function slaGuards() {
+    const old = S.bodies.filter(slaIsGuard), o = slaOpt();
+    for (const b of old) removeBody(b);
+    if (!o.guard) return null;
+    const parts = slaBodies(); if (!parts.length) return null;
+    const bb = parts.map(tightBox), g = S.sla.gap === undefined ? o.gap : S.sla.gap;
+    const y0 = Math.min.apply(null, bb.map(function (t) { return t.min[1]; })), y1 = Math.max.apply(null, bb.map(function (t) { return t.max[1]; })), h = Math.max.apply(null, bb.map(function (t) { return t.max[2]; }));
+    if (!(h > 0)) return null;
+    const geo = slaBoxGeo(o.gx, o.gy, h), out = [];
+    [[o.W - o.margin - o.gx, y0 - g - o.gy], [o.margin, y1 + g]].forEach(function (p, i) {
+      out.push(addBody('SLA_guard_' + (i + 1), i ? slaBoxGeo(o.gx, o.gy, h) : geo, { matrix: M.trans([p[0], p[1], 0]), color: [235, 120, 60] }));
+    });
+    return out;
+  }
+  function slaBodies() { return visibleBodies().filter(function (b) { return !slaIsGuard(b); }); }
   function slaApply(orient, undo) {
     if (blocked()) return;
     const list = slaBodies();
@@ -139,11 +158,12 @@
       try {
         if (undo) pushUndo();
         if (orient) for (const b of list) { const R = slaOrientMatrix(b); if (R) b.matrix = M.mul(R, b.matrix); }
-        const items = list.map(function (b) { const t = tightBox(b); return { w: t.max[0] - t.min[0], d: t.max[1] - t.min[1], t: t }; });
+        const items = list.map(function (b) { const t = tightBox(b); return { w: t.max[0] - t.min[0], d: t.max[1] - t.min[1], h: t.max[2] - t.min[2], t: t }; });
         const L1 = slaLayout(items, o);
         list.forEach(function (b, i) { const it = items[i]; b.matrix = M.mul(M.trans([L1.pos[i][0] - it.t.min[0], L1.pos[i][1] - it.t.min[1], o.lift - it.t.min[2]]), b.matrix); b.off = [0, 0, 0]; });
-        S.sla.last = list;
-        commitTransform(list);
+        S.sla.last = list; S.sla.gap = L1.gap;
+        const gd = slaGuards() || [];
+        commitTransform(list.concat(gd));
         { const c = mainCam.center, r = mainCam.radius, zt = Math.max.apply(null, list.map(function (b) { return tightBox(b).max[2]; })); fitCam(mainCam, { min: [-10, -16, 0], max: [o.W + 10, o.D + 10, zt] }); mainCam.center = c; mainCam.radius = r; }
         const hmax = Math.max.apply(null, list.map(function (b) { const t = tightBox(b); return t.max[2]; }));
         $('slaRes').textContent = (L1.fits ? L('Đã xếp ', 'Laid out ') + list.length + L(' body · khe ', ' bodies · gap ') + f2(L1.gap) + ' mm · ' + f2(L1.W) + ' × ' + f2(L1.H) + ' mm · ' + L('cao nhất ', 'tallest ') + f2(hmax) + ' mm'
@@ -159,16 +179,31 @@
     const list = (S.sla.last || []).filter(function (b) { return S.bodies.indexOf(b) >= 0; });
     if (!list.length) return;
     if (S.sla.armed) { pushUndo(); S.sla.armed = false; }
-    const o = slaOpt(), items = list.map(function (b) { const t = tightBox(b); return { w: t.max[0] - t.min[0], d: t.max[1] - t.min[1], t: t }; }), L1 = slaLayout(items, o);
+    const o = slaOpt(), items = list.map(function (b) { const t = tightBox(b); return { w: t.max[0] - t.min[0], d: t.max[1] - t.min[1], h: t.max[2] - t.min[2], t: t }; }), L1 = slaLayout(items, o);
     list.forEach(function (b, i) { const it = items[i]; b.matrix = M.mul(M.trans([L1.pos[i][0] - it.t.min[0], L1.pos[i][1] - it.t.min[1], o.lift - it.t.min[2]]), b.matrix); });
-    commitTransform(list);
+    S.sla.gap = L1.gap; const gd = slaGuards() || [];
+    commitTransform(list.concat(gd));
     $('slaRes').textContent = L('Khe ', 'Gap ') + f2(L1.gap) + ' mm · ' + f2(L1.W) + ' × ' + f2(L1.H) + ' mm';
   }
-  $('bSlaOrient').addEventListener('click', function () { openPop('sla', true); slaApply(true, true); });
-  $('bSlaArrange').addEventListener('click', function () { openPop('sla', true); slaApply(false, true); });
+  // lift only the ticked bodies to the "lift off the plate" height
+  function slaLiftSel() {
+    if (blocked()) return;
+    const list = selBodies().filter(function (b) { return !slaIsGuard(b); });
+    if (!list.length) { flash(L('Hãy tick hoặc bấm chọn body cần nâng', 'Tick or click the bodies to lift')); return; }
+    const o = slaOpt();
+    pushUndo();
+    for (const b of list) { const t = tightBox(b); b.matrix = M.mul(M.trans([0, 0, o.lift - t.min[2]]), b.matrix); }
+    const gd = S.bodies.some(slaIsGuard) || o.guard ? slaGuards() || [] : [];
+    commitTransform(list.concat(gd));
+    $('slaRes').textContent = L('Đã đặt ', 'Set ') + list.length + L(' body cách bàn ', ' bodies at ') + f2(o.lift) + ' mm';
+  }
+  $('slaLiftSel').addEventListener('click', slaLiftSel);
+  $('slaGuardOn').addEventListener('change', function () { if (blocked()) return; pushUndo(); const gd = slaGuards() || []; commitTransform(gd); dirty = true; });
+  ['slaGX', 'slaGY'].forEach(function (id) { $(id).addEventListener('change', function () { if (!$('slaGuardOn').checked) return; pushUndo(); commitTransform(slaGuards() || []); }); });
+  [['slaTiltR', 'slaTilt'], ['slaLiftR', 'slaLift']].forEach(function (p) { const r = $(p[0]), n = $(p[1]); r.addEventListener('input', function () { n.value = r.value; }); n.addEventListener('input', function () { r.value = n.value; }); });
   $('slaGo').addEventListener('click', function () { slaApply(true, true); });
   $('slaGoA').addEventListener('click', function () { slaApply(false, true); });
-  [['slaSpreadR', 'slaSpread'], ['slaLiftR', 'slaLift'], ['slaGapR', 'slaGap']].forEach(function (p) {
+  [['slaSpreadR', 'slaSpread'], ['slaGapR', 'slaGap']].forEach(function (p) {
     const r = $(p[0]), n = $(p[1]);
     r.addEventListener('input', function () { n.value = r.value; slaRespread(); });
     n.addEventListener('input', function () { r.value = n.value; slaRespread(); });
