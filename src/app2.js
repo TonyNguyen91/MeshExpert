@@ -322,7 +322,7 @@
     const fs = '#version 300 es\nprecision highp float;in vec3 vV;in vec3 vW;in vec3 vC;uniform vec4 uColor;uniform int uMode;uniform float uSel;uniform float uBright;uniform vec4 uClip;uniform float uClipOn;out vec4 o;' +
       'void main(){if(uClipOn>0.5&&dot(uClip.xyz,vW)>uClip.w)discard;' +
       'if(uMode==1){o=vec4(0.03,0.05,0.08,uColor.a);return;}if(uMode==3){o=uColor;return;}' +
-      'vec3 base=uMode==2?vC:(uSel>0.5?vec3(1.0,0.55,0.06):uColor.rgb);' +
+      'vec3 base=uMode==2?vC:(uSel>2.5?vec3(0.18,0.78,1.0):uSel>1.5?vec3(1.0,0.3,0.2):uSel>0.5?vec3(1.0,0.55,0.06):uColor.rgb);' +
       'if(uClipOn>0.5&&!gl_FrontFacing){o=vec4(base*0.45+vec3(0.16,0.03,0.03),uColor.a);return;}' +
       'vec3 n=normalize(cross(dFdx(vV),dFdy(vV)));' +
       'if(uMode==2){o=vec4(min(base*(abs(n.z)*0.4+0.6)*uBright,vec3(1.0)),uColor.a);return;}' +
@@ -502,7 +502,7 @@
     gl.uniformMatrix4fv(U.uM, false, dispMatrix(b));
     gl.frontFace(M.det3(b.matrix) < 0 ? gl.CW : gl.CCW);
     gl.uniform4f(U.uColor, b.color[0] / 255, b.color[1] / 255, b.color[2] / 255, alpha);
-    gl.uniform1f(U.uSel, !plain && S.sel.has(b) ? 1 : 0);
+    gl.uniform1f(U.uSel, plain ? 0 : (dlgRole(b) || (S.sel.has(b) ? 1 : 0)));
     gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 1);
     if (b.ana && !plain) { gl.uniform1i(U.uMode, 2); gl.bindVertexArray(b.ana.vao); gl.drawArrays(gl.TRIANGLES, 0, b.ana.count); }
     else { gl.uniform1i(U.uMode, 0); gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES, b.geo.indices.length, gl.UNSIGNED_INT, 0); }
@@ -2785,5 +2785,5 @@
 /*MODEL*/
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();

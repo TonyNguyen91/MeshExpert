@@ -268,7 +268,7 @@
       setBusy(true, L('Dựng lại khối...', 'Rebuilding the solid...'));
       const keep = [];
       for (const f of feats) {
-        try { mesh = await DRESS[f.type].apply(mesh, f, true); keep.push(f); } catch (e) { dropped.push(f.type); }
+        try { if (!DRESS[f.type]) throw new Error(f.type); mesh = await DRESS[f.type].apply(mesh, f, true); keep.push(f); } catch (e) { dropped.push(f.type); }
       }
       recipe.feats = keep;
       setBusy(false);
@@ -516,7 +516,8 @@
     let h = '';
     const box = function (key, title) {
       const items = od.sel[key] || [];
-      h += '<div class="selbox' + (od.active === key ? ' on' : '') + '" data-box="' + key + '"><div class="sbt">' + title + ' <span class="cnt">' + items.length + '</span></div>';
+      const sw = od.cmd === 'boolean' ? '<i class="bsw" style="background:' + (key === 'tools' ? '#ff4d33' : '#2ec7ff') + '"></i>' : '';
+      h += '<div class="selbox' + (od.active === key ? ' on' : '') + '" data-box="' + key + '"><div class="sbt">' + sw + title + ' <span class="cnt">' + items.length + '</span></div>';
       h += items.length ? items.map(function (it, i) { return '<div class="sbi">' + boxLabel(it).replace(/</g, '&lt;') + '<span data-rm="' + key + ':' + i + '">✕</span></div>'; }).join('') : '<div class="sbe">' + L('bấm để chọn trên màn hình', 'click to pick in the view') + '</div>';
       h += '</div>';
     };
@@ -545,7 +546,7 @@
     if ($('odV')) { $('odV').addEventListener('input', function () { od.v = +this.value; $('odR').value = this.value; dlgPreview(); }); $('odR').addEventListener('input', function () { od.v = +this.value; $('odV').value = this.value; dlgPreview(); }); }
     if ($('odTan')) $('odTan').addEventListener('change', function () { od.tan = this.checked; });
     if ($('odFlip')) $('odFlip').addEventListener('change', function () { od.flip = this.checked; dlgPreview(); });
-    dlgNote();
+    dlgNote(); dirty = true;
   }
   function dlgNote(extra) {
     const od = S.od; if (!od || !$('odNote')) return;
@@ -553,6 +554,13 @@
     if (od.cmd === 'boolean') t = od.op === 'subtract' ? L('Bấm ô Tools hoặc Targets rồi bấm body trên màn hình / trong danh sách để đưa vào ô đó.', 'Click the Tools or Targets box, then click bodies in the view / list to put them there.') : L('Bấm các body cần gộp / giao vào ô Tools.', 'Click the bodies to combine into Tools.');
     else t = L('Bấm ô cần chọn rồi bấm ', 'Click a box, then click ') + (DRESS[od.cmd].boxes.some(function (b) { return b[1] === 'edge'; }) ? L('cạnh', 'edges') : L('mặt', 'faces')) + L(' trên body. Tất cả phải trên cùng 1 body kín.', ' on the body. All on one closed body.');
     $('odNote').innerHTML = t + (extra ? '<br>' + extra : '');
+  }
+  // bodies put into the Boolean boxes light up: Tools red, Targets blue (0 = not in a box)
+  function dlgRole(b) {
+    const od = S.od; if (!od || od.cmd !== 'boolean' || !od.sel) return 0;
+    if (od.sel.tools && od.sel.tools.indexOf(b) >= 0) return 2;
+    if (od.sel.targets && od.sel.targets.indexOf(b) >= 0) return 3;
+    return 0;
   }
   // a click in the view while the dialog is open
   function dlgClick(px, py, h) {
@@ -640,7 +648,7 @@
     let src = { positions: b.geo.positions, indices: b.geo.indices }, again = false;
     if (b.solid && b.geo.brep) {                               // the mesh method starts from its own mesh of the solid
       src = featMesh(b.solid.type, { frame: b.solid.frame, ents: b.solid.ents }, b.solid.params, b.solid.off);
-      for (const f of b.solid.feats || []) src = await DRESS[f.type].apply(src, f, true);
+      for (const f of b.solid.feats || []) { if (!DRESS[f.type]) throw new Error(L('Khối có Remove face: chỉ sửa tiếp được bằng lõi B-rep', 'The solid has a Remove face: it can only be edited further by the B-rep engine')); src = await DRESS[f.type].apply(src, f, true); }
       again = true;
     }
     const mesh = await DRESS[od.cmd].apply(src, rec, again);

@@ -2,7 +2,7 @@
 
 `src/lib.rs` is a small wrapper around the SolidCraft kernel (solidcore B-rep), compiled to WebAssembly and
 embedded in `index.html` (`src/brep_embed.js`). It takes JSON commands (box, extrude, revolve, fillet, chamfer,
-shell, boolean, transform, mesh, step) and keeps bodies in a table by id.
+shell, boolean, transform, draft, offsetFaces, deleteFaces, mesh, step) and keeps bodies in a table by id.
 
 Licences: solidcore is Apache-2.0, the SolidCraft kernel crates are MIT OR Apache-2.0. See `src/LICENSES-BREP.txt`.
 No SolidCraft brand or interface material is used.

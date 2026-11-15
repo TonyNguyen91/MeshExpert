@@ -237,6 +237,7 @@
   #dock { position: absolute; right: 10px; top: 132px; width: 320px; max-height: calc(100% - 150px); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; z-index: 7; }
   .pop { display: none; background: rgba(20,24,29,.97); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px 9px; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
   .pop.on { display: block; }
+  .bsw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
   .rdgrid { display: flex; gap: 8px; margin: 4px 0; }
   .rdgrid fieldset { border: 1px solid var(--line); border-radius: 5px; padding: 2px 8px 4px; margin: 0; display: flex; flex-direction: column; gap: 2px; min-width: 96px; }
   .rdgrid legend { color: var(--muted); font-size: 11px; padding: 0 3px; }
@@ -292,8 +293,8 @@
   <div class="rpage on" data-page="home">
    <div class="rgrp"><div class="rbody"><button id="bSketch" class="bb" title="Sketch: vẽ sketch trên một mặt phẳng" data-en-title="Sketch: draw on a plane"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.4" stroke-linejoin="round"><path d="M3 17l7 4 11-6-7-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M13 3l3 3-6 6-3.5.5.5-3.5z" fill="#f0a030" stroke="#ffd28a"/></svg><span>Sketch</span></button></div><div class="rtitle" data-en="Sketch">Sketch</div></div>
       <div class="rgrp"><div class="rbody"><div class="rcol"><button data-tool="gpoint" class="sb" title="Point: đặt điểm trên mesh / theo bộ lọc" data-en-title="Point: place a point on the mesh / as the filter allows"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12h10M12 7v10" stroke="#ff7ad9"/><circle cx="12" cy="12" r="2.6" fill="#ff7ad9" stroke="#ffd2f2"/></svg><span>Point</span></button><button data-tool="gline" class="sb" title="Line: điểm–điểm hoặc điểm–mặt" data-en-title="Line: point–point or point–plane"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19L20 5" stroke="#ffd166" stroke-width="2"/><circle cx="4" cy="19" r="2" fill="#ffd166"/><circle cx="20" cy="5" r="2" fill="#ffd166"/></svg><span>Line</span></button></div><div class="rcol"><button data-tool="gplane" class="sb" title="Plane: theo mặt (offset, đảo chiều) hoặc 3 điểm" data-en-title="Plane: on a face (offset, flip) or 3 points"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16l5-9h13l-5 9z" fill="rgba(120,200,255,.25)" stroke="#78c8ff"/><path d="M12 11.5V4" stroke="#78c8ff"/></svg><span>Plane</span></button><button data-tool="gaxis" class="sb" title="Axis: trục từ mặt trụ / cạnh hoặc 2 điểm" data-en-title="Axis: from a cylinder / edge or 2 points"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20" stroke="#c58bff" stroke-width="1.8" stroke-dasharray="4 2 1 2"/><ellipse cx="12" cy="12" rx="6" ry="2.4" stroke="#6f8aa8"/></svg><span>Axis</span></button></div></div><div class="rtitle" data-en="Geometry">Geometry</div></div>
-<div class="rgrp"><div class="rbody"><div class="rcol"><button id="bExtrude" class="sb" title="Extrude: đùn biên dạng kín của sketch" data-en-title="Extrude: push closed sketch profiles out"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 16l6 3 10-5-6-3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 16V8l6 3v8M10 11l10-5v8M4 8l10-5 6 3" fill="none" stroke="#dfe6ee"/><path d="M15 12V3m-2 2l2-2 2 2" stroke="#f0a030" fill="none"/></svg><span>Extrude</span></button><button id="bRevolve" class="sb" title="Revolve: xoay biên dạng quanh trục" data-en-title="Revolve: turn profiles about an axis"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M7 2v20" stroke="#c58bff" stroke-dasharray="2 2"/><path d="M10 5h6v11h-6z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2.5 16.5a9.5 3.5 0 0 0 19 0" fill="none" stroke="#f0a030" stroke-width="1.8"/><path d="M21.5 16.5l-2.6-.4m2.6.4l.8-2.5" stroke="#f0a030" stroke-width="1.8" fill="none"/></svg><span>Revolve</span></button><button id="b_boolean" class="sb" title="Boolean: gộp / trừ / giao các body" data-en-title="Boolean: union / subtract / intersect"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><circle cx="9" cy="12" r="6" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="15" cy="12" r="6" fill="rgba(240,160,48,.55)" stroke="#ffd28a"/></svg><span>Boolean</span></button></div><div class="rcol"><button id="b_fillet" class="sb" title="Fillet: bo tròn cạnh" data-en-title="Fillet: round edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10a6 6 0 0 1 6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10a6 6 0 0 1 6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Fillet</span></button><button id="b_chamfer" class="sb" title="Chamfer: vát cạnh" data-en-title="Chamfer: bevel edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10l6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10l6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Chamfer</span></button><button id="b_shell" class="sb" title="Shell: làm rỗng khối thành vỏ" data-en-title="Shell: hollow out a solid"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M3 8l9-4 9 4v10l-9 4-9-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 9l6-2.7L18 9v7.5l-6 2.7-6-2.7z" fill="#14181d" stroke="#f0a030"/></svg><span>Shell</span></button></div><div class="rcol"><button id="b_draft" class="sb" title="Draft: nghiêng mặt để thoát khuôn" data-en-title="Draft: tilt faces for mould release"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M6 20l3-16h9v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 20l3-16" stroke="#f0a030" stroke-width="2.2"/><path d="M6 20V6" stroke="#dfe6ee" stroke-dasharray="2 2"/><path d="M6 10a4 4 0 0 1 1.9.3" stroke="#ffd28a" fill="none"/></svg><span>Draft</span></button></div></div><div class="rtitle" data-en="Feature">Feature</div></div>
-   <div class="rgrp"><div class="rbody"><div class="rcol"><button id="b_moveface" class="sb" title="Move face: dời mặt phẳng / mặt trụ" data-en-title="Move face: move flat / cylindrical faces"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V11h12v9z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 11h12" stroke="#f0a030" stroke-width="2.2"/><path d="M10 9V3m-2 2l2-2 2 2" stroke="#f0a030" fill="none"/><path d="M4 7h12" stroke="#f0a030" stroke-dasharray="2 2"/></svg><span>Move face</span></button><button id="b_replace" class="sb" title="Replace face: đưa mặt về mặt phẳng của mặt khác" data-en-title="Replace face: put faces onto another face"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M3 20V13h10v7z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 13h10" stroke="#f0a030" stroke-width="2.2"/><path d="M14 6h7v14h-7z" fill="#5a6676" stroke="#b8c4d2"/><path d="M8 11V6h4m-2-2l2 2-2 2" stroke="#f0a030" fill="none"/></svg><span>Replace face</span></button></div></div><div class="rtitle" data-en="Synchronous Modeling">Synchronous Modeling</div></div>
+<div class="rgrp"><div class="rbody"><div class="rcol"><button id="bExtrude" class="sb" title="Extrude: đùn biên dạng kín của sketch" data-en-title="Extrude: push closed sketch profiles out"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 16l6 3 10-5-6-3z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 16V8l6 3v8M10 11l10-5v8M4 8l10-5 6 3" fill="none" stroke="#dfe6ee"/><path d="M15 12V3m-2 2l2-2 2 2" stroke="#f0a030" fill="none"/></svg><span>Extrude</span></button><button id="bRevolve" class="sb" title="Revolve: xoay biên dạng quanh trục" data-en-title="Revolve: turn profiles about an axis"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M7 2v20" stroke="#c58bff" stroke-dasharray="2 2"/><path d="M10 5h6v11h-6z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2.5 16.5a9.5 3.5 0 0 0 19 0" fill="none" stroke="#f0a030" stroke-width="1.8"/><path d="M21.5 16.5l-2.6-.4m2.6.4l.8-2.5" stroke="#f0a030" stroke-width="1.8" fill="none"/></svg><span>Revolve</span></button><button id="b_boolean" class="sb" title="Boolean: gộp / trừ / giao các body" data-en-title="Boolean: union / subtract / intersect"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><circle cx="9" cy="12" r="6" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="15" cy="12" r="6" fill="rgba(240,160,48,.55)" stroke="#ffd28a"/></svg><span>Boolean</span></button></div><div class="rcol"><button id="b_fillet" class="sb" title="Fillet: bo tròn cạnh" data-en-title="Fillet: round edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10a6 6 0 0 1 6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10a6 6 0 0 1 6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Fillet</span></button><button id="b_chamfer" class="sb" title="Chamfer: vát cạnh" data-en-title="Chamfer: bevel edges"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V10l6-6h10v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 10l6-6" fill="none" stroke="#f0a030" stroke-width="2.2"/></svg><span>Chamfer</span></button><button id="b_shell" class="sb" title="Shell: làm rỗng khối thành vỏ" data-en-title="Shell: hollow out a solid"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M3 8l9-4 9 4v10l-9 4-9-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 9l6-2.7L18 9v7.5l-6 2.7-6-2.7z" fill="#14181d" stroke="#f0a030"/></svg><span>Shell</span></button></div><div class="rcol"><button id="b_draft" class="sb" title="Draft: nghiêng mặt để thoát khuôn" data-en-title="Draft: tilt faces for mould release"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M6 20l3-16h9v16z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M6 20l3-16" stroke="#f0a030" stroke-width="2.2"/><path d="M6 20V6" stroke="#dfe6ee" stroke-dasharray="2 2"/><path d="M6 10a4 4 0 0 1 1.9.3" stroke="#ffd28a" fill="none"/></svg><span>Draft</span></button><div class="rcol"><button id="b_patlin" class="sb" title="Linear pattern: dãy body đang tick theo một hướng" data-en-title="Linear pattern: copies of the ticked bodies along a direction"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><rect x="2" y="9" width="5" height="6" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="9.5" y="9" width="5" height="6" fill="rgba(61,111,168,.45)" stroke="#9cc4ee" stroke-dasharray="1.5 1"/><rect x="17" y="9" width="5" height="6" fill="rgba(61,111,168,.45)" stroke="#9cc4ee" stroke-dasharray="1.5 1"/><path d="M3 19h18M18 17l3 2-3 2" stroke="#f0a030"/></svg><span data-en="Linear pattern">Linear pattern</span></button><button id="b_patcir" class="sb" title="Circular pattern: dãy body đang tick quanh một trục" data-en-title="Circular pattern: copies of the ticked bodies around an axis"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><circle cx="12" cy="12" r="7" stroke="#f0a030" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="1.3" fill="#f0a030" stroke="none"/><rect x="10" y="2.5" width="4" height="4" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="17.5" y="13" width="4" height="4" fill="rgba(61,111,168,.45)" stroke="#9cc4ee" stroke-dasharray="1.5 1"/><rect x="2.5" y="13" width="4" height="4" fill="rgba(61,111,168,.45)" stroke="#9cc4ee" stroke-dasharray="1.5 1"/></svg><span data-en="Circular pattern">Circular pattern</span></button></div></div></div><div class="rtitle" data-en="Feature">Feature</div></div>
+   <div class="rgrp"><div class="rbody"><div class="rcol"><button id="b_moveface" class="sb" title="Move face: dời mặt phẳng / mặt trụ" data-en-title="Move face: move flat / cylindrical faces"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M4 20V11h12v9z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M4 11h12" stroke="#f0a030" stroke-width="2.2"/><path d="M10 9V3m-2 2l2-2 2 2" stroke="#f0a030" fill="none"/><path d="M4 7h12" stroke="#f0a030" stroke-dasharray="2 2"/></svg><span>Move face</span></button><button id="b_replace" class="sb" title="Replace face: đưa mặt về mặt phẳng của mặt khác" data-en-title="Replace face: put faces onto another face"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.4" stroke-linejoin="round"><path d="M3 20V13h10v7z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 13h10" stroke="#f0a030" stroke-width="2.2"/><path d="M14 6h7v14h-7z" fill="#5a6676" stroke="#b8c4d2"/><path d="M8 11V6h4m-2-2l2 2-2 2" stroke="#f0a030" fill="none"/></svg><span>Replace face</span></button><div class="rcol"><button class="sb popb" data-pop="rf" title="Remove face: xoá mặt (lỗ, boss, fillet, chamfer...) rồi vá kín" data-en-title="Remove face: delete faces (holes, bosses, fillets, chamfers...) and close the gap"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><path d="M3 17l7 4 11-6-7-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 17V9l7 4v8M10 13l11-6v8" fill="rgba(61,111,168,.5)" stroke="#9cc4ee"/><ellipse cx="15" cy="10" rx="2.3" ry="1.2" fill="#ee2a1f" stroke="#ff8a7a"/><path d="M16 2l5 5M21 2l-5 5" stroke="#ff6b5e" stroke-width="1.8"/></svg><span data-en="Remove face">Remove face</span></button></div></div></div><div class="rtitle" data-en="Synchronous Modeling">Synchronous Modeling</div></div>
    <div class="rgrp"><div class="rbody"><div class="rcol"><label class="mini" data-en-title="Colour and opacity of the ticked bodies" title="Màu và độ đục của các body đang tick"><input type="color" id="col" value="#92aac8"><input type="range" id="opa" min="5" max="100" value="100"><span class="unit" id="opaV">100%</span></label><button class="sb popb" data-pop="explode" title="Tách xa các body để nhìn" data-en-title="Spread the bodies apart"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="6" height="6" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M3 3l4 4M21 3l-4 4M3 21l4-4M21 21l-4-4" stroke="#f0a030"/></svg><span data-en="Explode">Explode</span></button><button class="sb popb" data-pop="section" title="Mặt cắt (section)" data-en-title="Section view"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l8-4 8 4v8l-8 4-8-4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M2 12h20" stroke="#ff6b5e" stroke-width="2"/></svg><span data-en="Section">Mặt cắt</span></button></div><div class="tgrid"><label class="tg" title="Cạnh lưới" data-en-title="Edges"><input type="checkbox" id="cWire"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L12 4l9 16zM7.5 12h9M12 4v16" stroke="#9cc4ee"/></svg></label><label class="tg" title="Viền hở (đỏ)" data-en-title="Open borders (red)"><input type="checkbox" id="cHoles" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="12" r="5" fill="#14181d" stroke="#ff3b30" stroke-width="2"/></svg></label><label class="tg" title="Hệ trục XYZ" data-en-title="XYZ axes"><input type="checkbox" id="cAxes" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V5M5 19h14M5 19l9-6" stroke-width="2"/><path d="M5 19V5" stroke="#4f9bff" stroke-width="2"/><path d="M5 19h14" stroke="#ff5a52" stroke-width="2"/><path d="M5 19l9-6" stroke="#52d06a" stroke-width="2"/></svg></label><label class="tg" title="Bảng thông tin" data-en-title="Info panel"><input type="checkbox" id="cInfo" checked><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke="#9cc4ee"/><path d="M12 11v6" stroke="#f0a030" stroke-width="2"/><circle cx="12" cy="7.5" r="1.2" fill="#f0a030"/></svg></label><label class="tg" title="Đảo chiều zoom" data-en-title="Invert zoom"><input type="checkbox" id="cZoomInv"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6" stroke="#9cc4ee"/><path d="M15 15l5 5" stroke="#9cc4ee" stroke-width="2"/><path d="M7 10h6M10 7l-3 3 3 3" stroke="#f0a030"/></svg></label></div></div><div class="rtitle" data-en="Display">Hiển thị</div></div>
    <div class="rgrp"><div class="rbody"><button id="bNormal" class="bb hl" title="Nhìn thẳng theo hướng chuẩn gần nhất (X / Y / Z)" data-en-title="Look straight along the nearest standard direction (X / Y / Z)"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.5"><rect x="4" y="6" width="16" height="13" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M12 1v9m-3-3l3 3 3-3" stroke="#f0a030" fill="none" stroke-width="2"/><circle cx="12" cy="12.5" r="1.6" fill="#f0a030"/></svg><span>Normal</span></button><div class="rcol"><button id="bFit" class="sb" title="Thu vừa màn hình" data-en-title="Fit the view"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.6"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" stroke="#9cc4ee"/><rect x="8" y="8" width="8" height="8" fill="#3d6fa8" stroke="#dfe6ee"/></svg><span>Fit</span></button><button id="bIso" class="sb" title="Hướng nhìn Iso" data-en-title="Isometric view"><svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.3" stroke-linejoin="round"><path d="M12 3l8 4.5-8 4.5-8-4.5z" fill="#5d8fc8" stroke="#dfe6ee"/><path d="M4 7.5V16l8 4.5V12z" fill="#3d6fa8" stroke="#dfe6ee"/><path d="M20 7.5V16l-8 4.5V12z" fill="#2c5486" stroke="#dfe6ee"/></svg><span>Iso</span></button></div></div><div class="rtitle" data-en="Orient">Hướng nhìn</div></div>
    <div class="rgrp"><div class="rbody"><div class="rcol"><button class="sb" data-tool="dist" title="Đo khoảng cách" data-en-title="Distance"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M6 9l-3 3 3 3M18 9l3 3-3 3" stroke="#f0a030" stroke-width="1.8"/><path d="M3 6v12M21 6v12" stroke="#9cc4ee"/></svg><span data-en="Distance">Khoảng cách</span></button><button class="sb" data-tool="angle" title="Đo góc" data-en-title="Angle"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M4 20L16 6" stroke="#9cc4ee" stroke-width="1.8"/><path d="M11 20a7 7 0 0 0-2.3-5.2" stroke="#f0a030" stroke-width="1.8"/></svg><span data-en="Angle">Góc</span></button><button class="sb" data-tool="radius" title="Đo bán kính" data-en-title="Radius"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" stroke="#9cc4ee"/><path d="M12 12l6-6" stroke="#f0a030" stroke-width="1.8"/><circle cx="12" cy="12" r="1.3" fill="#f0a030"/></svg><span data-en="Radius">Bán kính</span></button></div><div class="rcol"><button class="sb" data-tool="thick" title="Đo bề dày" data-en-title="Wall thickness"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16M10 4v16" stroke="#9cc4ee" stroke-width="2"/><path d="M14 12h7M14 12l2.5-2.5M14 12l2.5 2.5M4 12h6" stroke="#f0a030"/></svg><span data-en="Wall thickness">Bề dày</span></button><button class="sb popb" data-pop="undercut" title="Tooling analysis (undercut)" data-en-title="Tooling analysis (undercut)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20V9h12v11" stroke="#9cc4ee"/><path d="M6 9l6-5 6 5" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M9 14h3v6" stroke="#ff6b5e" stroke-width="2"/><path d="M12 2v3" stroke="#f0a030"/></svg><span data-en="Undercut">Undercut</span></button><button class="sb popb" data-pop="collide" title="Kiểm tra va chạm" data-en-title="Collision check"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="10" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="11" y="4" width="10" height="10" fill="rgba(240,160,48,.5)" stroke="#ffd28a"/><path d="M11 7h2v7h-2z" fill="#ff3b30"/></svg><span data-en="Collision">Va chạm</span></button></div><div class="rcol"><button class="sb popb" data-pop="compare" title="So sánh mesh" data-en-title="Compare meshes"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-8 6-8 9-4s6 4 9-4" stroke="#9cc4ee" stroke-width="1.8"/><path d="M3 19c3-8 6-8 9-4s6 4 9-4" stroke="#f0a030" stroke-width="1.8" stroke-dasharray="2 2"/></svg><span data-en="Compare">So sánh mesh</span></button></div></div><div class="rtitle" data-en="Analysis">Analysis</div></div>
@@ -527,6 +528,29 @@
    <div class="pop" id="pop_collide"><div class="pophd"><b data-en="Collision check">Kiểm tra va chạm</b><span class="grow"></span><button class="popx" data-pop="collide">✕</button></div><div class="c">
     <div class="btns"><button class="primary" id="bCol" data-en="Check">Kiểm tra</button><button id="bColClr" data-en="Clear colours">Xóa tô màu</button></div>
     <div class="box" id="colRes" data-en="Checks the ticked bodies (2 or more), otherwise every visible body. Click a pair in the list to highlight its intersecting triangles.">Kiểm tra giữa các body đang tick (từ 2 body), nếu không thì mọi body đang hiện. Bấm vào một cặp trong danh sách để tô vùng giao nhau của cặp đó.</div>
+  </div></div>
+   <div class="pop" id="pop_pat"><div class="pophd"><b>Pattern</b><span class="grow"></span><button class="popx" data-pop="pat">✕</button></div><div class="c">
+    <div class="seg" id="patSeg"><button data-k="lin" class="on">Linear</button><button data-k="cir">Circular</button></div>
+    <div class="row"><span class="lbl" id="patCnt"></span></div>
+    <div id="patLin"><div class="row"><span class="lbl" data-en="Direction">Hướng</span><select id="patDir"></select></div>
+    <div class="row"><span class="lbl" data-en="Count">Số lượng</span><input type="range" id="patNR" min="2" max="50" step="1" value="3" style="width:110px"><input type="number" id="patN" class="s" value="3" min="2" step="1"><span class="unit"></span></div>
+    <div class="row"><span class="lbl" data-en="Spacing">Khoảng cách</span><input type="range" id="patGapR" min="0.5" max="200" step="0.5" value="20" style="width:110px"><input type="number" id="patGap" class="s" value="20" min="0.5" step="0.5"><span class="unit">mm</span></div>
+    </div>
+    <div id="patCir" style="display:none"><div class="row"><span class="lbl" data-en="Axis">Trục</span><select id="patAx"></select></div>
+    <div class="row"><span class="lbl" data-en="Count">Số lượng</span><input type="range" id="patCNR" min="2" max="72" step="1" value="6" style="width:110px"><input type="number" id="patCN" class="s" value="6" min="2" step="1"><span class="unit"></span></div>
+    <div class="row"><span class="lbl" data-en="Total angle">Tổng góc</span><input type="range" id="patAngR" min="1" max="360" step="1" value="360" style="width:110px"><input type="number" id="patAng" class="s" value="360" min="1" step="1"><span class="unit">°</span></div>
+    </div>
+    <div class="row"><label><input type="checkbox" id="patFlip"> <span data-en="Reverse">Đảo chiều</span></label><label title="Gộp bản gốc và các bản sao bằng Boolean union (kết quả là mesh)" data-en-title="Join the original and its copies with a boolean union (the result is a mesh)"><input type="checkbox" id="patMerge"> <span data-en="Merge into one body">Gộp thành 1 body</span></label></div>
+    <div class="btns"><button class="primary" id="patOk" data-en="Apply">Tạo</button><button class="popx" data-pop="pat" data-en="Close">Đóng</button></div>
+  </div></div>
+   <div class="pop" id="pop_rf"><div class="pophd"><b>Remove face</b><span class="grow"></span><button class="popx" data-pop="rf">✕</button></div><div class="c">
+    <div class="row"><label title="Bấm vào mặt: chọn cả mặt trơn liền nhau (dừng ở cạnh gãy). Bấm lại hoặc Ctrl+bấm để bỏ, Shift+bấm để thêm" data-en-title="Click a face: picks the whole smooth face (stops at sharp edges). Click again or Ctrl+click to drop, Shift+click to add"><input type="radio" name="rfMode" id="rfModeC" checked> <span data-en="Click (auto)">Bấm chọn (tự nhận)</span></label><label title="Giữ chuột trái bôi lên mesh; Ctrl+bôi để xóa" data-en-title="Hold the left button and paint; Ctrl+paint erases"><input type="radio" name="rfMode" id="rfModeB"> <span data-en="Brush">Bút bôi</span></label></div>
+    <div class="row" id="rfAngRow"><span class="lbl" data-en="Smooth angle">Góc nhận vùng</span><input type="range" id="rfAngR" min="1" max="60" step="1" value="15" style="width:110px"><input type="number" id="rfAng" class="s" value="15" min="1" max="60" step="1"><span class="unit">°</span></div>
+    <div class="row" id="rfBrushRow" style="opacity:.45"><span class="lbl" data-en="Brush size">Cỡ bút</span><input type="range" id="rfBrushR" min="2" max="150" step="1" value="20" style="width:110px"><input type="number" id="rfBrush" class="s" value="20" min="1" max="400" step="1"><span class="unit">px</span></div>
+    <div class="row"><span class="lbl" id="rfCnt"></span><span class="grow"></span><button id="rfClr" data-en="Clear">Bỏ chọn</button></div>
+    <div class="row"><span class="lbl" data-en="Patch (mesh)">Kiểu vá (mesh)</span><select id="rfFill"><option value="1" data-en="Flat">Phẳng</option><option value="3" data-en="Follow the surface">Theo mặt xung quanh</option></select></div>
+    <div class="box rdres" id="rfRes"></div>
+    <div class="btns"><button class="primary" id="rfOk" data-en="Remove">Xoá mặt</button><button class="popx" data-pop="rf" data-en="Close">Đóng</button></div>
   </div></div>
    <div class="pop" id="pop_rd"><div class="pophd"><b data-en="Basic Surface Recognition">Basic Surface Recognition</b><span class="grow"></span><button class="popx" data-pop="rd">✕</button></div><div class="c">
     <div class="row"><label title="Bấm vào mesh: chọn cả vùng trơn liền nhau (dừng ở cạnh gãy). Bấm lại để bỏ, Ctrl+bấm để bỏ, Shift+bấm để thêm" data-en-title="Click the mesh: picks the whole smooth patch (stops at sharp edges). Click again or Ctrl+click to drop, Shift+click to add"><input type="radio" name="rdMode" id="rdModeC" checked> <span data-en="Click (auto)">Bấm chọn (tự nhận)</span></label><label title="Giữ chuột trái bôi lên mesh; Ctrl+bôi để xóa" data-en-title="Hold the left button and paint; Ctrl+paint erases"><input type="radio" name="rdMode" id="rdModeB"> <span data-en="Brush">Bút bôi</span></label></div>
@@ -4330,7 +4354,7 @@ var wasm_bindgen = (function(exports) {
     const fs = '#version 300 es\nprecision highp float;in vec3 vV;in vec3 vW;in vec3 vC;uniform vec4 uColor;uniform int uMode;uniform float uSel;uniform float uBright;uniform vec4 uClip;uniform float uClipOn;out vec4 o;' +
       'void main(){if(uClipOn>0.5&&dot(uClip.xyz,vW)>uClip.w)discard;' +
       'if(uMode==1){o=vec4(0.03,0.05,0.08,uColor.a);return;}if(uMode==3){o=uColor;return;}' +
-      'vec3 base=uMode==2?vC:(uSel>0.5?vec3(1.0,0.55,0.06):uColor.rgb);' +
+      'vec3 base=uMode==2?vC:(uSel>2.5?vec3(0.18,0.78,1.0):uSel>1.5?vec3(1.0,0.3,0.2):uSel>0.5?vec3(1.0,0.55,0.06):uColor.rgb);' +
       'if(uClipOn>0.5&&!gl_FrontFacing){o=vec4(base*0.45+vec3(0.16,0.03,0.03),uColor.a);return;}' +
       'vec3 n=normalize(cross(dFdx(vV),dFdy(vV)));' +
       'if(uMode==2){o=vec4(min(base*(abs(n.z)*0.4+0.6)*uBright,vec3(1.0)),uColor.a);return;}' +
@@ -4510,7 +4534,7 @@ var wasm_bindgen = (function(exports) {
     gl.uniformMatrix4fv(U.uM, false, dispMatrix(b));
     gl.frontFace(M.det3(b.matrix) < 0 ? gl.CW : gl.CCW);
     gl.uniform4f(U.uColor, b.color[0] / 255, b.color[1] / 255, b.color[2] / 255, alpha);
-    gl.uniform1f(U.uSel, !plain && S.sel.has(b) ? 1 : 0);
+    gl.uniform1f(U.uSel, plain ? 0 : (dlgRole(b) || (S.sel.has(b) ? 1 : 0)));
     gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 1);
     if (b.ana && !plain) { gl.uniform1i(U.uMode, 2); gl.bindVertexArray(b.ana.vao); gl.drawArrays(gl.TRIANGLES, 0, b.ana.count); }
     else { gl.uniform1i(U.uMode, 0); gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES, b.geo.indices.length, gl.UNSIGNED_INT, 0); }
@@ -8067,7 +8091,7 @@ var wasm_bindgen = (function(exports) {
       setBusy(true, L('Dựng lại khối...', 'Rebuilding the solid...'));
       const keep = [];
       for (const f of feats) {
-        try { mesh = await DRESS[f.type].apply(mesh, f, true); keep.push(f); } catch (e) { dropped.push(f.type); }
+        try { if (!DRESS[f.type]) throw new Error(f.type); mesh = await DRESS[f.type].apply(mesh, f, true); keep.push(f); } catch (e) { dropped.push(f.type); }
       }
       recipe.feats = keep;
       setBusy(false);
@@ -8315,7 +8339,8 @@ var wasm_bindgen = (function(exports) {
     let h = '';
     const box = function (key, title) {
       const items = od.sel[key] || [];
-      h += '<div class="selbox' + (od.active === key ? ' on' : '') + '" data-box="' + key + '"><div class="sbt">' + title + ' <span class="cnt">' + items.length + '</span></div>';
+      const sw = od.cmd === 'boolean' ? '<i class="bsw" style="background:' + (key === 'tools' ? '#ff4d33' : '#2ec7ff') + '"></i>' : '';
+      h += '<div class="selbox' + (od.active === key ? ' on' : '') + '" data-box="' + key + '"><div class="sbt">' + sw + title + ' <span class="cnt">' + items.length + '</span></div>';
       h += items.length ? items.map(function (it, i) { return '<div class="sbi">' + boxLabel(it).replace(/</g, '&lt;') + '<span data-rm="' + key + ':' + i + '">✕</span></div>'; }).join('') : '<div class="sbe">' + L('bấm để chọn trên màn hình', 'click to pick in the view') + '</div>';
       h += '</div>';
     };
@@ -8344,7 +8369,7 @@ var wasm_bindgen = (function(exports) {
     if ($('odV')) { $('odV').addEventListener('input', function () { od.v = +this.value; $('odR').value = this.value; dlgPreview(); }); $('odR').addEventListener('input', function () { od.v = +this.value; $('odV').value = this.value; dlgPreview(); }); }
     if ($('odTan')) $('odTan').addEventListener('change', function () { od.tan = this.checked; });
     if ($('odFlip')) $('odFlip').addEventListener('change', function () { od.flip = this.checked; dlgPreview(); });
-    dlgNote();
+    dlgNote(); dirty = true;
   }
   function dlgNote(extra) {
     const od = S.od; if (!od || !$('odNote')) return;
@@ -8352,6 +8377,13 @@ var wasm_bindgen = (function(exports) {
     if (od.cmd === 'boolean') t = od.op === 'subtract' ? L('Bấm ô Tools hoặc Targets rồi bấm body trên màn hình / trong danh sách để đưa vào ô đó.', 'Click the Tools or Targets box, then click bodies in the view / list to put them there.') : L('Bấm các body cần gộp / giao vào ô Tools.', 'Click the bodies to combine into Tools.');
     else t = L('Bấm ô cần chọn rồi bấm ', 'Click a box, then click ') + (DRESS[od.cmd].boxes.some(function (b) { return b[1] === 'edge'; }) ? L('cạnh', 'edges') : L('mặt', 'faces')) + L(' trên body. Tất cả phải trên cùng 1 body kín.', ' on the body. All on one closed body.');
     $('odNote').innerHTML = t + (extra ? '<br>' + extra : '');
+  }
+  // bodies put into the Boolean boxes light up: Tools red, Targets blue (0 = not in a box)
+  function dlgRole(b) {
+    const od = S.od; if (!od || od.cmd !== 'boolean' || !od.sel) return 0;
+    if (od.sel.tools && od.sel.tools.indexOf(b) >= 0) return 2;
+    if (od.sel.targets && od.sel.targets.indexOf(b) >= 0) return 3;
+    return 0;
   }
   // a click in the view while the dialog is open
   function dlgClick(px, py, h) {
@@ -8439,7 +8471,7 @@ var wasm_bindgen = (function(exports) {
     let src = { positions: b.geo.positions, indices: b.geo.indices }, again = false;
     if (b.solid && b.geo.brep) {                               // the mesh method starts from its own mesh of the solid
       src = featMesh(b.solid.type, { frame: b.solid.frame, ents: b.solid.ents }, b.solid.params, b.solid.off);
-      for (const f of b.solid.feats || []) src = await DRESS[f.type].apply(src, f, true);
+      for (const f of b.solid.feats || []) { if (!DRESS[f.type]) throw new Error(L('Khối có Remove face: chỉ sửa tiếp được bằng lõi B-rep', 'The solid has a Remove face: it can only be edited further by the B-rep engine')); src = await DRESS[f.type].apply(src, f, true); }
       again = true;
     }
     const mesh = await DRESS[od.cmd].apply(src, rec, again);
@@ -8699,7 +8731,7 @@ var wasm_bindgen = (function(exports) {
     if (r.err) throw new Error(r.err);
     return r.ok;
   }
-  const BR_FEATS = { fillet: true, chamfer: true, shell: true, moveface: true, draft: true };
+  const BR_FEATS = { fillet: true, chamfer: true, shell: true, moveface: true, draft: true, removeface: true };
   function brCan(r) {
     if (!r || (r.type !== 'extrude' && r.type !== 'revolve')) return false;
     return (r.feats || []).every(function (f) { return BR_FEATS[f.type]; });
@@ -8747,6 +8779,7 @@ var wasm_bindgen = (function(exports) {
     return brCall({ op: 'revolve', plane: plane, regions: regions, axisOrigin: o, axisDir: dir, angle: Math.min(360, Math.max(1, p.angle)) * Math.PI / 180 }).id;
   }
   function brFeat(id, f) {
+    if (f.type === 'removeface') return brCall({ op: 'deleteFaces', id: id, at: f.at }).id;   // needs an engine built with deleteFaces
     if (f.type !== 'moveface' && !(f.v > 0)) throw new Error('size');
     const facePt = function (d) { return d.at || d.c; };
     if (f.type === 'shell') return brCall({ op: 'shell', id: id, t: f.v, open: (f.sel.faces || []).map(facePt) }).id;
@@ -9809,12 +9842,15 @@ var wasm_bindgen = (function(exports) {
   // fit a plane / sphere / cylinder / cone (or let the app choose), then build it as a B-rep solid (exact, STEP)
   // with its axis / centre as geometry. A plane becomes a Plane geometry.
   S.rd = { body: null, sel: null, n: 0, fit: null, paint: null, brushAt: null, gpu: null, adj: null };
-  const rdOpen = function () { return $('pop_rd').classList.contains('on'); };
+  // the selection engine also serves Remove face (pop_rf); the mode follows the open panel
+  const rdMode = function () { return $('pop_rf').classList.contains('on') ? 'rf' : 'rd'; };
+  const rdOpen = function () { return $('pop_rd').classList.contains('on') || $('pop_rf').classList.contains('on'); };
   const rdLive = function () { return rdOpen() && S.tool === 'select' && !S.sk; };   // the left button belongs to the panel only with the Select tool
   const rdNum = function (id, d) { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
   function rdOpt() {
     const m = document.querySelector('input[name=rdMeth]:checked');
-    return { meth: m ? m.value : 'auto', brush: $('rdModeB').checked, ang: Math.max(1, Math.min(60, rdNum('rdAng', 15))), r: Math.max(1, rdNum('rdBrush', 20)),
+    const px = rdMode();
+    return { meth: m ? m.value : 'auto', brush: $(px + 'ModeB').checked, ang: Math.max(1, Math.min(60, rdNum(px + 'Ang', 15))), r: Math.max(1, rdNum(px + 'Brush', 20)),
       tol: Math.max(1e-4, rdNum('rdTol', 0.5)), fixR: $('rdFixR').checked ? Math.max(1e-4, rdNum('rdR', 5)) : 0, solid: $('rdSolid').checked, aux: $('rdAux').checked };
   }
   // ---------- selection ----------
@@ -9897,7 +9933,7 @@ var wasm_bindgen = (function(exports) {
   function camDir() { const r = screenRay(canvas.clientWidth / 2, canvas.clientHeight / 2); return V.norm(r.d); }
   function rdChanged() {
     rdCount();
-    S.rd.fit = S.rd.n >= 3 ? rdFitAll() : null;
+    S.rd.fit = S.rd.n >= 3 && rdMode() === 'rd' ? rdFitAll() : null;
     rdShow(); rdGpu(); dirty = true;
   }
   // ---------- fitting ----------
@@ -10028,6 +10064,7 @@ var wasm_bindgen = (function(exports) {
   // ---------- panel text ----------
   const RD_NAME = { plane: ['Plane', 'Plane'], sphere: ['Sphere', 'Sphere'], cyl: ['Cylinder', 'Cylinder'], cone: ['Cone', 'Cone'] };
   function rdShow() {
+    if (rdMode() === 'rf') { rfShow(); return; }
     const F = S.rd.fit, el = $('rdRes'), o = rdOpt();
     $('rdCnt').textContent = S.rd.n ? S.rd.n + L(' tam giác', ' triangles') + (S.rd.body ? ' · ' + S.rd.body.name : '') : L('Chưa chọn', 'Nothing picked');
     $('rdOk').disabled = !(F && F.f);
@@ -10177,23 +10214,163 @@ var wasm_bindgen = (function(exports) {
     if (made.length) flash(L('Đã tạo: ', 'Created: ') + made.join(', '));
     rdClear();
   }
+  // ---------- Remove face ----------
+  function rfShow() {
+    const b = S.rd.body;
+    $('rfCnt').textContent = S.rd.n ? S.rd.n + L(' tam giác · ', ' triangles · ') + b.name : L('Chưa chọn mặt', 'No face picked');
+    $('rfOk').disabled = !S.rd.n;
+    $('rfRes').textContent = !S.rd.n ? '' : b.solid ? L('Khối B-rep: xoá mặt rồi kéo dài các mặt phẳng kề để vá (lỗ, boss, fillet, chamfer). Nếu lõi B-rep không làm được, khối sẽ được vá trên mesh và chuyển thành mesh.', 'B-rep solid: the faces go and the neighbouring planes extend to close the gap (holes, bosses, fillets, chamfers). If the B-rep engine cannot, it is patched as a mesh and becomes a mesh body.') : L('Mesh: xoá các tam giác đã chọn rồi vá kín lỗ.', 'Mesh: the picked triangles go and the hole is patched.');
+  }
+  async function rfApply() {
+    const b = S.rd.body; if (!b || !S.rd.n || blocked()) return;
+    const sel = S.rd.sel, nt = sel.length;
+    if (S.rd.n >= nt) { flash(L('Không thể xoá mọi mặt của body', 'Cannot remove every face of the body'), true); return; }
+    setBusy(true, 'Remove face...');
+    try {
+      const P = b.geo.positions, I = b.geo.indices;
+      if (b.solid && brCan(b.solid)) {                         // exact: the engine removes the faces and heals the gap
+        const at = [];
+        for (let t = 0; t < nt; t++) if (sel[t]) { const a = 3 * I[3 * t], c = 3 * I[3 * t + 1], d = 3 * I[3 * t + 2]; at.push([(P[a] + P[c] + P[d]) / 3, (P[a + 1] + P[c + 1] + P[d + 1]) / 3, (P[a + 2] + P[c + 2] + P[d + 2]) / 3]); }
+        const rec = { type: 'removeface', at: at };
+        const bm = await brepMeshOf(Object.assign({}, b.solid, { feats: (b.solid.feats || []).concat([rec]) }));
+        if (bm) {
+          pushUndo();
+          setGeo(b, brGeo(bm), true); b.geoBrep = true; b.solid.feats = (b.solid.feats || []).concat([rec]);
+          setBusy(false); rdSetBody(null); rdChanged(); geomChanged(); refresh();
+          flash(L('Đã xoá mặt (B-rep)', 'Faces removed (B-rep)')); return;
+        }
+      }
+      const keep = [];
+      for (let t = 0; t < nt; t++) if (!sel[t]) keep.push(I[3 * t], I[3 * t + 1], I[3 * t + 2]);
+      const lvl = +$('rfFill').value || 1;
+      const r = await run('fill', { mesh: { positions: P, indices: new Uint32Array(keep) }, opt: { level: lvl, maxPerimeter: 0, stitch: 0 } });
+      pushUndo();
+      const wasSolid = !!b.solid;
+      setGeo(b, makeGeo(r.positions, r.indices));
+      setBusy(false); rdSetBody(null); rdChanged(); geomChanged(); refresh();
+      flash((wasSolid ? L('Lõi B-rep chưa xoá được mặt này: đã vá trên mesh, khối thành mesh. ', 'The B-rep engine could not remove these faces: patched as a mesh, the body is now a mesh. ') : '') +
+        L('Đã xoá mặt và vá ', 'Faces removed, patched ') + r.filled + '/' + r.holes + L(' lỗ', ' holes'), true);
+    } catch (e) { setBusy(false); showError(e); }
+  }
+  $('rfOk').addEventListener('click', function () { rfApply().catch(showError); });
+  $('rfClr').addEventListener('click', rdClear);
   // ---------- panel ----------
   $('rdOk').addEventListener('click', function () { rdApply().catch(showError); });
-  document.querySelectorAll('#ribbon button.popb[data-pop=rd]').forEach(function (bt) { bt.addEventListener('click', function () { if (rdOpen() && S.tool !== 'select') setTool('select'); }); });
+  [['rd', 'rf'], ['rf', 'rd']].forEach(function (p) {
+    document.querySelectorAll('#ribbon button.popb[data-pop=' + p[0] + ']').forEach(function (bt) { bt.addEventListener('click', function () {
+      if ($('pop_' + p[0]).classList.contains('on')) { $('pop_' + p[1]).classList.remove('on'); if (S.tool !== 'select') setTool('select'); rdShow(); dirty = true; }
+    }); });
+  });
   $('rdClr').addEventListener('click', rdClear);
   document.querySelectorAll('input[name=rdMeth]').forEach(function (r) { r.addEventListener('change', function () { if (S.rd.n) rdChanged(); }); });
   ['rdFixR', 'rdR', 'rdTol'].forEach(function (id) { $(id).addEventListener('input', function () { if (S.rd.n) rdChanged(); else rdShow(); }); });
-  [['rdBrushR', 'rdBrush'], ['rdAngR', 'rdAng'], ['rdTolR', 'rdTol']].forEach(function (p) {
+  [['rdBrushR', 'rdBrush'], ['rdAngR', 'rdAng'], ['rdTolR', 'rdTol'], ['rfBrushR', 'rfBrush'], ['rfAngR', 'rfAng']].forEach(function (p) {
     const r = $(p[0]), n = $(p[1]);
     r.addEventListener('input', function () { n.value = r.value; n.dispatchEvent(new Event('input')); dirty = true; });
     n.addEventListener('input', function () { r.value = n.value; dirty = true; });
   });
-  ['rdModeC', 'rdModeB'].forEach(function (id) { $(id).addEventListener('change', function () { $('rdBrushRow').style.opacity = $('rdModeB').checked ? 1 : 0.45; $('rdAngRow').style.opacity = $('rdModeB').checked ? 0.45 : 1; dirty = true; }); });
+  ['rd', 'rf'].forEach(function (px) { [px + 'ModeC', px + 'ModeB'].forEach(function (id) { $(id).addEventListener('change', function () { $(px + 'BrushRow').style.opacity = $(px + 'ModeB').checked ? 1 : 0.45; $(px + 'AngRow').style.opacity = $(px + 'ModeB').checked ? 0.45 : 1; dirty = true; }); }); });
   rdShow();
+  // ================= Pattern: linear and circular copies of the ticked bodies =================
+  // B-rep solids keep their recipe in every copy (still exact, STEP, editable); meshes share their triangles.
+  // "Merge into one body" joins the original and its copies with a boolean union (the result is a mesh).
+  S.pat = { kind: 'lin' };
+  const patNum = function (id, d) { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
+  // direction / axis choices: the world axes, then the Line and Axis geometry
+  function patRefs() {
+    const out = [{ k: 'x', n: L('Trục X', 'X axis'), p: [0, 0, 0], d: [1, 0, 0] }, { k: 'y', n: L('Trục Y', 'Y axis'), p: [0, 0, 0], d: [0, 1, 0] }, { k: 'z', n: L('Trục Z', 'Z axis'), p: [0, 0, 0], d: [0, 0, 1] }];
+    for (const g of S.geos) if ((g.type === 'line' || g.type === 'axis') && g.p && g.p2) { const d = V.sub(g.p2, g.p); if (V.len(d) > 1e-9) out.push({ k: 'g' + g.id, n: g.name, p: g.p.slice(), d: V.norm(d) }); }
+    return out;
+  }
+  function patFill() {
+    const refs = patRefs();
+    ['patDir', 'patAx'].forEach(function (id) {
+      const el = $(id), was = el.value;
+      el.innerHTML = refs.map(function (r) { return '<option value="' + r.k + '">' + r.n.replace(/</g, '&lt;') + '</option>'; }).join('');
+      if (refs.some(function (r) { return r.k === was; })) el.value = was; else el.value = id === 'patAx' ? 'z' : 'x';
+    });
+  }
+  function patOpt() {
+    const refs = patRefs(), kind = S.pat.kind;
+    const ref = refs.filter(function (r) { return r.k === $(kind === 'lin' ? 'patDir' : 'patAx').value; })[0] || refs[0];
+    return { kind: kind, ref: ref, flip: $('patFlip').checked, n: Math.max(2, Math.min(200, Math.round(patNum(kind === 'lin' ? 'patN' : 'patCN', 3)))),
+      gap: patNum('patGap', 20), ang: Math.max(1, Math.min(360, patNum('patAng', 360))), merge: $('patMerge').checked };
+  }
+  // the transforms of copies 1..n-1
+  function patMats(o) {
+    const out = [];
+    if (o.kind === 'lin') {
+      const d = V.mul(o.ref.d, o.flip ? -1 : 1);
+      for (let i = 1; i < o.n; i++) out.push(M.trans(V.mul(d, o.gap * i)));
+    } else {
+      const step = o.ang >= 359.999 ? 360 / o.n : o.ang / (o.n - 1), d = V.mul(o.ref.d, o.flip ? -1 : 1);
+      for (let i = 1; i < o.n; i++) out.push(M.about(o.ref.p, M.rot(d, step * i * Math.PI / 180)));
+    }
+    return out;
+  }
+  function patList() { return selBodies().filter(function (b) { return b.visible; }); }
+  function patPreview() {
+    if (!$('pop_pat').classList.contains('on')) { if (S.patGhost) { S.patGhost = false; setGhosts([]); } return; }
+    const list = patList(), o = patOpt(), mats = patMats(o), gh = [];
+    $('patCnt').textContent = list.length ? list.length + L(' body đang chọn → ', ' ticked bodies → ') + (list.length * (mats.length + 1)) + L(' body', ' bodies') : L('Hãy tick các body cần tạo dãy', 'Tick the bodies to pattern');
+    $('patOk').disabled = !list.length;
+    if (list.length * mats.length <= 400) for (const b of list) for (const T of mats) gh.push({ geo: b.geo, matrix: M.mul(T, b.matrix), color: [0.3, 0.78, 1], alpha: 0.35 });
+    S.patGhost = true; setGhosts(gh);
+  }
+  async function patApply() {
+    const list = patList(); if (!list.length || blocked()) { if (!list.length) needSel(); return; }
+    const o = patOpt(), mats = patMats(o);
+    setBusy(true, 'Pattern...');
+    try {
+      pushUndo();
+      const made = [];
+      for (const b of list) {
+        const group = [b];
+        mats.forEach(function (T, i) {
+          const c = addBody(b.name + '_' + (i + 2), b.geo, { orig: b.orig, matrix: M.mul(T, b.matrix), color: b.color, opacity: b.opacity, material: b.material, density: b.density,
+            solid: b.solid ? JSON.parse(JSON.stringify(b.solid)) : null });
+          c.geoBrep = b.geoBrep; group.push(c); made.push(c);
+        });
+        if (o.merge) {
+          if (group.some(function (g) { return !closedBody(g); })) throw new Error(L('Body "', 'Body "') + b.name + L('" còn viền hở: không gộp được', '" has open borders: cannot merge'));
+          let cur = worldMesh(group[0]);
+          for (let i = 1; i < group.length; i++) cur = await boolRun(cur, worldMesh(group[i]), 'union');
+          for (const g of group.slice(1)) removeBody(g);
+          setGeo(b, makeGeo(cur.positions, cur.indices)); b.matrix = M.ident(); b.matrix0 = M.ident(); b.orig = b.geo;
+        }
+      }
+      S.sel.clear(); for (const b of list) S.sel.add(b); if (!o.merge) for (const c of made) S.sel.add(c);
+      setGhosts([]); S.patGhost = false;
+      updateExplode(); geomChanged(); sceneChanged(false); refresh();
+      flash(o.merge ? L('Đã tạo dãy và gộp thành ', 'Pattern made and merged into ') + list.length + ' body' : L('Đã tạo ', 'Made ') + made.length + L(' bản sao', ' copies'), true);
+      $('pop_pat').classList.remove('on');
+    } catch (e) { showError(e); }
+    setBusy(false);
+  }
+  function patKind(k) {
+    S.pat.kind = k;
+    document.querySelectorAll('#patSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.k === k); });
+    $('patLin').style.display = k === 'lin' ? '' : 'none'; $('patCir').style.display = k === 'cir' ? '' : 'none';
+    patPreview();
+  }
+  document.querySelectorAll('#patSeg button').forEach(function (b) { b.addEventListener('click', function () { patKind(b.dataset.k); }); });
+  [['b_patlin', 'lin'], ['b_patcir', 'cir']].forEach(function (p) {
+    $(p[0]).addEventListener('click', function () { patFill(); openPop('pat', true); patKind(p[1]); });
+  });
+  [['patNR', 'patN'], ['patGapR', 'patGap'], ['patCNR', 'patCN'], ['patAngR', 'patAng']].forEach(function (p) {
+    const r = $(p[0]), n = $(p[1]);
+    r.addEventListener('input', function () { n.value = r.value; patPreview(); });
+    n.addEventListener('input', function () { r.value = n.value; patPreview(); });
+  });
+  ['patDir', 'patAx', 'patFlip', 'patMerge'].forEach(function (id) { $(id).addEventListener('change', patPreview); });
+  $('patOk').addEventListener('click', function () { patApply().catch(showError); });
+  document.querySelectorAll('[data-pop=pat].popx').forEach(function (b) { b.addEventListener('click', function () { setTimeout(patPreview, 0); }); });
+  // keep the preview in step with the ticked bodies
+  setInterval(function () { if ($('pop_pat').classList.contains('on')) { const k = patList().map(function (b) { return b.id + ':' + b.matrix.join(','); }).join('|'); if (k !== S.patKey) { S.patKey = k; patPreview(); } } else if (S.patGhost) patPreview(); }, 400);
 
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();
 </script>
 </body>

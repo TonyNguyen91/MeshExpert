@@ -31,6 +31,45 @@ fn get(v: &Value, key: &str) -> Result<k::Body, String> {
     BODIES.with(|m| m.borrow().get(&id).cloned()).ok_or(format!("no body {id}"))
 }
 fn e(x: k::KernelError) -> String { x.to_string() }
+// the faces (body face order, as in the mesh's tri_face) nearest to each point
+fn faces_at(b: &k::Body, at: &[Vec3]) -> Result<Vec<usize>, String> {
+    let size = b.size().max(1e-9);
+    let m = b.mesh(&k::MeshTolerance::chord((size * 1e-3).max(1e-3))).map_err(e)?;
+    let mut out: Vec<usize> = Vec::new();
+    for p in at {
+        let mut best = (f64::INFINITY, usize::MAX);
+        for (t, f) in m.triangles.iter().zip(&m.tri_face) {
+            let q = |i: u32| m.positions.get(i as usize).copied();
+            if let (Some(a), Some(c), Some(d)) = (q(t[0]), q(t[1]), q(t[2])) {
+                let dd = tri_dist(*p, a, c, d);
+                if dd < best.0 { best = (dd, *f as usize); }
+            }
+        }
+        if best.1 == usize::MAX || best.0 > size * 1e-2 + 1e-6 { return Err(format!("no face at {:?}", [p.x, p.y, p.z])); }
+        if !out.contains(&best.1) { out.push(best.1); }
+    }
+    Ok(out)
+}
+fn tri_dist(p: Vec3, a: Vec3, b: Vec3, c: Vec3) -> f64 {
+    let sub = |u: Vec3, v: Vec3| [u.x - v.x, u.y - v.y, u.z - v.z];
+    let dot = |u: [f64; 3], v: [f64; 3]| u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+    let (ab, ac, ap) = (sub(b, a), sub(c, a), sub(p, a));
+    let (d1, d2) = (dot(ab, ap), dot(ac, ap));
+    let at = |s: f64, t: f64| { let q = [a.x + ab[0] * s + ac[0] * t - p.x, a.y + ab[1] * s + ac[1] * t - p.y, a.z + ab[2] * s + ac[2] * t - p.z]; dot(q, q).sqrt() };
+    if d1 <= 0.0 && d2 <= 0.0 { return at(0.0, 0.0); }
+    let bp = sub(p, b); let (d3, d4) = (dot(ab, bp), dot(ac, bp));
+    if d3 >= 0.0 && d4 <= d3 { return at(1.0, 0.0); }
+    let vc = d1 * d4 - d3 * d2;
+    if vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0 { return at(d1 / (d1 - d3), 0.0); }
+    let cp = sub(p, c); let (d5, d6) = (dot(ab, cp), dot(ac, cp));
+    if d6 >= 0.0 && d5 <= d6 { return at(0.0, 1.0); }
+    let vb = d5 * d2 - d1 * d6;
+    if vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0 { return at(0.0, d2 / (d2 - d6)); }
+    let va = d3 * d6 - d5 * d4;
+    if va <= 0.0 && (d4 - d3) >= 0.0 && (d5 - d6) >= 0.0 { let w = (d4 - d3) / ((d4 - d3) + (d5 - d6)); return at(1.0 - w, w); }
+    let den = 1.0 / (va + vb + vc);
+    at(vb * den, vc * den)
+}
 fn ok(b: k::Body) -> Value { json!({"id": put(b)}) }
 
 pub fn run(cmd: &Value) -> Result<Value, String> {
@@ -79,6 +118,13 @@ pub fn run(cmd: &Value) -> Result<Value, String> {
             Ok(ok(k::transform_matrix(&get(cmd, "id")?, m).map_err(e)?))
         }
         "offsetFaces" => Ok(ok(k::offset_faces(&get(cmd, "id")?, &pts(&cmd["at"])?, num(cmd, "d")?).map_err(e)?)),
+        "deleteFaces" => {
+            // remove the faces under the given points and heal the gap (neighbouring planes extend to close it)
+            let b = get(cmd, "id")?;
+            let at = pts(&cmd["at"])?;
+            let faces = faces_at(&b, &at)?;
+            Ok(ok(k::delete_faces(&b, &faces).map_err(e)?))
+        }
         "draft" => {
             let plane: solidcore_record::Plane = serde_json::from_value(cmd["neutral"].clone()).map_err(|x| x.to_string())?;
             Ok(ok(k::draft(&get(cmd, "id")?, &pts(&cmd["faces"])?, &plane, v3(&cmd["pull"])?, num(cmd, "angle")?).map_err(e)?))

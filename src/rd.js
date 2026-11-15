@@ -3,12 +3,15 @@
   // fit a plane / sphere / cylinder / cone (or let the app choose), then build it as a B-rep solid (exact, STEP)
   // with its axis / centre as geometry. A plane becomes a Plane geometry.
   S.rd = { body: null, sel: null, n: 0, fit: null, paint: null, brushAt: null, gpu: null, adj: null };
-  const rdOpen = function () { return $('pop_rd').classList.contains('on'); };
+  // the selection engine also serves Remove face (pop_rf); the mode follows the open panel
+  const rdMode = function () { return $('pop_rf').classList.contains('on') ? 'rf' : 'rd'; };
+  const rdOpen = function () { return $('pop_rd').classList.contains('on') || $('pop_rf').classList.contains('on'); };
   const rdLive = function () { return rdOpen() && S.tool === 'select' && !S.sk; };   // the left button belongs to the panel only with the Select tool
   const rdNum = function (id, d) { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
   function rdOpt() {
     const m = document.querySelector('input[name=rdMeth]:checked');
-    return { meth: m ? m.value : 'auto', brush: $('rdModeB').checked, ang: Math.max(1, Math.min(60, rdNum('rdAng', 15))), r: Math.max(1, rdNum('rdBrush', 20)),
+    const px = rdMode();
+    return { meth: m ? m.value : 'auto', brush: $(px + 'ModeB').checked, ang: Math.max(1, Math.min(60, rdNum(px + 'Ang', 15))), r: Math.max(1, rdNum(px + 'Brush', 20)),
       tol: Math.max(1e-4, rdNum('rdTol', 0.5)), fixR: $('rdFixR').checked ? Math.max(1e-4, rdNum('rdR', 5)) : 0, solid: $('rdSolid').checked, aux: $('rdAux').checked };
   }
   // ---------- selection ----------
@@ -91,7 +94,7 @@
   function camDir() { const r = screenRay(canvas.clientWidth / 2, canvas.clientHeight / 2); return V.norm(r.d); }
   function rdChanged() {
     rdCount();
-    S.rd.fit = S.rd.n >= 3 ? rdFitAll() : null;
+    S.rd.fit = S.rd.n >= 3 && rdMode() === 'rd' ? rdFitAll() : null;
     rdShow(); rdGpu(); dirty = true;
   }
   // ---------- fitting ----------
@@ -222,6 +225,7 @@
   // ---------- panel text ----------
   const RD_NAME = { plane: ['Plane', 'Plane'], sphere: ['Sphere', 'Sphere'], cyl: ['Cylinder', 'Cylinder'], cone: ['Cone', 'Cone'] };
   function rdShow() {
+    if (rdMode() === 'rf') { rfShow(); return; }
     const F = S.rd.fit, el = $('rdRes'), o = rdOpt();
     $('rdCnt').textContent = S.rd.n ? S.rd.n + L(' tam giác', ' triangles') + (S.rd.body ? ' · ' + S.rd.body.name : '') : L('Chưa chọn', 'Nothing picked');
     $('rdOk').disabled = !(F && F.f);
@@ -371,16 +375,60 @@
     if (made.length) flash(L('Đã tạo: ', 'Created: ') + made.join(', '));
     rdClear();
   }
+  // ---------- Remove face ----------
+  function rfShow() {
+    const b = S.rd.body;
+    $('rfCnt').textContent = S.rd.n ? S.rd.n + L(' tam giác · ', ' triangles · ') + b.name : L('Chưa chọn mặt', 'No face picked');
+    $('rfOk').disabled = !S.rd.n;
+    $('rfRes').textContent = !S.rd.n ? '' : b.solid ? L('Khối B-rep: xoá mặt rồi kéo dài các mặt phẳng kề để vá (lỗ, boss, fillet, chamfer). Nếu lõi B-rep không làm được, khối sẽ được vá trên mesh và chuyển thành mesh.', 'B-rep solid: the faces go and the neighbouring planes extend to close the gap (holes, bosses, fillets, chamfers). If the B-rep engine cannot, it is patched as a mesh and becomes a mesh body.') : L('Mesh: xoá các tam giác đã chọn rồi vá kín lỗ.', 'Mesh: the picked triangles go and the hole is patched.');
+  }
+  async function rfApply() {
+    const b = S.rd.body; if (!b || !S.rd.n || blocked()) return;
+    const sel = S.rd.sel, nt = sel.length;
+    if (S.rd.n >= nt) { flash(L('Không thể xoá mọi mặt của body', 'Cannot remove every face of the body'), true); return; }
+    setBusy(true, 'Remove face...');
+    try {
+      const P = b.geo.positions, I = b.geo.indices;
+      if (b.solid && brCan(b.solid)) {                         // exact: the engine removes the faces and heals the gap
+        const at = [];
+        for (let t = 0; t < nt; t++) if (sel[t]) { const a = 3 * I[3 * t], c = 3 * I[3 * t + 1], d = 3 * I[3 * t + 2]; at.push([(P[a] + P[c] + P[d]) / 3, (P[a + 1] + P[c + 1] + P[d + 1]) / 3, (P[a + 2] + P[c + 2] + P[d + 2]) / 3]); }
+        const rec = { type: 'removeface', at: at };
+        const bm = await brepMeshOf(Object.assign({}, b.solid, { feats: (b.solid.feats || []).concat([rec]) }));
+        if (bm) {
+          pushUndo();
+          setGeo(b, brGeo(bm), true); b.geoBrep = true; b.solid.feats = (b.solid.feats || []).concat([rec]);
+          setBusy(false); rdSetBody(null); rdChanged(); geomChanged(); refresh();
+          flash(L('Đã xoá mặt (B-rep)', 'Faces removed (B-rep)')); return;
+        }
+      }
+      const keep = [];
+      for (let t = 0; t < nt; t++) if (!sel[t]) keep.push(I[3 * t], I[3 * t + 1], I[3 * t + 2]);
+      const lvl = +$('rfFill').value || 1;
+      const r = await run('fill', { mesh: { positions: P, indices: new Uint32Array(keep) }, opt: { level: lvl, maxPerimeter: 0, stitch: 0 } });
+      pushUndo();
+      const wasSolid = !!b.solid;
+      setGeo(b, makeGeo(r.positions, r.indices));
+      setBusy(false); rdSetBody(null); rdChanged(); geomChanged(); refresh();
+      flash((wasSolid ? L('Lõi B-rep chưa xoá được mặt này: đã vá trên mesh, khối thành mesh. ', 'The B-rep engine could not remove these faces: patched as a mesh, the body is now a mesh. ') : '') +
+        L('Đã xoá mặt và vá ', 'Faces removed, patched ') + r.filled + '/' + r.holes + L(' lỗ', ' holes'), true);
+    } catch (e) { setBusy(false); showError(e); }
+  }
+  $('rfOk').addEventListener('click', function () { rfApply().catch(showError); });
+  $('rfClr').addEventListener('click', rdClear);
   // ---------- panel ----------
   $('rdOk').addEventListener('click', function () { rdApply().catch(showError); });
-  document.querySelectorAll('#ribbon button.popb[data-pop=rd]').forEach(function (bt) { bt.addEventListener('click', function () { if (rdOpen() && S.tool !== 'select') setTool('select'); }); });
+  [['rd', 'rf'], ['rf', 'rd']].forEach(function (p) {
+    document.querySelectorAll('#ribbon button.popb[data-pop=' + p[0] + ']').forEach(function (bt) { bt.addEventListener('click', function () {
+      if ($('pop_' + p[0]).classList.contains('on')) { $('pop_' + p[1]).classList.remove('on'); if (S.tool !== 'select') setTool('select'); rdShow(); dirty = true; }
+    }); });
+  });
   $('rdClr').addEventListener('click', rdClear);
   document.querySelectorAll('input[name=rdMeth]').forEach(function (r) { r.addEventListener('change', function () { if (S.rd.n) rdChanged(); }); });
   ['rdFixR', 'rdR', 'rdTol'].forEach(function (id) { $(id).addEventListener('input', function () { if (S.rd.n) rdChanged(); else rdShow(); }); });
-  [['rdBrushR', 'rdBrush'], ['rdAngR', 'rdAng'], ['rdTolR', 'rdTol']].forEach(function (p) {
+  [['rdBrushR', 'rdBrush'], ['rdAngR', 'rdAng'], ['rdTolR', 'rdTol'], ['rfBrushR', 'rfBrush'], ['rfAngR', 'rfAng']].forEach(function (p) {
     const r = $(p[0]), n = $(p[1]);
     r.addEventListener('input', function () { n.value = r.value; n.dispatchEvent(new Event('input')); dirty = true; });
     n.addEventListener('input', function () { r.value = n.value; dirty = true; });
   });
-  ['rdModeC', 'rdModeB'].forEach(function (id) { $(id).addEventListener('change', function () { $('rdBrushRow').style.opacity = $('rdModeB').checked ? 1 : 0.45; $('rdAngRow').style.opacity = $('rdModeB').checked ? 0.45 : 1; dirty = true; }); });
+  ['rd', 'rf'].forEach(function (px) { [px + 'ModeC', px + 'ModeB'].forEach(function (id) { $(id).addEventListener('change', function () { $(px + 'BrushRow').style.opacity = $(px + 'ModeB').checked ? 1 : 0.45; $(px + 'AngRow').style.opacity = $(px + 'ModeB').checked ? 0.45 : 1; dirty = true; }); }); });
   rdShow();

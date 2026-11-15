@@ -40,7 +40,7 @@
     if (r.err) throw new Error(r.err);
     return r.ok;
   }
-  const BR_FEATS = { fillet: true, chamfer: true, shell: true, moveface: true, draft: true };
+  const BR_FEATS = { fillet: true, chamfer: true, shell: true, moveface: true, draft: true, removeface: true };
   function brCan(r) {
     if (!r || (r.type !== 'extrude' && r.type !== 'revolve')) return false;
     return (r.feats || []).every(function (f) { return BR_FEATS[f.type]; });
@@ -88,6 +88,7 @@
     return brCall({ op: 'revolve', plane: plane, regions: regions, axisOrigin: o, axisDir: dir, angle: Math.min(360, Math.max(1, p.angle)) * Math.PI / 180 }).id;
   }
   function brFeat(id, f) {
+    if (f.type === 'removeface') return brCall({ op: 'deleteFaces', id: id, at: f.at }).id;   // needs an engine built with deleteFaces
     if (f.type !== 'moveface' && !(f.v > 0)) throw new Error('size');
     const facePt = function (d) { return d.at || d.c; };
     if (f.type === 'shell') return brCall({ op: 'shell', id: id, t: f.v, open: (f.sel.faces || []).map(facePt) }).id;
