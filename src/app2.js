@@ -567,6 +567,7 @@
         const opaque = [], trans = [];
         for (const b of S.bodies) if (b.visible && !S.ghostHide.has(b)) (alphaOf(b) >= 0.999 ? opaque : trans).push(b);
         for (const b of opaque) drawBody(b, edges, false);
+        drawRdSel();
         if (trans.length) {
           const w = viewer();
           trans.sort(function (a, b) { return V.dot(boxCenter(bodyBox(a, true)), w) - V.dot(boxCenter(bodyBox(b, true)), w); });
@@ -849,7 +850,7 @@
       }
     }
     if (S.show.box && tick.length) drawBBox(tick);
-    drawSla(); drawUcHov(); drawGeos(); drawUcDir(); drawMeasures(); updGeoVisBtn();
+    drawSla(); drawRd(); drawUcHov(); drawGeos(); drawUcDir(); drawMeasures(); updGeoVisBtn();
     drawSketch(); drawDlgSel();
     for (const p of S.tmp) dot2(project(p), '#ffcf5a', 4.5);
     drawSkHov();

@@ -252,7 +252,10 @@
     flash(L('Đã chuyển ', 'Converted ') + list.length + L(' khối solid thành mesh', ' solids to meshes'));
     refresh();
   }
-  function editSolid(b) { if (b.solid) openFeature(b.solid.type, b); }
+  function editSolid(b) {
+    if (b.solid && b.solid.fromMesh) { flash(L('Khối nhận diện từ mesh: sửa bằng Fillet, Shell, Move face... (không có sketch gốc)', 'Solid recognised from a mesh: edit it with Fillet, Shell, Move face... (it has no sketch)')); return; }
+    if (b.solid) openFeature(b.solid.type, b);
+  }
   // a solid's base shape changed: rebuild it and replay its solid edits (fillet, shell...) on the new shape
   async function rebuildSolid(b, recipe, base) {
     setBusy(true, L('Dựng lại khối...', 'Rebuilding the solid...'));

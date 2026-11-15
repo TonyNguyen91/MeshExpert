@@ -102,6 +102,19 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 ## Undercut: góc draft dưới con trỏ
 - Sau khi bấm "Phân tích" trong Tooling analysis (undercut), rê chuột lên body đã phân tích sẽ hiện nhãn góc draft của mặt dưới con trỏ (so với hướng mở khuôn), cho biết mặt thoát về phía + hay −, và cảnh báo vàng khi nhỏ hơn "Góc thoát khuôn tối thiểu". Xóa màu phân tích thì nhãn tắt.
 
+## Reverse Design: Basic Surface Recognition
+- Nhóm "Reverse Design" trên ribbon → nút "Surface Recognition" mở bảng Basic Surface Recognition (giống CATIA). Khi bảng mở, chuột trái dùng để chọn mesh (xoay / kéo màn hình bằng chuột phải / giữa như thường).
+- Chọn mesh — các tam giác được chọn tô đỏ:
+  - Bấm chọn (tự nhận): bấm vào mesh, app tự loang ra cả vùng trơn liền nhau và dừng ở cạnh gãy ("Góc nhận vùng", mặc định 15°). Bấm lại vùng đã chọn hoặc Ctrl+bấm để bỏ; Shift+bấm để thêm.
+  - Bút bôi: giữ chuột trái bôi lên mesh, "Cỡ bút" tính bằng mm (vòng tròn đỏ hiện cỡ bút); Ctrl+bôi để xóa. Chỉ chọn mặt đang quay về phía người nhìn.
+  - "Bỏ chọn" xóa vùng chọn.
+- Kiểu mặt: Plane, Sphere, Cylinder, Cone hoặc Tự động (app thử cả 4, chọn mặt khớp nhất mà pháp tuyến các tam giác cũng khớp). "Bán kính =" cố định bán kính cho Sphere / Cylinder.
+- Khung kết quả cho thông số mặt (bán kính, trục, nửa góc cone...), sai lệch RMS / lớn nhất và độ lệch pháp tuyến; chuyển vàng khi vượt "Sai lệch tối đa". Màn 3D vẽ nét xem trước của mặt (xanh) và trục (tím).
+- Tạo:
+  - Cylinder / Cone / Sphere → khối solid B-rep chính xác (xuất được STEP solid, boolean, fillet...) dài đúng bằng vùng đã chọn; kèm trục (Cylinder, Cone), tâm (Sphere) và đỉnh nón (Cone) dạng geometry nếu tick "Trục / tâm".
+  - Plane → Plane geometry (cỡ bằng vùng đã chọn).
+  - Bỏ tick "Tạo solid B-rep" nếu chỉ cần geometry. Lùi (Ctrl+Z) được.
+
 ## Bàn in SLA
 - Nhóm "Bàn in" trên ribbon: nút "SLA control panel" mở bảng điều khiển; nút "SLA table" (sáng lên khi bật) hiện khung bàn in trong suốt (viền, lưới 50 mm, lề, tâm, dao gạt) ngay cả khi bảng đóng.
 - Bảng SLA nổi trên màn hình 3D, mặc định nằm sát bên trái; kéo thanh tiêu đề để dời, bấm đúp thanh tiêu đề để đưa về chỗ cũ.
