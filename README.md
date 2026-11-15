@@ -106,7 +106,7 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Nhóm "Reverse Design" trên ribbon → nút "Surface Recognition" mở bảng Basic Surface Recognition (giống CATIA). Khi bảng mở, chuột trái dùng để chọn mesh (xoay / kéo màn hình bằng chuột phải / giữa như thường).
 - Chọn mesh — các tam giác được chọn tô đỏ:
   - Bấm chọn (tự nhận): bấm vào mesh, app tự loang ra cả vùng trơn liền nhau và dừng ở cạnh gãy ("Góc nhận vùng", mặc định 15°). Bấm lại vùng đã chọn hoặc Ctrl+bấm để bỏ; Shift+bấm để thêm.
-  - Bút bôi: giữ chuột trái bôi lên mesh, "Cỡ bút" tính bằng mm (vòng tròn đỏ hiện cỡ bút); Ctrl+bôi để xóa. Chỉ chọn mặt đang quay về phía người nhìn.
+  - Bút bôi: giữ chuột trái bôi lên mesh; "Cỡ bút" tính bằng pixel màn hình nên vòng bút giữ nguyên cỡ khi zoom. Vòng bút chạm vào tam giác nào là chọn tam giác đó (kể cả tam giác to hơn vòng bút). Ctrl+bôi để xóa. Chỉ chọn mặt đang quay về phía người nhìn, không xuyên ra mặt sau.
   - "Bỏ chọn" xóa vùng chọn.
 - Kiểu mặt: Plane, Sphere, Cylinder, Cone hoặc Tự động (app thử cả 4, chọn mặt khớp nhất mà pháp tuyến các tam giác cũng khớp). "Bán kính =" cố định bán kính cho Sphere / Cylinder.
 - Khung kết quả cho thông số mặt (bán kính, trục, nửa góc cone...), sai lệch RMS / lớn nhất và độ lệch pháp tuyến; chuyển vàng khi vượt "Sai lệch tối đa". Màn 3D vẽ nét xem trước của mặt (xanh) và trục (tím).

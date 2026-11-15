@@ -57,7 +57,16 @@ with sync_playwright() as p:
     pg.evaluate("(()=>{const b=__mrt.S.bodies.slice(-1)[0];b.visible=false;})()")
     # ---- cone: forced method, and brush painting
     view(FRONT,[-50,0,10])
-    pg.check('#rdModeB'); pg.fill('#rdBrush','3'); pg.dispatch_event('#rdBrush','input')
+    pg.check('#rdModeB'); pg.fill('#rdBrush','6'); pg.dispatch_event('#rdBrush','input')
+    # a small brush touching the middle of one big triangle (no corner inside the circle) still picks it
+    view(FRONT,[0,0,12],None); pg.evaluate("(()=>{const S=__mrt.S;S.bodies.forEach((b,i)=>b.visible=i==0);})()"); pg.wait_for_timeout(200)
+    m=scr([0,-8,12]); pg.mouse.move(m[0]+3,m[1]); pg.mouse.down(); pg.mouse.up(); pg.wait_for_timeout(250)
+    ok('A touch picks the long triangles under the brush (no corner inside the circle)',1<=pg.evaluate("__mrt.S.rd.n")<=10,pg.evaluate("__mrt.S.rd.n"))
+    pg.click('#rdClr')
+    z0=pg.evaluate("__mrt.cam().zoom"); pg.evaluate("(()=>{__mrt.cam().zoom*=3;})()"); pg.mouse.move(m[0]+5,m[1]+2); pg.wait_for_timeout(200)
+    ok('Brush circle keeps its size on screen when zooming',pg.evaluate("__mrt.S.rd.brushPx!=null") and pg.input_value('#rdBrush')=='6')
+    pg.evaluate("z=>{__mrt.cam().zoom=z;}",z0); pg.evaluate("(()=>{const S=__mrt.S;S.bodies.forEach(b=>b.visible=true);S.bodies.slice(3).forEach(b=>b.visible=false);})()")
+    view(FRONT,[-50,0,10]); pg.fill('#rdBrush','14'); pg.dispatch_event('#rdBrush','input')
     a=scr([-50,-9.2,4]); z=scr([-50,-5.6,16])
     pg.mouse.move(a[0],a[1]); pg.mouse.down(); pg.mouse.move(z[0],z[1],steps=12); pg.mouse.up(); pg.wait_for_timeout(250)
     n1=pg.evaluate("__mrt.S.rd.n"); ok('Brush paints triangles',n1>10,n1)

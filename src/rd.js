@@ -8,7 +8,7 @@
   const rdNum = function (id, d) { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
   function rdOpt() {
     const m = document.querySelector('input[name=rdMeth]:checked');
-    return { meth: m ? m.value : 'auto', brush: $('rdModeB').checked, ang: Math.max(1, Math.min(60, rdNum('rdAng', 15))), r: Math.max(0.05, rdNum('rdBrush', 3)),
+    return { meth: m ? m.value : 'auto', brush: $('rdModeB').checked, ang: Math.max(1, Math.min(60, rdNum('rdAng', 15))), r: Math.max(1, rdNum('rdBrush', 20)),
       tol: Math.max(1e-4, rdNum('rdTol', 0.5)), fixR: $('rdFixR').checked ? Math.max(1e-4, rdNum('rdR', 5)) : 0, solid: $('rdSolid').checked, aux: $('rdAux').checked };
   }
   // ---------- selection ----------
@@ -53,18 +53,39 @@
       for (const u of nb[t]) if (!seen[u] && V.dot(N(t), N(u)) >= cosA) { seen[u] = 1; q.push(u); }
     }
   }
-  // the brush: every triangle facing the viewer with a corner inside the sphere around the hit point
-  function rdPaint(b, at, val) {
-    const dm = dispMatrix(b), mi = M.inv(dm), pl = M.point(mi, at), sc = Math.cbrt(Math.abs(M.det ? M.det(dm) : 1)) || 1, r = rdOpt().r / sc, r2 = r * r;
-    const P = b.geo.positions, I = b.geo.indices, sel = S.rd.sel, view = M.vec(mi, camDir()), nt = I.length / 3;
+  // the brush: a circle of fixed size on the screen (it does not change with zoom); every triangle facing the viewer
+  // that the circle touches is picked, however big the triangle is
+  function rdMaxEdge(b) {
+    const g = b.geo; if (g.rdMaxE !== undefined) return g.rdMaxE;
+    const P = g.positions, I = g.indices; let m = 0;
+    for (let h = 0; h < I.length; h++) { const a = 3 * I[h], c = 3 * I[h % 3 === 2 ? h - 2 : h + 1], d = (P[a] - P[c]) ** 2 + (P[a + 1] - P[c + 1]) ** 2 + (P[a + 2] - P[c + 2]) ** 2; if (d > m) m = d; }
+    g.rdMaxE = Math.sqrt(m); return g.rdMaxE;
+  }
+  function rdTouch(q, R, A, B, C) {                         // does the circle (q, R) touch the screen triangle ABC?
+    const cr = function (p, u, v) { return (u[0] - p[0]) * (v[1] - p[1]) - (u[1] - p[1]) * (v[0] - p[0]); };
+    const d1 = cr(q, A, B), d2 = cr(q, B, C), d3 = cr(q, C, A);
+    if ((d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0)) return true;
+    const seg = function (u, v) { const dx = v[0] - u[0], dy = v[1] - u[1], l = dx * dx + dy * dy; let t = l > 0 ? ((q[0] - u[0]) * dx + (q[1] - u[1]) * dy) / l : 0; t = Math.max(0, Math.min(1, t)); return Math.hypot(u[0] + dx * t - q[0], u[1] + dy * t - q[1]); };
+    return seg(A, B) <= R || seg(B, C) <= R || seg(C, A) <= R;
+  }
+  function rdPaint(b, at, val, px, py) {
+    const dm = dispMatrix(b), mi = M.inv(dm), vd = camDir(), Rpx = rdOpt().r;
+    const e = V.norm(V.cross(vd, Math.abs(vd[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0])), q0 = project(at), q1 = project(V.add(at, e)), ppm = Math.hypot(q1[0] - q0[0], q1[1] - q0[1]) || 1;
+    const rW = Rpx / ppm, sc = Math.cbrt(Math.abs(M.det ? M.det(dm) : 1)) || 1, lim = (rW + rdMaxEdge(b) * sc) / sc, lim2 = lim * lim;
+    const q = (px === undefined) ? q0 : [px, py], depthTol = Math.max(3 * rW, sceneSize() * 0.01);
+    const pl = M.point(mi, at), P = b.geo.positions, I = b.geo.indices, sel = S.rd.sel, view = M.vec(mi, vd), nt = I.length / 3;
     for (let t = 0; t < nt; t++) {
       if (sel[t] === val) continue;
-      let hit = false;
-      for (let k = 0; k < 3 && !hit; k++) { const j = 3 * I[3 * t + k], dx = P[j] - pl[0], dy = P[j + 1] - pl[1], dz = P[j + 2] - pl[2]; if (dx * dx + dy * dy + dz * dz <= r2) hit = true; }
-      if (!hit) continue;
+      let near = false;
+      for (let k = 0; k < 3 && !near; k++) { const j = 3 * I[3 * t + k], dx = P[j] - pl[0], dy = P[j + 1] - pl[1], dz = P[j + 2] - pl[2]; if (dx * dx + dy * dy + dz * dz <= lim2) near = true; }
+      if (!near) continue;
       const a = 3 * I[3 * t], c = 3 * I[3 * t + 1], d = 3 * I[3 * t + 2];
       const n = V.cross([P[c] - P[a], P[c + 1] - P[a + 1], P[c + 2] - P[a + 2]], [P[d] - P[a], P[d + 1] - P[a + 1], P[d + 2] - P[a + 2]]);
-      if (V.dot(n, view) < 0) sel[t] = val;
+      if (V.dot(n, view) >= 0) continue;                      // facing away
+      const W = [a, c, d].map(function (j) { return M.point(dm, [P[j], P[j + 1], P[j + 2]]); });
+      const cz = V.dot(V.sub(V.mul(V.add(V.add(W[0], W[1]), W[2]), 1 / 3), at), vd);
+      if (cz > depthTol) continue;                            // behind the surface under the brush
+      if (rdTouch(q, Rpx, project(W[0]), project(W[1]), project(W[2]))) sel[t] = val;
     }
   }
   function camDir() { const r = screenRay(canvas.clientWidth / 2, canvas.clientHeight / 2); return V.norm(r.d); }
@@ -247,11 +268,11 @@
   function drawRd() {
     if (!rdOpen() || S.sk) return;
     const o = rdOpt();
-    if (o.brush && S.rd.brushAt) {                           // the brush outline
-      const P = S.rd.brushAt, q = project(P); let rp = 0;
-      for (const ax of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) { const s = project(V.add(P, V.mul(ax, o.r))); rp = Math.max(rp, Math.hypot(s[0] - q[0], s[1] - q[1])); }
+    if (o.brush && S.rd.brushPx && S.rd.brushOn) {             // the brush outline: same size on screen at any zoom
+      const q = S.rd.brushPx;
       ctx.strokeStyle = S.rd.erase ? '#9cc4ee' : '#ff5a4a'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
-      ctx.beginPath(); ctx.arc(q[0], q[1], Math.max(2, rp), 0, 7); ctx.stroke();
+      ctx.beginPath(); ctx.arc(q[0], q[1], o.r, 0, 7); ctx.stroke();
+      ctx.globalAlpha = 0.12; ctx.fillStyle = ctx.strokeStyle; ctx.fill(); ctx.globalAlpha = 1;
     }
     const F = S.rd.fit; if (!F || !F.f) return;
     const f = F.f, ln = function (pts, close) { ctx.beginPath(); pts.forEach(function (p, i) { const s = project(p); if (i) ctx.lineTo(s[0], s[1]); else ctx.moveTo(s[0], s[1]); }); if (close) ctx.closePath(); ctx.stroke(); };
@@ -282,24 +303,24 @@
     const erase = e.ctrlKey || e.metaKey;
     if (rdOpt().brush) {
       S.rd.paint = { erase: erase }; S.rd.erase = erase;
-      rdPaint(h.body, h.point, erase ? 0 : 1); rdChanged();
+      rdPaint(h.body, h.point, erase ? 0 : 1, px, py); rdChanged();
       try { canvas.setPointerCapture(e.pointerId); } catch (er) { }
     } else {
       rdGrow(h.body, h.tri, erase || (S.rd.sel[h.tri] && !e.shiftKey) ? 0 : 1); rdChanged();
     }
   }, true);
   canvas.addEventListener('pointermove', function (e) {
-    if (!rdLive() || !rdOpt().brush) { if (S.rd.brushAt) { S.rd.brushAt = null; dirty = true; } return; }
+    if (!rdLive() || !rdOpt().brush) { if (S.rd.brushOn) { S.rd.brushOn = false; S.rd.brushAt = null; dirty = true; } return; }
     const r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, h = rdHit(px, py);
-    S.rd.brushAt = h ? h.point : null; S.rd.erase = e.ctrlKey || e.metaKey; dirty = true;
+    S.rd.brushAt = h ? h.point : null; S.rd.brushPx = [px, py]; S.rd.brushOn = true; S.rd.erase = e.ctrlKey || e.metaKey; dirty = true;
     if (S.rd.paint && h && (e.buttons & 1)) {
       if (S.rd.body !== h.body) return;
-      rdPaint(h.body, h.point, S.rd.paint.erase ? 0 : 1); rdCount(); rdGpu();
+      rdPaint(h.body, h.point, S.rd.paint.erase ? 0 : 1, px, py); rdCount(); rdGpu();
       clearTimeout(S.rd.tm); S.rd.tm = setTimeout(rdChanged, 60);
     }
   }, true);
   window.addEventListener('pointerup', function () { if (S.rd.paint) { S.rd.paint = null; rdChanged(); } });
-  canvas.addEventListener('pointerleave', function () { if (S.rd.brushAt) { S.rd.brushAt = null; dirty = true; } });
+  canvas.addEventListener('pointerleave', function () { if (S.rd.brushOn) { S.rd.brushOn = false; S.rd.brushAt = null; dirty = true; } });
   // ---------- build ----------
   function rdGeoQuiet(g) {
     g.id = S.geoSeq++; g.vis = true;
