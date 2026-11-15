@@ -1,4 +1,4 @@
-  // ================= Pattern: linear and circular copies of the ticked bodies =================
+  // ================= Pattern: linear and circular copies of the ticked bodies (one command) =================
   // B-rep solids keep their recipe in every copy (still exact, STEP, editable); meshes share their triangles.
   // "Merge into one body" joins the original and its copies with a boolean union (the result is a mesh).
   S.pat = { kind: 'lin' };
@@ -7,6 +7,7 @@
   function patRefs() {
     const out = [{ k: 'x', n: L('Trục X', 'X axis'), p: [0, 0, 0], d: [1, 0, 0] }, { k: 'y', n: L('Trục Y', 'Y axis'), p: [0, 0, 0], d: [0, 1, 0] }, { k: 'z', n: L('Trục Z', 'Z axis'), p: [0, 0, 0], d: [0, 0, 1] }];
     for (const g of S.geos) if ((g.type === 'line' || g.type === 'axis') && g.p && g.p2) { const d = V.sub(g.p2, g.p); if (V.len(d) > 1e-9) out.push({ k: 'g' + g.id, n: g.name, p: g.p.slice(), d: V.norm(d) }); }
+    for (const k of ['pickD', 'pickA']) if (S.pat[k]) out.push(S.pat[k]);
     return out;
   }
   function patFill() {
@@ -37,7 +38,7 @@
   }
   function patList() { return selBodies().filter(function (b) { return b.visible; }); }
   function patPreview() {
-    if (!$('pop_pat').classList.contains('on')) { if (S.patGhost) { S.patGhost = false; setGhosts([]); } return; }
+    if (!$('pop_pat').classList.contains('on')) { if (S.pat.picking) patArm(false); if (S.patGhost) { S.patGhost = false; setGhosts([]); } return; }
     const list = patList(), o = patOpt(), mats = patMats(o), gh = [];
     $('patCnt').textContent = list.length ? list.length + L(' body đang chọn → ', ' ticked bodies → ') + (list.length * (mats.length + 1)) + L(' body', ' bodies') : L('Hãy tick các body cần tạo dãy', 'Tick the bodies to pattern');
     $('patOk').disabled = !list.length;
@@ -78,12 +79,42 @@
     S.pat.kind = k;
     document.querySelectorAll('#patSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.k === k); });
     $('patLin').style.display = k === 'lin' ? '' : 'none'; $('patCir').style.display = k === 'cir' ? '' : 'none';
+    if (S.pat.picking) patArm(false);
     patPreview();
   }
   document.querySelectorAll('#patSeg button').forEach(function (b) { b.addEventListener('click', function () { patKind(b.dataset.k); }); });
-  [['b_patlin', 'lin'], ['b_patcir', 'cir']].forEach(function (p) {
-    $(p[0]).addEventListener('click', function () { patFill(); openPop('pat', true); patKind(p[1]); });
-  });
+  $('b_pattern').addEventListener('click', function () { patFill(); openPop('pat', true); patKind(S.pat.kind); });
+  // a direction / axis picked on a body: straight edge, flat face (its normal through the face) or cylindrical face (its axis)
+  function patPickRef(h, px, py) {
+    const f = featOf(h.body), el = pickEdge(h, px, py, false);
+    if (el) {
+      const c = f.chains[el[0]], a = c.pts[0], q = c.pts[c.pts.length - 1], d = V.sub(q, a);
+      let straight = !c.closed && V.len(d) > 1e-6;
+      if (straight) { const u = V.norm(d); for (const p of c.pts) { const w = V.sub(p, a); if (V.len(V.sub(w, V.mul(u, V.dot(w, u)))) > 1e-3 * (1 + V.len(d))) { straight = false; break; } } }
+      if (straight) return { n: L('Cạnh ', 'Edge ') + h.body.name, p: a.slice(), d: V.norm(d) };
+    }
+    const R = f.regions[f.reg[h.tri]];
+    if (R && R.type === 'plane') return { n: L('Pháp tuyến mặt ', 'Face normal ') + h.body.name, p: h.point.slice(), d: R.n.slice() };
+    if (R && R.type === 'cyl') return { n: L('Trục mặt trụ ', 'Cylinder axis ') + h.body.name, p: R.c.slice(), d: V.norm(R.axis) };
+    return null;
+  }
+  function patArm(on) {
+    S.pat.picking = on ? (S.pat.kind === 'lin' ? 'D' : 'A') : null;
+    $('patPickD').classList.toggle('on', S.pat.picking === 'D'); $('patPickA').classList.toggle('on', S.pat.picking === 'A');
+  }
+  ['patPickD', 'patPickA'].forEach(function (id) { $(id).addEventListener('click', function () { patArm(!S.pat.picking); if (S.pat.picking) flash(L('Bấm vào cạnh thẳng, mặt phẳng hoặc mặt trụ', 'Click a straight edge, a flat face or a cylindrical face')); }); });
+  canvas.addEventListener('pointerdown', function (e) {
+    if (!S.pat.picking || e.button !== 0 || !$('pop_pat').classList.contains('on')) return;
+    const r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, h = pickNear(px, py);
+    e.stopImmediatePropagation(); e.preventDefault();
+    if (!h) return;
+    const ref = patPickRef(h, px, py);
+    if (!ref) { flash(L('Chỗ này không có cạnh thẳng / mặt phẳng / mặt trụ', 'No straight edge, flat or cylindrical face here')); return; }
+    const k = S.pat.picking === 'D' ? 'pickD' : 'pickA';
+    ref.k = k; S.pat[k] = ref; patArm(false); patFill();
+    $(k === 'pickD' ? 'patDir' : 'patAx').value = k; patPreview();
+  }, true);
+  window.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.pat.picking) patArm(false); });
   [['patNR', 'patN'], ['patGapR', 'patGap'], ['patCNR', 'patCN'], ['patAngR', 'patAng']].forEach(function (p) {
     const r = $(p[0]), n = $(p[1]);
     r.addEventListener('input', function () { n.value = r.value; patPreview(); });

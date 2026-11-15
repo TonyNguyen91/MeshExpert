@@ -420,7 +420,7 @@
         }
         return cur;
       } },
-    replace: { title: 'Replace face', boxes: [['faces', 'plane', 'Mặt cần thay', 'Faces to replace'], ['target', 'plane1', 'Mặt đích', 'Target face']], num: ['Offset', 'Offset', 0, 0.1, -50, 50],
+    replace: { title: 'Replace face', boxes: [['faces', 'face', 'Mặt cần thay (phẳng / cong)', 'Faces to replace (flat / curved)'], ['target', 'plane1', 'Mặt đích', 'Target face']], num: ['Offset', 'Offset', 0, 0.1, -50, 50],
       apply: async function (mesh, f, again) {
         let cur = mesh;
         const dg0 = diagOf(cur), tol = function (dg) { return again ? 0.3 * dg : 1e-3 * dg + 1e-6; };
@@ -432,6 +432,16 @@
           if (r < 0) throw NEED(L('mặt', 'face'));
           const R = fl.regions[r];
           let nT = RT.n, dT = RT.d;
+          if (R.type !== 'plane') {                          // chamfer, fillet, any curved face: flatten it onto the target plane
+            let m = [0, 0, 0];
+            const P = cur.positions, I = cur.indices;
+            for (const t of regionTris(fl, r)) { const a = 3 * I[3 * t], b = 3 * I[3 * t + 1], c = 3 * I[3 * t + 2]; m = V.add(m, V.cross([P[b] - P[a], P[b + 1] - P[a + 1], P[b + 2] - P[a + 2]], [P[c] - P[a], P[c + 1] - P[a + 1], P[c + 2] - P[a + 2]])); }
+            if (V.dot(nT, m) < 0) { nT = V.mul(nT, -1); dT = -dT; }
+            dT += f.v;
+            try { cur = core.replaceCurvedVerts(cur, fl, r, nT, dT); }
+            catch (e) { throw new Error(L('Không đưa được mặt cong này về mặt đích (mặt bên cạnh bị lật). Thử mặt đích khác hoặc Offset nhỏ hơn.', 'Cannot put this curved face onto the target (a neighbouring face would turn over). Try another target or a smaller offset.')); }
+            continue;
+          }
           if (V.dot(nT, R.n) < 0) { nT = V.mul(nT, -1); dT = -dT; }
           dT += f.v;
           cur = await facePlane(cur, fl, r, nT, dT);

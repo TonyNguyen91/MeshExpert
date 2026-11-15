@@ -390,10 +390,26 @@
     try {
       const P = b.geo.positions, I = b.geo.indices;
       if (b.solid && brCan(b.solid)) {                         // exact: the engine removes the faces and heals the gap
-        const at = [];
-        for (let t = 0; t < nt; t++) if (sel[t]) { const a = 3 * I[3 * t], c = 3 * I[3 * t + 1], d = 3 * I[3 * t + 2]; at.push([(P[a] + P[c] + P[d]) / 3, (P[a + 1] + P[c + 1] + P[d + 1]) / 3, (P[a + 2] + P[c + 2] + P[d + 2]) / 3]); }
+        // one point well inside each picked face (a face counts when a good part of it is painted): points near a face's
+        // border could land on the neighbour in the engine's own tessellation
+        const fl = core.features(b.geo), acc = new Map(), at = [];
+        for (let t = 0; t < nt; t++) {
+          const a = 3 * I[3 * t], c = 3 * I[3 * t + 1], d = 3 * I[3 * t + 2], r = fl.reg[t];
+          const ar = V.len(V.cross([P[c] - P[a], P[c + 1] - P[a + 1], P[c + 2] - P[a + 2]], [P[d] - P[a], P[d + 1] - P[a + 1], P[d + 2] - P[a + 2]])) / 2;
+          const q = acc.get(r) || { all: 0, on: 0, n: 0, c: [0, 0, 0], tris: [] };
+          q.all += ar; q.n++;
+          if (sel[t]) { q.on += ar; const m = [(P[a] + P[c] + P[d]) / 3, (P[a + 1] + P[c + 1] + P[d + 1]) / 3, (P[a + 2] + P[c + 2] + P[d + 2]) / 3]; q.c = V.add(q.c, V.mul(m, ar)); q.tris.push(m); }
+          acc.set(r, q);
+        }
+        acc.forEach(function (q) {
+          if (!q.tris.length || (q.tris.length < 0.3 * q.n && q.on < 0.6 * q.all)) return;   // a few big triangles brushed by accident do not count
+          const c = V.mul(q.c, 1 / (q.on || 1));
+          let best = q.tris[0], bd = Infinity;
+          for (const m of q.tris) { const dd = V.len(V.sub(m, c)); if (dd < bd) { bd = dd; best = m; } }
+          at.push(best);
+        });
         const rec = { type: 'removeface', at: at };
-        const bm = await brepMeshOf(Object.assign({}, b.solid, { feats: (b.solid.feats || []).concat([rec]) }));
+        const bm = !at.length ? null : await brepMeshOf(Object.assign({}, b.solid, { feats: (b.solid.feats || []).concat([rec]) }));
         if (bm) {
           pushUndo();
           setGeo(b, brGeo(bm), true); b.geoBrep = true; b.solid.feats = (b.solid.feats || []).concat([rec]);
@@ -403,13 +419,14 @@
       }
       const keep = [];
       for (let t = 0; t < nt; t++) if (!sel[t]) keep.push(I[3 * t], I[3 * t + 1], I[3 * t + 2]);
+      const why = b.solid && brCan(b.solid) ? brLast : '';
       const lvl = +$('rfFill').value || 1;
       const r = await run('fill', { mesh: { positions: P, indices: new Uint32Array(keep) }, opt: { level: lvl, maxPerimeter: 0, stitch: 0 } });
       pushUndo();
       const wasSolid = !!b.solid;
       setGeo(b, makeGeo(r.positions, r.indices));
       setBusy(false); rdSetBody(null); rdChanged(); geomChanged(); refresh();
-      flash((wasSolid ? L('Lõi B-rep chưa xoá được mặt này: đã vá trên mesh, khối thành mesh. ', 'The B-rep engine could not remove these faces: patched as a mesh, the body is now a mesh. ') : '') +
+      flash((wasSolid ? L('Lõi B-rep chưa xoá được mặt này: đã vá trên mesh, khối thành mesh. ', 'The B-rep engine could not remove these faces: patched as a mesh, the body is now a mesh. ') + (why ? '(' + why + ') ' : '') : '') +
         L('Đã xoá mặt và vá ', 'Faces removed, patched ') + r.filled + '/' + r.holes + L(' lỗ', ' holes'), true);
     } catch (e) { setBusy(false); showError(e); }
   }

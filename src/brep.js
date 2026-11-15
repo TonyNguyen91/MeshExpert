@@ -113,7 +113,7 @@
     };
     let id = step(key, function () { return brBase(r); });
     for (const f of r.feats || []) {
-      key += '|' + JSON.stringify([f.type, f.v, f.flip, f.sel]);
+      key += '|' + JSON.stringify([f.type, f.v, f.flip, f.sel, f.at]);
       const from = id;
       id = step(key, function () { return brFeat(from, f); });
     }

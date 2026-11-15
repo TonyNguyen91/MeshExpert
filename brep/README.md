@@ -22,10 +22,11 @@ No SolidCraft brand or interface material is used.
    panic = "abort"
    incremental = false
    ```
-3. Build (Rust with the `wasm32-unknown-unknown` target; `-j1` keeps memory use under about 6 GB):
+3. Build (Rust 1.99.1 with the `wasm32-unknown-unknown` target; `-j1` keeps memory use under about 6 GB; the path remap keeps
+   local folder names out of the file):
 
    ```sh
-   RUSTFLAGS="-C link-arg=-zstack-size=8388608" cargo build --profile mrtw2 -j1 -p mrtbrep --lib --target wasm32-unknown-unknown
+   RUSTFLAGS="-C link-arg=-zstack-size=8388608 --remap-path-prefix=$HOME=~" cargo build --profile mrtw2 -j1 -p mrtbrep --lib --target wasm32-unknown-unknown
    wasm-bindgen --target no-modules --no-typescript --remove-name-section --remove-producers-section \
      --out-dir out target/wasm32-unknown-unknown/mrtw2/mrtbrep.wasm
    ```

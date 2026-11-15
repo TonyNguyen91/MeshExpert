@@ -1,6 +1,6 @@
 # Browser test: Boolean boxes light their bodies (Tools red, Targets blue); Linear / Circular pattern (B-rep copies keep
 # their recipe, merge option); Remove face on a mesh (hole walls removed and patched) and on a B-rep solid (falls back to the
-# mesh method while the engine has no deleteFaces).
+# mesh method when the faces around the gap are curved, e.g. the top of a cylinder).
 # Run: python3 make_rd_meshes.py <fixtures>; python3 ui18.py <fixtures folder> [path to index.html]
 import sys,os,math,io
 from playwright.sync_api import sync_playwright
@@ -39,7 +39,7 @@ with sync_playwright() as p:
     pg.click('#odNo'); pg.wait_for_timeout(150)
     ok('Colours go when the dialog closes',px([cb[0],cb[1],B[1][2][2]])[2]>60)
     # ---------- Linear pattern of a mesh body
-    tick([0]); pg.click('#b_patlin'); pg.wait_for_timeout(200)
+    tick([0]); pg.click('#b_pattern'); pg.click('#patSeg button[data-k=lin]'); pg.wait_for_timeout(200)
     pg.select_option('#patDir','x'); pg.fill('#patN','3'); pg.dispatch_event('#patN','input'); pg.fill('#patGap','30'); pg.dispatch_event('#patGap','input'); pg.wait_for_timeout(200)
     ok('Preview ghosts for the copies',pg.evaluate("__mrt.S.ghosts.length")==2)
     pg.click('#patOk'); idle()
@@ -50,14 +50,14 @@ with sync_playwright() as p:
     pg.click('#bUndo'); idle(); ok('Undo removes the copies',len(names())==2)
     # ---------- Circular pattern around Z (cylinder sits on Z; move it off-axis first)
     pg.evaluate("(()=>{const b=__mrt.S.bodies[1];b.matrix[12]=40;})()"); tick([1])
-    pg.click('#b_patcir'); pg.wait_for_timeout(200); pg.select_option('#patAx','z'); pg.fill('#patCN','4'); pg.dispatch_event('#patCN','input'); pg.fill('#patAng','360'); pg.dispatch_event('#patAng','input')
+    pg.click('#b_pattern'); pg.click('#patSeg button[data-k=cir]'); pg.wait_for_timeout(200); pg.select_option('#patAx','z'); pg.fill('#patCN','4'); pg.dispatch_event('#patCN','input'); pg.fill('#patAng','360'); pg.dispatch_event('#patAng','input')
     pg.click('#patOk'); idle()
     B=pg.evaluate(BOX); cy=[x for x in B if x[0].startswith('cyl')]
     cs=sorted((round((x[1][0]+x[2][0])/2,2),round((x[1][1]+x[2][1])/2,2)) for x in cy)
     ok('Circular pattern: 4 cylinders at 90° steps around Z',len(cy)==4 and cs==sorted([(40.0,0.0),(0.0,40.0),(-40.0,0.0),(0.0,-40.0)]) or cs==sorted([(40,0),(0,40),(-40,0),(0,-40)]),cs)
     pg.click('#bUndo'); idle()
     # ---------- Merge
-    tick([0]); pg.click('#b_patlin'); pg.wait_for_timeout(150); pg.select_option('#patDir','x'); pg.fill('#patN','3'); pg.dispatch_event('#patN','input')
+    tick([0]); pg.click('#b_pattern'); pg.click('#patSeg button[data-k=lin]'); pg.wait_for_timeout(150); pg.select_option('#patDir','x'); pg.fill('#patN','3'); pg.dispatch_event('#patN','input')
     w=B[0][2][0]-B[0][1][0]; pg.fill('#patGap',str(round(w*0.5,3))); pg.dispatch_event('#patGap','input'); pg.check('#patMerge'); pg.click('#patOk'); idle()
     B=pg.evaluate(BOX); bl=[x for x in B if x[0].startswith('block')]
     ok('Merge: one body spanning the three overlapping copies',len(bl)==1 and abs((bl[0][2][0]-bl[0][1][0])-2*w)<1e-3,[len(bl), bl[0][2][0]-bl[0][1][0] if bl else None])
@@ -67,7 +67,7 @@ with sync_playwright() as p:
     pg.evaluate("(()=>{const c=__mrt.cam();c.R=[1,0,0,0,0,1,0,-1,0];c.target=[40,0,12];})()"); pg.wait_for_timeout(200)
     c=scr([40,-8,12]); pg.mouse.click(c[0],c[1]); pg.wait_for_timeout(200); pg.click('#rdOk'); idle()
     pg.evaluate("document.querySelector('#pop_rd .popx').click()")
-    n0=len(names()); tick([n0-1]); pg.click('#b_patlin'); pg.wait_for_timeout(150); pg.select_option('#patDir','y'); pg.fill('#patN','2'); pg.dispatch_event('#patN','input'); pg.check('#patMerge'); pg.uncheck('#patMerge'); pg.click('#patOk'); idle()
+    n0=len(names()); tick([n0-1]); pg.click('#b_pattern'); pg.click('#patSeg button[data-k=lin]'); pg.wait_for_timeout(150); pg.select_option('#patDir','y'); pg.fill('#patN','2'); pg.dispatch_event('#patN','input'); pg.check('#patMerge'); pg.uncheck('#patMerge'); pg.click('#patOk'); idle()
     s=pg.evaluate("(()=>{const b=__mrt.S.bodies.slice(-1)[0];return {solid:!!b.solid,brep:!!b.geoBrep,t:b.solid&&b.solid.type}})()")
     ok('A B-rep solid’s copy is still a B-rep solid',s['solid'] and s['brep'] and s['t']=='extrude',s)
     # ---------- Remove face on a mesh: the four walls of a square hole
@@ -84,7 +84,7 @@ with sync_playwright() as p:
     v1=pg.evaluate("b=>("+VOL+")(__mrt.S.bodies[0])",None); nb=pg.evaluate("__mrt.holesOf(__mrt.S.bodies[0].geo).edges")
     ok('Hole removed: closed plate, volume 40×40×10',abs(v1-16000)<1e-2 and abs(v0-15000)<1e-2 and nb==0,(v0,v1,nb))
     pg.click('#bUndo'); idle(); ok('Undo brings the hole back',abs(pg.evaluate("b=>("+VOL+")(__mrt.S.bodies[0])",None)-15000)<1e-2)
-    # ---------- Remove face on a B-rep solid (engine without deleteFaces → mesh method, with a note)
+    # ---------- Remove face on a B-rep solid (curved neighbours: the engine cannot heal → mesh method, with a note)
     pg.set_input_files('#file',[S+'/cyl.stl']); pg.wait_for_function("__mrt.S.bodies.length==2"); idle()
     pg.evaluate("document.querySelector('#pop_rf .popx').click()"); pg.click('#ribbon button.popb[data-pop=rd]')
     pg.evaluate("(()=>{const c=__mrt.cam();c.R=[1,0,0,0,0,1,0,-1,0];c.target=[0,0,12];})()"); pg.wait_for_timeout(200)
@@ -96,7 +96,7 @@ with sync_playwright() as p:
     ok('Top face of the B-rep cylinder picked',pg.evaluate("__mrt.S.rd.n")>0 and pg.evaluate("__mrt.S.rd.body&&__mrt.S.rd.body.name")==nm)
     pg.click('#rfOk'); idle()
     r=pg.evaluate("(()=>{const b=__mrt.S.bodies.slice(-1)[0];return {solid:!!b.solid,closed:__mrt.holesOf(b.geo).edges===0,flash:document.getElementById('flash')?document.getElementById('flash').textContent:''}})()")
-    ok('Without deleteFaces in the engine the solid is patched as a mesh (and says so)',(not r['solid']) and r['closed'],r)
+    ok('Curved neighbours: the solid is patched as a mesh (and says so)',(not r['solid']) and r['closed'],r)
     ok('No page errors',not errs,errs)
     b.close()
 print('ALL OK' if not fails else '%d FAIL'%fails); sys.exit(1 if fails else 0)

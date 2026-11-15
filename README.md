@@ -103,15 +103,20 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Sau khi bấm "Phân tích" trong Tooling analysis (undercut), rê chuột lên body đã phân tích sẽ hiện nhãn góc draft của mặt dưới con trỏ (so với hướng mở khuôn), cho biết mặt thoát về phía + hay −, và cảnh báo vàng khi nhỏ hơn "Góc thoát khuôn tối thiểu". Xóa màu phân tích thì nhãn tắt.
 
 ## Pattern (nhóm Feature)
-- "Linear pattern" / "Circular pattern" mở bảng Pattern (đổi qua lại bằng nút Linear / Circular). Áp dụng cho các body đang tick; màn 3D hiện bản xem trước trong suốt màu xanh.
-- Linear: chọn hướng (trục X / Y / Z hoặc một Line / Axis geometry), số lượng và khoảng cách (thanh kéo + ô số).
-- Circular: chọn trục (trục X / Y / Z qua gốc tọa độ hoặc một Line / Axis geometry), số lượng và tổng góc (360° = chia đều cả vòng; nhỏ hơn thì bản cuối nằm đúng ở tổng góc).
+- Một nút "Pattern" mở bảng Pattern, chọn kiểu Linear hoặc Circular ngay trong bảng. Áp dụng cho các body đang tick; màn 3D hiện bản xem trước trong suốt màu xanh.
+- Linear: chọn hướng, số lượng và khoảng cách (thanh kéo + ô số).
+- Circular: chọn trục, số lượng và tổng góc (360° = chia đều cả vòng; nhỏ hơn thì bản cuối nằm đúng ở tổng góc).
+- Hướng / trục chọn tùy ý: trục X / Y / Z, một Line / Axis geometry, hoặc bấm nút mũi tên cạnh ô rồi bấm trên màn hình vào một cạnh thẳng (hướng của cạnh), một mặt phẳng (pháp tuyến của mặt) hoặc một mặt trụ (trục của mặt trụ). Esc để thôi chọn.
 - "Đảo chiều" lật hướng / chiều quay. Khối solid B-rep được nhân bản vẫn là B-rep (xuất STEP được). "Gộp thành 1 body" nối bản gốc và các bản sao bằng Boolean union (kết quả là mesh). Lùi (Ctrl+Z) được.
 
 ## Remove face (nhóm Synchronous Modeling)
 - Mở bảng Remove face, chọn mặt giống Surface Recognition: bấm vào mặt (app tự loang theo vùng trơn, dừng ở cạnh gãy; Shift thêm, Ctrl bỏ) hoặc dùng bút bôi; mặt chọn tô đỏ. Bấm "Xoá mặt".
 - Body mesh: xoá các tam giác đã chọn rồi vá kín lỗ, "Kiểu vá" Phẳng (hợp với lỗ xuyên, mặt phẳng) hoặc Theo mặt xung quanh (uốn theo bề mặt). Ví dụ xoá 4 vách của một lỗ vuông xuyên tấm → tấm đặc kín.
-- Khối solid B-rep: app nhờ lõi B-rep xoá mặt rồi kéo dài các mặt phẳng kề để vá (lỗ, boss, fillet, chamfer) — giữ nguyên B-rep. Lõi B-rep hiện nhúng trong app chưa có lệnh này (cần build lại lõi, xem brep/README.md); trong lúc đó khối được vá trên mesh và chuyển thành mesh, app báo rõ.
+- Khối solid B-rep: lõi B-rep xoá mặt rồi kéo dài các mặt phẳng kề để vá (lỗ, boss, fillet, chamfer trên chi tiết vuông vức) — giữ nguyên B-rep, vẫn xuất STEP. Khi mặt kề là mặt cong (ví dụ mặt đầu của trụ) lõi không vá được: khối được vá trên mesh và chuyển thành mesh, app báo rõ.
+
+## Replace face (nhóm Synchronous Modeling)
+- "Mặt cần thay" nhận cả mặt phẳng và mặt cong (chamfer, fillet, mặt bo bất kỳ); "Mặt đích" là một mặt phẳng.
+- Mặt cong được làm phẳng nằm lên mặt đích: đỉnh nằm trên mặt phẳng kề trượt trong mặt đó, đỉnh nằm trên mặt trụ kề trượt dọc trục trụ. Ví dụ: chamfer ở đầu trụ + mặt đích là mặt đầu → trụ thẳng, hết chamfer. Offset dời mặt đích ra / vào.
 
 ## Boolean
 - Khi đưa body vào ô của lệnh Boolean, body đó sáng lên: ô Tools màu đỏ, ô Targets màu xanh (ô trong bảng có ô màu tương ứng).

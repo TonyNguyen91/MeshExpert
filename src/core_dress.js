@@ -182,6 +182,59 @@
     }
     return { positions: Q, indices: Uint32Array.from(I) };
   }
+  // Put a curved face (chamfer, fillet, any rounded patch) onto the plane (nT, dT) by moving its vertices: a vertex on a
+  // flat neighbour slides inside that plane, one on a cylinder slides along its axis, the rest go straight to the plane.
+  // The face flattens into the target plane and its neighbours stretch to meet it. Throws 'flip' / 'stuck'.
+  function replaceCurvedVerts(mesh, f, r, nT, dT) {
+    const P = mesh.positions, I = mesh.indices, nt = I.length / 3, nv = P.length / 3, R = f.regions, reg = f.reg;
+    const inS = new Uint8Array(nv), around = [], N = [];
+    let bb = 0;
+    for (let i = 0; i < P.length; i++) bb = Math.max(bb, Math.abs(P[i]));
+    const tol = 1e-6 * (1 + bb);
+    for (let v = 0; v < nv; v++) around.push(null);
+    for (let t = 0; t < nt; t++) {
+      N.push(triN(P, I, t));
+      for (let c = 0; c < 3; c++) { const v = I[3 * t + c]; if (reg[t] === r) inS[v] = 1; else { if (!around[v]) around[v] = new Set(); around[v].add(reg[t]); } }
+    }
+    const Q = Float32Array.from(P);
+    for (let v = 0; v < nv; v++) {
+      if (!inS[v]) continue;
+      const p = vtx(P, v), off = dT - v3.dot(nT, p);
+      if (Math.abs(off) < tol) continue;                       // already on the target plane
+      const planes = [], axes = [];
+      if (around[v]) around[v].forEach(function (q) {
+        const Rq = R[q];
+        if (Rq.type === 'plane') { if (!planes.some(function (n) { return Math.abs(v3.dot(n, Rq.n)) > 0.999; })) planes.push(Rq.n); }
+        else if (Rq.type === 'cyl' && Rq.axis) axes.push(v3.norm(Rq.axis));
+      });
+      let dir = nT;
+      if (planes.length >= 2) dir = v3.cross(planes[0], planes[1]);
+      else if (planes.length === 1 && axes.length) { const A = planes[0]; dir = v3.sub(axes[0], v3.mul(A, v3.dot(axes[0], A))); }
+      else if (planes.length === 1) { const A = planes[0]; dir = v3.sub(nT, v3.mul(A, v3.dot(nT, A))); }
+      else if (axes.length) dir = axes[0];
+      let den = v3.dot(nT, dir);
+      if (Math.hypot(dir[0], dir[1], dir[2]) < 1e-9 || Math.abs(den) < 1e-6 * Math.hypot(dir[0], dir[1], dir[2])) { dir = nT; den = 1; }
+      const t = off / den;
+      Q[3 * v] = p[0] + dir[0] * t; Q[3 * v + 1] = p[1] + dir[1] * t; Q[3 * v + 2] = p[2] + dir[2] * t;
+    }
+    for (let t = 0; t < nt; t++) {
+      const a = 3 * I[3 * t], b = 3 * I[3 * t + 1], c = 3 * I[3 * t + 2];
+      const n2 = v3.cross([Q[b] - Q[a], Q[b + 1] - Q[a + 1], Q[b + 2] - Q[a + 2]], [Q[c] - Q[a], Q[c + 1] - Q[a + 1], Q[c + 2] - Q[a + 2]]);
+      if (reg[t] === r) continue;                              // the face itself may fold flat
+      if (v3.dot(n2, N[t]) < 0) throw new Error('flip');
+    }
+    // the face may lie flat now, but must not face the other way
+    const keep = [];
+    for (let t = 0; t < nt; t++) {
+      const a = 3 * I[3 * t], b = 3 * I[3 * t + 1], c = 3 * I[3 * t + 2];
+      if (reg[t] === r) {
+        const n2 = v3.cross([Q[b] - Q[a], Q[b + 1] - Q[a + 1], Q[b + 2] - Q[a + 2]], [Q[c] - Q[a], Q[c + 1] - Q[a + 1], Q[c + 2] - Q[a + 2]]);
+        if (v3.dot(n2, nT) * Math.sign(v3.dot(N[t], nT) || 1) < 0) throw new Error('flip');
+      }
+      keep.push(I[3 * t], I[3 * t + 1], I[3 * t + 2]);
+    }
+    return { positions: Q, indices: Uint32Array.from(keep) };
+  }
   // move every vertex of a cylindrical face radially by d (+ = outwards from the axis)
   function moveCylFace(mesh, tris, axis, c, d) {
     const P = Float32Array.from(mesh.positions), I = mesh.indices, done = new Set();
