@@ -113,6 +113,15 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - **Độ sắc nét**: DPI 72–1200; khổ A4 / A3 / A2 / A1 ngang / dọc hoặc số pixel tùy chọn; tỉ lệ Vừa khổ hoặc cố định 5:1 … 1:10 (đúng kích thước thật khi in ở DPI đã chọn); độ dày nét theo mm (kèm inch); khử răng cưa 1×–4× (dựng ảnh lớn hơn rồi thu nhỏ); "B-rep mịn" chia lưới lại khối B-rep theo độ phân giải ảnh nên mặt cong tròn đều.
 - Ô thông tin: khổ giấy (mm | in), số pixel, DPI, kích thước mô hình (mm | in), tỉ lệ, **dung lượng dự kiến** của file.
 - Lưu PNG (nền trắng / trong suốt) hoặc JPG (chỉnh chất lượng); DPI được ghi vào file nên in ra đúng kích thước. "Chép ảnh" đưa ảnh PNG vào clipboard. Ảnh tối đa khoảng 150 triệu pixel.
+- **Hình chiếu iso**: tick "Hình chiếu iso", chỉnh Góc xoay (quanh trục đứng) và Góc nghiêng (nhìn từ trên xuống); hình iso kéo được tới bất kỳ đâu trên bản vẽ.
+- **Cỡ hình**: phóng to / thu nhỏ toàn bộ hình vẽ (20–300 %) khi tỉ lệ là Vừa khổ. **Cỡ chữ** (mm) và **Đậm** cho kích thước, tên view, tên linh kiện, ghi tỉ lệ.
+- **Ghi chú chữ**: "+ Thêm chữ" đặt một dòng chữ và mở ô sửa; kéo để dời, bấm đúp để sửa (Shift+Enter xuống dòng), Delete hoặc ✕ để xoá; cỡ (mm) và đậm của ghi chú đang chọn chỉnh ở dòng "Ghi chú".
+
+## Exploded view (nhóm Chụp)
+- Nút "Exploded view" cạnh "6 view" mở cùng bảng và cửa sổ xem trước ở chế độ tách linh kiện: một hình iso cho từng body (Góc xoay / Góc nghiêng tùy ý), các body tách ra khỏi tâm cụm theo "Độ tách"; kéo từng linh kiện tới chỗ dễ nhìn. "Xếp tự động" đưa về vị trí tách mặc định.
+- Dưới chân mỗi linh kiện: tên body và (tuỳ chọn) vật liệu · khối lượng (g, tính từ thể tích × khối lượng riêng).
+- Bấm đúp vào tên (hoặc hình) linh kiện để sửa tên và chọn vật liệu ngay trên bản vẽ; hoặc bấm chọn linh kiện rồi sửa ở dòng "Linh kiện" của bảng. Thay đổi ghi thẳng vào body: cây body, Properties (vật liệu, khối lượng) cập nhật theo; đổi tên / vật liệu trong cây body thì bản vẽ cũng tự cập nhật. Undo được.
+- Cùng các tùy chọn màu, ánh sáng, nét, khổ giấy, DPI, khử răng cưa, định dạng, ghi chú chữ như 6 view.
 
 ## Pattern (nhóm Feature)
 - Một nút "Pattern" mở bảng Pattern, chọn kiểu Linear hoặc Circular ngay trong bảng. Áp dụng cho các body đang tick; màn 3D hiện bản xem trước trong suốt màu xanh.

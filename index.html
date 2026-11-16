@@ -265,6 +265,11 @@
   #v6Sheet .v6hint { color: #8796a8; font-size: 11px; }
   #v6Sheet .v6body { flex: 1; position: relative; overflow: hidden; background: #3a434f; }
   #v6Prev { position: absolute; box-shadow: 0 2px 10px rgba(0,0,0,.5); }
+  #v6Ed { position: absolute; display: none; z-index: 3; background: #1b222b; border: 1px solid #2f8cff; border-radius: 5px; padding: 5px; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
+  #v6Ed textarea { width: 200px; font: 13px "Segoe UI", Arial, sans-serif; resize: both; display: block; }
+  #v6Ed select { margin-top: 4px; width: 100%; }
+  #v6Ed .v6edb { display: flex; gap: 4px; justify-content: flex-end; margin-top: 4px; }
+  #pop_v6 #v6PMat { max-width: 120px; }
   #pop_sla { position: absolute; left: 10px; top: 90px; width: 330px; z-index: 8; max-height: calc(100% - 100px); overflow-y: auto; }
   #pop_sla .pophd { cursor: move; user-select: none; }
   .pophd { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
@@ -323,7 +328,7 @@
    <div class="rgrp"><div class="rbody"><div class="rcol"><button class="sb" data-tool="dist" title="Đo khoảng cách" data-en-title="Distance"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M6 9l-3 3 3 3M18 9l3 3-3 3" stroke="#f0a030" stroke-width="1.8"/><path d="M3 6v12M21 6v12" stroke="#9cc4ee"/></svg><span data-en="Distance">Khoảng cách</span></button><button class="sb" data-tool="angle" title="Đo góc" data-en-title="Angle"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M4 20L16 6" stroke="#9cc4ee" stroke-width="1.8"/><path d="M11 20a7 7 0 0 0-2.3-5.2" stroke="#f0a030" stroke-width="1.8"/></svg><span data-en="Angle">Góc</span></button><button class="sb" data-tool="radius" title="Đo bán kính" data-en-title="Radius"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" stroke="#9cc4ee"/><path d="M12 12l6-6" stroke="#f0a030" stroke-width="1.8"/><circle cx="12" cy="12" r="1.3" fill="#f0a030"/></svg><span data-en="Radius">Bán kính</span></button></div><div class="rcol"><button class="sb" data-tool="thick" title="Đo bề dày" data-en-title="Wall thickness"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16M10 4v16" stroke="#9cc4ee" stroke-width="2"/><path d="M14 12h7M14 12l2.5-2.5M14 12l2.5 2.5M4 12h6" stroke="#f0a030"/></svg><span data-en="Wall thickness">Bề dày</span></button><button class="sb popb" data-pop="undercut" title="Tooling analysis (undercut)" data-en-title="Tooling analysis (undercut)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20V9h12v11" stroke="#9cc4ee"/><path d="M6 9l6-5 6 5" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M9 14h3v6" stroke="#ff6b5e" stroke-width="2"/><path d="M12 2v3" stroke="#f0a030"/></svg><span data-en="Undercut">Undercut</span></button><button class="sb popb" data-pop="collide" title="Kiểm tra va chạm" data-en-title="Collision check"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="10" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="11" y="4" width="10" height="10" fill="rgba(240,160,48,.5)" stroke="#ffd28a"/><path d="M11 7h2v7h-2z" fill="#ff3b30"/></svg><span data-en="Collision">Va chạm</span></button></div><div class="rcol"><button class="sb popb" data-pop="compare" title="So sánh mesh" data-en-title="Compare meshes"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-8 6-8 9-4s6 4 9-4" stroke="#9cc4ee" stroke-width="1.8"/><path d="M3 19c3-8 6-8 9-4s6 4 9-4" stroke="#f0a030" stroke-width="1.8" stroke-dasharray="2 2"/></svg><span data-en="Compare">So sánh mesh</span></button></div></div><div class="rtitle" data-en="Analysis">Analysis</div></div>
    <div class="rgrp"><div class="rbody"><button class="bb popb" data-pop="rd" title="Basic Surface Recognition: nhận diện Plane / Sphere / Cylinder / Cone từ mesh" data-en-title="Basic Surface Recognition: recognise a plane / sphere / cylinder / cone on a mesh"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l4-9 5 3 4-6 5 7-3 6-6 2z" fill="rgba(156,196,238,.15)" stroke="#9cc4ee" stroke-width="1"/><path d="M7 8l5 3M12 11l4-6M12 11l-2 8M12 11l6 3" stroke="#9cc4ee" stroke-width=".8"/><path d="M10 19l2-8 6 3-3 6z" fill="#ee2a1f" stroke="#ff8a7a" stroke-width=".8"/><ellipse cx="17" cy="8" rx="4" ry="1.6" stroke="#3ce0ff"/><path d="M13 8v6M21 8v6" stroke="#3ce0ff"/><path d="M13 14a4 1.6 0 0 0 8 0" stroke="#3ce0ff"/></svg><span data-en="Surface Recognition">Surface Recognition</span></button></div><div class="rtitle" data-en="Reverse Design">Reverse Design</div></div>
    <div class="rgrp"><div class="rbody"><button class="bb popb" data-pop="sla" title="SLA control panel: xoay tối ưu, dàn đều, nâng, khối chắn" data-en-title="SLA control panel: orient, lay out, lift, guard blocks"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15l10 5 10-5-10-5z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 13.5V6.5l2 1v7M13 15V4l2.2 1v11" fill="#f0a030" stroke="#ffd28a"/><path d="M4.5 13.6l2.2-1.1" stroke="#eb783c" stroke-width="2.2"/><path d="M17.3 17.4l2.2-1.1" stroke="#eb783c" stroke-width="2.2"/><path d="M2 21.5h20" stroke="#52d06a" stroke-width="1.8"/></svg><span data-en="SLA control panel">SLA control panel</span></button><div class="rcol"><button id="bSlaTable" class="sb" title="Hiện / ẩn bàn in trong 3D" data-en-title="Show / hide the print table in 3D"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l10 5 10-5-10-5z" fill="#9ea8b5" stroke="#dfe6ee"/><path d="M2 12v3l10 5 10-5v-3" fill="#5a6676" stroke="#b8c4d2"/><path d="M7 11.5l10-5M9.5 13l10-5" stroke="#3d6fa8" stroke-width="1"/></svg><span>SLA table</span></button></div></div><div class="rtitle" data-en="Print plate">Bàn in</div></div>
-   <div class="rgrp rcap"><div class="rbody"><button id="bShot" class="bb" title="Chép ảnh màn hình 3D vào clipboard" data-en-title="Copy a picture of the 3D view to the clipboard"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.5"><rect x="3" y="7" width="18" height="13" rx="2" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 7l1.5-3h5L16 7" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="13.5" r="4" fill="#14181d" stroke="#f0a030" stroke-width="1.8"/></svg><span data-en="Copy image">Chép ảnh</span></button><button class="bb popb" data-pop="v6" title="6 view: ảnh hình chiếu Trên / Trước / Trái / Phải / Sau / Dưới kiểu bản vẽ, có kích thước bao" data-en-title="6 views: Top / Front / Left / Right / Back / Bottom drawing-style projections with overall dimensions"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.3"><rect x="8.5" y="2" width="7" height="6" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="1" y="10" width="6" height="7" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="8.5" y="10" width="7" height="7" fill="#4f86c4" stroke="#9cc4ee"/><rect x="17" y="10" width="6" height="7" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="8.5" y="19" width="7" height="4" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8.5 21.5h7" stroke="#f0a030"/></svg><span data-en="6 views">6 view</span></button></div><div class="rtitle" data-en="Capture">Chụp</div></div>
+   <div class="rgrp rcap"><div class="rbody"><button id="bShot" class="bb" title="Chép ảnh màn hình 3D vào clipboard" data-en-title="Copy a picture of the 3D view to the clipboard"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.5"><rect x="3" y="7" width="18" height="13" rx="2" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 7l1.5-3h5L16 7" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="13.5" r="4" fill="#14181d" stroke="#f0a030" stroke-width="1.8"/></svg><span data-en="Copy image">Chép ảnh</span></button><button class="bb popb" data-pop="v6" title="6 view: ảnh hình chiếu Trên / Trước / Trái / Phải / Sau / Dưới kiểu bản vẽ, có kích thước bao" data-en-title="6 views: Top / Front / Left / Right / Back / Bottom drawing-style projections with overall dimensions"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.3"><rect x="8.5" y="2" width="7" height="6" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="1" y="10" width="6" height="7" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="8.5" y="10" width="7" height="7" fill="#4f86c4" stroke="#9cc4ee"/><rect x="17" y="10" width="6" height="7" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="8.5" y="19" width="7" height="4" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8.5 21.5h7" stroke="#f0a030"/></svg><span data-en="6 views">6 view</span></button><button class="bb" id="bExpView" title="Exploded view: tách các linh kiện theo góc nhìn iso, kèm tên, vật liệu và khối lượng" data-en-title="Exploded view: parts pulled apart in an iso view, with names, materials and masses"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.3" stroke-linejoin="round"><path d="M4 15l4-2 4 2-4 2z" fill="#4f86c4" stroke="#9cc4ee"/><path d="M4 15v3l4 2v-3zM12 15v3l-4 2" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M12 6l4-2 4 2-4 2z" fill="#4f86c4" stroke="#9cc4ee"/><path d="M12 6v3l4 2V8zM20 6v3l-4 2" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M10 13l3-3" stroke="#f0a030" stroke-dasharray="1.6 1.2"/><path d="M3 22h6M14 13h7" stroke="#cfd8e3" stroke-width="1"/></svg><span data-en="Exploded view">Exploded view</span></button></div><div class="rtitle" data-en="Capture">Chụp</div></div>
    <div class="rgrp rlast"><div class="rbody"><button class="bb popb" data-pop="split" title="Tách / gộp body" data-en-title="Split / merge bodies"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="8" height="14" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="13" y="5" width="8" height="14" fill="#5d8fc8" stroke="#9cc4ee"/><path d="M12 2v20" stroke="#f0a030" stroke-dasharray="2 2"/></svg><span data-en="Split / merge">Tách / gộp</span></button><button class="bb popb" data-pop="repair" title="Vá lưới hở" data-en-title="Repair open meshes"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M9 9h6v6H9z" fill="#14181d" stroke="#ff3b30"/><path d="M8 16l8-8" stroke="#f0a030" stroke-width="2"/></svg><span data-en="Repair">Vá lưới</span></button></div><div class="rtitle" data-en="Mesh">Mesh</div></div>
   </div>
  </div>
@@ -585,15 +590,24 @@
     <div class="box rdres" id="rdRes"></div>
     <div class="btns"><button class="primary" id="rdOk" data-en="Apply">Tạo</button><button class="popx" data-pop="rd" data-en="Close">Đóng</button></div>
   </div></div>
-   <div class="pop" id="pop_v6"><div class="pophd"><b data-en="6 views">6 view</b><span class="grow"></span><button class="popx" data-pop="v6">✕</button></div><div class="c">
-    <div class="row v6views"><label><input type="checkbox" class="v6v" data-v="top" checked><span data-en="Top">Trên</span></label><label><input type="checkbox" class="v6v" data-v="front" checked><span data-en="Front">Trước</span></label><label><input type="checkbox" class="v6v" data-v="left" checked><span data-en="Left">Trái</span></label><label><input type="checkbox" class="v6v" data-v="right" checked><span data-en="Right">Phải</span></label><label><input type="checkbox" class="v6v" data-v="back" checked><span data-en="Back">Sau</span></label><label><input type="checkbox" class="v6v" data-v="bottom" checked><span data-en="Bottom">Dưới</span></label></div>
+   <div class="pop" id="pop_v6"><div class="pophd"><b id="v6Title">6 view</b><span class="grow"></span><button class="popx" data-pop="v6">✕</button></div><div class="c">
+    <div class="row v6views v6m6"><label><input type="checkbox" class="v6v" data-v="top" checked><span data-en="Top">Trên</span></label><label><input type="checkbox" class="v6v" data-v="front" checked><span data-en="Front">Trước</span></label><label><input type="checkbox" class="v6v" data-v="left" checked><span data-en="Left">Trái</span></label><label><input type="checkbox" class="v6v" data-v="right" checked><span data-en="Right">Phải</span></label><label><input type="checkbox" class="v6v" data-v="back" checked><span data-en="Back">Sau</span></label><label><input type="checkbox" class="v6v" data-v="bottom" checked><span data-en="Bottom">Dưới</span></label></div>
     <div class="row"><span class="lbl" data-en="Turn">Xoay</span><button id="v6RotZ" class="v6b" title="Xoay mô hình 90° quanh trục đứng (đổi mặt Trước)" data-en-title="Turn the model 90° about the vertical axis (changes the Front)">⟳ 90°</button><button id="v6RotZm" class="v6b" title="Xoay mô hình -90° quanh trục đứng" data-en-title="Turn the model -90° about the vertical axis">⟲ 90°</button><button id="v6Tip" class="v6b" title="Lật mô hình 90° về phía trước (đổi mặt Trên)" data-en-title="Tip the model 90° forward (changes the Top)">⤵ 90°</button><button id="v6Auto" class="v6b" title="Xếp lại các hình chiếu như mặc định" data-en-title="Put the views back to the default layout" data-en="Auto layout">Xếp tự động</button></div>
+    <div class="row v6m6"><label><input type="checkbox" id="v6Iso"> <span data-en="Iso view">Hình chiếu iso</span></label></div>
+    <div class="row v6isorow"><span class="lbl" data-en="Iso turn" title="Góc xoay quanh trục đứng" data-en-title="Angle about the vertical axis">Góc xoay</span><input type="range" id="v6AzR" min="-180" max="180" step="1" value="45" style="width:70px"><input type="number" id="v6Az" class="s" value="45" min="-180" max="180" step="1"><span class="unit">°</span></div>
+    <div class="row v6isorow"><span class="lbl" data-en="Iso tilt" title="Góc nhìn từ trên xuống" data-en-title="Angle looking down">Góc nghiêng</span><input type="range" id="v6ElR" min="-89" max="89" step="0.5" value="30" style="width:70px"><input type="number" id="v6El" class="s" value="30" min="-89" max="89" step="0.5"><span class="unit">°</span></div>
+    <div class="row v6mE"><span class="lbl" data-en="Spread" title="Mức tách các linh kiện ra khỏi tâm cụm" data-en-title="How far the parts move out from the centre of the assembly">Độ tách</span><input type="range" id="v6ExR" min="0" max="300" step="5" value="80" style="width:70px"><input type="number" id="v6Ex" class="s" value="80" min="0" max="300" step="5"><span class="unit">%</span></div>
+    <div class="row v6mE"><label><input type="checkbox" id="v6PN" checked> <span data-en="Part names">Tên linh kiện</span></label><label><input type="checkbox" id="v6PM" checked> <span data-en="Material + mass">Vật liệu + khối lượng</span></label></div>
+    <div class="row v6mE v6part"><span class="lbl" data-en="Part">Linh kiện</span><input type="text" id="v6PName" style="width:110px" title="Đổi tên body (cập nhật cây body)" data-en-title="Rename the body (updates the body list)"><select id="v6PMat" title="Vật liệu của body" data-en-title="Material of the body"></select><span class="unit" id="v6PMass"></span></div>
     <div class="row"><span class="lbl" data-en="Colour">Màu</span><select id="v6Col"><option value="view" data-en="As the 3D view">Như 3D view</option><option value="one" data-en="One colour">Một màu</option><option value="white" data-en="White (drawing)">Trắng (nét vẽ)</option></select><input type="color" id="v6One" value="#8fa9c4" title="Màu cho toàn bộ mô hình" data-en-title="Colour for the whole model"><span class="lbl" data-en="Light">Sáng</span><select id="v6Light"><option value="studio" data-en="Studio (smooth)">Studio (mượt)</option><option value="view" data-en="As the 3D view">Như 3D view</option></select><label title="Chia lưới lại khối B-rep theo độ phân giải ảnh" data-en-title="Re-tessellate B-rep solids to the picture resolution"><input type="checkbox" id="v6Fine" checked> <span data-en="Fine B-rep">B-rep mịn</span></label></div>
     <div class="row"><label><input type="checkbox" id="v6Edge" checked> <span data-en="Edges">Nét cạnh</span></label><label><input type="checkbox" id="v6Hid"> <span data-en="Hidden lines">Nét khuất</span></label><span class="lbl" data-en="Angle" title="Cạnh mesh gãy hơn góc này thì vẽ nét" data-en-title="Mesh edges sharper than this are drawn">Góc</span><input type="range" id="v6AngR" min="5" max="80" step="1" value="30" style="width:60px"><input type="number" id="v6Ang" class="s" value="30" min="5" max="80" step="1"><span class="unit">°</span></div>
     <div class="row"><label><input type="checkbox" id="v6Dim" checked> <span data-en="Dimensions">Kích thước</span></label><select id="v6Unit"><option value="mmin">mm + in</option><option value="mm">mm</option><option value="in">in</option></select><label><input type="checkbox" id="v6Lbl"> <span data-en="View names">Tên view</span></label><label><input type="checkbox" id="v6ScN"> <span data-en="Scale note">Ghi tỉ lệ</span></label></div>
     <div class="row"><span class="lbl" data-en="Scale">Tỉ lệ</span><select id="v6Scale"><option value="0" data-en="Fit">Vừa khổ</option><option value="5">5:1</option><option value="2">2:1</option><option value="1">1:1</option><option value="0.5">1:2</option><option value="0.2">1:5</option><option value="0.1">1:10</option></select><span class="lbl" data-en="Paper">Khổ</span><select id="v6Paper"><option value="A4">A4</option><option value="A3" selected>A3</option><option value="A2">A2</option><option value="A1">A1</option><option value="px" data-en="Custom">Tùy chọn</option></select><select id="v6Ori"><option value="L" data-en="Landscape">Ngang</option><option value="P" data-en="Portrait">Dọc</option></select></div>
     <div class="row v6px"><span class="lbl" data-en="Width">Rộng</span><input type="range" id="v6WR" min="400" max="16000" step="10" value="4000" style="width:86px"><input type="number" id="v6W" class="s" value="4000" min="400" max="16000" step="10"><span class="unit">px</span></div>
     <div class="row v6px"><span class="lbl" data-en="Height">Cao</span><input type="range" id="v6HR" min="300" max="16000" step="10" value="2800" style="width:86px"><input type="number" id="v6H" class="s" value="2800" min="300" max="16000" step="10"><span class="unit">px</span></div>
+    <div class="row"><span class="lbl" data-en="Drawing size" title="Phóng to / thu nhỏ toàn bộ hình vẽ khi tỉ lệ là Vừa khổ" data-en-title="Make the whole drawing bigger or smaller (Fit scale)">Cỡ hình</span><input type="range" id="v6ZmR" min="20" max="300" step="5" value="100" style="width:70px"><input type="number" id="v6Zm" class="s" value="100" min="20" max="300" step="5"><span class="unit">%</span></div>
+    <div class="row"><span class="lbl" data-en="Text" title="Cỡ chữ của kích thước, tên view, tên linh kiện" data-en-title="Size of dimension, view and part texts">Cỡ chữ</span><input type="range" id="v6FsR" min="1" max="10" step="0.1" value="2.6" style="width:70px"><input type="number" id="v6Fs" class="s" value="2.6" min="1" max="10" step="0.1"><span class="unit">mm</span><label><input type="checkbox" id="v6Fb"> <span data-en="Bold">Đậm</span></label></div>
+    <div class="row"><button id="v6AddT" class="v6b" data-en="Add text" title="Thêm một dòng chữ vào bản vẽ (kéo để dời, bấm đúp để sửa, Delete để xoá)" data-en-title="Add a text to the sheet (drag to move, double-click to edit, Delete to remove)">+ Thêm chữ</button><span class="lbl" data-en="Note">Ghi chú</span><input type="range" id="v6NsR" min="1" max="20" step="0.5" value="4" style="width:56px"><input type="number" id="v6Ns" class="s" value="4" min="1" max="20" step="0.5"><span class="unit">mm</span><label><input type="checkbox" id="v6Nb" checked> <span data-en="Bold">Đậm</span></label><button id="v6DelT" class="v6b" title="Xoá ghi chú đang chọn" data-en-title="Delete the selected note">✕</button></div>
     <div class="row"><span class="lbl">DPI</span><input type="range" id="v6DpiR" min="72" max="1200" step="1" value="300" style="width:86px"><input type="number" id="v6Dpi" class="s" value="300" min="72" max="1200" step="1"><span class="unit"></span></div>
     <div class="row"><span class="lbl" data-en="Line">Nét</span><input type="range" id="v6LwR" min="0.05" max="1" step="0.05" value="0.25" style="width:86px"><input type="number" id="v6Lw" class="s" value="0.25" min="0.05" max="1" step="0.05"><span class="unit">mm</span><span class="unit" id="v6LwIn"></span></div>
     <div class="row"><span class="lbl" data-en="Smoothing" title="Khử răng cưa: dựng ảnh lớn hơn rồi thu nhỏ" data-en-title="Anti-aliasing: draw larger, then scale down">Khử răng</span><select id="v6SS"><option value="1">1×</option><option value="2">2×</option><option value="3" selected>3×</option><option value="4">4×</option></select><span class="lbl" data-en="Format">Định dạng</span><select id="v6Fmt"><option value="png">PNG</option><option value="jpg">JPG</option></select><select id="v6Bg"><option value="w" data-en="White">Nền trắng</option><option value="t" data-en="Transparent">Trong suốt</option></select></div>
@@ -601,7 +615,7 @@
     <div class="v6info" id="v6Info"></div>
     <div class="btns"><button class="primary" id="v6Save" data-en="Save">Lưu ảnh</button><button id="v6Copy" data-en="Copy">Chép ảnh</button><button class="popx" data-pop="v6" data-en="Close">Đóng</button></div>
   </div></div>
-   <div id="v6Sheet"><div class="v6hd"><b data-en="6-view sheet">Bản xếp 6 view</b><span class="grow"></span><span class="v6hint" id="v6Zoom"></span></div><div class="v6body"><canvas id="v6Prev"></canvas></div></div>
+   <div id="v6Sheet"><div class="v6hd"><b data-en="6-view sheet">Bản xếp 6 view</b><span class="grow"></span><span class="v6hint" id="v6Zoom"></span></div><div class="v6body"><canvas id="v6Prev"></canvas><div id="v6Ed"><textarea id="v6EdT" rows="2"></textarea><select id="v6EdM"></select><div class="v6edb"><button id="v6EdOk" class="primary">OK</button><button id="v6EdNo" data-en="Cancel">Huỷ</button></div></div></div></div>
    <div class="pop" id="pop_sla"><div class="pophd"><b data-en="SLA print plate">Bàn in SLA</b><span class="grow"></span><button class="popx" data-pop="sla">✕</button></div><div class="c">
     <div class="row"><span class="lbl" data-en="Plate X × Y">Bàn X × Y</span><input type="number" id="slaW" class="s" value="400" min="10" step="1"> × <input type="number" id="slaD" class="s" value="400" min="10" step="1"><span class="unit">mm</span></div>
     <div class="row"><span class="lbl" data-en="Spread">Độ dàn đều</span><input type="range" id="slaSpreadR" min="0" max="100" step="1" value="0" style="width:120px"><input type="number" id="slaSpread" class="s" value="0" min="0" step="1"><span class="unit">%</span></div>
@@ -10519,22 +10533,24 @@ var wasm_bindgen = (function(exports) {
   // keep the preview in step with the ticked bodies
   setInterval(function () { if ($('pop_pat').classList.contains('on')) { const k = patList().map(function (b) { return b.id + ':' + b.matrix.join(','); }).join('|'); if (k !== S.patKey) { S.patKey = k; patPreview(); } } else if (S.patGhost) patPreview(); }, 400);
 
-  // ================= 6 views: drawing-style orthographic projections (Top / Front / Left / Right / Back / Bottom) =================
+  // ================= 6 views + Exploded view: drawing-style projections on a sheet =================
   // Each view is rendered off screen (WebGL2) into a depth image and a colour image; edges (B-rep edges, sharp mesh edges,
   // silhouettes) are traced with Canvas 2D where the depth image shows they are not covered. Views are drawn larger and scaled
-  // down (anti-aliasing). The sheet window shows a live preview where the views can be slid along their projection lines.
-  const V6_VIEWS = {   // in the drawing frame: d = looking direction, r = screen right, u = screen up (Z is up); ax = drawing axes across / up
-    front: { d: [0, 1, 0], r: [1, 0, 0], u: [0, 0, 1], ax: [0, 2], vi: 'TRƯỚC', en: 'FRONT' },
-    back: { d: [0, -1, 0], r: [-1, 0, 0], u: [0, 0, 1], ax: [0, 2], vi: 'SAU', en: 'BACK' },
-    left: { d: [1, 0, 0], r: [0, -1, 0], u: [0, 0, 1], ax: [1, 2], vi: 'TRÁI', en: 'LEFT' },
-    right: { d: [-1, 0, 0], r: [0, 1, 0], u: [0, 0, 1], ax: [1, 2], vi: 'PHẢI', en: 'RIGHT' },
-    top: { d: [0, 0, -1], r: [1, 0, 0], u: [0, 1, 0], ax: [0, 1], vi: 'TRÊN', en: 'TOP' },
-    bottom: { d: [0, 0, 1], r: [1, 0, 0], u: [0, -1, 0], ax: [0, 1], vi: 'DƯỚI', en: 'BOTTOM' }
+  // down (anti-aliasing). The sheet window shows a live preview: views slide along their projection lines, the iso view, parts
+  // of the exploded view and notes move freely; part names / materials are the bodies' own (edited here or in the body list).
+  const V6_VIEWS = {   // in the drawing frame: d = looking direction, r = screen right, u = screen up (Z is up)
+    front: { d: [0, 1, 0], r: [1, 0, 0], u: [0, 0, 1], vi: 'TRƯỚC', en: 'FRONT' },
+    back: { d: [0, -1, 0], r: [-1, 0, 0], u: [0, 0, 1], vi: 'SAU', en: 'BACK' },
+    left: { d: [1, 0, 0], r: [0, -1, 0], u: [0, 0, 1], vi: 'TRÁI', en: 'LEFT' },
+    right: { d: [-1, 0, 0], r: [0, 1, 0], u: [0, 0, 1], vi: 'PHẢI', en: 'RIGHT' },
+    top: { d: [0, 0, -1], r: [1, 0, 0], u: [0, 1, 0], vi: 'TRÊN', en: 'TOP' },
+    bottom: { d: [0, 0, 1], r: [1, 0, 0], u: [0, -1, 0], vi: 'DƯỚI', en: 'BOTTOM' }
   };
   const V6_ORDER = ['top', 'front', 'left', 'right', 'back', 'bottom'];
   const V6_PAPER = { A4: [297, 210], A3: [420, 297], A2: [594, 420], A1: [841, 594] };
   const V6_MAXPX = 150e6, V6_MAXVIEW = 64e6;
-  const V6S = { R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, prev: null, fine: new Map() };
+  const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, notes: { '6v': [], exp: [] }, nsel: null, psel: null,
+    prev: null, fine: new Map(), seq: 1 };
   let v6gl = null;
 
   function v6Num(id, def) { const v = parseFloat($(id).value); return isFinite(v) ? v : def; }
@@ -10542,7 +10558,7 @@ var wasm_bindgen = (function(exports) {
   function v6Opt() {
     const views = {};
     document.querySelectorAll('.v6v').forEach(function (c) { views[c.dataset.v] = c.checked; });
-    const dpi = Math.max(72, Math.min(1200, v6Num('v6Dpi', 300))), paper = $('v6Paper').value;
+    const dpi = Math.max(72, Math.min(1200, v6Num('v6Dpi', 300))), paper = $('v6Paper').value, exp = V6S.mode === 'exp';
     let W, H;
     if (paper === 'px') { W = Math.round(v6Num('v6W', 4000)); H = Math.round(v6Num('v6H', 2800)); }
     else { let mm = V6_PAPER[paper].slice(); if ($('v6Ori').value === 'P') mm = [mm[1], mm[0]]; W = Math.round(mm[0] / 25.4 * dpi); H = Math.round(mm[1] / 25.4 * dpi); }
@@ -10550,20 +10566,32 @@ var wasm_bindgen = (function(exports) {
     let cut = false;
     if (W * H > V6_MAXPX) { const k = Math.sqrt(V6_MAXPX / (W * H)); W = Math.floor(W * k); H = Math.floor(H * k); cut = true; }
     const fmt = $('v6Fmt').value;
-    return { views: views, col: $('v6Col').value, one: v6Hex($('v6One').value), light: $('v6Light').value, fine: $('v6Fine').checked,
-      edge: $('v6Edge').checked, hidden: $('v6Hid').checked, ang: v6Num('v6Ang', 30), dim: $('v6Dim').checked, unit: $('v6Unit').value,
-      lbl: $('v6Lbl').checked, scn: $('v6ScN').checked, scale: parseFloat($('v6Scale').value) || 0, W: W, H: H, cut: cut, dpi: dpi,
+    return { exp: exp, views: views, iso: !exp && $('v6Iso').checked, az: v6Num('v6Az', 45), el: v6Num('v6El', 30), spread: v6Num('v6Ex', 80) / 100,
+      pn: $('v6PN').checked, pm: $('v6PM').checked,
+      col: $('v6Col').value, one: v6Hex($('v6One').value), light: $('v6Light').value, fine: $('v6Fine').checked,
+      edge: $('v6Edge').checked, hidden: $('v6Hid').checked, ang: v6Num('v6Ang', 30), dim: !exp && $('v6Dim').checked, unit: $('v6Unit').value,
+      lbl: !exp && $('v6Lbl').checked, scn: $('v6ScN').checked, scale: parseFloat($('v6Scale').value) || 0, zoom: v6Num('v6Zm', 100) / 100,
+      fs: v6Num('v6Fs', 2.6), fb: $('v6Fb').checked, W: W, H: H, cut: cut, dpi: dpi,
       lw: v6Num('v6Lw', 0.25), ss: +$('v6SS').value || 1, fmt: fmt, q: v6Num('v6Q', 92) / 100, bg: fmt === 'jpg' ? 'w' : $('v6Bg').value };
   }
   function v6Bodies() {
     const s = S.bodies.filter(function (b) { return b.visible && S.sel.has(b); });
     return s.length ? s : S.bodies.filter(function (b) { return b.visible; });
   }
-  // a drawing-frame direction expressed in model (world) coordinates
+  // drawing-frame direction expressed in model (world) coordinates
   function v6MV(v) { const R = V6S.R; return [R[0][0] * v[0] + R[1][0] * v[1] + R[2][0] * v[2], R[0][1] * v[0] + R[1][1] * v[1] + R[2][1] * v[2], R[0][2] * v[0] + R[1][2] * v[1] + R[2][2] * v[2]]; }
+  function v6Dirs(spec) { return { r: v6MV(spec.r), u: v6MV(spec.u), d: v6MV(spec.d) }; }
+  // iso direction: turned az about the vertical, looking down el (az 0 / el 0 = Front)
+  function v6IsoSpec(az, el) {
+    const a = az * Math.PI / 180, e = el * Math.PI / 180, c = [Math.cos(e) * Math.sin(a), -Math.cos(e) * Math.cos(a), Math.sin(e)];
+    const d = V.mul(c, -1), r = V.norm(V.cross(d, [0, 0, 1])), u = V.cross(r, d);
+    return { d: d, r: r, u: u };
+  }
   function v6mm(v) { return (Math.round(v * 10) / 10).toFixed(1) + ' mm'; }
   function v6in(v) { return (v / 25.4).toFixed(2) + ' in'; }
   function v6Txt(v, unit) { return unit === 'mm' ? v6mm(v) : unit === 'in' ? v6in(v) : v6mm(v) + '  (' + v6in(v) + ')'; }
+  function v6Mat(b) { const m = MATS.find(function (x) { return x[0] === b.material; }); return m && m[0] ? (m[0] === 'custom' ? b.density + ' g/cm³' : (lang === 'en' ? m[2] : m[1])) : ''; }
+  function v6Mass(b) { return b.density > 0 ? massTxt(getStats(b).volume / 1000 * b.density) : ''; }
 
   // ---------- geometry of one body in world space, with edges and normals for drawing
   async function v6Geo(b, o, sc) {
@@ -10627,7 +10655,7 @@ var wasm_bindgen = (function(exports) {
       }
       NN[9 * t + 3 * c] = nx; NN[9 * t + 3 * c + 1] = ny; NN[9 * t + 3 * c + 2] = nz;
     }
-    return { W: W, I: I, N: N, NN: NN, fixed: fixed, sil: sil, color: [b.color[0] / 255, b.color[1] / 255, b.color[2] / 255] };
+    return { b: b, W: W, I: I, N: N, NN: NN, fixed: fixed, sil: sil, lo: lo, hi: hi, color: [b.color[0] / 255, b.color[1] / 255, b.color[2] / 255] };
   }
 
   function v6GL() {
@@ -10680,11 +10708,21 @@ var wasm_bindgen = (function(exports) {
     g.bindVertexArray(null);
   }
   function v6Release(G, sc6) { const g = G.g; for (const p of sc6.preps) if (p.vao) { g.deleteVertexArray(p.vao); g.deleteBuffer(p.vb); g.deleteBuffer(p.nb); p.vao = null; } }
+  // projected extents (mm, relative to the scene centre) of some bodies along r / u
+  function v6Ranges(preps, c, r, u) {
+    let r0 = Infinity, r1 = -Infinity, u0 = Infinity, u1 = -Infinity;
+    for (const p of preps) for (let i = 0; i < p.W.length; i += 3) {
+      const x = p.W[i] - c[0], y = p.W[i + 1] - c[1], z = p.W[i + 2] - c[2], a = x * r[0] + y * r[1] + z * r[2], b = x * u[0] + y * u[1] + z * u[2];
+      if (a < r0) r0 = a; if (a > r1) r1 = a; if (b < u0) u0 = b; if (b > u1) u1 = b;
+    }
+    return [r0, r1, u0, u1];
+  }
 
-  // ---------- one view, drawn at `sc` px per mm times `ss`: returns {cv, ss, pad, w, h} (w, h = model extent in px at sc)
-  function v6View(G, sc6, name, sc, ss, lwPx, o) {
-    const g = G.g, U = G.U, V6 = V6_VIEWS[name], r = v6MV(V6.r), u = v6MV(V6.u), d = v6MV(V6.d);
-    const er = sc6.ext[V6.ax[0]], eu = sc6.ext[V6.ax[1]];
+  // ---------- one picture of some bodies along dirs {r,u,d} (model space), at `sc` px per mm times `ss`
+  // returns {cv, ss, pad, w, h, rc, uc}: w, h = picture size in px at sc, (rc, uc) = its centre in mm from the scene centre
+  function v6View(G, sc6, preps, D, sc, ss, lwPx, o) {
+    const g = G.g, U = G.U, r = D.r, u = D.u, d = D.d, rg = v6Ranges(preps, sc6.ctr, r, u);
+    const er = Math.max(rg[1] - rg[0], 1e-6), eu = Math.max(rg[3] - rg[2], 1e-6);
     let s2 = ss, vw, vh, pad;
     for (;;) {
       pad = Math.ceil(lwPx * s2) + 3; vw = Math.max(2, Math.ceil(er * sc * s2) + 2 * pad); vh = Math.max(2, Math.ceil(eu * sc * s2) + 2 * pad);
@@ -10694,9 +10732,9 @@ var wasm_bindgen = (function(exports) {
     if (vw > G.max || vh > G.max || vw * vh > V6_MAXVIEW) throw new Error(L('Hình chiếu quá lớn cho card đồ hoạ: giảm DPI, khổ giấy hoặc tỉ lệ', 'View too large for the graphics card: lower the DPI, paper or scale'));
     const S2 = sc * s2;
     let d0 = Infinity, d1 = -Infinity;
-    for (const p of sc6.preps) for (let i = 0; i < p.W.length; i += 3) { const z = (p.W[i] - sc6.ctr[0]) * d[0] + (p.W[i + 1] - sc6.ctr[1]) * d[1] + (p.W[i + 2] - sc6.ctr[2]) * d[2]; if (z < d0) d0 = z; if (z > d1) d1 = z; }
+    for (const p of preps) for (let i = 0; i < p.W.length; i += 3) { const z = (p.W[i] - sc6.ctr[0]) * d[0] + (p.W[i + 1] - sc6.ctr[1]) * d[1] + (p.W[i + 2] - sc6.ctr[2]) * d[2]; if (z < d0) d0 = z; if (z > d1) d1 = z; }
     const dz = Math.max(d1 - d0, 1e-6); d0 -= 0.01 * dz; d1 += 0.01 * dz;
-    const R0 = -er / 2 - pad / S2, U0 = -eu / 2 - pad / S2, box = [R0, U0, vw / S2, vh / S2];
+    const R0 = rg[0] - pad / S2, U0 = rg[2] - pad / S2, box = [R0, U0, vw / S2, vh / S2];
     const fb = g.createFramebuffer(), cb = g.createRenderbuffer(), db = g.createRenderbuffer();
     g.bindRenderbuffer(g.RENDERBUFFER, cb); g.renderbufferStorage(g.RENDERBUFFER, g.RGBA8, vw, vh);
     g.bindRenderbuffer(g.RENDERBUFFER, db); g.renderbufferStorage(g.RENDERBUFFER, g.DEPTH_COMPONENT24, vw, vh);
@@ -10707,7 +10745,7 @@ var wasm_bindgen = (function(exports) {
     const light = o.col === 'white' ? 2 : o.light === 'studio' ? 1 : 0;
     const draw = function (mode) {
       g.clearColor(1, 1, 1, mode === 0 ? 1 : 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT); g.uniform1i(U.uMode, mode); g.uniform1i(U.uLight, light);
-      for (const p of sc6.preps) {
+      for (const p of preps) {
         g.uniform3fv(U.uC, o.col === 'white' ? [1, 1, 1] : o.col === 'one' ? o.one : p.color);
         g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n);
       }
@@ -10739,7 +10777,7 @@ var wasm_bindgen = (function(exports) {
           if (i === n2) (state ? vis : hid).lineTo(x, y);
         }
       };
-      for (const p of sc6.preps) {
+      for (const p of preps) {
         for (const e of p.fixed) seg(proj(p.W, e[0]), proj(p.W, e[1]));
         const N = p.N;
         for (const e of p.sil) {
@@ -10752,14 +10790,14 @@ var wasm_bindgen = (function(exports) {
       if (o.hidden) { c2.save(); c2.strokeStyle = '#7d7d7d'; c2.lineWidth = Math.max(1, lw * 0.6); c2.setLineDash([4 * lw, 3 * lw]); c2.stroke(hid); c2.restore(); }
       c2.strokeStyle = '#111111'; c2.lineWidth = lw; c2.stroke(vis);
     }
-    return { cv: cv, ss: s2, pad: pad, w: er * sc, h: eu * sc };
+    return { cv: cv, ss: s2, pad: pad, w: er * sc, h: eu * sc, rc: (rg[0] + rg[1]) / 2, uc: (rg[2] + rg[3]) / 2 };
   }
 
-  // ---------- layout (full-size sheet px; positions are fractions of the sheet, view centres)
-  function v6Names(o) { return V6_ORDER.filter(function (n) { return o.views[n]; }); }
+  // ---------- layout (full-size sheet px; positions are fractions of the sheet, item centres)
+  function v6Names(o) { return o.exp ? [] : V6_ORDER.filter(function (n) { return o.views[n]; }); }
   const V6_COL = { left: 0, front: 1, top: 1, bottom: 1, right: 2, back: 3 }, V6_ROW = { top: 0, bottom: 2, front: 1, left: 1, right: 1, back: 1 };
-  function v6Metrics(o) { const ppmm = o.dpi / 25.4; return { ppmm: ppmm, font: Math.max(10, 2.6 * ppmm), lw: Math.max(1, o.lw * ppmm) }; }
-  // default layout; also the fitting scale when sc is not given
+  function v6Metrics(o) { const ppmm = o.dpi / 25.4; return { ppmm: ppmm, font: Math.max(8, o.fs * ppmm), lw: Math.max(1, o.lw * ppmm) }; }
+  // default 6-view layout; also the fitting scale when sc is not given
   function v6Auto(o, ext, sc) {
     const names = v6Names(o), M = v6Metrics(o), W = o.W, H = o.H;
     const colW = [ext[1], ext[0], ext[1], ext[0]], rowH = [ext[1], ext[2], ext[1]];
@@ -10769,7 +10807,7 @@ var wasm_bindgen = (function(exports) {
     const rgap = rows.slice(1).map(function (r) { return gap + (o.lbl ? 1.4 * M.font : 0) + (o.dim && r === 2 && rows.indexOf(1) >= 0 ? 3.2 * M.font : 0); });
     const gapsH = rgap.reduce(function (s, v) { return s + v; }, 0), top = o.lbl ? 1.4 * M.font : 0;
     const sumW = cols.reduce(function (s, c) { return s + colW[c]; }, 0) || 1, sumH = rows.reduce(function (s, r) { return s + rowH[r]; }, 0) || 1;
-    if (!sc) sc = Math.max(1e-6, Math.min((W - 2 * margin - gap * (cols.length - 1)) / sumW, (H - 2 * margin - gapsH - top - (o.scn ? 2 * M.font : 0)) / sumH));
+    if (!sc) sc = Math.max(1e-6, Math.min((W - 2 * margin - gap * (cols.length - 1)) / sumW, (H - 2 * margin - gapsH - top - (o.scn ? 2 * M.font : 0)) / sumH)) * o.zoom;
     const usedW = sumW * sc + gap * (cols.length - 1), usedH = sumH * sc + gapsH + top;
     const cx = {}, cy = {};
     let x = (W - usedW) / 2; for (const c of cols) { cx[c] = x + colW[c] * sc / 2; x += colW[c] * sc + gap; }
@@ -10784,76 +10822,139 @@ var wasm_bindgen = (function(exports) {
     if (n === 'left' || n === 'right' || n === 'back') return [pos[n], F[1]];
     return [F[0], pos[n]];
   }
-  function v6Scale(o, ext) { return o.scale > 0 ? o.scale * o.dpi / 25.4 : v6Auto(o, ext).sc; }
   function v6Ratio(sc, o) {
     const r = sc / (o.dpi / 25.4), t = function (v) { return (Math.round(v * 100) / 100).toString(); };
     return r >= 1 ? t(r) + ':1' : '1:' + t(1 / r);
   }
+  // exploded: each part's centre in the iso picture (mm from the assembly centre) after pulling it out from the centre
+  function v6ExpPlan(o, sc6) {
+    const D = v6Dirs(v6IsoSpec(o.az, o.el)), C = sc6.ctr, items = [];
+    for (const p of sc6.preps) {
+      const rg = v6Ranges([p], C, D.r, D.u), mid = V.mul(V.add(p.lo, p.hi), 0.5), sh = V.mul(V.sub(mid, C), o.spread);
+      items.push({ p: p, id: p.b.id, w: rg[1] - rg[0], h: rg[3] - rg[2], cx: (rg[0] + rg[1]) / 2 + V.dot(sh, D.r), cy: (rg[2] + rg[3]) / 2 + V.dot(sh, D.u) });
+    }
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const it of items) { x0 = Math.min(x0, it.cx - it.w / 2); x1 = Math.max(x1, it.cx + it.w / 2); y0 = Math.min(y0, it.cy - it.h / 2); y1 = Math.max(y1, it.cy + it.h / 2); }
+    return { D: D, items: items, bx: (x0 + x1) / 2, by: (y0 + y1) / 2, sw: Math.max(x1 - x0, 1e-6), sh: Math.max(y1 - y0, 1e-6) };
+  }
+  function v6ScaleOf(o, sc6, plan) {
+    if (o.scale > 0) return o.scale * o.dpi / 25.4;
+    if (!o.exp) return v6Auto(o, sc6.ext).sc;
+    const M = v6Metrics(o), m = Math.max(0.05 * Math.min(o.W, o.H), 2 * M.font), lab = (o.pn ? 1.3 : 0) + (o.pm ? 1.3 : 0);
+    return Math.max(1e-6, Math.min((o.W - 2 * m) / plan.sw, (o.H - 2 * m - (lab + 1) * M.font * 1.4) / plan.sh)) * o.zoom;
+  }
 
-  // ---------- the sheet: views + dimensions + notes, drawn at k x full size
-  function v6Compose(c2, o, R, pos, k) {
-    const W = o.W * k, H = o.H * k, M = v6Metrics(o), font = M.font * k, lw = M.lw * k, frames = {};
+  // ---------- rendering
+  async function v6Render(o, k, ss) {
+    if (!o.exp && !v6Names(o).length && !o.iso) throw new Error(L('Chưa chọn view nào', 'No view chosen'));
+    let sc6 = await v6Scene(o, 0);
+    let plan = o.exp ? v6ExpPlan(o, sc6) : null;
+    const sc = v6ScaleOf(o, sc6, plan);
+    if (o.fine && k >= 1) { sc6 = await v6Scene(o, sc); if (o.exp) plan = v6ExpPlan(o, sc6); }
+    const M = v6Metrics(o), G = v6GL(); v6Upload(G, sc6);
+    const out = { sc6: sc6, sc: sc, views: {}, parts: [], plan: plan };
+    try {
+      if (o.exp) {
+        for (const it of plan.items) out.parts.push(Object.assign(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, o), { id: it.id, b: it.p.b, cx: it.cx, cy: it.cy }));
+      } else {
+        out.pos = V6S.pos || v6Auto(o, sc6.ext, sc).pos;
+        for (const n of v6Names(o)) out.views[n] = v6View(G, sc6, sc6.preps, v6Dirs(V6_VIEWS[n]), sc * k, ss, M.lw * k, o);
+        if (o.iso) out.iso = v6View(G, sc6, sc6.preps, v6Dirs(v6IsoSpec(o.az, o.el)), sc * k, ss, M.lw * k, o);
+      }
+    } finally { v6Release(G, sc6); }
+    return out;
+  }
+
+  // ---------- the sheet: pictures, dimensions, names, notes, drawn at k x full size; returns hit boxes
+  function v6Font(px, bold) { return (bold ? 'bold ' : '') + Math.round(px) + 'px "Segoe UI", Arial, sans-serif'; }
+  function v6Compose(c2, o, R, k) {
+    const W = o.W * k, H = o.H * k, M = v6Metrics(o), font = M.font * k, lw = M.lw * k, hits = [], frames = {};
     c2.imageSmoothingEnabled = true; c2.imageSmoothingQuality = 'high';
-    for (const n of Object.keys(R.views)) {
-      const v = R.views[n], c = v6Centre(pos, n), w = v.w, h = v.h, x = c[0] * W - w / 2, y = c[1] * H - h / 2, pad = v.pad / v.ss;
-      frames[n] = { x: x, y: y, w: w, h: h };
+    const put = function (v, cx, cy) {
+      const x = cx - v.w / 2, y = cy - v.h / 2, pad = v.pad / v.ss;
       c2.drawImage(v.cv, x - pad, y - pad, v.cv.width / v.ss, v.cv.height / v.ss);
-    }
+      return { x: x, y: y, w: v.w, h: v.h };
+    };
     c2.fillStyle = '#111'; c2.strokeStyle = '#111'; c2.setLineDash([]);
-    const fnt = Math.round(font) + 'px "Segoe UI", Arial, sans-serif';
-    const arrow = function (x0, y0, x1, y1) {
-      const a = Math.atan2(y1 - y0, x1 - x0), L2 = font * 1.05, wv = L2 * 0.3;
-      c2.beginPath(); c2.moveTo(x1, y1); c2.lineTo(x1 - L2 * Math.cos(a) + wv * Math.sin(a), y1 - L2 * Math.sin(a) - wv * Math.cos(a));
-      c2.lineTo(x1 - L2 * Math.cos(a) - wv * Math.sin(a), y1 - L2 * Math.sin(a) + wv * Math.cos(a)); c2.closePath(); c2.fill();
-    };
-    const dimH = function (x0, x1, yb, yd, v) {
-      c2.lineWidth = Math.max(1, lw * 0.55); c2.beginPath();
-      c2.moveTo(x0, yb + 0.4 * font); c2.lineTo(x0, yd + 0.5 * font); c2.moveTo(x1, yb + 0.4 * font); c2.lineTo(x1, yd + 0.5 * font);
-      c2.moveTo(x0, yd); c2.lineTo(x1, yd); c2.stroke(); arrow(x1, yd, x0, yd); arrow(x0, yd, x1, yd);
-      c2.font = fnt; c2.textAlign = 'center'; c2.textBaseline = 'bottom'; c2.fillText(v6Txt(v, o.unit), (x0 + x1) / 2, yd - 0.25 * font);
-    };
-    const dimV = function (y0, y1, xb, xd, v) {
-      c2.lineWidth = Math.max(1, lw * 0.55); c2.beginPath();
-      c2.moveTo(xb - 0.4 * font, y0); c2.lineTo(xd - 0.5 * font, y0); c2.moveTo(xb - 0.4 * font, y1); c2.lineTo(xd - 0.5 * font, y1);
-      c2.moveTo(xd, y0); c2.lineTo(xd, y1); c2.stroke(); arrow(xd, y1, xd, y0); arrow(xd, y0, xd, y1);
-      c2.save(); c2.translate(xd - 0.25 * font, (y0 + y1) / 2); c2.rotate(-Math.PI / 2);
-      c2.font = fnt; c2.textAlign = 'center'; c2.textBaseline = 'bottom'; c2.fillText(v6Txt(v, o.unit), 0, 0); c2.restore();
-    };
-    const ext = R.sc6.ext;
-    if (o.dim) {
-      const fx = frames.front || frames.back || frames.top || frames.bottom;
-      if (fx) dimH(fx.x, fx.x + fx.w, fx.y + fx.h, fx.y + fx.h + 2.4 * font, ext[0]);
-      const fy = frames.right || frames.left;
-      if (fy) dimH(fy.x, fy.x + fy.w, fy.y + fy.h, fy.y + fy.h + 2.4 * font, ext[1]);
-      else if (frames.top) { const t = frames.top; dimV(t.y, t.y + t.h, t.x, t.x - 1.6 * font, ext[1]); }
-      const fz = frames.right || frames.front || frames.left || frames.back;
-      if (fz) dimV(fz.y, fz.y + fz.h, fz.x, fz.x - 1.6 * font, ext[2]);
-    }
-    if (o.lbl) {
-      c2.font = 'bold ' + fnt; c2.textAlign = 'center'; c2.textBaseline = 'bottom';
-      for (const n of Object.keys(frames)) { const f = frames[n]; c2.fillText(L(V6_VIEWS[n].vi, V6_VIEWS[n].en), f.x + f.w / 2, f.y - 0.6 * font); }
+    const fnt = v6Font(font, o.fb);
+    if (!o.exp) {
+      const pos = V6S.pos || R.pos;
+      for (const n of Object.keys(R.views)) { const c = v6Centre(pos, n); frames[n] = put(R.views[n], c[0] * W, c[1] * H); hits.push({ kind: 'view', n: n, r: frames[n] }); }
+      if (R.iso) {
+        const ip = V6S.iso || v6IsoDefault(o, R, pos);
+        const f = put(R.iso, ip[0] * W, ip[1] * H); hits.push({ kind: 'iso', r: f }); frames.iso = f;
+      }
+      const arrow = function (x0, y0, x1, y1) {
+        const a = Math.atan2(y1 - y0, x1 - x0), L2 = font * 1.05, wv = L2 * 0.3;
+        c2.beginPath(); c2.moveTo(x1, y1); c2.lineTo(x1 - L2 * Math.cos(a) + wv * Math.sin(a), y1 - L2 * Math.sin(a) - wv * Math.cos(a));
+        c2.lineTo(x1 - L2 * Math.cos(a) - wv * Math.sin(a), y1 - L2 * Math.sin(a) + wv * Math.cos(a)); c2.closePath(); c2.fill();
+      };
+      const dimH = function (x0, x1, yb, yd, v) {
+        c2.lineWidth = Math.max(1, lw * 0.55); c2.beginPath();
+        c2.moveTo(x0, yb + 0.4 * font); c2.lineTo(x0, yd + 0.5 * font); c2.moveTo(x1, yb + 0.4 * font); c2.lineTo(x1, yd + 0.5 * font);
+        c2.moveTo(x0, yd); c2.lineTo(x1, yd); c2.stroke(); arrow(x1, yd, x0, yd); arrow(x0, yd, x1, yd);
+        c2.font = fnt; c2.textAlign = 'center'; c2.textBaseline = 'bottom'; c2.fillText(v6Txt(v, o.unit), (x0 + x1) / 2, yd - 0.25 * font);
+      };
+      const dimV = function (y0, y1, xb, xd, v) {
+        c2.lineWidth = Math.max(1, lw * 0.55); c2.beginPath();
+        c2.moveTo(xb - 0.4 * font, y0); c2.lineTo(xd - 0.5 * font, y0); c2.moveTo(xb - 0.4 * font, y1); c2.lineTo(xd - 0.5 * font, y1);
+        c2.moveTo(xd, y0); c2.lineTo(xd, y1); c2.stroke(); arrow(xd, y1, xd, y0); arrow(xd, y0, xd, y1);
+        c2.save(); c2.translate(xd - 0.25 * font, (y0 + y1) / 2); c2.rotate(-Math.PI / 2);
+        c2.font = fnt; c2.textAlign = 'center'; c2.textBaseline = 'bottom'; c2.fillText(v6Txt(v, o.unit), 0, 0); c2.restore();
+      };
+      const ext = R.sc6.ext;
+      if (o.dim) {
+        const fx = frames.front || frames.back || frames.top || frames.bottom;
+        if (fx) dimH(fx.x, fx.x + fx.w, fx.y + fx.h, fx.y + fx.h + 2.4 * font, ext[0]);
+        const fy = frames.right || frames.left;
+        if (fy) dimH(fy.x, fy.x + fy.w, fy.y + fy.h, fy.y + fy.h + 2.4 * font, ext[1]);
+        else if (frames.top) { const t = frames.top; dimV(t.y, t.y + t.h, t.x, t.x - 1.6 * font, ext[1]); }
+        const fz = frames.right || frames.front || frames.left || frames.back;
+        if (fz) dimV(fz.y, fz.y + fz.h, fz.x, fz.x - 1.6 * font, ext[2]);
+      }
+      if (o.lbl) {
+        c2.font = fnt; c2.textAlign = 'center'; c2.textBaseline = 'bottom';
+        for (const n of Object.keys(frames)) { const f = frames[n]; c2.fillText(n === 'iso' ? 'ISO' : L(V6_VIEWS[n].vi, V6_VIEWS[n].en), f.x + f.w / 2, f.y - 0.6 * font); }
+      }
+    } else {
+      const P = R.plan, sc = R.sc * k;
+      for (const pt of R.parts) {
+        const off = V6S.off[pt.id] || [0, 0];
+        const cx = W / 2 + (pt.cx - P.bx) * sc + off[0] * W, cy = H / 2 - (pt.cy - P.by) * sc + off[1] * H;
+        const f = put(pt, cx, cy); hits.push({ kind: 'part', id: pt.id, r: f });
+        const lines = [];
+        if (o.pn) lines.push([pt.b.name, true]);
+        if (o.pm) { const m = v6Mat(pt.b), g = v6Mass(pt.b); if (m || g) lines.push([[m, g].filter(Boolean).join('  ·  '), false]); }
+        let y = f.y + f.h + 0.5 * font, wmax = 0;
+        c2.textAlign = 'center'; c2.textBaseline = 'top';
+        for (const ln of lines) {
+          c2.font = v6Font(ln[1] ? font : font * 0.88, ln[1] ? true : o.fb); c2.fillStyle = ln[1] ? '#111' : '#444';
+          c2.fillText(ln[0], cx, y); wmax = Math.max(wmax, c2.measureText(ln[0]).width); y += (ln[1] ? font : font * 0.88) * 1.3;
+        }
+        c2.fillStyle = '#111';
+        if (lines.length) hits.push({ kind: 'label', id: pt.id, r: { x: cx - wmax / 2 - 3, y: f.y + f.h + 0.4 * font, w: wmax + 6, h: y - (f.y + f.h + 0.4 * font) } });
+      }
     }
     if (o.scn) {
       c2.font = fnt; c2.textAlign = 'right'; c2.textBaseline = 'bottom';
       c2.fillText(L('Tỉ lệ ', 'Scale ') + v6Ratio(R.sc, o) + '    ' + L('Đơn vị: mm (in)', 'Units: mm (in)'), W - 1.5 * font, H - 1.2 * font);
     }
-    return frames;
+    // notes
+    for (const n of V6S.notes[V6S.mode]) {
+      const px = n.size * M.ppmm * k, ls = n.text.split('\n');
+      c2.font = v6Font(px, n.bold); c2.textAlign = 'left'; c2.textBaseline = 'top'; c2.fillStyle = '#111';
+      let wm = 0; ls.forEach(function (s, i) { c2.fillText(s, n.x * W, n.y * H + i * px * 1.25); wm = Math.max(wm, c2.measureText(s).width); });
+      hits.push({ kind: 'note', id: n.id, r: { x: n.x * W - 3, y: n.y * H - 3, w: wm + 6, h: ls.length * px * 1.25 + 6 } });
+    }
+    return hits;
+  }
+  // default place of the iso picture: the free corner right of the Top view (or top right)
+  function v6IsoDefault(o, R, pos) {
+    const v = R.iso, W = o.W * (R.k || 1), H = o.H * (R.k || 1), x = Math.min(0.97 - v.w / 2 / W, Math.max(pos.right || 0.75, 0.62)), y = Math.max(0.03 + v.h / 2 / H, (pos.top !== undefined && o.views.top ? pos.top : 0.2));
+    return [x, y];
   }
 
-  // ---------- rendering + files
-  async function v6Render(o, k, ss) {
-    const names = v6Names(o);
-    if (!names.length) throw new Error(L('Chưa chọn view nào', 'No view chosen'));
-    let sc6 = await v6Scene(o, 0);
-    const sc = v6Scale(o, sc6.ext);
-    if (o.fine && k >= 1) sc6 = await v6Scene(o, sc);
-    const pos = V6S.pos || v6Auto(o, sc6.ext, sc).pos, M = v6Metrics(o);
-    const G = v6GL(); v6Upload(G, sc6);
-    const views = {};
-    try { for (const n of names) views[n] = v6View(G, sc6, n, sc * k, ss, M.lw * k, o); }
-    finally { v6Release(G, sc6); }
-    return { sc6: sc6, sc: sc, pos: pos, views: views };
-  }
+  // ---------- files
   const V6_CRC = (function () { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
   function v6Crc(u8) { let c = 0xffffffff; for (let i = 0; i < u8.length; i++) c = V6_CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
   async function v6Encode(cv, o) {
@@ -10872,27 +10973,57 @@ var wasm_bindgen = (function(exports) {
     const cv = document.createElement('canvas'); cv.width = Math.round(o.W * k); cv.height = Math.round(o.H * k);
     const c2 = cv.getContext('2d');
     if (o.bg === 'w') { c2.fillStyle = '#fff'; c2.fillRect(0, 0, cv.width, cv.height); }
-    v6Compose(c2, o, R, V6S.pos || R.pos, k);
+    R.k = k; v6Compose(c2, o, R, k);
     return cv;
   }
   async function v6Full(fmt) {
     const o = v6Sync(); if (fmt) { o.fmt = fmt; if (fmt === 'png') o.bg = $('v6Bg').value; }
-    setBusy(true, L('Đang dựng 6 view…', 'Drawing 6 views…'));
+    setBusy(true, L('Đang dựng bản vẽ…', 'Drawing the sheet…'));
     await new Promise(function (r) { setTimeout(r, 30); });
     try { const R = await v6Render(o, 1, o.ss); return { blob: await v6Encode(v6Sheet(o, R, 1), o), o: o }; }
     finally { setBusy(false); }
   }
 
-  // ---------- panel info, sheet preview, dragging
+  // ---------- panel
   function v6Size(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
   function v6Sync() {
-    const o = v6Opt(), px = $('v6Paper').value === 'px';
+    const o = v6Opt(), px = $('v6Paper').value === 'px', exp = o.exp;
     document.querySelectorAll('.v6px').forEach(function (r) { r.style.display = px ? '' : 'none'; });
     document.querySelectorAll('.v6jpg').forEach(function (r) { r.style.display = o.fmt === 'jpg' ? '' : 'none'; });
+    document.querySelectorAll('#pop_v6 .v6m6').forEach(function (r) { r.style.display = exp ? 'none' : ''; });
+    document.querySelectorAll('#pop_v6 .v6mE').forEach(function (r) { r.style.display = exp ? '' : 'none'; });
+    document.querySelectorAll('#pop_v6 .v6isorow').forEach(function (r) { r.style.display = exp || o.iso ? '' : 'none'; });
+    $('v6Title').textContent = exp ? 'Exploded view' : '6 view';
+    $('v6Dim').parentNode.style.display = exp ? 'none' : ''; $('v6Unit').style.display = exp ? 'none' : ''; $('v6Lbl').parentNode.style.display = exp ? 'none' : '';
     $('v6Ori').style.display = px ? 'none' : ''; $('v6Bg').disabled = o.fmt === 'jpg';
     $('v6One').style.display = o.col === 'one' ? '' : 'none';
+    $('v6Zm').disabled = $('v6ZmR').disabled = o.scale > 0;
     $('v6LwIn').textContent = '(' + (o.lw / 25.4).toFixed(3) + ' in)';
+    v6PartRow();
     return o;
+  }
+  function v6PartRow() {
+    const b = V6S.mode === 'exp' && S.bodies.find(function (x) { return x.id === V6S.psel; });
+    document.querySelectorAll('#pop_v6 .v6part').forEach(function (r) { r.style.display = b ? '' : 'none'; });
+    if (!b) return;
+    if (document.activeElement !== $('v6PName')) $('v6PName').value = b.name;
+    $('v6PMat').value = MATS.some(function (m) { return m[0] === b.material; }) ? b.material : '';
+    $('v6PMass').textContent = v6Mass(b) || L('chưa có vật liệu', 'no material');
+  }
+  function v6MatOpts(sel) {
+    sel.innerHTML = '';
+    for (const m of MATS) { const op = document.createElement('option'); op.value = m[0]; op.textContent = (lang === 'en' ? m[2] : m[1]) + (m[3] && m[0] !== 'custom' ? ' (' + m[3] + ')' : ''); sel.appendChild(op); }
+  }
+  // body changes made here go to the body itself (and so to the body list and Properties)
+  function v6SetName(b, n) {
+    n = (n || '').trim();
+    if (!n || n === b.name) return;
+    pushUndo(); b.name = ''; b.name = uniqueName(safe(n)); refresh();
+  }
+  function v6SetMat(b, key) {
+    const m = MATS.find(function (x) { return x[0] === key; }); if (!m || key === b.material) return;
+    pushUndo(); b.material = m[0]; if (m[0] !== 'custom') b.density = m[3]; else if (!b.density) b.density = 1;
+    refresh();
   }
   function v6Info(o, P, est) {
     const wm = o.W / o.dpi * 25.4, hm = o.H / o.dpi * 25.4, mp = (o.W * o.H / 1e6).toFixed(1);
@@ -10906,6 +11037,8 @@ var wasm_bindgen = (function(exports) {
     s += '<b>' + L('Dung lượng dự kiến', 'Expected size') + ':</b> <span id="v6Est">' + (est ? '≈ ' + v6Size(est) + ' (' + o.fmt.toUpperCase() + ')' : '…') + '</span>';
     $('v6Info').innerHTML = s;
   }
+
+  // ---------- preview
   let v6Timer = 0, v6Busy = false, v6Again = false;
   function v6Preview() { clearTimeout(v6Timer); v6Timer = setTimeout(v6PreviewNow, 180); }
   async function v6PreviewNow() {
@@ -10926,8 +11059,9 @@ var wasm_bindgen = (function(exports) {
       v6Info(o, V6S.prev, 0);
       // expected size: the preview sheet encoded the same way, scaled up by area (larger pictures compress better)
       const b = await new Promise(function (r) { v6Sheet(o, V6S.prev, k).toBlob(r, o.fmt === 'jpg' ? 'image/jpeg' : 'image/png', o.q); });
+      V6S.prev.k = k;
       const f = (o.W * o.H) / (pc.width * pc.height), est = b.size * Math.pow(f, 0.76) + 2048;
-      V6S.est = est; v6Info(o, V6S.prev, est);
+      v6Info(o, V6S.prev, est);
     } catch (e) {
       const g = pc.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, pc.width, pc.height); g.fillStyle = '#a33'; g.font = '13px sans-serif'; g.fillText(e.message, 10, 22);
       V6S.prev = null; v6Info(o, null, 0);
@@ -10938,47 +11072,132 @@ var wasm_bindgen = (function(exports) {
     const c2 = pc.getContext('2d'), o = q.o;
     if (o.bg === 'w') { c2.fillStyle = '#fff'; c2.fillRect(0, 0, pc.width, pc.height); }
     else { const s = Math.max(6, Math.round(pc.width / 80)); for (let y = 0; y < pc.height; y += s) for (let x = 0; x < pc.width; x += s) { c2.fillStyle = ((x + y) / s) % 2 ? '#e9e9e9' : '#ffffff'; c2.fillRect(x, y, s, s); } }
-    q.frames = v6Compose(c2, o, q, V6S.pos || q.pos, q.k);
-    const n = hover || (V6S.drag && V6S.drag.n);
-    if (n && q.frames[n]) {
-      const f = q.frames[n], dpr = window.devicePixelRatio || 1;
-      c2.save(); c2.strokeStyle = '#2f8cff'; c2.lineWidth = 1.5 * dpr; c2.setLineDash([5 * dpr, 4 * dpr]); c2.strokeRect(f.x - 4 * dpr, f.y - 4 * dpr, f.w + 8 * dpr, f.h + 8 * dpr); c2.restore();
+    q.k = q.k || pc.width / o.W;
+    q.hits = v6Compose(c2, o, q, q.k);
+    const dpr = window.devicePixelRatio || 1;
+    const box = function (h, col) { c2.save(); c2.strokeStyle = col; c2.lineWidth = 1.5 * dpr; c2.setLineDash([5 * dpr, 4 * dpr]); c2.strokeRect(h.r.x - 4 * dpr, h.r.y - 4 * dpr, h.r.w + 8 * dpr, h.r.h + 8 * dpr); c2.restore(); };
+    for (const h of q.hits) {
+      if ((h.kind === 'note' && h.id === V6S.nsel) || ((h.kind === 'part' || h.kind === 'label') && h.id === V6S.psel)) box(h, '#f0a030');
+      else if (hover && h === hover) box(h, '#2f8cff');
     }
   }
   function v6Hit(e) {
-    const q = V6S.prev; if (!q || !q.frames) return null;
+    const q = V6S.prev; if (!q || !q.hits) return null;
     const pc = $('v6Prev'), r = pc.getBoundingClientRect();
     if (!r.width) return null;
-    const x = (e.clientX - r.left) * pc.width / r.width, y = (e.clientY - r.top) * pc.height / r.height;
+    const x = (e.clientX - r.left) * pc.width / r.width, y = (e.clientY - r.top) * pc.height / r.height, m = 6;
     let best = null;
-    for (const n of Object.keys(q.frames)) { const f = q.frames[n], m = 6; if (x >= f.x - m && x <= f.x + f.w + m && y >= f.y - m && y <= f.y + f.h + m) best = n; }
-    return { n: best, x: x, y: y };
+    for (const h of q.hits) if (x >= h.r.x - m && x <= h.r.x + h.r.w + m && y >= h.r.y - m && y <= h.r.y + h.r.h + m) {
+      // notes and labels over pictures
+      const rank = { note: 3, label: 2, part: 1, iso: 1, view: 0 };
+      if (!best || rank[h.kind] >= rank[best.kind]) best = h;
+    }
+    return { h: best, x: x, y: y };
   }
+  function v6Note(id) { return V6S.notes[V6S.mode].find(function (n) { return n.id === id; }); }
+  // inline editor over the sheet: a note's text, or a part's name + material
+  function v6Edit(h) {
+    const ed = $('v6Ed'), t = $('v6EdT'), ms = $('v6EdM'), pc = $('v6Prev'), r = pc.getBoundingClientRect(), br = document.querySelector('#v6Sheet .v6body').getBoundingClientRect(), s = r.width / pc.width;
+    let b = null, n = null;
+    if (h.kind === 'note') { n = v6Note(h.id); t.value = n.text; t.rows = Math.max(2, n.text.split('\n').length); ms.style.display = 'none'; }
+    else { b = S.bodies.find(function (x) { return x.id === h.id; }); if (!b) return; t.value = b.name; t.rows = 1; v6MatOpts(ms); ms.value = MATS.some(function (m) { return m[0] === b.material; }) ? b.material : ''; ms.style.display = ''; }
+    ed.style.display = 'block';
+    ed.style.left = Math.max(0, Math.min(br.width - 220, r.left - br.left + h.r.x * s)) + 'px';
+    ed.style.top = Math.max(0, Math.min(br.height - 110, r.top - br.top + (h.r.y + h.r.h) * s + 4)) + 'px';
+    t.focus(); t.select();
+    V6S.edit = { n: n, b: b };
+  }
+  function v6EditDone(ok) {
+    const E = V6S.edit; $('v6Ed').style.display = 'none'; V6S.edit = null;
+    if (!E || !ok) return;
+    if (E.n) { const v = $('v6EdT').value; if (v.trim()) E.n.text = v; else { const L2 = V6S.notes[V6S.mode]; L2.splice(L2.indexOf(E.n), 1); V6S.nsel = null; } v6Paint(); }
+    else if (E.b) { v6SetName(E.b, $('v6EdT').value.replace(/\n/g, ' ')); v6SetMat(E.b, $('v6EdM').value); v6PartRow(); v6Paint(); v6Preview(); }
+  }
+  $('v6EdOk').addEventListener('click', function () { v6EditDone(true); });
+  $('v6EdNo').addEventListener('click', function () { v6EditDone(false); });
+  $('v6EdT').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && (!V6S.edit || !V6S.edit.n || !e.shiftKey)) { e.preventDefault(); v6EditDone(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); v6EditDone(false); }
+    e.stopPropagation();
+  });
   (function () {
     const pc = $('v6Prev');
     pc.addEventListener('mousedown', function (e) {
-      const h = v6Hit(e); if (!h || !h.n || e.button !== 0) return;
-      if (!V6S.pos) V6S.pos = JSON.parse(JSON.stringify(V6S.prev.pos));
-      V6S.drag = { n: h.n, x: h.x, y: h.y, pos: JSON.parse(JSON.stringify(V6S.pos)) }; e.preventDefault();
+      if (e.button !== 0) return;
+      const t = v6Hit(e); if (!t) return;
+      const h = t.h;
+      if (V6S.edit) v6EditDone(true);
+      V6S.nsel = h && h.kind === 'note' ? h.id : null;
+      if (h && (h.kind === 'part' || h.kind === 'label')) V6S.psel = h.id; else if (h) V6S.psel = null;
+      if (h && h.kind === 'note') { const n = v6Note(h.id); $('v6Ns').value = $('v6NsR').value = n.size; $('v6Nb').checked = n.bold; }
+      v6PartRow(); v6Paint(h);
+      if (!h) return;
+      if (h.kind === 'view' && !V6S.pos) V6S.pos = JSON.parse(JSON.stringify(V6S.prev.pos));
+      if (h.kind === 'iso' && !V6S.iso) V6S.iso = v6IsoDefault(V6S.prev.o, V6S.prev, V6S.pos || V6S.prev.pos);
+      V6S.drag = { h: h, x: t.x, y: t.y, pos: JSON.parse(JSON.stringify(V6S.pos)), iso: V6S.iso && V6S.iso.slice(), off: (V6S.off[h.id] || [0, 0]).slice(), note: h.kind === 'note' ? [v6Note(h.id).x, v6Note(h.id).y] : null };
+      e.preventDefault();
     });
+    pc.addEventListener('dblclick', function (e) { const t = v6Hit(e); if (t && t.h && (t.h.kind === 'note' || t.h.kind === 'label' || t.h.kind === 'part')) v6Edit(t.h); });
     window.addEventListener('mousemove', function (e) {
       if (!V6S.prev) return;
-      const h = v6Hit(e); if (!h) return;
+      const t = v6Hit(e); if (!t) return;
       if (!V6S.drag) {
         if (e.target !== pc) return;
-        pc.style.cursor = !h.n ? 'default' : h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize';
-        if (h.n !== V6S.hov) { V6S.hov = h.n; v6Paint(h.n); }
+        const h = t.h;
+        pc.style.cursor = !h ? 'default' : h.kind === 'view' ? (h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize') : 'move';
+        if (h !== V6S.hov) { V6S.hov = h; v6Paint(h); }
         return;
       }
-      const D = V6S.drag, dx = (h.x - D.x) / pc.width, dy = (h.y - D.y) / pc.height, P = JSON.parse(JSON.stringify(D.pos));
-      if (D.n === 'front') { P.front = [P.front[0] + dx, P.front[1] + dy]; ['left', 'right', 'back'].forEach(function (k) { P[k] += dx; }); ['top', 'bottom'].forEach(function (k) { P[k] += dy; }); }
-      else if (D.n === 'top' || D.n === 'bottom') P[D.n] += dy;
-      else P[D.n] += dx;
-      V6S.pos = P; v6Paint();
+      const D = V6S.drag, h = D.h, dx = (t.x - D.x) / pc.width, dy = (t.y - D.y) / pc.height;
+      if (Math.abs(t.x - D.x) + Math.abs(t.y - D.y) > 2) D.moved = true;
+      if (h.kind === 'view') {
+        const P = JSON.parse(JSON.stringify(D.pos));
+        if (h.n === 'front') { P.front = [P.front[0] + dx, P.front[1] + dy]; ['left', 'right', 'back'].forEach(function (k) { P[k] += dx; }); ['top', 'bottom'].forEach(function (k) { P[k] += dy; }); }
+        else if (h.n === 'top' || h.n === 'bottom') P[h.n] += dy;
+        else P[h.n] += dx;
+        V6S.pos = P;
+      } else if (h.kind === 'iso') V6S.iso = [D.iso[0] + dx, D.iso[1] + dy];
+      else if (h.kind === 'part' || h.kind === 'label') V6S.off[h.id] = [D.off[0] + dx, D.off[1] + dy];
+      else if (h.kind === 'note') { const n = v6Note(h.id); n.x = D.note[0] + dx; n.y = D.note[1] + dy; }
+      v6Paint(h);
     });
     window.addEventListener('mouseup', function () { if (V6S.drag) { V6S.drag = null; v6Paint(V6S.hov); } });
     pc.addEventListener('mouseleave', function () { if (!V6S.drag && V6S.hov) { V6S.hov = null; v6Paint(); } });
+    window.addEventListener('keydown', function (e) {
+      if (!$('pop_v6').classList.contains('on') || !V6S.nsel || V6S.edit) return;
+      if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (e.key === 'Delete' || e.key === 'Backspace') { v6DelNote(); e.preventDefault(); e.stopPropagation(); }
+    }, true);
   })();
+  function v6DelNote() { const L2 = V6S.notes[V6S.mode], n = v6Note(V6S.nsel); if (n) L2.splice(L2.indexOf(n), 1); V6S.nsel = null; v6Paint(); }
+  $('v6AddT').addEventListener('click', function () {
+    if (!V6S.prev) return;
+    const n = { id: V6S.seq++, text: L('Ghi chú', 'Note'), x: 0.06, y: 0.06, size: v6Num('v6Ns', 4), bold: $('v6Nb').checked };
+    V6S.notes[V6S.mode].push(n); V6S.nsel = n.id; v6Paint();
+    const h = (V6S.prev.hits || []).find(function (x) { return x.kind === 'note' && x.id === n.id; });
+    if (h) v6Edit(h);
+  });
+  $('v6DelT').addEventListener('click', v6DelNote);
+  ['v6Ns', 'v6NsR', 'v6Nb'].forEach(function (id) {
+    $(id).addEventListener('input', function () { const n = v6Note(V6S.nsel); if (!n) return; n.size = v6Num('v6Ns', n.size); n.bold = $('v6Nb').checked; v6Paint(); });
+  });
+  // part row in the panel: rename / material of the selected part, straight onto the body
+  v6MatOpts($('v6PMat'));
+  $('v6PName').addEventListener('change', function () { const b = S.bodies.find(function (x) { return x.id === V6S.psel; }); if (b) { v6SetName(b, this.value); v6PartRow(); v6Paint(); } });
+  $('v6PName').addEventListener('keydown', function (e) { if (e.key === 'Enter') this.blur(); e.stopPropagation(); });
+  $('v6PMat').addEventListener('change', function () { const b = S.bodies.find(function (x) { return x.id === V6S.psel; }); if (b) { v6SetMat(b, this.value); v6PartRow(); v6Paint(); } });
+  // the body list / Properties changed a name, material or what is shown: follow
+  let v6Sig = '';
+  setInterval(function () {
+    if (!$('pop_v6').classList.contains('on') || !V6S.prev) return;
+    const sig = S.bodies.map(function (b) { return b.id + ':' + b.name + ':' + b.material + ':' + b.density + ':' + (b.visible ? 1 : 0) + (S.sel.has(b) ? 1 : 0) + ':' + b.color.join(','); }).join('|');
+    if (v6Sig && sig !== v6Sig) {
+      const geoSig = function (s) { return s.split('|').map(function (x) { const p = x.split(':'); return p[0] + p[4] + p[5]; }).join('|'); };
+      if (geoSig(sig) !== geoSig(v6Sig)) v6Preview(); else { v6PartRow(); v6Paint(); }
+    }
+    v6Sig = sig;
+  }, 700);
+
   // the panel and the sheet window move by their title bars (the sheet also resizes from its corner)
   function v6Move(el, hd, key) {
     try { const s = JSON.parse(localStorage.getItem(key) || 'null'); if (s && s.l) { el.style.left = s.l; el.style.top = s.t; el.style.right = 'auto'; if (s.w) { el.style.width = s.w; el.style.height = s.h; } } } catch (e) { }
@@ -11012,37 +11231,58 @@ var wasm_bindgen = (function(exports) {
   new MutationObserver(function () {
     const on = $('pop_v6').classList.contains('on');
     $('v6Sheet').classList.toggle('on', on);
+    if (!on && V6S.edit) v6EditDone(false);
     if (on) v6Preview();
   }).observe($('pop_v6'), { attributes: true, attributeFilter: ['class'] });
 
-  document.querySelectorAll('#pop_v6 input, #pop_v6 select').forEach(function (el) { el.addEventListener('input', v6Preview); el.addEventListener('change', v6Preview); });
-  [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q']].forEach(function (p) {
+  document.querySelectorAll('#pop_v6 input, #pop_v6 select').forEach(function (el) {
+    if (/^v6(Ns|NsR|Nb|PName|PMat)$/.test(el.id)) return;
+    el.addEventListener('input', v6Preview); el.addEventListener('change', v6Preview);
+  });
+  [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
+    ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns']].forEach(function (p) {
     const r = $(p[0]), n = $(p[1]);
-    r.addEventListener('input', function () { n.value = r.value; });
+    r.addEventListener('input', function () { n.value = r.value; n.dispatchEvent(new Event('input')); });
     n.addEventListener('input', function () { r.value = n.value; });
   });
   // views switched or the sheet changed: a hand placement would no longer fit
   document.querySelectorAll('.v6v').forEach(function (c) { c.addEventListener('change', function () { V6S.pos = null; }); });
-  ['v6Scale', 'v6Paper', 'v6Ori', 'v6Dim', 'v6Lbl', 'v6ScN'].forEach(function (id) { $(id).addEventListener('change', function () { V6S.pos = null; }); });
+  ['v6Scale', 'v6Paper', 'v6Ori', 'v6Dim', 'v6Lbl', 'v6ScN', 'v6Zm', 'v6Fs'].forEach(function (id) { $(id).addEventListener('change', function () { V6S.pos = null; V6S.iso = null; }); });
+  $('v6Iso').addEventListener('change', function () { V6S.iso = null; });
+  $('v6Ex').addEventListener('change', function () { V6S.off = {}; });
   function v6Rot(M) {
     const R = V6S.R;
     V6S.R = [0, 1, 2].map(function (i) { return [0, 1, 2].map(function (j) { return M[i][0] * R[0][j] + M[i][1] * R[1][j] + M[i][2] * R[2][j]; }); });
-    V6S.pos = null; v6Preview();
+    V6S.pos = null; V6S.iso = null; v6Preview();
   }
   $('v6RotZ').addEventListener('click', function () { v6Rot([[0, -1, 0], [1, 0, 0], [0, 0, 1]]); });
   $('v6RotZm').addEventListener('click', function () { v6Rot([[0, 1, 0], [-1, 0, 0], [0, 0, 1]]); });
   $('v6Tip').addEventListener('click', function () { v6Rot([[1, 0, 0], [0, 0, -1], [0, 1, 0]]); });
-  $('v6Auto').addEventListener('click', function () { V6S.pos = null; v6Preview(); });
+  $('v6Auto').addEventListener('click', function () { V6S.pos = null; V6S.iso = null; V6S.off = {}; v6Preview(); });
+  // the two buttons of the Capture group open the same panel in their own mode
+  function v6Open(mode) {
+    const was = V6S.mode; V6S.mode = mode; V6S.nsel = null;
+    if (mode === 'exp' && was !== 'exp') { $('v6Light').value = 'studio'; }
+    const p = $('pop_v6');
+    if (p.classList.contains('on')) v6Preview(); else openPop('v6', true);
+  }
+  document.querySelectorAll('.popb[data-pop=v6]').forEach(function (b) {
+    b.addEventListener('click', function (e) {
+      if ($('pop_v6').classList.contains('on') && V6S.mode !== '6v') { e.stopImmediatePropagation(); e.preventDefault(); v6Open('6v'); return; }
+      V6S.mode = '6v'; V6S.nsel = null;
+    }, true);
+  });
+  $('bExpView').addEventListener('click', function () { v6Open('exp'); });
   $('v6Save').addEventListener('click', function () {
     v6Full().then(function (r) {
-      download([r.blob], 'mrt_6view_' + r.o.dpi + 'dpi.' + r.o.fmt);
-      flash(L('Đã lưu ảnh 6 view ', 'Saved the 6-view picture ') + r.o.W + ' × ' + r.o.H + ' px, ' + r.o.dpi + ' dpi, ' + v6Size(r.blob.size));
+      download([r.blob], 'mrt_' + (r.o.exp ? 'exploded' : '6view') + '_' + r.o.dpi + 'dpi.' + r.o.fmt);
+      flash(L('Đã lưu ảnh ', 'Saved the picture ') + r.o.W + ' × ' + r.o.H + ' px, ' + r.o.dpi + ' dpi, ' + v6Size(r.blob.size));
       const e = $('v6Est'); if (e) e.textContent = v6Size(r.blob.size) + ' (' + r.o.fmt.toUpperCase() + L(', đã lưu)', ', saved)');
     }).catch(showError);
   });
   $('v6Copy').addEventListener('click', function () {
     v6Full('png').then(function (r) {
-      return navigator.clipboard.write([new ClipboardItem({ 'image/png': r.blob })]).then(function () { flash(L('Đã chép ảnh 6 view vào clipboard', '6-view picture copied to the clipboard')); });
+      return navigator.clipboard.write([new ClipboardItem({ 'image/png': r.blob })]).then(function () { flash(L('Đã chép ảnh vào clipboard', 'Picture copied to the clipboard')); });
     }).catch(showError);
   });
 
