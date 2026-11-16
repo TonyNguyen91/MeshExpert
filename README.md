@@ -104,12 +104,15 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Sau khi bấm "Phân tích" trong Tooling analysis (undercut), rê chuột lên body đã phân tích sẽ hiện nhãn góc draft của mặt dưới con trỏ (so với hướng mở khuôn), cho biết mặt thoát về phía + hay −, và cảnh báo vàng khi nhỏ hơn "Góc thoát khuôn tối thiểu". Xóa màu phân tích thì nhãn tắt.
 
 ## Chụp ảnh 6 view (nhóm Chụp)
-- Nút "6 view" mở bảng tạo ảnh hình chiếu kiểu bản vẽ: Trên / Trước / Trái / Phải / Sau / Dưới (tick chọn view nào cần), xếp theo hình chiếu góc thứ ba: Trên ở trên view Trước, Dưới ở dưới, hàng giữa Trái – Trước – Phải – Sau. Trục Z hướng lên.
-- Lấy các body đang tick; không tick body nào thì lấy tất cả body đang hiện.
-- Kiểu: Nét vẽ (nền trắng, nét đen), Tô bóng + nét, Tô bóng. Nét khuất ẩn hoặc vẽ nét đứt. Nét gồm cạnh B-rep, cạnh mesh gãy hơn "Góc cạnh", và đường bao (silhouette) theo từng hướng nhìn; phần bị che được bỏ.
-- Kích thước bao: dài (X) dưới view Trước, rộng (Y) dưới view Phải, cao (Z) bên trái view Phải; đơn vị mm + [in], mm hoặc in. Tuỳ chọn hiện tên view.
-- Khổ A4 / A3 / A2 / A1 (ngang / dọc) theo DPI (72–600), hoặc Tùy chọn số pixel rộng × cao. Độ dày nét tính bằng mm theo DPI. Nền trắng hoặc trong suốt. Ảnh tối đa khoảng 120 triệu pixel.
-- Ô xem trước cập nhật khi đổi thông số. "Lưu PNG" ghi DPI vào file (in đúng kích thước); "Chép ảnh" đưa ảnh vào clipboard.
+- Nút "6 view" mở một bảng nhỏ (kéo thanh tiêu đề để dời) và cửa sổ "Bản xếp 6 view" (kéo tiêu đề để dời, kéo góc dưới phải để đổi cỡ) hiện bản xem trước đúng tỉ lệ khổ giấy.
+- Hình chiếu Trên / Trước / Trái / Phải / Sau / Dưới (tick chọn), xếp theo hình chiếu góc thứ ba, trục Z hướng lên. Lấy các body đang tick; không tick body nào thì lấy tất cả body đang hiện.
+- **Sắp xếp bằng chuột trong bản xem trước**, luôn giữ đúng gióng hình chiếu: kéo view Trước thì cả bản vẽ đi theo; Trái / Phải / Sau chỉ trượt ngang (cùng độ cao với view Trước); Trên / Dưới chỉ trượt dọc (cùng cột với view Trước). "Xếp tự động" để xếp lại như mặc định.
+- **Xoay**: ⟳ 90° / ⟲ 90° xoay mô hình quanh trục đứng (đổi mặt nào là mặt Trước), ⤵ 90° lật mô hình (đổi mặt Trên); các view luôn đồng bộ với nhau.
+- **Màu**: Như 3D view (màu từng body), Một màu (chọn màu cho toàn bộ mô hình), Trắng (nét vẽ kỹ thuật). **Ánh sáng**: Studio (mượt — pháp tuyến làm mượt trong góc cạnh, 2 nguồn sáng + bóng loáng nhẹ) hoặc Như 3D view.
+- Nét cạnh (cạnh B-rep, cạnh mesh gãy hơn "Góc", đường bao), nét khuất (nét đứt), kích thước bao ghi song song **mm và inch** (ví dụ `188.5 mm (7.42 in)`), hoặc chỉ mm / chỉ in; tên view; ghi tỉ lệ ở góc.
+- **Độ sắc nét**: DPI 72–1200; khổ A4 / A3 / A2 / A1 ngang / dọc hoặc số pixel tùy chọn; tỉ lệ Vừa khổ hoặc cố định 5:1 … 1:10 (đúng kích thước thật khi in ở DPI đã chọn); độ dày nét theo mm (kèm inch); khử răng cưa 1×–4× (dựng ảnh lớn hơn rồi thu nhỏ); "B-rep mịn" chia lưới lại khối B-rep theo độ phân giải ảnh nên mặt cong tròn đều.
+- Ô thông tin: khổ giấy (mm | in), số pixel, DPI, kích thước mô hình (mm | in), tỉ lệ, **dung lượng dự kiến** của file.
+- Lưu PNG (nền trắng / trong suốt) hoặc JPG (chỉnh chất lượng); DPI được ghi vào file nên in ra đúng kích thước. "Chép ảnh" đưa ảnh PNG vào clipboard. Ảnh tối đa khoảng 150 triệu pixel.
 
 ## Pattern (nhóm Feature)
 - Một nút "Pattern" mở bảng Pattern, chọn kiểu Linear hoặc Circular ngay trong bảng. Áp dụng cho các body đang tick; màn 3D hiện bản xem trước trong suốt màu xanh.

@@ -119,8 +119,8 @@
     }
     return id;
   }
-  function brMesh(id) {
-    const m = brCall({ op: 'mesh', id: id, chord: 0.02 });
+  function brMesh(id, chord) {
+    const m = brCall({ op: 'mesh', id: id, chord: chord || 0.02 });
     // faces carry their own copies of shared nodes: weld equal points so the mesh is closed
     const P = m.pos, map = new Map(), at = new Int32Array(P.length / 3), out = [];
     for (let i = 0; i < at.length; i++) {
