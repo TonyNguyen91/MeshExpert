@@ -210,7 +210,13 @@
   #rtabs { display: flex; gap: 2px; align-self: flex-end; margin-bottom: -4px; }
   .rtab { border-radius: 6px 6px 0 0; border-bottom: none; background: transparent; color: var(--muted); padding: 4px 14px; font-weight: 600; }
   .rtab.on { background: #171c22; color: var(--accent); border-color: var(--line); }
-  #ribbon { background: #171c22; border: 1px solid var(--line); border-radius: 6px; margin: 3px 0 2px; overflow-x: auto; overflow-y: hidden; min-width: 0; scrollbar-width: thin; }
+  #ribbon { background: #171c22; border: 1px solid var(--line); border-radius: 6px; margin: 3px 0 2px; overflow: hidden; min-width: 0; }
+  #ribbon .rpage { transform-origin: 0 0; }
+  #ribbon.f1 .rgrp { padding: 3px 3px 0; } #ribbon.f1 .rbody { gap: 1px; } #ribbon.f1 button.bb { min-width: 44px; padding: 3px 3px; } #ribbon.f1 button.sb { padding: 1px 4px 1px 2px; gap: 4px; }
+  #ribbon.f2 button.bb > span { white-space: normal; max-width: 62px; text-align: center; line-height: 1.05; font-size: 10.5px; }
+  #ribbon .rgrp.ic .rcol button.sb > span { display: none; } #ribbon .rgrp.ic .rcol { min-width: 0; } #ribbon .rgrp.ic .rtitle, #ribbon .rgrp.ib .rtitle { overflow: hidden; text-overflow: ellipsis; max-width: 100%; min-width: 0; }
+  #ribbon .rgrp.ib button.bb > span { display: none; } #ribbon .rgrp.ib button.bb { min-width: 34px; }
+  #ribbon.f5 .rtitle { font-size: 9px; } #ribbon.f5 .rcol label .unit { display: none; }
   html { overflow: hidden; }
   .rpage { display: none; align-items: stretch; height: 84px; }
   .rpage.on { display: flex; }
@@ -270,6 +276,7 @@
   #v6Ed select { margin-top: 4px; width: 100%; }
   #v6Ed .v6edb { display: flex; gap: 4px; justify-content: flex-end; margin-top: 4px; }
   #pop_v6 #v6PMat { max-width: 120px; }
+  #pop_v6 #v6Seg { margin: 2px 0 6px; } #pop_v6 #v6Seg button { padding: 3px 6px; }
   #pop_sla { position: absolute; left: 10px; top: 90px; width: 330px; z-index: 8; max-height: calc(100% - 100px); overflow-y: auto; }
   #pop_sla .pophd { cursor: move; user-select: none; }
   .pophd { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
@@ -328,7 +335,7 @@
    <div class="rgrp"><div class="rbody"><div class="rcol"><button class="sb" data-tool="dist" title="Đo khoảng cách" data-en-title="Distance"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M6 9l-3 3 3 3M18 9l3 3-3 3" stroke="#f0a030" stroke-width="1.8"/><path d="M3 6v12M21 6v12" stroke="#9cc4ee"/></svg><span data-en="Distance">Khoảng cách</span></button><button class="sb" data-tool="angle" title="Đo góc" data-en-title="Angle"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M4 20L16 6" stroke="#9cc4ee" stroke-width="1.8"/><path d="M11 20a7 7 0 0 0-2.3-5.2" stroke="#f0a030" stroke-width="1.8"/></svg><span data-en="Angle">Góc</span></button><button class="sb" data-tool="radius" title="Đo bán kính" data-en-title="Radius"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" stroke="#9cc4ee"/><path d="M12 12l6-6" stroke="#f0a030" stroke-width="1.8"/><circle cx="12" cy="12" r="1.3" fill="#f0a030"/></svg><span data-en="Radius">Bán kính</span></button></div><div class="rcol"><button class="sb" data-tool="thick" title="Đo bề dày" data-en-title="Wall thickness"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16M10 4v16" stroke="#9cc4ee" stroke-width="2"/><path d="M14 12h7M14 12l2.5-2.5M14 12l2.5 2.5M4 12h6" stroke="#f0a030"/></svg><span data-en="Wall thickness">Bề dày</span></button><button class="sb popb" data-pop="undercut" title="Tooling analysis (undercut)" data-en-title="Tooling analysis (undercut)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 20V9h12v11" stroke="#9cc4ee"/><path d="M6 9l6-5 6 5" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M9 14h3v6" stroke="#ff6b5e" stroke-width="2"/><path d="M12 2v3" stroke="#f0a030"/></svg><span data-en="Undercut">Undercut</span></button><button class="sb popb" data-pop="collide" title="Kiểm tra va chạm" data-en-title="Collision check"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="10" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="11" y="4" width="10" height="10" fill="rgba(240,160,48,.5)" stroke="#ffd28a"/><path d="M11 7h2v7h-2z" fill="#ff3b30"/></svg><span data-en="Collision">Va chạm</span></button></div><div class="rcol"><button class="sb popb" data-pop="compare" title="So sánh mesh" data-en-title="Compare meshes"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-8 6-8 9-4s6 4 9-4" stroke="#9cc4ee" stroke-width="1.8"/><path d="M3 19c3-8 6-8 9-4s6 4 9-4" stroke="#f0a030" stroke-width="1.8" stroke-dasharray="2 2"/></svg><span data-en="Compare">So sánh mesh</span></button></div></div><div class="rtitle" data-en="Analysis">Analysis</div></div>
    <div class="rgrp"><div class="rbody"><button class="bb popb" data-pop="rd" title="Basic Surface Recognition: nhận diện Plane / Sphere / Cylinder / Cone từ mesh" data-en-title="Basic Surface Recognition: recognise a plane / sphere / cylinder / cone on a mesh"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l4-9 5 3 4-6 5 7-3 6-6 2z" fill="rgba(156,196,238,.15)" stroke="#9cc4ee" stroke-width="1"/><path d="M7 8l5 3M12 11l4-6M12 11l-2 8M12 11l6 3" stroke="#9cc4ee" stroke-width=".8"/><path d="M10 19l2-8 6 3-3 6z" fill="#ee2a1f" stroke="#ff8a7a" stroke-width=".8"/><ellipse cx="17" cy="8" rx="4" ry="1.6" stroke="#3ce0ff"/><path d="M13 8v6M21 8v6" stroke="#3ce0ff"/><path d="M13 14a4 1.6 0 0 0 8 0" stroke="#3ce0ff"/></svg><span data-en="Surface Recognition">Surface Recognition</span></button></div><div class="rtitle" data-en="Reverse Design">Reverse Design</div></div>
    <div class="rgrp"><div class="rbody"><button class="bb popb" data-pop="sla" title="SLA control panel: xoay tối ưu, dàn đều, nâng, khối chắn" data-en-title="SLA control panel: orient, lay out, lift, guard blocks"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15l10 5 10-5-10-5z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 13.5V6.5l2 1v7M13 15V4l2.2 1v11" fill="#f0a030" stroke="#ffd28a"/><path d="M4.5 13.6l2.2-1.1" stroke="#eb783c" stroke-width="2.2"/><path d="M17.3 17.4l2.2-1.1" stroke="#eb783c" stroke-width="2.2"/><path d="M2 21.5h20" stroke="#52d06a" stroke-width="1.8"/></svg><span data-en="SLA control panel">SLA control panel</span></button><div class="rcol"><button id="bSlaTable" class="sb" title="Hiện / ẩn bàn in trong 3D" data-en-title="Show / hide the print table in 3D"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l10 5 10-5-10-5z" fill="#9ea8b5" stroke="#dfe6ee"/><path d="M2 12v3l10 5 10-5v-3" fill="#5a6676" stroke="#b8c4d2"/><path d="M7 11.5l10-5M9.5 13l10-5" stroke="#3d6fa8" stroke-width="1"/></svg><span>SLA table</span></button></div></div><div class="rtitle" data-en="Print plate">Bàn in</div></div>
-   <div class="rgrp rcap"><div class="rbody"><button id="bShot" class="bb" title="Chép ảnh màn hình 3D vào clipboard" data-en-title="Copy a picture of the 3D view to the clipboard"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.5"><rect x="3" y="7" width="18" height="13" rx="2" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 7l1.5-3h5L16 7" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="13.5" r="4" fill="#14181d" stroke="#f0a030" stroke-width="1.8"/></svg><span data-en="Copy image">Chép ảnh</span></button><button class="bb popb" data-pop="v6" title="6 view: ảnh hình chiếu Trên / Trước / Trái / Phải / Sau / Dưới kiểu bản vẽ, có kích thước bao" data-en-title="6 views: Top / Front / Left / Right / Back / Bottom drawing-style projections with overall dimensions"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.3"><rect x="8.5" y="2" width="7" height="6" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="1" y="10" width="6" height="7" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="8.5" y="10" width="7" height="7" fill="#4f86c4" stroke="#9cc4ee"/><rect x="17" y="10" width="6" height="7" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="8.5" y="19" width="7" height="4" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8.5 21.5h7" stroke="#f0a030"/></svg><span data-en="6 views">6 view</span></button><button class="bb" id="bExpView" title="Exploded view: tách các linh kiện theo góc nhìn iso, kèm tên, vật liệu và khối lượng" data-en-title="Exploded view: parts pulled apart in an iso view, with names, materials and masses"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.3" stroke-linejoin="round"><path d="M4 15l4-2 4 2-4 2z" fill="#4f86c4" stroke="#9cc4ee"/><path d="M4 15v3l4 2v-3zM12 15v3l-4 2" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M12 6l4-2 4 2-4 2z" fill="#4f86c4" stroke="#9cc4ee"/><path d="M12 6v3l4 2V8zM20 6v3l-4 2" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M10 13l3-3" stroke="#f0a030" stroke-dasharray="1.6 1.2"/><path d="M3 22h6M14 13h7" stroke="#cfd8e3" stroke-width="1"/></svg><span data-en="Exploded view">Exploded view</span></button></div><div class="rtitle" data-en="Capture">Chụp</div></div>
+   <div class="rgrp rcap"><div class="rbody"><button id="bShot" class="bb" title="Chép ảnh màn hình 3D vào clipboard" data-en-title="Copy a picture of the 3D view to the clipboard"><svg viewBox="0 0 24 24" width="32" height="32" stroke-width="1.5"><rect x="3" y="7" width="18" height="13" rx="2" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M8 7l1.5-3h5L16 7" fill="#3d6fa8" stroke="#9cc4ee"/><circle cx="12" cy="13.5" r="4" fill="#14181d" stroke="#f0a030" stroke-width="1.8"/></svg><span data-en="Copy image">Chép ảnh</span></button><button class="bb popb" data-pop="v6" title="Drawing: bản vẽ 6 view hoặc Exploded view (mỗi loại có thiết lập riêng, lưu cùng phiên)" data-en-title="Drawing: 6-view sheet or exploded view (each keeps its own settings, saved with the session)"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.3" stroke-linejoin="round"><path d="M3 2h13l5 5v15H3z" fill="#e8eef5" stroke="#9cc4ee"/><path d="M16 2v5h5" stroke="#9cc4ee"/><rect x="5.5" y="5" width="4.5" height="3.5" fill="#3d6fa8" stroke="#2b557f" stroke-width=".8"/><rect x="5.5" y="10" width="4.5" height="4.5" fill="#4f86c4" stroke="#2b557f" stroke-width=".8"/><rect x="11.5" y="10" width="3.5" height="4.5" fill="#3d6fa8" stroke="#2b557f" stroke-width=".8"/><path d="M12 18.5l2.5-1.3 2.5 1.3-2.5 1.3zM16 15l2-1 2 1-2 1z" fill="#f0a030" stroke="#b06a10" stroke-width=".6"/><path d="M5 19.5h5" stroke="#f0a030"/></svg><span>Drawing</span></button></div><div class="rtitle" data-en="Capture">Chụp</div></div>
    <div class="rgrp rlast"><div class="rbody"><button class="bb popb" data-pop="split" title="Tách / gộp body" data-en-title="Split / merge bodies"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="8" height="14" fill="#3d6fa8" stroke="#9cc4ee"/><rect x="13" y="5" width="8" height="14" fill="#5d8fc8" stroke="#9cc4ee"/><path d="M12 2v20" stroke="#f0a030" stroke-dasharray="2 2"/></svg><span data-en="Split / merge">Tách / gộp</span></button><button class="bb popb" data-pop="repair" title="Vá lưới hở" data-en-title="Repair open meshes"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" fill="#3d6fa8" stroke="#9cc4ee"/><path d="M9 9h6v6H9z" fill="#14181d" stroke="#ff3b30"/><path d="M8 16l8-8" stroke="#f0a030" stroke-width="2"/></svg><span data-en="Repair">Vá lưới</span></button></div><div class="rtitle" data-en="Mesh">Mesh</div></div>
   </div>
  </div>
@@ -590,19 +597,22 @@
     <div class="box rdres" id="rdRes"></div>
     <div class="btns"><button class="primary" id="rdOk" data-en="Apply">Tạo</button><button class="popx" data-pop="rd" data-en="Close">Đóng</button></div>
   </div></div>
-   <div class="pop" id="pop_v6"><div class="pophd"><b id="v6Title">6 view</b><span class="grow"></span><button class="popx" data-pop="v6">✕</button></div><div class="c">
+   <div class="pop" id="pop_v6"><div class="pophd"><b id="v6Title">Drawing</b><span class="grow"></span><button class="popx" data-pop="v6">✕</button></div><div class="c">
+    <div class="seg" id="v6Seg"><button data-k="6v" class="on" title="Bản vẽ 6 view (thiết lập riêng)" data-en-title="6-view sheet (own settings)">6 view</button><button data-k="exp" title="Exploded view (thiết lập riêng)" data-en-title="Exploded view (own settings)">Exploded view</button></div>
     <div class="row v6views v6m6"><label><input type="checkbox" class="v6v" data-v="top" checked><span data-en="Top">Trên</span></label><label><input type="checkbox" class="v6v" data-v="front" checked><span data-en="Front">Trước</span></label><label><input type="checkbox" class="v6v" data-v="left" checked><span data-en="Left">Trái</span></label><label><input type="checkbox" class="v6v" data-v="right" checked><span data-en="Right">Phải</span></label><label><input type="checkbox" class="v6v" data-v="back" checked><span data-en="Back">Sau</span></label><label><input type="checkbox" class="v6v" data-v="bottom" checked><span data-en="Bottom">Dưới</span></label></div>
     <div class="row"><span class="lbl" data-en="Turn">Xoay</span><button id="v6RotZ" class="v6b" title="Xoay mô hình 90° quanh trục đứng (đổi mặt Trước)" data-en-title="Turn the model 90° about the vertical axis (changes the Front)">⟳ 90°</button><button id="v6RotZm" class="v6b" title="Xoay mô hình -90° quanh trục đứng" data-en-title="Turn the model -90° about the vertical axis">⟲ 90°</button><button id="v6Tip" class="v6b" title="Lật mô hình 90° về phía trước (đổi mặt Trên)" data-en-title="Tip the model 90° forward (changes the Top)">⤵ 90°</button><button id="v6Auto" class="v6b" title="Xếp lại các hình chiếu như mặc định" data-en-title="Put the views back to the default layout" data-en="Auto layout">Xếp tự động</button></div>
     <div class="row v6m6"><label><input type="checkbox" id="v6Iso"> <span data-en="Iso view">Hình chiếu iso</span></label></div>
     <div class="row v6isorow"><span class="lbl" data-en="Iso turn" title="Góc xoay quanh trục đứng" data-en-title="Angle about the vertical axis">Góc xoay</span><input type="range" id="v6AzR" min="-180" max="180" step="1" value="45" style="width:70px"><input type="number" id="v6Az" class="s" value="45" min="-180" max="180" step="1"><span class="unit">°</span></div>
     <div class="row v6isorow"><span class="lbl" data-en="Iso tilt" title="Góc nhìn từ trên xuống" data-en-title="Angle looking down">Góc nghiêng</span><input type="range" id="v6ElR" min="-89" max="89" step="0.5" value="30" style="width:70px"><input type="number" id="v6El" class="s" value="30" min="-89" max="89" step="0.5"><span class="unit">°</span></div>
+    <div class="row v6isok"><span class="lbl" data-en="Iso size" title="Cỡ hình iso so với các view (kéo góc hình iso trên bản vẽ cũng được)" data-en-title="Size of the iso picture against the views (or drag its corner on the sheet)">Cỡ iso</span><input type="range" id="v6IsoKR" min="10" max="500" step="1" value="100" style="width:70px"><input type="number" id="v6IsoK" class="s" value="100" min="10" max="500" step="1"><span class="unit">%</span></div>
     <div class="row v6mE"><span class="lbl" data-en="Spread" title="Mức tách các linh kiện ra khỏi tâm cụm" data-en-title="How far the parts move out from the centre of the assembly">Độ tách</span><input type="range" id="v6ExR" min="0" max="300" step="5" value="80" style="width:70px"><input type="number" id="v6Ex" class="s" value="80" min="0" max="300" step="5"><span class="unit">%</span></div>
-    <div class="row v6mE"><label><input type="checkbox" id="v6PN" checked> <span data-en="Part names">Tên linh kiện</span></label><label><input type="checkbox" id="v6PM" checked> <span data-en="Material + mass">Vật liệu + khối lượng</span></label></div>
+    <div class="row v6mE"><label><input type="checkbox" id="v6PN" checked> <span data-en="Part names">Tên linh kiện</span></label><label><input type="checkbox" id="v6PM" checked> <span data-en="Material + mass">Vật liệu + khối lượng</span></label><label title="Tổng khối lượng theo từng vật liệu, mặc định ở góc dưới phải (kéo để dời)" data-en-title="Total mass per material, bottom right by default (drag to move)"><input type="checkbox" id="v6Tot" checked> <span data-en="Totals">Tổng khối lượng</span></label></div>
     <div class="row v6mE v6part"><span class="lbl" data-en="Part">Linh kiện</span><input type="text" id="v6PName" style="width:110px" title="Đổi tên body (cập nhật cây body)" data-en-title="Rename the body (updates the body list)"><select id="v6PMat" title="Vật liệu của body" data-en-title="Material of the body"></select><span class="unit" id="v6PMass"></span></div>
     <div class="row"><span class="lbl" data-en="Colour">Màu</span><select id="v6Col"><option value="view" data-en="As the 3D view">Như 3D view</option><option value="one" data-en="One colour">Một màu</option><option value="white" data-en="White (drawing)">Trắng (nét vẽ)</option></select><input type="color" id="v6One" value="#8fa9c4" title="Màu cho toàn bộ mô hình" data-en-title="Colour for the whole model"><span class="lbl" data-en="Light">Sáng</span><select id="v6Light"><option value="studio" data-en="Studio (smooth)">Studio (mượt)</option><option value="view" data-en="As the 3D view">Như 3D view</option></select><label title="Chia lưới lại khối B-rep theo độ phân giải ảnh" data-en-title="Re-tessellate B-rep solids to the picture resolution"><input type="checkbox" id="v6Fine" checked> <span data-en="Fine B-rep">B-rep mịn</span></label></div>
     <div class="row"><label><input type="checkbox" id="v6Edge" checked> <span data-en="Edges">Nét cạnh</span></label><label><input type="checkbox" id="v6Hid"> <span data-en="Hidden lines">Nét khuất</span></label><span class="lbl" data-en="Angle" title="Cạnh mesh gãy hơn góc này thì vẽ nét" data-en-title="Mesh edges sharper than this are drawn">Góc</span><input type="range" id="v6AngR" min="5" max="80" step="1" value="30" style="width:60px"><input type="number" id="v6Ang" class="s" value="30" min="5" max="80" step="1"><span class="unit">°</span></div>
     <div class="row"><label><input type="checkbox" id="v6Dim" checked> <span data-en="Dimensions">Kích thước</span></label><select id="v6Unit"><option value="mmin">mm + in</option><option value="mm">mm</option><option value="in">in</option></select><label><input type="checkbox" id="v6Lbl"> <span data-en="View names">Tên view</span></label><label><input type="checkbox" id="v6ScN"> <span data-en="Scale note">Ghi tỉ lệ</span></label></div>
-    <div class="row"><span class="lbl" data-en="Scale">Tỉ lệ</span><select id="v6Scale"><option value="0" data-en="Fit">Vừa khổ</option><option value="5">5:1</option><option value="2">2:1</option><option value="1">1:1</option><option value="0.5">1:2</option><option value="0.2">1:5</option><option value="0.1">1:10</option></select><span class="lbl" data-en="Paper">Khổ</span><select id="v6Paper"><option value="A4">A4</option><option value="A3" selected>A3</option><option value="A2">A2</option><option value="A1">A1</option><option value="px" data-en="Custom">Tùy chọn</option></select><select id="v6Ori"><option value="L" data-en="Landscape">Ngang</option><option value="P" data-en="Portrait">Dọc</option></select></div>
+    <div class="row"><span class="lbl" data-en="Scale">Tỉ lệ</span><select id="v6Scale"><option value="0" data-en="Fit">Vừa khổ</option><option value="5">5:1</option><option value="2">2:1</option><option value="1">1:1</option><option value="0.5">1:2</option><option value="0.2">1:5</option><option value="0.1">1:10</option><option value="c" data-en="Custom">Tùy chọn</option></select><span class="lbl" data-en="Paper">Khổ</span><select id="v6Paper"><option value="A4">A4</option><option value="A3" selected>A3</option><option value="A2">A2</option><option value="A1">A1</option><option value="px" data-en="Custom">Tùy chọn</option></select><select id="v6Ori"><option value="L" data-en="Landscape">Ngang</option><option value="P" data-en="Portrait">Dọc</option></select></div>
+    <div class="row v6scc"><span class="lbl" data-en="Ratio" title="Tỉ lệ tùy chọn a : b" data-en-title="Custom scale a : b">Tỉ lệ</span><input type="range" id="v6ScR" min="-2" max="2" step="0.01" value="0" style="width:70px"><input type="number" id="v6ScA" class="s" value="1" min="0.01" max="1000" step="0.1" style="width:52px"><span class="unit">:</span><input type="number" id="v6ScB" class="s" value="1" min="0.01" max="1000" step="0.1" style="width:52px"></div>
     <div class="row v6px"><span class="lbl" data-en="Width">Rộng</span><input type="range" id="v6WR" min="400" max="16000" step="10" value="4000" style="width:86px"><input type="number" id="v6W" class="s" value="4000" min="400" max="16000" step="10"><span class="unit">px</span></div>
     <div class="row v6px"><span class="lbl" data-en="Height">Cao</span><input type="range" id="v6HR" min="300" max="16000" step="10" value="2800" style="width:86px"><input type="number" id="v6H" class="s" value="2800" min="300" max="16000" step="10"><span class="unit">px</span></div>
     <div class="row"><span class="lbl" data-en="Drawing size" title="Phóng to / thu nhỏ toàn bộ hình vẽ khi tỉ lệ là Vừa khổ" data-en-title="Make the whole drawing bigger or smaller (Fit scale)">Cỡ hình</span><input type="range" id="v6ZmR" min="20" max="300" step="5" value="100" style="width:70px"><input type="number" id="v6Zm" class="s" value="100" min="20" max="300" step="5"><span class="unit">%</span></div>
@@ -615,7 +625,7 @@
     <div class="v6info" id="v6Info"></div>
     <div class="btns"><button class="primary" id="v6Save" data-en="Save">Lưu ảnh</button><button id="v6Copy" data-en="Copy">Chép ảnh</button><button class="popx" data-pop="v6" data-en="Close">Đóng</button></div>
   </div></div>
-   <div id="v6Sheet"><div class="v6hd"><b data-en="6-view sheet">Bản xếp 6 view</b><span class="grow"></span><span class="v6hint" id="v6Zoom"></span></div><div class="v6body"><canvas id="v6Prev"></canvas><div id="v6Ed"><textarea id="v6EdT" rows="2"></textarea><select id="v6EdM"></select><div class="v6edb"><button id="v6EdOk" class="primary">OK</button><button id="v6EdNo" data-en="Cancel">Huỷ</button></div></div></div></div>
+   <div id="v6Sheet"><div class="v6hd"><b id="v6ShT">6 view</b><span class="grow"></span><span class="v6hint" id="v6Zoom"></span></div><div class="v6body"><canvas id="v6Prev"></canvas><div id="v6Ed"><textarea id="v6EdT" rows="2"></textarea><select id="v6EdM"></select><div class="v6edb"><button id="v6EdOk" class="primary">OK</button><button id="v6EdNo" data-en="Cancel">Huỷ</button></div></div></div></div>
    <div class="pop" id="pop_sla"><div class="pophd"><b data-en="SLA print plate">Bàn in SLA</b><span class="grow"></span><button class="popx" data-pop="sla">✕</button></div><div class="c">
     <div class="row"><span class="lbl" data-en="Plate X × Y">Bàn X × Y</span><input type="number" id="slaW" class="s" value="400" min="10" step="1"> × <input type="number" id="slaD" class="s" value="400" min="10" step="1"><span class="unit">mm</span></div>
     <div class="row"><span class="lbl" data-en="Spread">Độ dàn đều</span><input type="range" id="slaSpreadR" min="0" max="100" step="1" value="0" style="width:120px"><input type="number" id="slaSpread" class="s" value="0" min="0" step="1"><span class="unit">%</span></div>
@@ -5506,7 +5516,7 @@ var wasm_bindgen = (function(exports) {
     if (S.col) renderCollisions();
     flash('');
   }
-  function setLang(l) { lang = l; try { localStorage.setItem('mrtLang', l); } catch (e) { /* ignore */ } applyLang(); }
+  function setLang(l) { lang = l; try { localStorage.setItem('mrtLang', l); } catch (e) { /* ignore */ } applyLang(); ribFit(); }
   $('bVi').addEventListener('click', function () { setLang('vi'); });
   $('bEn').addEventListener('click', function () { setLang('en'); });
 
@@ -6768,6 +6778,7 @@ var wasm_bindgen = (function(exports) {
     const vis = S.cmp ? new Map(S.cmp.vis) : null;
     const meta = { app: 'MeshExpert', format: 2, view: { R: mainCam.R, target: mainCam.target, zoom: mainCam.zoom }, explode: S.explode, sketches: S.sketches, skSeq: S.skSeq, geos: S.geos, geoSeq: S.geoSeq,
       section: { on: S.sec.on, flip: S.sec.flip, axis: S.sec.axis, s: S.sec.s, nView: S.sec.nView, nPick: S.sec.nPick }, measures: S.measures, bodies: [] };
+    meta.drawing = v6Dump();
     const blobs = [], geos = new Map();
     let off = 0;
     for (const b of S.bodies) {
@@ -6813,6 +6824,7 @@ var wasm_bindgen = (function(exports) {
     if (meta.view) { mainCam.R = meta.view.R; mainCam.target = meta.view.target; mainCam.zoom = meta.view.zoom; }
     hist.undo.length = 0; hist.redo.length = 0; updateHistBtns();
     updateMeasList(); refresh();
+    v6Load(meta.drawing || null);
   }
   function clearAll() {
     for (const b of S.bodies.slice()) removeBody(b);
@@ -6854,7 +6866,7 @@ var wasm_bindgen = (function(exports) {
     if (blocked()) return;
     if (S.bodies.length && !confirm(L('Bắt đầu phiên mới? Phiên hiện tại chưa lưu sẽ mất.', 'Start a new session? Unsaved work in the current one is lost.'))) return;
     clearAll(); hist.undo.length = 0; hist.redo.length = 0; updateHistBtns();
-    S.sesHandle = null; S.sesName = ''; sesShow(); sceneChanged(true); refresh();
+    S.sesHandle = null; S.sesName = ''; sesShow(); sceneChanged(true); refresh(); v6Load(null);
   }
   $('bSaveSes').addEventListener('click', function () { saveSession().catch(showError); });
   $('bSaveAs').addEventListener('click', function () { saveSessionAs().catch(showError); });
@@ -8793,7 +8805,31 @@ var wasm_bindgen = (function(exports) {
     try { localStorage.setItem('mrt_tab', t); } catch (e) { /* not kept */ }
     dirty = true;
   }
-  document.querySelectorAll('#rtabs .rtab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
+  // the ribbon never scrolls sideways: when the window is narrow the groups get tighter step by step (spacing, two-line
+  // labels, icon-only small buttons, icon-only big buttons) and, as a last resort, the whole row is scaled down to fit
+  function ribFit() {
+    const rb = $('ribbon'), pg = rb && rb.querySelector('.rpage.on'); if (!pg) return;
+    const over = function () { return pg.scrollWidth > pg.clientWidth + 1; };
+    pg.style.transform = ''; rb.style.height = '';
+    rb.classList.remove('f1', 'f2', 'f5'); pg.querySelectorAll('.rgrp').forEach(function (g) { g.classList.remove('ic', 'ib'); });
+    if (over()) rb.classList.add('f1');
+    if (over()) rb.classList.add('f2');
+    // widest groups first: small buttons lose their text, then big buttons
+    for (const cls of ['ic', 'ib']) {
+      if (!over()) break;
+      const gs = Array.from(pg.querySelectorAll('.rgrp')).filter(function (g) { return g.querySelector(cls === 'ic' ? '.rcol button.sb' : 'button.bb'); })
+        .sort(function (a, b) { return b.offsetWidth - a.offsetWidth; });
+      for (const g of gs) { if (!over()) break; g.classList.add(cls); }
+    }
+    if (over()) rb.classList.add('f5');
+    if (over()) {
+      const k = pg.clientWidth / pg.scrollWidth;
+      pg.style.transform = 'scale(' + k.toFixed(4) + ')'; rb.style.height = Math.ceil(pg.offsetHeight * k + 2) + 'px';
+    }
+  }
+  if (window.ResizeObserver) { let rw = -1; new ResizeObserver(function () { const w = $('ribbon').clientWidth; if (w !== rw) { rw = w; ribFit(); } }).observe($('ribbon')); }
+  window.addEventListener('resize', ribFit);
+  document.querySelectorAll('#rtabs .rtab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); ribFit(); }); });
   try { const t = localStorage.getItem('mrt_tab'); if (t === 'home') showTab(t); } catch (e) { /* default tab */ }
 
   // ---------- floating panels opened from the ribbon (several may be open) ----------
@@ -10549,8 +10585,12 @@ var wasm_bindgen = (function(exports) {
   const V6_ORDER = ['top', 'front', 'left', 'right', 'back', 'bottom'];
   const V6_PAPER = { A4: [297, 210], A3: [420, 297], A2: [594, 420], A1: [841, 594] };
   const V6_MAXPX = 150e6, V6_MAXVIEW = 64e6;
-  const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, notes: { '6v': [], exp: [] }, nsel: null, psel: null,
-    prev: null, fine: new Map(), seq: 1 };
+  // the 6-view sheet and the exploded view are two separate drawings: each keeps its own panel values (cfg) and its own
+  // placements (st: model turn, view / iso / part / totals positions); both are saved with the session (.mrtl)
+  const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, tot: null, notes: { '6v': [], exp: [] }, nsel: null, psel: null,
+    prev: null, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null };
+  const V6_PAIRS = [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
+    ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK']];
   let v6gl = null;
 
   function v6Num(id, def) { const v = parseFloat($(id).value); return isFinite(v) ? v : def; }
@@ -10565,12 +10605,13 @@ var wasm_bindgen = (function(exports) {
     W = Math.max(100, W); H = Math.max(100, H);
     let cut = false;
     if (W * H > V6_MAXPX) { const k = Math.sqrt(V6_MAXPX / (W * H)); W = Math.floor(W * k); H = Math.floor(H * k); cut = true; }
-    const fmt = $('v6Fmt').value;
-    return { exp: exp, views: views, iso: !exp && $('v6Iso').checked, az: v6Num('v6Az', 45), el: v6Num('v6El', 30), spread: v6Num('v6Ex', 80) / 100,
+    const fmt = $('v6Fmt').value, scv = $('v6Scale').value;
+    const scale = scv === 'c' ? Math.max(1e-3, (parseFloat($('v6ScA').value) || 1) / (parseFloat($('v6ScB').value) || 1)) : parseFloat(scv) || 0;
+    return { isoK: Math.max(0.1, Math.min(5, v6Num('v6IsoK', 100) / 100)), tot: exp && $('v6Tot').checked, exp: exp, views: views, iso: !exp && $('v6Iso').checked, az: v6Num('v6Az', 45), el: v6Num('v6El', 30), spread: v6Num('v6Ex', 80) / 100,
       pn: $('v6PN').checked, pm: $('v6PM').checked,
       col: $('v6Col').value, one: v6Hex($('v6One').value), light: $('v6Light').value, fine: $('v6Fine').checked,
       edge: $('v6Edge').checked, hidden: $('v6Hid').checked, ang: v6Num('v6Ang', 30), dim: !exp && $('v6Dim').checked, unit: $('v6Unit').value,
-      lbl: !exp && $('v6Lbl').checked, scn: $('v6ScN').checked, scale: parseFloat($('v6Scale').value) || 0, zoom: v6Num('v6Zm', 100) / 100,
+      lbl: !exp && $('v6Lbl').checked, scn: $('v6ScN').checked, scale: scale, zoom: v6Num('v6Zm', 100) / 100,
       fs: v6Num('v6Fs', 2.6), fb: $('v6Fb').checked, W: W, H: H, cut: cut, dpi: dpi,
       lw: v6Num('v6Lw', 0.25), ss: +$('v6SS').value || 1, fmt: fmt, q: v6Num('v6Q', 92) / 100, bg: fmt === 'jpg' ? 'w' : $('v6Bg').value };
   }
@@ -10592,6 +10633,17 @@ var wasm_bindgen = (function(exports) {
   function v6Txt(v, unit) { return unit === 'mm' ? v6mm(v) : unit === 'in' ? v6in(v) : v6mm(v) + '  (' + v6in(v) + ')'; }
   function v6Mat(b) { const m = MATS.find(function (x) { return x[0] === b.material; }); return m && m[0] ? (m[0] === 'custom' ? b.density + ' g/cm³' : (lang === 'en' ? m[2] : m[1])) : ''; }
   function v6Mass(b) { return b.density > 0 ? massTxt(getStats(b).volume / 1000 * b.density) : ''; }
+  // "Tổng ABS 100 g" lines, one per material (custom materials grouped by density), in the order they first appear
+  function v6Totals(bodies) {
+    const g = new Map();
+    for (const b of bodies) {
+      if (!b.material || !(b.density > 0)) continue;
+      const key = b.material === 'custom' ? 'c' + b.density : b.material;
+      const e = g.get(key) || { n: b.material === 'custom' ? L('Tùy chọn ', 'Custom ') + b.density + ' g/cm³' : v6Mat(b), m: 0 };
+      e.m += getStats(b).volume / 1000 * b.density; g.set(key, e);
+    }
+    return Array.from(g.values()).map(function (e) { return L('Tổng ', 'Total ') + e.n + ' ' + massTxt(e.m); });
+  }
 
   // ---------- geometry of one body in world space, with edges and normals for drawing
   async function v6Geo(b, o, sc) {
@@ -10852,14 +10904,14 @@ var wasm_bindgen = (function(exports) {
     const sc = v6ScaleOf(o, sc6, plan);
     if (o.fine && k >= 1) { sc6 = await v6Scene(o, sc); if (o.exp) plan = v6ExpPlan(o, sc6); }
     const M = v6Metrics(o), G = v6GL(); v6Upload(G, sc6);
-    const out = { sc6: sc6, sc: sc, views: {}, parts: [], plan: plan };
+    const out = { sc6: sc6, sc: sc, views: {}, parts: [], plan: plan, isoK: o.isoK };
     try {
       if (o.exp) {
         for (const it of plan.items) out.parts.push(Object.assign(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, o), { id: it.id, b: it.p.b, cx: it.cx, cy: it.cy }));
       } else {
         out.pos = V6S.pos || v6Auto(o, sc6.ext, sc).pos;
         for (const n of v6Names(o)) out.views[n] = v6View(G, sc6, sc6.preps, v6Dirs(V6_VIEWS[n]), sc * k, ss, M.lw * k, o);
-        if (o.iso) out.iso = v6View(G, sc6, sc6.preps, v6Dirs(v6IsoSpec(o.az, o.el)), sc * k, ss, M.lw * k, o);
+        if (o.iso) out.iso = v6View(G, sc6, sc6.preps, v6Dirs(v6IsoSpec(o.az, o.el)), sc * k * o.isoK, ss, M.lw * k * Math.min(1, o.isoK), o);
       }
     } finally { v6Release(G, sc6); }
     return out;
@@ -10870,10 +10922,11 @@ var wasm_bindgen = (function(exports) {
   function v6Compose(c2, o, R, k) {
     const W = o.W * k, H = o.H * k, M = v6Metrics(o), font = M.font * k, lw = M.lw * k, hits = [], frames = {};
     c2.imageSmoothingEnabled = true; c2.imageSmoothingQuality = 'high';
-    const put = function (v, cx, cy) {
-      const x = cx - v.w / 2, y = cy - v.h / 2, pad = v.pad / v.ss;
-      c2.drawImage(v.cv, x - pad, y - pad, v.cv.width / v.ss, v.cv.height / v.ss);
-      return { x: x, y: y, w: v.w, h: v.h };
+    const put = function (v, cx, cy, f) {
+      f = f || 1;
+      const w = v.w * f, h = v.h * f, x = cx - w / 2, y = cy - h / 2, pad = v.pad / v.ss * f;
+      c2.drawImage(v.cv, x - pad, y - pad, v.cv.width / v.ss * f, v.cv.height / v.ss * f);
+      return { x: x, y: y, w: w, h: h };
     };
     c2.fillStyle = '#111'; c2.strokeStyle = '#111'; c2.setLineDash([]);
     const fnt = v6Font(font, o.fb);
@@ -10882,7 +10935,11 @@ var wasm_bindgen = (function(exports) {
       for (const n of Object.keys(R.views)) { const c = v6Centre(pos, n); frames[n] = put(R.views[n], c[0] * W, c[1] * H); hits.push({ kind: 'view', n: n, r: frames[n] }); }
       if (R.iso) {
         const ip = V6S.iso || v6IsoDefault(o, R, pos);
-        const f = put(R.iso, ip[0] * W, ip[1] * H); hits.push({ kind: 'iso', r: f }); frames.iso = f;
+        // while its corner is dragged the iso picture is scaled on the fly; the next render redraws it sharp
+        const D = V6S.drag, ik = D && D.h.kind === 'isoR' && D.k ? D.k : o.isoK;
+        const f = put(R.iso, ip[0] * W, ip[1] * H, ik / (R.isoK || 1)), hs = 7 * (window.devicePixelRatio || 1);
+        hits.push({ kind: 'iso', r: f }); frames.iso = f;
+        hits.push({ kind: 'isoR', r: { x: f.x + f.w - hs, y: f.y + f.h - hs, w: 2 * hs, h: 2 * hs } });
       }
       const arrow = function (x0, y0, x1, y1) {
         const a = Math.atan2(y1 - y0, x1 - x0), L2 = font * 1.05, wv = L2 * 0.3;
@@ -10933,6 +10990,17 @@ var wasm_bindgen = (function(exports) {
         }
         c2.fillStyle = '#111';
         if (lines.length) hits.push({ kind: 'label', id: pt.id, r: { x: cx - wmax / 2 - 3, y: f.y + f.h + 0.4 * font, w: wmax + 6, h: y - (f.y + f.h + 0.4 * font) } });
+      }
+      // total mass per material, one line each; the box's lower right corner sits at V6S.tot (bottom right by default)
+      const tl = v6Totals(R.parts.map(function (pt) { return pt.b; }));
+      if (o.tot && tl.length) {
+        c2.font = fnt; c2.textAlign = 'left'; c2.textBaseline = 'top'; c2.fillStyle = '#111';
+        const lh = font * 1.35, wm = Math.max.apply(null, tl.map(function (t) { return c2.measureText(t).width; })), hh = tl.length * lh - (lh - font);
+        const tp = V6S.tot || [(W - 1.5 * font) / W, (H - 1.2 * font - (o.scn ? 1.7 * font : 0)) / H];
+        const x0 = tp[0] * W - wm, y0 = tp[1] * H - hh;
+        tl.forEach(function (t, i) { c2.fillText(t, x0, y0 + i * lh); });
+        R.totPos = tp.slice();
+        hits.push({ kind: 'tot', r: { x: x0 - 3, y: y0 - 3, w: wm + 6, h: hh + 6 } });
       }
     }
     if (o.scn) {
@@ -10993,7 +11061,10 @@ var wasm_bindgen = (function(exports) {
     document.querySelectorAll('#pop_v6 .v6m6').forEach(function (r) { r.style.display = exp ? 'none' : ''; });
     document.querySelectorAll('#pop_v6 .v6mE').forEach(function (r) { r.style.display = exp ? '' : 'none'; });
     document.querySelectorAll('#pop_v6 .v6isorow').forEach(function (r) { r.style.display = exp || o.iso ? '' : 'none'; });
-    $('v6Title').textContent = exp ? 'Exploded view' : '6 view';
+    $('v6ShT').textContent = exp ? 'Exploded view' : '6 view';
+    document.querySelectorAll('#v6Seg button').forEach(function (b) { b.classList.toggle('on', b.dataset.k === V6S.mode); });
+    document.querySelectorAll('#pop_v6 .v6isok').forEach(function (r) { r.style.display = !exp && o.iso ? '' : 'none'; });
+    document.querySelectorAll('#pop_v6 .v6scc').forEach(function (r) { r.style.display = $('v6Scale').value === 'c' ? '' : 'none'; });
     $('v6Dim').parentNode.style.display = exp ? 'none' : ''; $('v6Unit').style.display = exp ? 'none' : ''; $('v6Lbl').parentNode.style.display = exp ? 'none' : '';
     $('v6Ori').style.display = px ? 'none' : ''; $('v6Bg').disabled = o.fmt === 'jpg';
     $('v6One').style.display = o.col === 'one' ? '' : 'none';
@@ -11080,6 +11151,11 @@ var wasm_bindgen = (function(exports) {
       if ((h.kind === 'note' && h.id === V6S.nsel) || ((h.kind === 'part' || h.kind === 'label') && h.id === V6S.psel)) box(h, '#f0a030');
       else if (hover && h === hover) box(h, '#2f8cff');
     }
+    const isoH = q.hits.find(function (h) { return h.kind === 'isoR'; });
+    if (isoH && hover && (hover.kind === 'iso' || hover.kind === 'isoR')) {
+      c2.save(); c2.fillStyle = '#2f8cff'; c2.strokeStyle = '#fff'; c2.lineWidth = dpr;
+      const r = isoH.r, a = r.w * 0.36; c2.fillRect(r.x + r.w / 2 - a, r.y + r.h / 2 - a, 2 * a, 2 * a); c2.strokeRect(r.x + r.w / 2 - a, r.y + r.h / 2 - a, 2 * a, 2 * a); c2.restore();
+    }
   }
   function v6Hit(e) {
     const q = V6S.prev; if (!q || !q.hits) return null;
@@ -11089,7 +11165,7 @@ var wasm_bindgen = (function(exports) {
     let best = null;
     for (const h of q.hits) if (x >= h.r.x - m && x <= h.r.x + h.r.w + m && y >= h.r.y - m && y <= h.r.y + h.r.h + m) {
       // notes and labels over pictures
-      const rank = { note: 3, label: 2, part: 1, iso: 1, view: 0 };
+      const rank = { isoR: 4, note: 3, tot: 3, label: 2, part: 1, iso: 1, view: 0 };
       if (!best || rank[h.kind] >= rank[best.kind]) best = h;
     }
     return { h: best, x: x, y: y };
@@ -11133,8 +11209,14 @@ var wasm_bindgen = (function(exports) {
       v6PartRow(); v6Paint(h);
       if (!h) return;
       if (h.kind === 'view' && !V6S.pos) V6S.pos = JSON.parse(JSON.stringify(V6S.prev.pos));
-      if (h.kind === 'iso' && !V6S.iso) V6S.iso = v6IsoDefault(V6S.prev.o, V6S.prev, V6S.pos || V6S.prev.pos);
-      V6S.drag = { h: h, x: t.x, y: t.y, pos: JSON.parse(JSON.stringify(V6S.pos)), iso: V6S.iso && V6S.iso.slice(), off: (V6S.off[h.id] || [0, 0]).slice(), note: h.kind === 'note' ? [v6Note(h.id).x, v6Note(h.id).y] : null };
+      if ((h.kind === 'iso' || h.kind === 'isoR') && !V6S.iso) V6S.iso = v6IsoDefault(V6S.prev.o, V6S.prev, V6S.pos || V6S.prev.pos);
+      if (h.kind === 'tot' && !V6S.tot) V6S.tot = (V6S.prev.totPos || [0.95, 0.95]).slice();
+      if (h.kind === 'isoR') {
+        const f = V6S.prev.hits.find(function (x) { return x.kind === 'iso'; }).r, c = [f.x + f.w / 2, f.y + f.h / 2];
+        V6S.drag = { h: h, x: t.x, y: t.y, c: c, d0: Math.max(4, Math.hypot(t.x - c[0], t.y - c[1])), k0: V6S.prev.o.isoK, k: V6S.prev.o.isoK };
+        e.preventDefault(); return;
+      }
+      V6S.drag = { tot: V6S.tot && V6S.tot.slice(), h: h, x: t.x, y: t.y, pos: JSON.parse(JSON.stringify(V6S.pos)), iso: V6S.iso && V6S.iso.slice(), off: (V6S.off[h.id] || [0, 0]).slice(), note: h.kind === 'note' ? [v6Note(h.id).x, v6Note(h.id).y] : null };
       e.preventDefault();
     });
     pc.addEventListener('dblclick', function (e) { const t = v6Hit(e); if (t && t.h && (t.h.kind === 'note' || t.h.kind === 'label' || t.h.kind === 'part')) v6Edit(t.h); });
@@ -11144,7 +11226,7 @@ var wasm_bindgen = (function(exports) {
       if (!V6S.drag) {
         if (e.target !== pc) return;
         const h = t.h;
-        pc.style.cursor = !h ? 'default' : h.kind === 'view' ? (h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize') : 'move';
+        pc.style.cursor = !h ? 'default' : h.kind === 'isoR' ? 'nwse-resize' : h.kind === 'view' ? (h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize') : 'move';
         if (h !== V6S.hov) { V6S.hov = h; v6Paint(h); }
         return;
       }
@@ -11159,9 +11241,16 @@ var wasm_bindgen = (function(exports) {
       } else if (h.kind === 'iso') V6S.iso = [D.iso[0] + dx, D.iso[1] + dy];
       else if (h.kind === 'part' || h.kind === 'label') V6S.off[h.id] = [D.off[0] + dx, D.off[1] + dy];
       else if (h.kind === 'note') { const n = v6Note(h.id); n.x = D.note[0] + dx; n.y = D.note[1] + dy; }
+      else if (h.kind === 'tot') V6S.tot = [D.tot[0] + dx, D.tot[1] + dy];
+      else if (h.kind === 'isoR') D.k = Math.max(0.1, Math.min(5, D.k0 * Math.hypot(t.x - D.c[0], t.y - D.c[1]) / D.d0));
       v6Paint(h);
     });
-    window.addEventListener('mouseup', function () { if (V6S.drag) { V6S.drag = null; v6Paint(V6S.hov); } });
+    window.addEventListener('mouseup', function () {
+      const D = V6S.drag; if (!D) return;
+      V6S.drag = null;
+      if (D.h.kind === 'isoR' && D.k !== D.k0) { $('v6IsoK').value = $('v6IsoKR').value = Math.round(D.k * 100); v6Paint(V6S.hov); v6Preview(); return; }
+      v6Paint(V6S.hov);
+    });
     pc.addEventListener('mouseleave', function () { if (!V6S.drag && V6S.hov) { V6S.hov = null; v6Paint(); } });
     window.addEventListener('keydown', function (e) {
       if (!$('pop_v6').classList.contains('on') || !V6S.nsel || V6S.edit) return;
@@ -11239,15 +11328,14 @@ var wasm_bindgen = (function(exports) {
     if (/^v6(Ns|NsR|Nb|PName|PMat)$/.test(el.id)) return;
     el.addEventListener('input', v6Preview); el.addEventListener('change', v6Preview);
   });
-  [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
-    ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns']].forEach(function (p) {
+  V6_PAIRS.forEach(function (p) {
     const r = $(p[0]), n = $(p[1]);
     r.addEventListener('input', function () { n.value = r.value; n.dispatchEvent(new Event('input')); });
     n.addEventListener('input', function () { r.value = n.value; });
   });
   // views switched or the sheet changed: a hand placement would no longer fit
   document.querySelectorAll('.v6v').forEach(function (c) { c.addEventListener('change', function () { V6S.pos = null; }); });
-  ['v6Scale', 'v6Paper', 'v6Ori', 'v6Dim', 'v6Lbl', 'v6ScN', 'v6Zm', 'v6Fs'].forEach(function (id) { $(id).addEventListener('change', function () { V6S.pos = null; V6S.iso = null; }); });
+  ['v6Scale', 'v6ScA', 'v6ScB', 'v6ScR', 'v6Paper', 'v6Ori', 'v6Dim', 'v6Lbl', 'v6ScN', 'v6Zm', 'v6Fs'].forEach(function (id) { $(id).addEventListener('change', function () { V6S.pos = null; V6S.iso = null; }); });
   $('v6Iso').addEventListener('change', function () { V6S.iso = null; });
   $('v6Ex').addEventListener('change', function () { V6S.off = {}; });
   function v6Rot(M) {
@@ -11259,20 +11347,57 @@ var wasm_bindgen = (function(exports) {
   $('v6RotZm').addEventListener('click', function () { v6Rot([[0, 1, 0], [-1, 0, 0], [0, 0, 1]]); });
   $('v6Tip').addEventListener('click', function () { v6Rot([[1, 0, 0], [0, 0, -1], [0, 1, 0]]); });
   $('v6Auto').addEventListener('click', function () { V6S.pos = null; V6S.iso = null; V6S.off = {}; v6Preview(); });
-  // the two buttons of the Capture group open the same panel in their own mode
-  function v6Open(mode) {
-    const was = V6S.mode; V6S.mode = mode; V6S.nsel = null;
-    if (mode === 'exp' && was !== 'exp') { $('v6Light').value = 'studio'; }
-    const p = $('pop_v6');
-    if (p.classList.contains('on')) v6Preview(); else openPop('v6', true);
-  }
-  document.querySelectorAll('.popb[data-pop=v6]').forEach(function (b) {
-    b.addEventListener('click', function (e) {
-      if ($('pop_v6').classList.contains('on') && V6S.mode !== '6v') { e.stopImmediatePropagation(); e.preventDefault(); v6Open('6v'); return; }
-      V6S.mode = '6v'; V6S.nsel = null;
-    }, true);
+  // custom scale a : b — the slider runs on a log scale from 1:100 to 100:1
+  function v6ScSync() { const a = parseFloat($('v6ScA').value) || 1, b = parseFloat($('v6ScB').value) || 1; $('v6ScR').value = Math.max(-2, Math.min(2, Math.log10(a / b))).toFixed(2); }
+  $('v6ScR').addEventListener('input', function () {
+    const r = Math.pow(10, +this.value), nice = function (v) { return v >= 10 ? Math.round(v) : Math.round(v * 10) / 10; };
+    if (r >= 1) { $('v6ScA').value = nice(r); $('v6ScB').value = 1; } else { $('v6ScA').value = 1; $('v6ScB').value = nice(1 / r); }
   });
-  $('bExpView').addEventListener('click', function () { v6Open('exp'); });
+  ['v6ScA', 'v6ScB'].forEach(function (id) { $(id).addEventListener('input', v6ScSync); });
+  // ---------- the two drawings (6 view / Exploded view): own settings, switched in the panel, saved with the session
+  function v6Ctls() { return Array.from(document.querySelectorAll('#pop_v6 input, #pop_v6 select')).filter(function (el) { return el.type !== 'range' && !/^v6(Ns|Nb|PName|PMat)$/.test(el.id); }); }
+  function v6Key(el) { return el.id || (el.dataset.v ? 'v:' + el.dataset.v : ''); }
+  function v6Snap() { const c = {}; v6Ctls().forEach(function (el) { const k = v6Key(el); if (k) c[k] = el.type === 'checkbox' ? el.checked : el.value; }); return c; }
+  function v6Apply(c) {
+    v6Ctls().forEach(function (el) { const k = v6Key(el); if (!k || !(k in c)) return; if (el.type === 'checkbox') el.checked = !!c[k]; else el.value = c[k]; });
+    V6_PAIRS.forEach(function (p) { $(p[0]).value = $(p[1]).value; }); v6ScSync();
+  }
+  function v6StGet() { return { R: V6S.R, pos: V6S.pos, iso: V6S.iso, off: V6S.off, tot: V6S.tot }; }
+  function v6StSet(t) { t = t || {}; V6S.R = t.R || [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; V6S.pos = t.pos || null; V6S.iso = t.iso || null; V6S.off = t.off || {}; V6S.tot = t.tot || null; }
+  function v6SetMode(m) {
+    if (V6S.edit) v6EditDone(false);
+    if (m !== V6S.mode) { V6S.cfg[V6S.mode] = v6Snap(); V6S.st[V6S.mode] = v6StGet(); V6S.mode = m; v6Apply(V6S.cfg[m]); v6StSet(V6S.st[m]); }
+    V6S.nsel = null; V6S.psel = null; v6Sync(); v6Preview();
+  }
+  document.querySelectorAll('#v6Seg button').forEach(function (b) { b.addEventListener('click', function () { v6SetMode(b.dataset.k); }); });
+  V6S.def = v6Snap(); V6S.cfg = { '6v': v6Snap(), exp: v6Snap() };
+  // session: body ids change when a session is opened, so hand placements of parts are kept by body order
+  function v6Dump() {
+    V6S.cfg[V6S.mode] = v6Snap(); V6S.st[V6S.mode] = v6StGet();
+    const idx = new Map(S.bodies.map(function (b, i) { return [String(b.id), i]; })), st = {};
+    for (const m of ['6v', 'exp']) {
+      const t = V6S.st[m] || {}, off = {};
+      for (const id in (t.off || {})) if (idx.has(id)) off[idx.get(id)] = t.off[id];
+      st[m] = { R: t.R || null, pos: t.pos || null, iso: t.iso || null, tot: t.tot || null, off: off };
+    }
+    return { mode: V6S.mode, cfg: JSON.parse(JSON.stringify(V6S.cfg)), st: st, notes: JSON.parse(JSON.stringify(V6S.notes)), seq: V6S.seq };
+  }
+  function v6Load(d) {
+    if (V6S.edit) v6EditDone(false);
+    d = d || {};
+    const ids = S.bodies.map(function (b) { return b.id; }), cf = d.cfg || {}, sd = d.st || {};
+    V6S.cfg = { '6v': Object.assign({}, V6S.def, cf['6v']), exp: Object.assign({}, V6S.def, cf.exp) };
+    for (const m of ['6v', 'exp']) {
+      const t = sd[m] || {}, off = {};
+      for (const i in (t.off || {})) if (ids[i] !== undefined) off[ids[i]] = t.off[i];
+      V6S.st[m] = { R: t.R, pos: t.pos, iso: t.iso, tot: t.tot, off: off };
+    }
+    const nt = d.notes || {};
+    V6S.notes = { '6v': nt['6v'] || [], exp: nt.exp || [] };
+    V6S.seq = Math.max(d.seq || 1, 1 + Math.max.apply(null, [0].concat(V6S.notes['6v'], V6S.notes.exp).map(function (n) { return n.id || 0; })));
+    V6S.mode = d.mode === 'exp' ? 'exp' : '6v'; v6Apply(V6S.cfg[V6S.mode]); v6StSet(V6S.st[V6S.mode]);
+    V6S.nsel = null; V6S.psel = null; V6S.prev = null; v6Sync(); v6Preview();
+  }
   $('v6Save').addEventListener('click', function () {
     v6Full().then(function (r) {
       download([r.blob], 'mrt_' + (r.o.exp ? 'exploded' : '6view') + '_' + r.o.dpi + 'dpi.' + r.o.fmt);
@@ -11288,7 +11413,7 @@ var wasm_bindgen = (function(exports) {
 
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();
 </script>
 </body>

@@ -863,7 +863,31 @@
     try { localStorage.setItem('mrt_tab', t); } catch (e) { /* not kept */ }
     dirty = true;
   }
-  document.querySelectorAll('#rtabs .rtab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
+  // the ribbon never scrolls sideways: when the window is narrow the groups get tighter step by step (spacing, two-line
+  // labels, icon-only small buttons, icon-only big buttons) and, as a last resort, the whole row is scaled down to fit
+  function ribFit() {
+    const rb = $('ribbon'), pg = rb && rb.querySelector('.rpage.on'); if (!pg) return;
+    const over = function () { return pg.scrollWidth > pg.clientWidth + 1; };
+    pg.style.transform = ''; rb.style.height = '';
+    rb.classList.remove('f1', 'f2', 'f5'); pg.querySelectorAll('.rgrp').forEach(function (g) { g.classList.remove('ic', 'ib'); });
+    if (over()) rb.classList.add('f1');
+    if (over()) rb.classList.add('f2');
+    // widest groups first: small buttons lose their text, then big buttons
+    for (const cls of ['ic', 'ib']) {
+      if (!over()) break;
+      const gs = Array.from(pg.querySelectorAll('.rgrp')).filter(function (g) { return g.querySelector(cls === 'ic' ? '.rcol button.sb' : 'button.bb'); })
+        .sort(function (a, b) { return b.offsetWidth - a.offsetWidth; });
+      for (const g of gs) { if (!over()) break; g.classList.add(cls); }
+    }
+    if (over()) rb.classList.add('f5');
+    if (over()) {
+      const k = pg.clientWidth / pg.scrollWidth;
+      pg.style.transform = 'scale(' + k.toFixed(4) + ')'; rb.style.height = Math.ceil(pg.offsetHeight * k + 2) + 'px';
+    }
+  }
+  if (window.ResizeObserver) { let rw = -1; new ResizeObserver(function () { const w = $('ribbon').clientWidth; if (w !== rw) { rw = w; ribFit(); } }).observe($('ribbon')); }
+  window.addEventListener('resize', ribFit);
+  document.querySelectorAll('#rtabs .rtab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); ribFit(); }); });
   try { const t = localStorage.getItem('mrt_tab'); if (t === 'home') showTab(t); } catch (e) { /* default tab */ }
 
   // ---------- floating panels opened from the ribbon (several may be open) ----------

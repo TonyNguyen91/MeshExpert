@@ -12,7 +12,7 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - `src/core_dress.js` — hình học cho các lệnh solid: dao cắt fillet / chamfer, dời / thay mặt, shell.
 - `src/app2.js` — logic giao diện và thao tác.
 - `src/model.js` — môi trường sketch và danh sách sketch; `src/feat.js` — Extrude / Revolve, Boolean, các lệnh solid, phím tắt. Cả hai được chèn vào `app2.js` khi build.
-- `src/v6.js` — ảnh 6 view (nhóm Chụp).
+- `src/v6.js` — Drawing: bản vẽ 6 view và Exploded view (nhóm Chụp).
 - `src/manifold_embed.js` — thư viện Manifold 3.5.4 (Apache 2.0, xem `src/MANIFOLD_LICENSE.txt`) nhúng sẵn, dùng cho Boolean.
 - `src/build.py` — ghép các file trên thành `index.html`: `python3 src/build.py`.
 - `src/test_core.js`, `src/test_cmp.js`, `src/test_split.js`, `src/test_repair.js`, `src/test_solid.js`, `src/test_sketch.js`, `src/test_dress.js` — kiểm thử lõi bằng Node.js (chạy `build.py` trước).
@@ -103,8 +103,12 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 ## Undercut: góc draft dưới con trỏ
 - Sau khi bấm "Phân tích" trong Tooling analysis (undercut), rê chuột lên body đã phân tích sẽ hiện nhãn góc draft của mặt dưới con trỏ (so với hướng mở khuôn), cho biết mặt thoát về phía + hay −, và cảnh báo vàng khi nhỏ hơn "Góc thoát khuôn tối thiểu". Xóa màu phân tích thì nhãn tắt.
 
-## Chụp ảnh 6 view (nhóm Chụp)
-- Nút "6 view" mở một bảng nhỏ (kéo thanh tiêu đề để dời) và cửa sổ "Bản xếp 6 view" (kéo tiêu đề để dời, kéo góc dưới phải để đổi cỡ) hiện bản xem trước đúng tỉ lệ khổ giấy.
+## Drawing (nhóm Chụp): bản vẽ 6 view và Exploded view
+- Một nút **Drawing** mở bảng nhỏ (kéo thanh tiêu đề để dời) và cửa sổ xem trước (kéo tiêu đề để dời, kéo góc dưới phải để đổi cỡ) đúng tỉ lệ khổ giấy. Đầu bảng chọn **6 view** hoặc **Exploded view**.
+- Hai bản vẽ **độc lập**: mỗi loại có bộ thiết lập riêng (khổ, tỉ lệ, DPI, màu, chữ…) và vị trí riêng (xoay mô hình, chỗ các view / hình iso / linh kiện / ô tổng khối lượng, ghi chú). Đổi qua lại không làm mất thiết lập của bên kia; cả hai được **lưu cùng phiên (.mrtl)** và mở lại đúng như cũ (Phiên mới đưa về mặc định).
+- **Tỉ lệ**: Vừa khổ, 5:1 … 1:10 hoặc **Tùy chọn** — nhập a : b bất kỳ (ví dụ 3 : 2) hoặc kéo thanh trượt (1:100 … 100:1).
+
+## Bản vẽ 6 view
 - Hình chiếu Trên / Trước / Trái / Phải / Sau / Dưới (tick chọn), xếp theo hình chiếu góc thứ ba, trục Z hướng lên. Lấy các body đang tick; không tick body nào thì lấy tất cả body đang hiện.
 - **Sắp xếp bằng chuột trong bản xem trước**, luôn giữ đúng gióng hình chiếu: kéo view Trước thì cả bản vẽ đi theo; Trái / Phải / Sau chỉ trượt ngang (cùng độ cao với view Trước); Trên / Dưới chỉ trượt dọc (cùng cột với view Trước). "Xếp tự động" để xếp lại như mặc định.
 - **Xoay**: ⟳ 90° / ⟲ 90° xoay mô hình quanh trục đứng (đổi mặt nào là mặt Trước), ⤵ 90° lật mô hình (đổi mặt Trên); các view luôn đồng bộ với nhau.
@@ -113,15 +117,19 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - **Độ sắc nét**: DPI 72–1200; khổ A4 / A3 / A2 / A1 ngang / dọc hoặc số pixel tùy chọn; tỉ lệ Vừa khổ hoặc cố định 5:1 … 1:10 (đúng kích thước thật khi in ở DPI đã chọn); độ dày nét theo mm (kèm inch); khử răng cưa 1×–4× (dựng ảnh lớn hơn rồi thu nhỏ); "B-rep mịn" chia lưới lại khối B-rep theo độ phân giải ảnh nên mặt cong tròn đều.
 - Ô thông tin: khổ giấy (mm | in), số pixel, DPI, kích thước mô hình (mm | in), tỉ lệ, **dung lượng dự kiến** của file.
 - Lưu PNG (nền trắng / trong suốt) hoặc JPG (chỉnh chất lượng); DPI được ghi vào file nên in ra đúng kích thước. "Chép ảnh" đưa ảnh PNG vào clipboard. Ảnh tối đa khoảng 150 triệu pixel.
-- **Hình chiếu iso**: tick "Hình chiếu iso", chỉnh Góc xoay (quanh trục đứng) và Góc nghiêng (nhìn từ trên xuống); hình iso kéo được tới bất kỳ đâu trên bản vẽ.
+- **Hình chiếu iso**: tick "Hình chiếu iso", chỉnh Góc xoay (quanh trục đứng) và Góc nghiêng (nhìn từ trên xuống); hình iso kéo được tới bất kỳ đâu trên bản vẽ. **Cỡ iso** (10–500 %) phóng to / thu nhỏ riêng hình iso; hoặc rê chuột lên hình iso rồi kéo ô vuông xanh ở góc dưới phải (tâm hình giữ nguyên).
 - **Cỡ hình**: phóng to / thu nhỏ toàn bộ hình vẽ (20–300 %) khi tỉ lệ là Vừa khổ. **Cỡ chữ** (mm) và **Đậm** cho kích thước, tên view, tên linh kiện, ghi tỉ lệ.
 - **Ghi chú chữ**: "+ Thêm chữ" đặt một dòng chữ và mở ô sửa; kéo để dời, bấm đúp để sửa (Shift+Enter xuống dòng), Delete hoặc ✕ để xoá; cỡ (mm) và đậm của ghi chú đang chọn chỉnh ở dòng "Ghi chú".
 
-## Exploded view (nhóm Chụp)
-- Nút "Exploded view" cạnh "6 view" mở cùng bảng và cửa sổ xem trước ở chế độ tách linh kiện: một hình iso cho từng body (Góc xoay / Góc nghiêng tùy ý), các body tách ra khỏi tâm cụm theo "Độ tách"; kéo từng linh kiện tới chỗ dễ nhìn. "Xếp tự động" đưa về vị trí tách mặc định.
+## Exploded view
+- Chọn "Exploded view" ở đầu bảng Drawing: chế độ tách linh kiện, một hình iso cho từng body (Góc xoay / Góc nghiêng tùy ý), các body tách ra khỏi tâm cụm theo "Độ tách"; kéo từng linh kiện tới chỗ dễ nhìn. "Xếp tự động" đưa về vị trí tách mặc định.
 - Dưới chân mỗi linh kiện: tên body và (tuỳ chọn) vật liệu · khối lượng (g, tính từ thể tích × khối lượng riêng).
 - Bấm đúp vào tên (hoặc hình) linh kiện để sửa tên và chọn vật liệu ngay trên bản vẽ; hoặc bấm chọn linh kiện rồi sửa ở dòng "Linh kiện" của bảng. Thay đổi ghi thẳng vào body: cây body, Properties (vật liệu, khối lượng) cập nhật theo; đổi tên / vật liệu trong cây body thì bản vẽ cũng tự cập nhật. Undo được.
-- Cùng các tùy chọn màu, ánh sáng, nét, khổ giấy, DPI, khử răng cưa, định dạng, ghi chú chữ như 6 view.
+- **Tổng khối lượng** (tick trong bảng): mỗi vật liệu một dòng, ví dụ `Tổng ABS 100 g` / `Tổng PVC mềm 120 g` (cộng tất cả linh kiện cùng vật liệu; vật liệu Tùy chọn gom theo khối lượng riêng). Mặc định ở góc dưới bên phải bản vẽ, kéo để dời đi chỗ khác.
+- Cùng các tùy chọn màu, ánh sáng, nét, khổ giấy, DPI, khử răng cưa, định dạng, ghi chú chữ như 6 view (nhưng là bộ thiết lập riêng).
+
+## Thanh công cụ chính
+- Thanh công cụ ngang không có thanh cuộn: khi cửa sổ hẹp, các nhóm tự co lại theo từng bước (giảm khoảng cách, chữ nút lớn xuống 2 dòng, nút nhỏ chỉ còn icon, nút lớn chỉ còn icon — tên vẫn hiện khi rê chuột), cuối cùng mới thu nhỏ cả hàng cho vừa.
 
 ## Pattern (nhóm Feature)
 - Một nút "Pattern" mở bảng Pattern, chọn kiểu Linear hoặc Circular ngay trong bảng. Áp dụng cho các body đang tick; màn 3D hiện bản xem trước trong suốt màu xanh.
