@@ -12,6 +12,7 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - `src/core_dress.js` — hình học cho các lệnh solid: dao cắt fillet / chamfer, dời / thay mặt, shell.
 - `src/app2.js` — logic giao diện và thao tác.
 - `src/model.js` — môi trường sketch và danh sách sketch; `src/feat.js` — Extrude / Revolve, Boolean, các lệnh solid, phím tắt. Cả hai được chèn vào `app2.js` khi build.
+- `src/v6.js` — ảnh 6 view (nhóm Chụp).
 - `src/manifold_embed.js` — thư viện Manifold 3.5.4 (Apache 2.0, xem `src/MANIFOLD_LICENSE.txt`) nhúng sẵn, dùng cho Boolean.
 - `src/build.py` — ghép các file trên thành `index.html`: `python3 src/build.py`.
 - `src/test_core.js`, `src/test_cmp.js`, `src/test_split.js`, `src/test_repair.js`, `src/test_solid.js`, `src/test_sketch.js`, `src/test_dress.js` — kiểm thử lõi bằng Node.js (chạy `build.py` trước).
@@ -101,6 +102,14 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 
 ## Undercut: góc draft dưới con trỏ
 - Sau khi bấm "Phân tích" trong Tooling analysis (undercut), rê chuột lên body đã phân tích sẽ hiện nhãn góc draft của mặt dưới con trỏ (so với hướng mở khuôn), cho biết mặt thoát về phía + hay −, và cảnh báo vàng khi nhỏ hơn "Góc thoát khuôn tối thiểu". Xóa màu phân tích thì nhãn tắt.
+
+## Chụp ảnh 6 view (nhóm Chụp)
+- Nút "6 view" mở bảng tạo ảnh hình chiếu kiểu bản vẽ: Trên / Trước / Trái / Phải / Sau / Dưới (tick chọn view nào cần), xếp theo hình chiếu góc thứ ba: Trên ở trên view Trước, Dưới ở dưới, hàng giữa Trái – Trước – Phải – Sau. Trục Z hướng lên.
+- Lấy các body đang tick; không tick body nào thì lấy tất cả body đang hiện.
+- Kiểu: Nét vẽ (nền trắng, nét đen), Tô bóng + nét, Tô bóng. Nét khuất ẩn hoặc vẽ nét đứt. Nét gồm cạnh B-rep, cạnh mesh gãy hơn "Góc cạnh", và đường bao (silhouette) theo từng hướng nhìn; phần bị che được bỏ.
+- Kích thước bao: dài (X) dưới view Trước, rộng (Y) dưới view Phải, cao (Z) bên trái view Phải; đơn vị mm + [in], mm hoặc in. Tuỳ chọn hiện tên view.
+- Khổ A4 / A3 / A2 / A1 (ngang / dọc) theo DPI (72–600), hoặc Tùy chọn số pixel rộng × cao. Độ dày nét tính bằng mm theo DPI. Nền trắng hoặc trong suốt. Ảnh tối đa khoảng 120 triệu pixel.
+- Ô xem trước cập nhật khi đổi thông số. "Lưu PNG" ghi DPI vào file (in đúng kích thước); "Chép ảnh" đưa ảnh vào clipboard.
 
 ## Pattern (nhóm Feature)
 - Một nút "Pattern" mở bảng Pattern, chọn kiểu Linear hoặc Circular ngay trong bảng. Áp dụng cho các body đang tick; màn 3D hiện bản xem trước trong suốt màu xanh.
