@@ -269,8 +269,9 @@
   #v6Sheet.on { display: flex; }
   #v6Sheet .v6hd { display: flex; align-items: center; gap: 6px; padding: 4px 8px; cursor: move; user-select: none; font-size: 12.5px; border-bottom: 1px solid #2a3340; }
   #v6Sheet .v6hint { color: #8796a8; font-size: 11px; }
+  #v6Sheet #v6VzR { width: 90px; } #v6Sheet #v6Vz { width: 52px; padding: 1px 3px; } #v6Sheet .v6zb { padding: 0 6px; line-height: 18px; }
   #v6Sheet .v6body { flex: 1; position: relative; overflow: hidden; background: #3a434f; }
-  #v6Prev { position: absolute; box-shadow: 0 2px 10px rgba(0,0,0,.5); }
+  #v6Prev { position: absolute; left: 0; top: 0; }
   #v6Ed { position: absolute; display: none; z-index: 3; background: #1b222b; border: 1px solid #2f8cff; border-radius: 5px; padding: 5px; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
   #v6Ed textarea { width: 200px; font: 13px "Segoe UI", Arial, sans-serif; resize: both; display: block; }
   #v6Ed select { margin-top: 4px; width: 100%; }
@@ -625,7 +626,7 @@
     <div class="v6info" id="v6Info"></div>
     <div class="btns"><button class="primary" id="v6Save" data-en="Save">Lưu ảnh</button><button id="v6Copy" data-en="Copy">Chép ảnh</button><button class="popx" data-pop="v6" data-en="Close">Đóng</button></div>
   </div></div>
-   <div id="v6Sheet"><div class="v6hd"><b id="v6ShT">6 view</b><span class="grow"></span><span class="v6hint" id="v6Zoom"></span></div><div class="v6body"><canvas id="v6Prev"></canvas><div id="v6Ed"><textarea id="v6EdT" rows="2"></textarea><select id="v6EdM"></select><div class="v6edb"><button id="v6EdOk" class="primary">OK</button><button id="v6EdNo" data-en="Cancel">Huỷ</button></div></div></div></div>
+   <div id="v6Sheet"><div class="v6hd"><b id="v6ShT">6 view</b><span class="grow"></span><span class="v6hint" id="v6Zoom"></span><input type="range" id="v6VzR" min="25" max="1200" step="5" value="100" title="Phóng to / thu nhỏ bản xem trước (lăn chuột trên bản vẽ; kéo chỗ trống để dời; bấm đúp chỗ trống để vừa khung)" data-en-title="Zoom the preview (mouse wheel on the sheet; drag an empty spot to pan; double-click an empty spot to fit)"><input type="number" id="v6Vz" value="100" min="25" max="1200" step="5"><span class="v6hint">%</span><button id="v6VzFit" class="v6zb" title="Vừa khung" data-en-title="Fit">⤢</button></div><div class="v6body"><canvas id="v6Prev"></canvas><div id="v6Ed"><textarea id="v6EdT" rows="2"></textarea><select id="v6EdM"></select><div class="v6edb"><button id="v6EdOk" class="primary">OK</button><button id="v6EdNo" data-en="Cancel">Huỷ</button></div></div></div></div>
    <div class="pop" id="pop_sla"><div class="pophd"><b data-en="SLA print plate">Bàn in SLA</b><span class="grow"></span><button class="popx" data-pop="sla">✕</button></div><div class="c">
     <div class="row"><span class="lbl" data-en="Plate X × Y">Bàn X × Y</span><input type="number" id="slaW" class="s" value="400" min="10" step="1"> × <input type="number" id="slaD" class="s" value="400" min="10" step="1"><span class="unit">mm</span></div>
     <div class="row"><span class="lbl" data-en="Spread">Độ dàn đều</span><input type="range" id="slaSpreadR" min="0" max="100" step="1" value="0" style="width:120px"><input type="number" id="slaSpread" class="s" value="0" min="0" step="1"><span class="unit">%</span></div>

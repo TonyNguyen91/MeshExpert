@@ -107,6 +107,7 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Một nút **Drawing** mở bảng nhỏ (kéo thanh tiêu đề để dời) và cửa sổ xem trước (kéo tiêu đề để dời, kéo góc dưới phải để đổi cỡ) đúng tỉ lệ khổ giấy. Đầu bảng chọn **6 view** hoặc **Exploded view**.
 - Hai bản vẽ **độc lập**: mỗi loại có bộ thiết lập riêng (khổ, tỉ lệ, DPI, màu, chữ…) và vị trí riêng (xoay mô hình, chỗ các view / hình iso / linh kiện / ô tổng khối lượng, ghi chú). Đổi qua lại không làm mất thiết lập của bên kia; cả hai được **lưu cùng phiên (.mrtl)** và mở lại đúng như cũ (Phiên mới đưa về mặc định).
 - **Tỉ lệ**: Vừa khổ, 5:1 … 1:10 hoặc **Tùy chọn** — nhập a : b bất kỳ (ví dụ 3 : 2) hoặc kéo thanh trượt (1:100 … 100:1).
+- **Xem trước nhẹ, zoom được**: lăn chuột trên bản vẽ để phóng to / thu nhỏ quanh con trỏ (hoặc thanh kéo % trên đầu cửa sổ xem trước); kéo chỗ trống (hoặc giữ chuột giữa) để dời; bấm đúp chỗ trống hoặc nút ⤢ để vừa khung. Khi zoom chỉ vẽ lại hình sẵn có nên rất mượt; nét sắc hơn được dựng lại sau khi dừng lăn một chút.
 
 ## Bản vẽ 6 view
 - Hình chiếu Trên / Trước / Trái / Phải / Sau / Dưới (tick chọn), xếp theo hình chiếu góc thứ ba, trục Z hướng lên. Lấy các body đang tick; không tick body nào thì lấy tất cả body đang hiện.
@@ -125,8 +126,12 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Chọn "Exploded view" ở đầu bảng Drawing: chế độ tách linh kiện, một hình iso cho từng body (Góc xoay / Góc nghiêng tùy ý), các body tách ra khỏi tâm cụm theo "Độ tách"; kéo từng linh kiện tới chỗ dễ nhìn. "Xếp tự động" đưa về vị trí tách mặc định.
 - Dưới chân mỗi linh kiện: tên body và (tuỳ chọn) vật liệu · khối lượng (g, tính từ thể tích × khối lượng riêng).
 - Bấm đúp vào tên (hoặc hình) linh kiện để sửa tên và chọn vật liệu ngay trên bản vẽ; hoặc bấm chọn linh kiện rồi sửa ở dòng "Linh kiện" của bảng. Thay đổi ghi thẳng vào body: cây body, Properties (vật liệu, khối lượng) cập nhật theo; đổi tên / vật liệu trong cây body thì bản vẽ cũng tự cập nhật. Undo được.
-- **Tổng khối lượng** (tick trong bảng): mỗi vật liệu một dòng, ví dụ `Tổng ABS 100 g` / `Tổng PVC mềm 120 g` (cộng tất cả linh kiện cùng vật liệu; vật liệu Tùy chọn gom theo khối lượng riêng). Mặc định ở góc dưới bên phải bản vẽ, kéo để dời đi chỗ khác.
+- **Tổng khối lượng** (tick trong bảng): mỗi vật liệu một dòng, ví dụ `Tổng ABS 100 g` / `Tổng PVC mềm 120 g` (cộng tất cả linh kiện cùng tên vật liệu — mọi loại PVC gộp thành một dòng PVC; vật liệu Tùy chọn gom theo khối lượng riêng). Mặc định ở góc dưới bên phải bản vẽ, kéo để dời đi chỗ khác.
+- **Combine**: chuột phải lên hình của một linh kiện → "Combine"; các body cùng khối lượng (lệch ≤ 0,5 %; body chưa có vật liệu thì so thể tích) sáng màu cam, bấm vào từng hình để gộp. Các body đã gộp chỉ còn một hình, tên có thêm `x2`, `x3`…; dòng vật liệu · khối lượng là của một chiếc; tổng khối lượng vẫn tính đủ. Esc, chuột phải hoặc bấm chỗ khác để thôi. Chuột phải lên hình đã gộp → "Tách ra". Nhóm gộp được lưu cùng phiên.
 - Cùng các tùy chọn màu, ánh sáng, nét, khổ giấy, DPI, khử răng cưa, định dạng, ghi chú chữ như 6 view (nhưng là bộ thiết lập riêng).
+
+## Vật liệu
+- Có nhiều loại PVC (khối lượng riêng 1.20 / 1.25 / 1.30 / 1.35 / 1.40 g/cm³), tên đều ghi là PVC; danh sách chọn hiện khối lượng riêng trong ngoặc để phân biệt.
 
 ## Thanh công cụ chính
 - Thanh công cụ ngang không có thanh cuộn: khi cửa sổ hẹp, các nhóm tự co lại theo từng bước (giảm khoảng cách, chữ nút lớn xuống 2 dòng, nút nhỏ chỉ còn icon, nút lớn chỉ còn icon — tên vẫn hiện khi rê chuột), cuối cùng mới thu nhỏ cả hàng cho vừa.

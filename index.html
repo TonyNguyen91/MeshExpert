@@ -269,8 +269,9 @@
   #v6Sheet.on { display: flex; }
   #v6Sheet .v6hd { display: flex; align-items: center; gap: 6px; padding: 4px 8px; cursor: move; user-select: none; font-size: 12.5px; border-bottom: 1px solid #2a3340; }
   #v6Sheet .v6hint { color: #8796a8; font-size: 11px; }
+  #v6Sheet #v6VzR { width: 90px; } #v6Sheet #v6Vz { width: 52px; padding: 1px 3px; } #v6Sheet .v6zb { padding: 0 6px; line-height: 18px; }
   #v6Sheet .v6body { flex: 1; position: relative; overflow: hidden; background: #3a434f; }
-  #v6Prev { position: absolute; box-shadow: 0 2px 10px rgba(0,0,0,.5); }
+  #v6Prev { position: absolute; left: 0; top: 0; }
   #v6Ed { position: absolute; display: none; z-index: 3; background: #1b222b; border: 1px solid #2f8cff; border-radius: 5px; padding: 5px; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
   #v6Ed textarea { width: 200px; font: 13px "Segoe UI", Arial, sans-serif; resize: both; display: block; }
   #v6Ed select { margin-top: 4px; width: 100%; }
@@ -625,7 +626,7 @@
     <div class="v6info" id="v6Info"></div>
     <div class="btns"><button class="primary" id="v6Save" data-en="Save">Lưu ảnh</button><button id="v6Copy" data-en="Copy">Chép ảnh</button><button class="popx" data-pop="v6" data-en="Close">Đóng</button></div>
   </div></div>
-   <div id="v6Sheet"><div class="v6hd"><b id="v6ShT">6 view</b><span class="grow"></span><span class="v6hint" id="v6Zoom"></span></div><div class="v6body"><canvas id="v6Prev"></canvas><div id="v6Ed"><textarea id="v6EdT" rows="2"></textarea><select id="v6EdM"></select><div class="v6edb"><button id="v6EdOk" class="primary">OK</button><button id="v6EdNo" data-en="Cancel">Huỷ</button></div></div></div></div>
+   <div id="v6Sheet"><div class="v6hd"><b id="v6ShT">6 view</b><span class="grow"></span><span class="v6hint" id="v6Zoom"></span><input type="range" id="v6VzR" min="25" max="1200" step="5" value="100" title="Phóng to / thu nhỏ bản xem trước (lăn chuột trên bản vẽ; kéo chỗ trống để dời; bấm đúp chỗ trống để vừa khung)" data-en-title="Zoom the preview (mouse wheel on the sheet; drag an empty spot to pan; double-click an empty spot to fit)"><input type="number" id="v6Vz" value="100" min="25" max="1200" step="5"><span class="v6hint">%</span><button id="v6VzFit" class="v6zb" title="Vừa khung" data-en-title="Fit">⤢</button></div><div class="v6body"><canvas id="v6Prev"></canvas><div id="v6Ed"><textarea id="v6EdT" rows="2"></textarea><select id="v6EdM"></select><div class="v6edb"><button id="v6EdOk" class="primary">OK</button><button id="v6EdNo" data-en="Cancel">Huỷ</button></div></div></div></div>
    <div class="pop" id="pop_sla"><div class="pophd"><b data-en="SLA print plate">Bàn in SLA</b><span class="grow"></span><button class="popx" data-pop="sla">✕</button></div><div class="c">
     <div class="row"><span class="lbl" data-en="Plate X × Y">Bàn X × Y</span><input type="number" id="slaW" class="s" value="400" min="10" step="1"> × <input type="number" id="slaD" class="s" value="400" min="10" step="1"><span class="unit">mm</span></div>
     <div class="row"><span class="lbl" data-en="Spread">Độ dàn đều</span><input type="range" id="slaSpreadR" min="0" max="100" step="1" value="0" style="width:120px"><input type="number" id="slaSpread" class="s" value="0" min="0" step="1"><span class="unit">%</span></div>
@@ -4285,7 +4286,7 @@ var wasm_bindgen = (function(exports) {
   let dirty = true, busy = false, W = 1, H = 1;
   const MATS = [['', '(chưa gán)', '(none)', 0], ['ABS', 'ABS', 'ABS', 1.05], ['PP', 'PP', 'PP', 0.905], ['HIPS', 'HIPS', 'HIPS', 1.05], ['PC', 'PC', 'PC', 1.20],
     ['PCABS', 'PC/ABS', 'PC/ABS', 1.15], ['POM', 'POM', 'POM', 1.41], ['PA6', 'PA6', 'PA6', 1.14], ['PA66GF30', 'PA66 GF30', 'PA66 GF30', 1.36],
-    ['HDPE', 'PE-HD', 'PE-HD', 0.95], ['PVC', 'PVC mềm', 'Soft PVC', 1.25], ['PMMA', 'PMMA', 'PMMA', 1.18], ['TPU', 'TPU', 'TPU', 1.20], ['PLA', 'PLA', 'PLA', 1.24],
+    ['HDPE', 'PE-HD', 'PE-HD', 0.95], ['PVC120', 'PVC', 'PVC', 1.20], ['PVC', 'PVC', 'PVC', 1.25], ['PVC130', 'PVC', 'PVC', 1.30], ['PVC135', 'PVC', 'PVC', 1.35], ['PVC140', 'PVC', 'PVC', 1.40], ['PMMA', 'PMMA', 'PMMA', 1.18], ['TPU', 'TPU', 'TPU', 1.20], ['PLA', 'PLA', 'PLA', 1.24],
     ['PETG', 'PETG', 'PETG', 1.27], ['AL', 'Nhôm', 'Aluminium', 2.70], ['ZAMAK', 'Kẽm (Zamak 3)', 'Zinc (Zamak 3)', 6.60], ['STEEL', 'Thép', 'Steel', 7.85], ['custom', 'Tùy chọn', 'Custom', 1]];
 
   // ================= geometry & bodies =================
@@ -10588,7 +10589,8 @@ var wasm_bindgen = (function(exports) {
   // the 6-view sheet and the exploded view are two separate drawings: each keeps its own panel values (cfg) and its own
   // placements (st: model turn, view / iso / part / totals positions); both are saved with the session (.mrtl)
   const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, tot: null, notes: { '6v': [], exp: [] }, nsel: null, psel: null,
-    prev: null, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null };
+    prev: null, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null, grp: {}, comb: null, vz: 1, vp: [0, 0], lay: null, est: 0 };
+  const V6_PREVPX = 12e6;   // the preview never renders the sheet above this many pixels (zooming further only scales)
   const V6_PAIRS = [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
     ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK']];
   let v6gl = null;
@@ -10633,12 +10635,28 @@ var wasm_bindgen = (function(exports) {
   function v6Txt(v, unit) { return unit === 'mm' ? v6mm(v) : unit === 'in' ? v6in(v) : v6mm(v) + '  (' + v6in(v) + ')'; }
   function v6Mat(b) { const m = MATS.find(function (x) { return x[0] === b.material; }); return m && m[0] ? (m[0] === 'custom' ? b.density + ' g/cm³' : (lang === 'en' ? m[2] : m[1])) : ''; }
   function v6Mass(b) { return b.density > 0 ? massTxt(getStats(b).volume / 1000 * b.density) : ''; }
+  // two bodies have the same mass (or, without material, the same volume) within 0.5 %
+  function v6Same(a, b) {
+    const ka = a.density > 0, kb = b.density > 0; if (ka !== kb) return false;
+    const ma = getStats(a).volume * (ka ? a.density : 1), mb = getStats(b).volume * (kb ? b.density : 1);
+    return Math.abs(ma - mb) <= 0.005 * Math.max(Math.abs(ma), Math.abs(mb), 1e-9);
+  }
+  // combined parts: V6S.grp[leader id] = [member ids]; members are not drawn, the leader carries "xN"
+  function v6GrpOf(ids) {
+    const have = new Set(ids), hide = new Set(), n = {};
+    for (const L in V6S.grp) {
+      if (!have.has(+L)) continue;
+      const m = V6S.grp[L].filter(function (id) { return have.has(id) && id !== +L; });
+      m.forEach(function (id) { hide.add(id); }); n[L] = 1 + m.length;
+    }
+    return { hide: hide, n: n };
+  }
   // "Tổng ABS 100 g" lines, one per material (custom materials grouped by density), in the order they first appear
   function v6Totals(bodies) {
     const g = new Map();
     for (const b of bodies) {
       if (!b.material || !(b.density > 0)) continue;
-      const key = b.material === 'custom' ? 'c' + b.density : b.material;
+      const key = b.material === 'custom' ? 'c' + b.density : v6Mat(b);
       const e = g.get(key) || { n: b.material === 'custom' ? L('Tùy chọn ', 'Custom ') + b.density + ' g/cm³' : v6Mat(b), m: 0 };
       e.m += getStats(b).volume / 1000 * b.density; g.set(key, e);
     }
@@ -10880,10 +10898,11 @@ var wasm_bindgen = (function(exports) {
   }
   // exploded: each part's centre in the iso picture (mm from the assembly centre) after pulling it out from the centre
   function v6ExpPlan(o, sc6) {
-    const D = v6Dirs(v6IsoSpec(o.az, o.el)), C = sc6.ctr, items = [];
+    const D = v6Dirs(v6IsoSpec(o.az, o.el)), C = sc6.ctr, items = [], G = v6GrpOf(sc6.preps.map(function (p) { return p.b.id; }));
     for (const p of sc6.preps) {
+      if (G.hide.has(p.b.id)) continue;
       const rg = v6Ranges([p], C, D.r, D.u), mid = V.mul(V.add(p.lo, p.hi), 0.5), sh = V.mul(V.sub(mid, C), o.spread);
-      items.push({ p: p, id: p.b.id, w: rg[1] - rg[0], h: rg[3] - rg[2], cx: (rg[0] + rg[1]) / 2 + V.dot(sh, D.r), cy: (rg[2] + rg[3]) / 2 + V.dot(sh, D.u) });
+      items.push({ p: p, id: p.b.id, n: G.n[p.b.id] || 1, w: rg[1] - rg[0], h: rg[3] - rg[2], cx: (rg[0] + rg[1]) / 2 + V.dot(sh, D.r), cy: (rg[2] + rg[3]) / 2 + V.dot(sh, D.u) });
     }
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     for (const it of items) { x0 = Math.min(x0, it.cx - it.w / 2); x1 = Math.max(x1, it.cx + it.w / 2); y0 = Math.min(y0, it.cy - it.h / 2); y1 = Math.max(y1, it.cy + it.h / 2); }
@@ -10897,17 +10916,17 @@ var wasm_bindgen = (function(exports) {
   }
 
   // ---------- rendering
-  async function v6Render(o, k, ss) {
+  async function v6Render(o, k, ss, quick) {
     if (!o.exp && !v6Names(o).length && !o.iso) throw new Error(L('Chưa chọn view nào', 'No view chosen'));
     let sc6 = await v6Scene(o, 0);
     let plan = o.exp ? v6ExpPlan(o, sc6) : null;
     const sc = v6ScaleOf(o, sc6, plan);
-    if (o.fine && k >= 1) { sc6 = await v6Scene(o, sc); if (o.exp) plan = v6ExpPlan(o, sc6); }
+    if (o.fine && k >= 1 && !quick) { sc6 = await v6Scene(o, sc); if (o.exp) plan = v6ExpPlan(o, sc6); }
     const M = v6Metrics(o), G = v6GL(); v6Upload(G, sc6);
     const out = { sc6: sc6, sc: sc, views: {}, parts: [], plan: plan, isoK: o.isoK };
     try {
       if (o.exp) {
-        for (const it of plan.items) out.parts.push(Object.assign(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, o), { id: it.id, b: it.p.b, cx: it.cx, cy: it.cy }));
+        for (const it of plan.items) out.parts.push(Object.assign(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, o), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
       } else {
         out.pos = V6S.pos || v6Auto(o, sc6.ext, sc).pos;
         for (const n of v6Names(o)) out.views[n] = v6View(G, sc6, sc6.preps, v6Dirs(V6_VIEWS[n]), sc * k, ss, M.lw * k, o);
@@ -10937,7 +10956,7 @@ var wasm_bindgen = (function(exports) {
         const ip = V6S.iso || v6IsoDefault(o, R, pos);
         // while its corner is dragged the iso picture is scaled on the fly; the next render redraws it sharp
         const D = V6S.drag, ik = D && D.h.kind === 'isoR' && D.k ? D.k : o.isoK;
-        const f = put(R.iso, ip[0] * W, ip[1] * H, ik / (R.isoK || 1)), hs = 7 * (window.devicePixelRatio || 1);
+        const f = put(R.iso, ip[0] * W, ip[1] * H, ik / (R.isoK || 1)), hs = V6S.hs || 7;
         hits.push({ kind: 'iso', r: f }); frames.iso = f;
         hits.push({ kind: 'isoR', r: { x: f.x + f.w - hs, y: f.y + f.h - hs, w: 2 * hs, h: 2 * hs } });
       }
@@ -10980,7 +10999,7 @@ var wasm_bindgen = (function(exports) {
         const cx = W / 2 + (pt.cx - P.bx) * sc + off[0] * W, cy = H / 2 - (pt.cy - P.by) * sc + off[1] * H;
         const f = put(pt, cx, cy); hits.push({ kind: 'part', id: pt.id, r: f });
         const lines = [];
-        if (o.pn) lines.push([pt.b.name, true]);
+        if (o.pn) lines.push([pt.b.name + (pt.n > 1 ? '  x' + pt.n : ''), true]);
         if (o.pm) { const m = v6Mat(pt.b), g = v6Mass(pt.b); if (m || g) lines.push([[m, g].filter(Boolean).join('  ·  '), false]); }
         let y = f.y + f.h + 0.5 * font, wmax = 0;
         c2.textAlign = 'center'; c2.textBaseline = 'top';
@@ -10992,7 +11011,7 @@ var wasm_bindgen = (function(exports) {
         if (lines.length) hits.push({ kind: 'label', id: pt.id, r: { x: cx - wmax / 2 - 3, y: f.y + f.h + 0.4 * font, w: wmax + 6, h: y - (f.y + f.h + 0.4 * font) } });
       }
       // total mass per material, one line each; the box's lower right corner sits at V6S.tot (bottom right by default)
-      const tl = v6Totals(R.parts.map(function (pt) { return pt.b; }));
+      const tl = v6Totals(R.sc6.preps.map(function (p) { return p.b; }));
       if (o.tot && tl.length) {
         c2.font = fnt; c2.textAlign = 'left'; c2.textBaseline = 'top'; c2.fillStyle = '#111';
         const lh = font * 1.35, wm = Math.max.apply(null, tl.map(function (t) { return c2.measureText(t).width; })), hh = tl.length * lh - (lh - font);
@@ -11112,56 +11131,93 @@ var wasm_bindgen = (function(exports) {
   // ---------- preview
   let v6Timer = 0, v6Busy = false, v6Again = false;
   function v6Preview() { clearTimeout(v6Timer); v6Timer = setTimeout(v6PreviewNow, 180); }
+  // the sheet window is a viewport: the sheet sits at V6S.vz x the fitting size, shifted by V6S.vp (css px); zoom and pan only
+  // repaint the pictures already rendered (scaled), a new render is made later and only when the zoom changed a lot
+  function v6Layout(o) {
+    const body = document.querySelector('#v6Sheet .v6body'), pc = $('v6Prev'), dpr = window.devicePixelRatio || 1;
+    const bw = Math.max(100, body.clientWidth), bh = Math.max(80, body.clientHeight);
+    if (pc.width !== Math.round(bw * dpr) || pc.height !== Math.round(bh * dpr)) { pc.width = Math.round(bw * dpr); pc.height = Math.round(bh * dpr); }
+    pc.style.width = bw + 'px'; pc.style.height = bh + 'px'; pc.style.left = '0px'; pc.style.top = '0px';
+    const fit = Math.min((bw - 16) / o.W, (bh - 16) / o.H), cw = o.W * fit * V6S.vz, ch = o.H * fit * V6S.vz;
+    const x0 = (bw - cw) / 2 + V6S.vp[0], y0 = (bh - ch) / 2 + V6S.vp[1];
+    return { dpr: dpr, bw: bw, bh: bh, x0: x0, y0: y0, cw: cw, ch: ch, kd: cw * dpr / o.W };
+  }
+  function v6WantK(o, L) { return Math.min(L.kd, Math.sqrt(V6_PREVPX / (o.W * o.H))); }
   async function v6PreviewNow() {
     if (!$('pop_v6').classList.contains('on')) return;
     if (v6Busy) { v6Again = true; return; }
     v6Busy = true;
-    const o = v6Sync(), body = document.querySelector('#v6Sheet .v6body'), pc = $('v6Prev');
+    const o = v6Sync(), pc = $('v6Prev');
     try {
-      const bw = Math.max(100, body.clientWidth - 16), bh = Math.max(80, body.clientHeight - 16);
-      const cssK = Math.min(bw / o.W, bh / o.H), dpr = window.devicePixelRatio || 1;
-      const cw = Math.max(40, Math.round(o.W * cssK)), ch = Math.max(30, Math.round(o.H * cssK));
-      pc.style.width = cw + 'px'; pc.style.height = ch + 'px'; pc.style.left = Math.round((body.clientWidth - cw) / 2) + 'px'; pc.style.top = Math.round((body.clientHeight - ch) / 2) + 'px';
-      pc.width = Math.round(cw * dpr); pc.height = Math.round(ch * dpr);
-      const k = pc.width / o.W;
-      V6S.prev = Object.assign(await v6Render(o, k, Math.min(2, o.ss)), { o: o, k: k });
+      const L = v6Layout(o), k = v6WantK(o, L), big = o.W * o.H * k * k;
+      V6S.prev = Object.assign(await v6Render(o, k, big > 3e6 ? 1 : Math.min(2, o.ss), true), { o: o, k: k });
       v6Paint();
       $('v6Zoom').textContent = o.W + ' × ' + o.H + ' px';
-      v6Info(o, V6S.prev, 0);
-      // expected size: the preview sheet encoded the same way, scaled up by area (larger pictures compress better)
-      const b = await new Promise(function (r) { v6Sheet(o, V6S.prev, k).toBlob(r, o.fmt === 'jpg' ? 'image/jpeg' : 'image/png', o.q); });
+      // expected size: a small copy of the sheet encoded the same way, scaled up by area (larger pictures compress better)
+      if (big <= 2.5e6 || !V6S.est) {
+        v6Info(o, V6S.prev, V6S.est);
+        const b = await new Promise(function (r) { v6Sheet(o, V6S.prev, k).toBlob(r, o.fmt === 'jpg' ? 'image/jpeg' : 'image/png', o.q); });
+        V6S.est = b.size * Math.pow(1 / (k * k), 0.76) + 2048;
+      }
       V6S.prev.k = k;
-      const f = (o.W * o.H) / (pc.width * pc.height), est = b.size * Math.pow(f, 0.76) + 2048;
-      v6Info(o, V6S.prev, est);
+      v6Info(o, V6S.prev, V6S.est);
     } catch (e) {
-      const g = pc.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, pc.width, pc.height); g.fillStyle = '#a33'; g.font = '13px sans-serif'; g.fillText(e.message, 10, 22);
+      const g = pc.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#fff'; g.fillRect(0, 0, pc.width, pc.height); g.fillStyle = '#a33'; g.font = '13px sans-serif'; g.fillText(e.message, 10, 22);
       V6S.prev = null; v6Info(o, null, 0);
     } finally { v6Busy = false; if (v6Again) { v6Again = false; v6Preview(); } }
   }
   function v6Paint(hover) {
     const q = V6S.prev, pc = $('v6Prev'); if (!q) return;
-    const c2 = pc.getContext('2d'), o = q.o;
-    if (o.bg === 'w') { c2.fillStyle = '#fff'; c2.fillRect(0, 0, pc.width, pc.height); }
-    else { const s = Math.max(6, Math.round(pc.width / 80)); for (let y = 0; y < pc.height; y += s) for (let x = 0; x < pc.width; x += s) { c2.fillStyle = ((x + y) / s) % 2 ? '#e9e9e9' : '#ffffff'; c2.fillRect(x, y, s, s); } }
-    q.k = q.k || pc.width / o.W;
+    if (hover === undefined) hover = V6S.hov;
+    const c2 = pc.getContext('2d'), o = q.o, L = v6Layout(o), dpr = L.dpr, s = L.kd / q.k;
+    const sx = L.x0 * dpr, sy = L.y0 * dpr, sw = L.cw * dpr, sh = L.ch * dpr;
+    V6S.lay = { ox: sx, oy: sy, s: s, dpr: dpr, W: o.W * q.k, H: o.H * q.k };
+    c2.setTransform(1, 0, 0, 1, 0, 0); c2.fillStyle = '#3a434f'; c2.fillRect(0, 0, pc.width, pc.height);
+    c2.save(); c2.shadowColor = 'rgba(0,0,0,.5)'; c2.shadowBlur = 10 * dpr; c2.shadowOffsetY = 2 * dpr; c2.fillStyle = '#fff'; c2.fillRect(sx, sy, sw, sh); c2.restore();
+    c2.save(); c2.beginPath(); c2.rect(sx, sy, sw, sh); c2.clip();
+    if (o.bg !== 'w') {
+      const t = Math.max(6, Math.round(12 * dpr)), x0 = Math.max(sx, 0), y0 = Math.max(sy, 0), x1 = Math.min(sx + sw, pc.width), y1 = Math.min(sy + sh, pc.height);
+      c2.fillStyle = '#e9e9e9';
+      for (let y = y0 - ((y0 - sy) % t); y < y1; y += t) for (let x = x0 - ((x0 - sx) % t); x < x1; x += t) if ((Math.round((x - sx) / t) + Math.round((y - sy) / t)) % 2) c2.fillRect(x, y, t, t);
+    }
+    c2.setTransform(s, 0, 0, s, sx, sy);
+    V6S.hs = 7 * dpr / s;
     q.hits = v6Compose(c2, o, q, q.k);
-    const dpr = window.devicePixelRatio || 1;
-    const box = function (h, col) { c2.save(); c2.strokeStyle = col; c2.lineWidth = 1.5 * dpr; c2.setLineDash([5 * dpr, 4 * dpr]); c2.strokeRect(h.r.x - 4 * dpr, h.r.y - 4 * dpr, h.r.w + 8 * dpr, h.r.h + 8 * dpr); c2.restore(); };
-    for (const h of q.hits) {
+    V6S.hs = 0;
+    const u = dpr / s;
+    const box = function (h, col, fill) {
+      c2.save(); if (fill) { c2.fillStyle = fill; c2.fillRect(h.r.x - 4 * u, h.r.y - 4 * u, h.r.w + 8 * u, h.r.h + 8 * u); }
+      c2.strokeStyle = col; c2.lineWidth = (fill ? 2.5 : 1.5) * u; c2.setLineDash(fill ? [] : [5 * u, 4 * u]); c2.strokeRect(h.r.x - 4 * u, h.r.y - 4 * u, h.r.w + 8 * u, h.r.h + 8 * u); c2.restore();
+    };
+    if (V6S.comb !== null) {
+      // combine: the chosen part in blue, parts of the same mass light up in orange
+      const cand = v6CombCands();
+      for (const h of q.hits) if (h.kind === 'part') {
+        if (h.id === V6S.comb) box(h, '#2f8cff', 'rgba(47,140,255,.10)');
+        else if (cand.has(h.id)) box(h, hover && hover.id === h.id ? '#ff8a00' : '#f0a030', hover && hover.id === h.id ? 'rgba(255,150,0,.32)' : 'rgba(240,160,48,.18)');
+      }
+    } else for (const h of q.hits) {
       if ((h.kind === 'note' && h.id === V6S.nsel) || ((h.kind === 'part' || h.kind === 'label') && h.id === V6S.psel)) box(h, '#f0a030');
       else if (hover && h === hover) box(h, '#2f8cff');
     }
     const isoH = q.hits.find(function (h) { return h.kind === 'isoR'; });
     if (isoH && hover && (hover.kind === 'iso' || hover.kind === 'isoR')) {
-      c2.save(); c2.fillStyle = '#2f8cff'; c2.strokeStyle = '#fff'; c2.lineWidth = dpr;
+      c2.save(); c2.fillStyle = '#2f8cff'; c2.strokeStyle = '#fff'; c2.lineWidth = u;
       const r = isoH.r, a = r.w * 0.36; c2.fillRect(r.x + r.w / 2 - a, r.y + r.h / 2 - a, 2 * a, 2 * a); c2.strokeRect(r.x + r.w / 2 - a, r.y + r.h / 2 - a, 2 * a, 2 * a); c2.restore();
     }
+    c2.restore(); c2.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  // sheet (render) coordinates -> client rect, for the editor and tests
+  function v6Scr(r) {
+    const L = V6S.lay, pc = $('v6Prev'); if (!L) return null;
+    const b = pc.getBoundingClientRect();
+    return { x: b.left + (L.ox + r.x * L.s) / L.dpr, y: b.top + (L.oy + r.y * L.s) / L.dpr, w: r.w * L.s / L.dpr, h: r.h * L.s / L.dpr };
   }
   function v6Hit(e) {
-    const q = V6S.prev; if (!q || !q.hits) return null;
+    const q = V6S.prev, Ly = V6S.lay; if (!q || !q.hits || !Ly) return null;
     const pc = $('v6Prev'), r = pc.getBoundingClientRect();
     if (!r.width) return null;
-    const x = (e.clientX - r.left) * pc.width / r.width, y = (e.clientY - r.top) * pc.height / r.height, m = 6;
+    const x = ((e.clientX - r.left) * Ly.dpr - Ly.ox) / Ly.s, y = ((e.clientY - r.top) * Ly.dpr - Ly.oy) / Ly.s, m = 6 * Ly.dpr / Ly.s;
     let best = null;
     for (const h of q.hits) if (x >= h.r.x - m && x <= h.r.x + h.r.w + m && y >= h.r.y - m && y <= h.r.y + h.r.h + m) {
       // notes and labels over pictures
@@ -11170,16 +11226,54 @@ var wasm_bindgen = (function(exports) {
     }
     return { h: best, x: x, y: y };
   }
+  // ---------- zoom / pan of the preview
+  function v6ZoomUI() { $('v6Vz').value = $('v6VzR').value = Math.round(V6S.vz * 100); }
+  function v6ZoomTo(z, mx, my) {
+    z = Math.max(0.25, Math.min(12, z));
+    const f = z / V6S.vz; if (Math.abs(f - 1) < 1e-4) return;
+    if (mx === undefined) { mx = 0; my = 0; }
+    V6S.vp = [mx - (mx - V6S.vp[0]) * f, my - (my - V6S.vp[1]) * f];
+    if (z <= 1.0001) V6S.vp = [V6S.vp[0] * Math.min(1, z), V6S.vp[1] * Math.min(1, z)];
+    V6S.vz = z; v6ZoomUI(); v6Paint();
+    v6ZoomCheck();
+  }
+  let v6ZTimer = 0;
+  function v6ZoomCheck() {
+    clearTimeout(v6ZTimer);
+    v6ZTimer = setTimeout(function () {
+      const q = V6S.prev; if (!q) return;
+      const want = v6WantK(q.o, v6Layout(q.o));
+      if (want > q.k * 1.15 || want < q.k * 0.55) v6PreviewNow();
+    }, 260);
+  }
+  function v6Fit() { V6S.vz = 1; V6S.vp = [0, 0]; v6ZoomUI(); v6Paint(); v6ZoomCheck(); }
+  // ---------- combine parts of the same mass into one picture (exploded view)
+  function v6CombCands() {
+    const q = V6S.prev, out = new Set(); if (!q || V6S.comb === null) return out;
+    const lead = S.bodies.find(function (b) { return b.id === V6S.comb; }); if (!lead) return out;
+    for (const pt of q.parts) if (pt.id !== lead.id && v6Same(pt.b, lead)) out.add(pt.id);
+    return out;
+  }
+  function v6CombStart(id) { V6S.comb = id; V6S.psel = id; v6Paint(); if (!v6CombCands().size) { flash(L('Không có body nào cùng khối lượng', 'No body with the same mass')); V6S.comb = null; v6Paint(); } }
+  function v6CombEnd() { if (V6S.comb === null) return; V6S.comb = null; v6Paint(); }
+  function v6CombAdd(id) {
+    const Ld = V6S.comb, g = (V6S.grp[Ld] || []).slice();
+    for (const x of [id].concat(V6S.grp[id] || [])) if (g.indexOf(x) < 0 && x !== Ld) g.push(x);
+    delete V6S.grp[id]; delete V6S.off[id]; V6S.grp[Ld] = g;
+    // one render later the member is gone; stay in combine mode while other parts of that mass are left
+    v6PreviewNow().then(function () { if (V6S.comb !== null && !v6CombCands().size) v6CombEnd(); });
+  }
+  function v6Uncomb(id) { delete V6S.grp[id]; v6Preview(); }
   function v6Note(id) { return V6S.notes[V6S.mode].find(function (n) { return n.id === id; }); }
   // inline editor over the sheet: a note's text, or a part's name + material
   function v6Edit(h) {
-    const ed = $('v6Ed'), t = $('v6EdT'), ms = $('v6EdM'), pc = $('v6Prev'), r = pc.getBoundingClientRect(), br = document.querySelector('#v6Sheet .v6body').getBoundingClientRect(), s = r.width / pc.width;
+    const ed = $('v6Ed'), t = $('v6EdT'), ms = $('v6EdM'), br = document.querySelector('#v6Sheet .v6body').getBoundingClientRect(), sr = v6Scr(h.r);
     let b = null, n = null;
     if (h.kind === 'note') { n = v6Note(h.id); t.value = n.text; t.rows = Math.max(2, n.text.split('\n').length); ms.style.display = 'none'; }
     else { b = S.bodies.find(function (x) { return x.id === h.id; }); if (!b) return; t.value = b.name; t.rows = 1; v6MatOpts(ms); ms.value = MATS.some(function (m) { return m[0] === b.material; }) ? b.material : ''; ms.style.display = ''; }
     ed.style.display = 'block';
-    ed.style.left = Math.max(0, Math.min(br.width - 220, r.left - br.left + h.r.x * s)) + 'px';
-    ed.style.top = Math.max(0, Math.min(br.height - 110, r.top - br.top + (h.r.y + h.r.h) * s + 4)) + 'px';
+    ed.style.left = Math.max(0, Math.min(br.width - 220, sr.x - br.left)) + 'px';
+    ed.style.top = Math.max(0, Math.min(br.height - 110, sr.y + sr.h - br.top + 4)) + 'px';
     t.focus(); t.select();
     V6S.edit = { n: n, b: b };
   }
@@ -11199,9 +11293,16 @@ var wasm_bindgen = (function(exports) {
   (function () {
     const pc = $('v6Prev');
     pc.addEventListener('mousedown', function (e) {
+      if (e.button === 1) { V6S.pan = { x: e.clientX, y: e.clientY, vp: V6S.vp.slice() }; e.preventDefault(); return; }
       if (e.button !== 0) return;
       const t = v6Hit(e); if (!t) return;
       const h = t.h;
+      if (V6S.comb !== null) {
+        const id = h && (h.kind === 'part' || h.kind === 'label') ? h.id : null;
+        if (id !== null && v6CombCands().has(id)) v6CombAdd(id); else v6CombEnd();
+        e.preventDefault(); return;
+      }
+      if (!h) V6S.pan = { x: e.clientX, y: e.clientY, vp: V6S.vp.slice() };
       if (V6S.edit) v6EditDone(true);
       V6S.nsel = h && h.kind === 'note' ? h.id : null;
       if (h && (h.kind === 'part' || h.kind === 'label')) V6S.psel = h.id; else if (h) V6S.psel = null;
@@ -11219,18 +11320,35 @@ var wasm_bindgen = (function(exports) {
       V6S.drag = { tot: V6S.tot && V6S.tot.slice(), h: h, x: t.x, y: t.y, pos: JSON.parse(JSON.stringify(V6S.pos)), iso: V6S.iso && V6S.iso.slice(), off: (V6S.off[h.id] || [0, 0]).slice(), note: h.kind === 'note' ? [v6Note(h.id).x, v6Note(h.id).y] : null };
       e.preventDefault();
     });
-    pc.addEventListener('dblclick', function (e) { const t = v6Hit(e); if (t && t.h && (t.h.kind === 'note' || t.h.kind === 'label' || t.h.kind === 'part')) v6Edit(t.h); });
+    pc.addEventListener('dblclick', function (e) { const t = v6Hit(e); if (t && t.h && (t.h.kind === 'note' || t.h.kind === 'label' || t.h.kind === 'part')) v6Edit(t.h); else if (t && !t.h) v6Fit(); });
+    pc.addEventListener('wheel', function (e) {
+      if (!V6S.prev) return;
+      e.preventDefault();
+      const r = pc.getBoundingClientRect();
+      v6ZoomTo(V6S.vz * Math.exp(-Math.max(-300, Math.min(300, e.deltaY * (e.deltaMode ? 30 : 1))) * 0.0018), e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2);
+    }, { passive: false });
+    pc.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+      if (V6S.comb !== null) { v6CombEnd(); return; }
+      const t = v6Hit(e), h = t && t.h;
+      if (!h || V6S.mode !== 'exp' || (h.kind !== 'part' && h.kind !== 'label')) return;
+      V6S.psel = h.id; v6PartRow(); v6Paint(h);
+      const items = [[L('Combine (gộp body cùng khối lượng)', 'Combine (bodies of the same mass)'), function () { v6CombStart(h.id); }, 'merge']];
+      if ((V6S.grp[h.id] || []).length) items.push([L('Tách ra', 'Uncombine'), function () { v6Uncomb(h.id); }, 'split']);
+      showMenu(items, e.clientX, e.clientY);
+    });
     window.addEventListener('mousemove', function (e) {
       if (!V6S.prev) return;
+      if (V6S.pan) { V6S.vp = [V6S.pan.vp[0] + e.clientX - V6S.pan.x, V6S.pan.vp[1] + e.clientY - V6S.pan.y]; pc.style.cursor = 'grabbing'; v6Paint(); return; }
       const t = v6Hit(e); if (!t) return;
       if (!V6S.drag) {
         if (e.target !== pc) return;
         const h = t.h;
-        pc.style.cursor = !h ? 'default' : h.kind === 'isoR' ? 'nwse-resize' : h.kind === 'view' ? (h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize') : 'move';
+        pc.style.cursor = V6S.comb !== null ? (h && v6CombCands().has(h.id) ? 'copy' : 'default') : !h ? 'grab' : h.kind === 'isoR' ? 'nwse-resize' : h.kind === 'view' ? (h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize') : 'move';
         if (h !== V6S.hov) { V6S.hov = h; v6Paint(h); }
         return;
       }
-      const D = V6S.drag, h = D.h, dx = (t.x - D.x) / pc.width, dy = (t.y - D.y) / pc.height;
+      const D = V6S.drag, h = D.h, dx = (t.x - D.x) / V6S.lay.W, dy = (t.y - D.y) / V6S.lay.H;
       if (Math.abs(t.x - D.x) + Math.abs(t.y - D.y) > 2) D.moved = true;
       if (h.kind === 'view') {
         const P = JSON.parse(JSON.stringify(D.pos));
@@ -11246,6 +11364,7 @@ var wasm_bindgen = (function(exports) {
       v6Paint(h);
     });
     window.addEventListener('mouseup', function () {
+      if (V6S.pan) { V6S.pan = null; pc.style.cursor = 'grab'; }
       const D = V6S.drag; if (!D) return;
       V6S.drag = null;
       if (D.h.kind === 'isoR' && D.k !== D.k0) { $('v6IsoK').value = $('v6IsoKR').value = Math.round(D.k * 100); v6Paint(V6S.hov); v6Preview(); return; }
@@ -11253,6 +11372,7 @@ var wasm_bindgen = (function(exports) {
     });
     pc.addEventListener('mouseleave', function () { if (!V6S.drag && V6S.hov) { V6S.hov = null; v6Paint(); } });
     window.addEventListener('keydown', function (e) {
+      if ($('pop_v6').classList.contains('on') && V6S.comb !== null && e.key === 'Escape') { v6CombEnd(); e.preventDefault(); e.stopPropagation(); return; }
       if (!$('pop_v6').classList.contains('on') || !V6S.nsel || V6S.edit) return;
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
       if (e.key === 'Delete' || e.key === 'Backspace') { v6DelNote(); e.preventDefault(); e.stopPropagation(); }
@@ -11307,6 +11427,10 @@ var wasm_bindgen = (function(exports) {
     return save;
   }
   $('tpop').parentNode.appendChild($('pop_v6')); $('tpop').parentNode.appendChild($('v6Sheet'));
+  $('v6VzR').addEventListener('input', function () { $('v6Vz').value = this.value; v6ZoomTo(+this.value / 100); });
+  $('v6Vz').addEventListener('input', function () { const v = parseFloat(this.value); if (isFinite(v) && v > 0) { $('v6VzR').value = v; v6ZoomTo(v / 100); } });
+  ['v6VzR', 'v6Vz'].forEach(function (id) { $(id).addEventListener('keydown', function (e) { e.stopPropagation(); }); });
+  $('v6VzFit').addEventListener('click', v6Fit);
   v6Move($('pop_v6'), document.querySelector('#pop_v6 .pophd'), 'mx.v6Pop');
   const v6SaveSheet = v6Move($('v6Sheet'), document.querySelector('#v6Sheet .v6hd'), 'mx.v6Sheet');
   if (window.ResizeObserver) {
@@ -11321,6 +11445,7 @@ var wasm_bindgen = (function(exports) {
     const on = $('pop_v6').classList.contains('on');
     $('v6Sheet').classList.toggle('on', on);
     if (!on && V6S.edit) v6EditDone(false);
+    if (!on) V6S.comb = null;
     if (on) v6Preview();
   }).observe($('pop_v6'), { attributes: true, attributeFilter: ['class'] });
 
@@ -11362,10 +11487,11 @@ var wasm_bindgen = (function(exports) {
     v6Ctls().forEach(function (el) { const k = v6Key(el); if (!k || !(k in c)) return; if (el.type === 'checkbox') el.checked = !!c[k]; else el.value = c[k]; });
     V6_PAIRS.forEach(function (p) { $(p[0]).value = $(p[1]).value; }); v6ScSync();
   }
-  function v6StGet() { return { R: V6S.R, pos: V6S.pos, iso: V6S.iso, off: V6S.off, tot: V6S.tot }; }
-  function v6StSet(t) { t = t || {}; V6S.R = t.R || [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; V6S.pos = t.pos || null; V6S.iso = t.iso || null; V6S.off = t.off || {}; V6S.tot = t.tot || null; }
+  function v6StGet() { return { R: V6S.R, pos: V6S.pos, iso: V6S.iso, off: V6S.off, tot: V6S.tot, grp: V6S.grp }; }
+  function v6StSet(t) { t = t || {}; V6S.R = t.R || [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; V6S.pos = t.pos || null; V6S.iso = t.iso || null; V6S.off = t.off || {}; V6S.tot = t.tot || null; V6S.grp = t.grp || {}; }
   function v6SetMode(m) {
     if (V6S.edit) v6EditDone(false);
+    V6S.comb = null;
     if (m !== V6S.mode) { V6S.cfg[V6S.mode] = v6Snap(); V6S.st[V6S.mode] = v6StGet(); V6S.mode = m; v6Apply(V6S.cfg[m]); v6StSet(V6S.st[m]); }
     V6S.nsel = null; V6S.psel = null; v6Sync(); v6Preview();
   }
@@ -11378,7 +11504,9 @@ var wasm_bindgen = (function(exports) {
     for (const m of ['6v', 'exp']) {
       const t = V6S.st[m] || {}, off = {};
       for (const id in (t.off || {})) if (idx.has(id)) off[idx.get(id)] = t.off[id];
-      st[m] = { R: t.R || null, pos: t.pos || null, iso: t.iso || null, tot: t.tot || null, off: off };
+      const grp = {};
+      for (const id in (t.grp || {})) if (idx.has(id)) grp[idx.get(id)] = t.grp[id].filter(function (x) { return idx.has(String(x)); }).map(function (x) { return idx.get(String(x)); });
+      st[m] = { R: t.R || null, pos: t.pos || null, iso: t.iso || null, tot: t.tot || null, off: off, grp: grp };
     }
     return { mode: V6S.mode, cfg: JSON.parse(JSON.stringify(V6S.cfg)), st: st, notes: JSON.parse(JSON.stringify(V6S.notes)), seq: V6S.seq };
   }
@@ -11390,13 +11518,15 @@ var wasm_bindgen = (function(exports) {
     for (const m of ['6v', 'exp']) {
       const t = sd[m] || {}, off = {};
       for (const i in (t.off || {})) if (ids[i] !== undefined) off[ids[i]] = t.off[i];
-      V6S.st[m] = { R: t.R, pos: t.pos, iso: t.iso, tot: t.tot, off: off };
+      const grp = {};
+      for (const i in (t.grp || {})) if (ids[i] !== undefined) grp[ids[i]] = t.grp[i].filter(function (j) { return ids[j] !== undefined; }).map(function (j) { return ids[j]; });
+      V6S.st[m] = { R: t.R, pos: t.pos, iso: t.iso, tot: t.tot, off: off, grp: grp };
     }
     const nt = d.notes || {};
     V6S.notes = { '6v': nt['6v'] || [], exp: nt.exp || [] };
     V6S.seq = Math.max(d.seq || 1, 1 + Math.max.apply(null, [0].concat(V6S.notes['6v'], V6S.notes.exp).map(function (n) { return n.id || 0; })));
     V6S.mode = d.mode === 'exp' ? 'exp' : '6v'; v6Apply(V6S.cfg[V6S.mode]); v6StSet(V6S.st[V6S.mode]);
-    V6S.nsel = null; V6S.psel = null; V6S.prev = null; v6Sync(); v6Preview();
+    V6S.nsel = null; V6S.psel = null; V6S.prev = null; V6S.comb = null; v6Sync(); v6Preview();
   }
   $('v6Save').addEventListener('click', function () {
     v6Full().then(function (r) {
@@ -11413,7 +11543,7 @@ var wasm_bindgen = (function(exports) {
 
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();
 </script>
 </body>

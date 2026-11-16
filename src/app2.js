@@ -136,7 +136,7 @@
   let dirty = true, busy = false, W = 1, H = 1;
   const MATS = [['', '(chưa gán)', '(none)', 0], ['ABS', 'ABS', 'ABS', 1.05], ['PP', 'PP', 'PP', 0.905], ['HIPS', 'HIPS', 'HIPS', 1.05], ['PC', 'PC', 'PC', 1.20],
     ['PCABS', 'PC/ABS', 'PC/ABS', 1.15], ['POM', 'POM', 'POM', 1.41], ['PA6', 'PA6', 'PA6', 1.14], ['PA66GF30', 'PA66 GF30', 'PA66 GF30', 1.36],
-    ['HDPE', 'PE-HD', 'PE-HD', 0.95], ['PVC', 'PVC mềm', 'Soft PVC', 1.25], ['PMMA', 'PMMA', 'PMMA', 1.18], ['TPU', 'TPU', 'TPU', 1.20], ['PLA', 'PLA', 'PLA', 1.24],
+    ['HDPE', 'PE-HD', 'PE-HD', 0.95], ['PVC120', 'PVC', 'PVC', 1.20], ['PVC', 'PVC', 'PVC', 1.25], ['PVC130', 'PVC', 'PVC', 1.30], ['PVC135', 'PVC', 'PVC', 1.35], ['PVC140', 'PVC', 'PVC', 1.40], ['PMMA', 'PMMA', 'PMMA', 1.18], ['TPU', 'TPU', 'TPU', 1.20], ['PLA', 'PLA', 'PLA', 1.24],
     ['PETG', 'PETG', 'PETG', 1.27], ['AL', 'Nhôm', 'Aluminium', 2.70], ['ZAMAK', 'Kẽm (Zamak 3)', 'Zinc (Zamak 3)', 6.60], ['STEEL', 'Thép', 'Steel', 7.85], ['custom', 'Tùy chọn', 'Custom', 1]];
 
   // ================= geometry & bodies =================
@@ -2787,5 +2787,5 @@
 /*MODEL*/
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();

@@ -33,7 +33,7 @@ with sync_playwright() as p:
     pg.evaluate("(()=>{const B=__mrt.S.bodies;B[0].material='ABS';B[0].density=1.05;B[1].material='PVC';B[1].density=1.25;B[2].material='ABS';B[2].density=1.05;__mrt.S.sel.clear();})()")
     pg.click('.popb[data-pop=v6]'); settle()
     ok('Drawing opens in 6 view',pg.is_visible('#v6Sheet') and pg.evaluate("__mrt.v6().mode")=='6v' and pg.is_visible('.v6v[data-v=top]'))
-    def hit(kind,key=None): return pg.evaluate("a=>{const q=__mrt.v6().prev,c=document.getElementById('v6Prev'),r=c.getBoundingClientRect(),h=q.hits.find(h=>h.kind==a[0]&&(a[1]==null||h.n==a[1]||h.id==a[1]));if(!h)return null;const f=h.r,s=r.width/c.width;return [r.left+(f.x+f.w/2)*s,r.top+(f.y+f.h/2)*s,f.x,f.y,f.w,f.h,c.width,c.height]}",[kind,key])
+    def hit(kind,key=None): return pg.evaluate("a=>{const q=__mrt.v6().prev,L=__mrt.v6().lay,h=q.hits.find(h=>h.kind==a[0]&&(a[1]==null||h.n==a[1]||h.id==a[1]));if(!h)return null;const f=h.r,s=__mrt.v6Scr(f);return [s.x+s.w/2,s.y+s.h/2,f.x,f.y,f.w,f.h,L.W,L.H]}",[kind,key])
     # ---- custom scale
     pg.select_option('#v6Paper','A4'); pg.select_option('#v6Scale','c'); settle()
     ok('Custom scale shows a : b with a slider',pg.is_visible('#v6ScA') and pg.is_visible('#v6ScB') and pg.is_visible('#v6ScR'))

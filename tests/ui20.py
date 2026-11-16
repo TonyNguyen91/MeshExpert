@@ -45,7 +45,7 @@ with sync_playwright() as p:
     ok('Info: expected file size shown','≈' in info and ('KB' in info or 'MB' in info),info.split('\n')[-1])
     red=pg.evaluate("(()=>{const c=document.getElementById('v6Prev'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let r=0,g=0,k=0;for(let i=0;i<d.length;i+=4){if(d[i]>150&&d[i+1]<110&&d[i+2]<110)r++;if(d[i+1]>120&&d[i]<110&&d[i+2]<140)g++;if(d[i]<60&&d[i+1]<60&&d[i+2]<60)k++;}return [r,g,k]})()")
     ok('Preview in the body colours of the 3D view, with lines',red[0]>300 and red[1]>300 and red[2]>40,red)
-    def hit(kind,key=None): return pg.evaluate("a=>{const q=__mrt.v6().prev,c=document.getElementById('v6Prev'),r=c.getBoundingClientRect(),h=q.hits.find(h=>h.kind==a[0]&&(a[1]==null||h.n==a[1]||h.id==a[1]));if(!h)return null;const f=h.r,s=r.width/c.width;return [r.left+(f.x+f.w/2)*s,r.top+(f.y+f.h/2)*s,f.x,f.y,f.w,f.h]}",[kind,key])
+    def hit(kind,key=None): return pg.evaluate("a=>{const q=__mrt.v6().prev,L=__mrt.v6().lay,h=q.hits.find(h=>h.kind==a[0]&&(a[1]==null||h.n==a[1]||h.id==a[1]));if(!h)return null;const f=h.r,s=__mrt.v6Scr(f);return [s.x+s.w/2,s.y+s.h/2,f.x,f.y,f.w,f.h,L.W,L.H]}",[kind,key])
     def frame(n): return hit('view',n)
     f0=frame('right'); fr0=frame('front'); t0=frame('top')
     pg.mouse.move(f0[0],f0[1]); pg.mouse.down(); pg.mouse.move(f0[0]+40,f0[1]+30,steps=5); pg.mouse.up(); pg.wait_for_timeout(200)
