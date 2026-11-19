@@ -81,7 +81,7 @@ with sync_playwright() as p:
     if OUT: open(os.path.join(OUT,'v6_line.png'),'wb').write(data)
     # ---- iso view, drawing size, text size, notes (6 view)
     sv('#v6Scale','0'); sc('#v6Iso',True); sv('#v6Az','30'); sv('#v6El','25'); settle()
-    i0=hit('iso'); ok('Iso view on the sheet',i0 is not None and pg.is_visible('#dwsRibbon .rpage.on input[data-bind=v6Az]'))
+    i0=hit('iso'); ok('Iso view on the sheet',i0 is not None and pg.locator('#dwsRibbon .rpage[data-k=set] input[data-bind=v6Az]').count()==1)
     pg.mouse.move(i0[0],i0[1]); pg.mouse.down(); pg.mouse.move(i0[0]-60,i0[1]+40,steps=5); pg.mouse.up(); pg.wait_for_timeout(200)
     i1=hit('iso'); ok('Iso view moves freely',abs(i1[2]-i0[2])>30 and abs(i1[3]-i0[3])>20,[i0[2:4],i1[2:4]])
     w0=frame('front')[4]; sv('#v6Zm','60'); pg.wait_for_timeout(0); settle()

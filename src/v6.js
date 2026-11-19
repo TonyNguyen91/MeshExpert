@@ -637,6 +637,62 @@
     V6S.vsel = null; v6Preview();
   }
   function v6ViewAuto(n) { if (n === 'iso') V6S.iso = null; else if (V6S.pos) delete V6S.pos[n]; v6Preview(); }
+  // Auto Arrange (6 views): the views keep their size and stay on their projection lines; columns and rows are
+  // spread so the gaps between them equal the gaps to the sheet border. Each box includes its view name and the
+  // overall dimensions drawn beside it; the scale note at the bottom counts as the border. The iso picture takes the
+  // free cell that leaves the widest gaps (top right first).
+  function v6AutoEven() {
+    const R = V6S.prev; if (!R || !R.frames || !R.o || R.o.exp) return false;
+    const o = R.o, k = R.k || 1, F = R.frames, M = v6Metrics(o), f = M.font, W = o.W, H = o.H;
+    const names = Object.keys(R.views).filter(function (n) { return F[n]; }), iso = !!(R.iso && F.iso);
+    if (!names.length && !iso) return false;
+    const fx = ['front', 'back', 'top', 'bottom'].find(function (n) { return F[n] && R.views[n]; });
+    const fy = ['right', 'left'].find(function (n) { return F[n] && R.views[n]; });
+    const fz = ['right', 'front', 'left', 'back'].find(function (n) { return F[n] && R.views[n]; });
+    // box of an item around its picture centre: half sizes l, r, u, d (sheet px at full size)
+    const box = function (n) {
+      const w = F[n].w / k, h = F[n].h / k, b = { l: w / 2, r: w / 2, u: h / 2, d: h / 2 };
+      if (o.lbl) b.u += 1.7 * f;
+      if (o.dim && n !== 'iso') {
+        if (n === fx || n === fy) b.d += 3 * f;
+        if (n === fz || (!fy && n === 'top')) b.l += 2.7 * f;
+      }
+      return b;
+    };
+    const items = names.map(function (n) { return { n: n, c: V6_COL[n], r: V6_ROW[n], b: box(n) }; });
+    const avH = H - (o.scn ? 2.6 * f : 0);
+    const plan = function (list) {
+      const cols = {}, rows = {};
+      for (const it of list) {
+        const c = cols[it.c] || (cols[it.c] = { l: 0, r: 0 }), r = rows[it.r] || (rows[it.r] = { u: 0, d: 0 });
+        c.l = Math.max(c.l, it.b.l); c.r = Math.max(c.r, it.b.r); r.u = Math.max(r.u, it.b.u); r.d = Math.max(r.d, it.b.d);
+      }
+      const ck = Object.keys(cols).map(Number).sort(function (a, b) { return a - b; }), rk = Object.keys(rows).map(Number).sort(function (a, b) { return a - b; });
+      const sw = ck.reduce(function (s, c) { return s + cols[c].l + cols[c].r; }, 0), sh = rk.reduce(function (s, r) { return s + rows[r].u + rows[r].d; }, 0);
+      const gx = (W - sw) / (ck.length + 1), gy = (avH - sh) / (rk.length + 1), cx = {}, cy = {};
+      let x = gx; for (const c of ck) { cx[c] = x + cols[c].l; x += cols[c].l + cols[c].r + gx; }
+      let y = gy; for (const r of rk) { cy[r] = y + rows[r].u; y += rows[r].u + rows[r].d + gy; }
+      return { cx: cx, cy: cy, gx: gx, gy: gy };
+    };
+    let best = null;
+    if (iso) {
+      const used = {}; for (const it of items) used[it.r + ',' + it.c] = 1;
+      const maxC = items.reduce(function (m, it) { return Math.max(m, it.c); }, -1);
+      const cand = [[0, 2], [0, 3], [2, 2], [2, 3], [0, 0], [2, 0]];
+      if (!items.some(function (it) { return it.r !== 1; })) cand.push([1, maxC + 1]);
+      if (!items.length) cand.push([1, 1]);
+      cand.forEach(function (rc, i) {
+        if (used[rc[0] + ',' + rc[1]]) return;
+        const it = { n: 'iso', c: rc[1], r: rc[0], b: box('iso') }, p = plan(items.concat([it])), sc = Math.min(p.gx, p.gy) - i * 1e-3 * Math.min(W, H);
+        if (!best || sc > best.sc) best = { sc: sc, p: p, it: it };
+      });
+    }
+    const p = best ? best.p : plan(items), fr = function (c, r) { return [(p.cx[c] !== undefined ? p.cx[c] : W / 2) / W, (p.cy[r] !== undefined ? p.cy[r] : avH / 2) / H]; };
+    const ctr = fr(1, 1);
+    V6S.pos = { front: ctr, left: fr(0, 1)[0], right: fr(2, 1)[0], back: fr(3, 1)[0], top: fr(1, 0)[1], bottom: fr(1, 2)[1] };
+    V6S.iso = best ? fr(best.it.c, best.it.r) : null;
+    return true;
+  }
   // default place of the iso picture: the free corner right of the Top view (or top right)
   function v6IsoDefault(o, R, pos) {
     const v = R.iso, W = o.W * (R.k || 1), H = o.H * (R.k || 1), x = Math.min(0.97 - v.w / 2 / W, Math.max(pos.right || 0.75, 0.62)), y = Math.max(0.03 + v.h / 2 / H, (pos.top !== undefined && o.views.top ? pos.top : 0.2));
@@ -1121,7 +1177,10 @@
   $('v6RotZ').addEventListener('click', function () { v6Rot([[0, -1, 0], [1, 0, 0], [0, 0, 1]]); });
   $('v6RotZm').addEventListener('click', function () { v6Rot([[0, 1, 0], [-1, 0, 0], [0, 0, 1]]); });
   $('v6Tip').addEventListener('click', function () { v6Rot([[1, 0, 0], [0, 0, -1], [0, 1, 0]]); });
-  $('v6Auto').addEventListener('click', function () { V6S.pos = null; V6S.iso = null; V6S.off = {}; v6Preview(); });
+  $('v6Auto').addEventListener('click', function () {
+    if (V6S.mode !== 'exp' && v6AutoEven()) { v6Preview(); return; }
+    V6S.pos = null; V6S.iso = null; V6S.off = {}; v6Preview();
+  });
   // custom scale a : b — the slider runs on a log scale from 1:100 to 100:1
   function v6ScSync() { const a = parseFloat($('v6ScA').value) || 1, b = parseFloat($('v6ScB').value) || 1; $('v6ScR').value = Math.max(-2, Math.min(2, Math.log10(a / b))).toFixed(2); }
   $('v6ScR').addEventListener('input', function () {
