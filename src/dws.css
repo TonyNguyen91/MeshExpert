@@ -1,0 +1,52 @@
+  /* ---------- Drawing Workspace: full-window work area over the 3D workspace (which stays as it is underneath) ---------- */
+  #dws { position: fixed; inset: 0; z-index: 15; display: none; flex-direction: column; background: var(--bg, #12161b); color: var(--text, #dfe6ee); }
+  body.dws-on #dws { display: flex; }
+  body.dws-on #busy, body.dws-on #status { position: fixed; z-index: 16; }
+  #dwsHd { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--line); background: #161b21; height: 34px; flex: none; }
+  #dwsHd .dwsLogo { display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  #dwsHd .dwsDoc { color: #9fb0c3; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  #dwsHd button { display: flex; align-items: center; gap: 5px; padding: 3px 9px; white-space: nowrap; }
+  #dwsHd .grow { flex: 1; }
+  #dwsTop { padding: 0 6px; flex: none; }
+  #dwsTabs { display: flex; gap: 2px; margin-top: 4px; margin-bottom: -1px; }
+  #dwsRibbon { background: #171c22; border: 1px solid var(--line); border-radius: 0 6px 6px 6px; margin: 0 0 4px; overflow: hidden; min-width: 0; }
+  #dwsRibbon select { padding: 1px 3px; max-width: 108px; }
+  #dwsRibbon .rcol input[type=range] { width: 74px; }
+  #dwsRibbon .rcol input[type=number] { width: 48px; padding: 1px 3px; }
+  #dwsRibbon .rcol .dwsRow { display: flex; align-items: center; gap: 4px; height: 21px; white-space: nowrap; }
+  #dwsRibbon .rcol .dwsRow > span { font-size: 11.5px; color: #b9c6d4; }
+  #dwsMid { flex: 1; display: flex; min-height: 0; }
+  #dwsCanvas { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; }
+  #dwsSide { width: 320px; flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: #161b21; min-height: 0; }
+  #dwsSplit { width: 5px; flex: none; cursor: col-resize; background: transparent; }
+  #dwsSplit:hover { background: #2a3442; }
+  .dwsPh { display: flex; align-items: center; gap: 6px; padding: 5px 8px; font-weight: 600; font-size: 12px; color: #9fb0c3; border-bottom: 1px solid var(--line); background: #1a2028; user-select: none; }
+  .dwsPh .grow { flex: 1; }
+  .dwsPh button { padding: 0 6px; line-height: 18px; }
+  #dwsTree { overflow: auto; padding: 4px 0; max-height: 42%; flex: none; user-select: none; }
+  .dwsNode { display: flex; align-items: center; gap: 6px; padding: 3px 8px; cursor: pointer; white-space: nowrap; font-size: 12.5px; border: 1px solid transparent; }
+  .dwsNode:hover { background: #222a34; }
+  .dwsNode.root { font-weight: 700; color: #e8eef5; }
+  .dwsNode.sheet { padding-left: 24px; }
+  .dwsNode.on { background: rgba(240,160,48,.16); border-color: var(--accent); color: var(--accent); }
+  .dwsNode .nm { overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+  .dwsNode .st { font-size: 10.5px; padding: 0 5px; border-radius: 8px; flex: none; }
+  .dwsNode .st.ok, .dwsTab .st.ok { color: #6fd08c; } .dwsNode .st.mod, .dwsTab .st.mod { color: #f0a030; }
+  .dwsNode.dragover, .dwsTab.dragover { box-shadow: inset 0 2px 0 var(--accent); }
+  .dwsNode input, .dwsTab input { width: 100%; padding: 0 3px; font-size: 12px; }
+  #dwsProps { flex: 1; overflow: auto; min-height: 0; }
+  #dwsProps.off { display: none; }
+  #dws #pop_v6 { position: static; display: block; width: auto; max-height: none; box-shadow: none; border: 0; border-radius: 0; background: transparent; z-index: auto; overflow: visible; padding: 4px 8px 10px; }
+  #dws #pop_v6 .pophd, #dws #pop_v6 #v6Seg, #dws #pop_v6 .popx { display: none; }
+  #dws #v6Sheet { position: relative; display: flex; inset: auto; right: auto; top: auto; left: auto; width: auto; height: auto; flex: 1; min-height: 0; border: 0; border-radius: 0; box-shadow: none; resize: none; z-index: auto; }
+  #dws #v6Sheet .v6hd { cursor: default; background: #1a2028; }
+  #dwsBar { display: flex; align-items: stretch; gap: 6px; padding: 0 6px; height: 32px; flex: none; border-top: 1px solid var(--line); background: #161b21; }
+  #dwsTabsS { display: flex; align-items: stretch; gap: 2px; overflow-x: auto; overflow-y: hidden; flex: 1; min-width: 0; scrollbar-width: thin; }
+  .dwsTab { display: flex; align-items: center; gap: 5px; padding: 0 10px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 6px 6px; background: #1b222b; cursor: pointer; white-space: nowrap; font-size: 12px; max-width: 180px; user-select: none; }
+  .dwsTab .nm { overflow: hidden; text-overflow: ellipsis; }
+  .dwsTab.on { background: #232c37; color: var(--accent); border-color: var(--accent); }
+  .dwsTab.add { color: #9fb0c3; padding: 0 8px; }
+  #dwsBar .dwsBtns { display: flex; align-items: center; gap: 5px; flex: none; }
+  #dwsBar .dwsBtns button { display: flex; align-items: center; gap: 5px; padding: 2px 10px; }
+  #dwsState { font-size: 11.5px; color: #9fb0c3; align-self: center; white-space: nowrap; flex: none; }
+  #dwsState b.mod { color: #f0a030; } #dwsState b.ok { color: #6fd08c; }

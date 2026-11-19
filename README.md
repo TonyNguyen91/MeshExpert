@@ -12,7 +12,8 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - `src/core_dress.js` — hình học cho các lệnh solid: dao cắt fillet / chamfer, dời / thay mặt, shell.
 - `src/app2.js` — logic giao diện và thao tác.
 - `src/model.js` — môi trường sketch và danh sách sketch; `src/feat.js` — Extrude / Revolve, Boolean, các lệnh solid, phím tắt. Cả hai được chèn vào `app2.js` khi build.
-- `src/v6.js` — Drawing: bản vẽ 6 view và Exploded view (nhóm Chụp).
+- `src/v6.js` — bộ máy vẽ bản vẽ: 6 view và Exploded view.
+- `src/dws.js`, `src/dws.css` — Drawing Workspace (không gian làm việc bản vẽ: Ribbon, Drawing Tree, Sheet, lưu phiên).
 - `src/manifold_embed.js` — thư viện Manifold 3.5.4 (Apache 2.0, xem `src/MANIFOLD_LICENSE.txt`) nhúng sẵn, dùng cho Boolean.
 - `src/build.py` — ghép các file trên thành `index.html`: `python3 src/build.py`.
 - `src/test_core.js`, `src/test_cmp.js`, `src/test_split.js`, `src/test_repair.js`, `src/test_solid.js`, `src/test_sketch.js`, `src/test_dress.js` — kiểm thử lõi bằng Node.js (chạy `build.py` trước).
@@ -103,9 +104,17 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 ## Undercut: góc draft dưới con trỏ
 - Sau khi bấm "Phân tích" trong Tooling analysis (undercut), rê chuột lên body đã phân tích sẽ hiện nhãn góc draft của mặt dưới con trỏ (so với hướng mở khuôn), cho biết mặt thoát về phía + hay −, và cảnh báo vàng khi nhỏ hơn "Góc thoát khuôn tối thiểu". Xóa màu phân tích thì nhãn tắt.
 
-## Drawing (nhóm Chụp): bản vẽ 6 view và Exploded view
-- Một nút **Drawing** mở bảng nhỏ (kéo thanh tiêu đề để dời) và cửa sổ xem trước (kéo tiêu đề để dời, kéo góc dưới phải để đổi cỡ) đúng tỉ lệ khổ giấy. Đầu bảng chọn **6 view** hoặc **Exploded view**.
-- Hai bản vẽ **độc lập**: mỗi loại có bộ thiết lập riêng (khổ, tỉ lệ, DPI, màu, chữ…) và vị trí riêng (xoay mô hình, chỗ các view / hình iso / linh kiện / ô tổng khối lượng, ghi chú). Đổi qua lại không làm mất thiết lập của bên kia; cả hai được **lưu cùng phiên (.mrtl)** và mở lại đúng như cũ (Phiên mới đưa về mặc định).
+## Drawing Workspace (Chụp → Drawing)
+- Nút **Drawing** chuyển sang **Drawing Workspace**: một màn hình làm việc riêng che toàn cửa sổ. Mô hình 3D, danh sách body, lựa chọn và góc nhìn vẫn giữ nguyên bên dưới; nút **3D Workspace** (góc trên phải) để quay lại.
+- Bố cục: **Ribbon** phía trên (tab **6 Views** và **Exploded View**), **Sheet Canvas** ở giữa, **Drawing Tree** bên phải (dưới là bảng **Thuộc tính Sheet** đầy đủ, ẩn/hiện bằng nút "Bảng thuộc tính"; kéo mép trái cột để đổi bề rộng), **thanh Sheet** phía dưới (các tab Sheet + nút Save / Discard / Duplicate + trạng thái).
+- Ribbon 6 Views: Sheet (Sheet mới, khổ giấy, hướng giấy, vừa khung), Tạo view (bật/tắt Trước/Trên/Dưới/Trái/Phải/Sau, Iso, Đủ 6 view), Bố trí (Xếp tự động, xoay ±90°, lật 90°), Hiển thị (nét cạnh, nét khuất, màu, ánh sáng), Thuộc tính view (tỉ lệ, cỡ hình, cỡ iso, tên view, kích thước, ghi tỉ lệ), Chú thích (thêm chữ), Xuất (PNG, JPG, chép ảnh).
+- Ribbon Exploded View: Explode (độ tách, bỏ vị trí kéo tay, xếp tự động, Combine, Tách ra), Sắp xếp (xoay ±90°, lật, góc xoay / nghiêng), Thông tin (tên linh kiện, vật liệu + khối lượng, tổng khối lượng), Hiển thị, Chú thích, Xuất. Combine trên ribbon dùng linh kiện đang chọn trên bản vẽ (hoặc chuột phải lên linh kiện như trước).
+- **Drawing Tree**: gốc `Drawing of "<tên model>"` (tên lấy từ tên phiên, hoặc tên body đầu tiên) và các Sheet. Bấm để mở Sheet; Sheet đang mở được tô sáng; mỗi Sheet ghi **Đã lưu** / **Đã sửa**. Bấm đúp để đổi tên; kéo thả để đổi thứ tự (cả trong cây lẫn trên thanh Sheet). Chuột phải gốc: Sheet mới, Đổi tên bản vẽ. Chuột phải Sheet: Mở, Đổi tên, Nhân bản, Xoá (có hỏi lại), Xuất PNG, Xuất JPG.
+- Mỗi **Sheet** là một bản vẽ độc lập với cấu hình riêng (khổ giấy, hướng, tỉ lệ, view, vị trí, hiển thị, ghi chú; trong mỗi Sheet tab 6 Views và Exploded View vẫn là hai bản vẽ riêng). Chuyển Sheet không làm mất cấu hình của Sheet trước.
+- **Save** (Ctrl+S): lưu Sheet hiện tại → "Đã lưu". **Discard**: bỏ các thay đổi chưa Save (có hỏi lại), về đúng lần Save trước. **Duplicate** (Ctrl+D): tạo "Sheet … Copy" ngay sau, dữ liệu độc lập với bản gốc.
+- **Lưu tài liệu** (nút trên cùng) ghi cả phiên .mrtl gồm mọi Sheet (Ctrl+Shift+S: lưu thành file khác). Mở lại file .mrtl khôi phục đủ: tên bản vẽ, thứ tự, Sheet đang mở, thiết lập từng Sheet, trạng thái Đã lưu / Đã sửa. Phiên lưu từ bản cũ (chưa có Workspace) mở ra thành Sheet 1.
+- Trong Drawing Workspace các phím tắt của vùng 3D không tác dụng (Delete, Ctrl+Z… không đụng tới mô hình). Hoàn tác trong bản vẽ chưa có — dùng Discard.
+- Mỗi Sheet có 2 bản vẽ (6 view / Exploded view) với thiết lập và vị trí riêng (xoay mô hình, chỗ các view / hình iso / linh kiện / ô tổng khối lượng, ghi chú).
 - **Tỉ lệ**: Vừa khổ, 5:1 … 1:10 hoặc **Tùy chọn** — nhập a : b bất kỳ (ví dụ 3 : 2) hoặc kéo thanh trượt (1:100 … 100:1).
 - **Xem trước nhẹ, zoom được**: lăn chuột trên bản vẽ để phóng to / thu nhỏ quanh con trỏ (hoặc thanh kéo % trên đầu cửa sổ xem trước); kéo chỗ trống (hoặc giữ chuột giữa) để dời; bấm đúp chỗ trống hoặc nút ⤢ để vừa khung. Khi zoom chỉ vẽ lại hình sẵn có nên rất mượt; nét sắc hơn được dựng lại sau khi dừng lăn một chút.
 

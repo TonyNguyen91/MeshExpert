@@ -26,7 +26,7 @@ with sync_playwright() as p:
     pg.evaluate("""(()=>{const B=__mrt.S.bodies;const set=(b,k,d)=>{b.material=k;b.density=d;};
       set(B[0],'ABS',1.05);set(B[1],'ABS',1.05);set(B[2],'ABS',1.05);set(B[3],'PVC',1.25);set(B[4],'PVC130',1.30);
       B[1].matrix[12]+=40;B[2].matrix[12]+=80;B[3].matrix[13]+=60;B.forEach(b=>{b.stats=null;});__mrt.S.sel.clear();})()""")
-    pg.click('.popb[data-pop=v6]'); settle(); pg.click('#v6Seg button[data-k=exp]'); settle()
+    pg.click('#b_dws'); settle(); pg.click('#dwsTabs [data-k=exp]'); settle()
     tl=pg.evaluate("__mrt.v6Totals()")
     ok('Two PVC grades give one "Tổng PVC" line',len(tl)==2 and sum(1 for t in tl if t.startswith('Tổng PVC '))==1,tl)
     ok('Five parts drawn before combining',pg.evaluate("__mrt.v6().prev.parts.length")==5)

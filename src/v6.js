@@ -20,6 +20,7 @@
   const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, tot: null, notes: { '6v': [], exp: [] }, nsel: null, psel: null,
     prev: null, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null, grp: {}, comb: null, vz: 1, vp: [0, 0], lay: null, est: 0 };
   const V6_PREVPX = 12e6;   // the preview never renders the sheet above this many pixels (zooming further only scales)
+  let v6Act = false;   // the Drawing Workspace is open and shows the sheet
   const V6_PAIRS = [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
     ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK']];
   let v6gl = null;
@@ -573,7 +574,7 @@
   }
   function v6WantK(o, L) { return Math.min(L.kd, Math.sqrt(V6_PREVPX / (o.W * o.H))); }
   async function v6PreviewNow() {
-    if (!$('pop_v6').classList.contains('on')) return;
+    if (!v6Act) return;
     if (v6Busy) { v6Again = true; return; }
     v6Busy = true;
     const o = v6Sync(), pc = $('v6Prev');
@@ -801,8 +802,8 @@
     });
     pc.addEventListener('mouseleave', function () { if (!V6S.drag && V6S.hov) { V6S.hov = null; v6Paint(); } });
     window.addEventListener('keydown', function (e) {
-      if ($('pop_v6').classList.contains('on') && V6S.comb !== null && e.key === 'Escape') { v6CombEnd(); e.preventDefault(); e.stopPropagation(); return; }
-      if (!$('pop_v6').classList.contains('on') || !V6S.nsel || V6S.edit) return;
+      if (v6Act && V6S.comb !== null && e.key === 'Escape') { v6CombEnd(); e.preventDefault(); e.stopPropagation(); return; }
+      if (!v6Act || !V6S.nsel || V6S.edit) return;
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
       if (e.key === 'Delete' || e.key === 'Backspace') { v6DelNote(); e.preventDefault(); e.stopPropagation(); }
     }, true);
@@ -827,7 +828,7 @@
   // the body list / Properties changed a name, material or what is shown: follow
   let v6Sig = '';
   setInterval(function () {
-    if (!$('pop_v6').classList.contains('on') || !V6S.prev) return;
+    if (!v6Act || !V6S.prev) return;
     const sig = S.bodies.map(function (b) { return b.id + ':' + b.name + ':' + b.material + ':' + b.density + ':' + (b.visible ? 1 : 0) + (S.sel.has(b) ? 1 : 0) + ':' + b.color.join(','); }).join('|');
     if (v6Sig && sig !== v6Sig) {
       const geoSig = function (s) { return s.split('|').map(function (x) { const p = x.split(':'); return p[0] + p[4] + p[5]; }).join('|'); };
@@ -841,7 +842,7 @@
     try { const s = JSON.parse(localStorage.getItem(key) || 'null'); if (s && s.l) { el.style.left = s.l; el.style.top = s.t; el.style.right = 'auto'; if (s.w) { el.style.width = s.w; el.style.height = s.h; } } } catch (e) { }
     let dr = null;
     hd.addEventListener('mousedown', function (e) {
-      if (e.target.closest('button,input,select')) return;
+      if (e.target.closest('button,input,select') || el.closest('#dws')) return;
       const r = el.getBoundingClientRect(), pr = el.offsetParent.getBoundingClientRect();
       dr = { x: e.clientX - r.left, y: e.clientY - r.top, pr: pr }; e.preventDefault();
     });
@@ -870,13 +871,14 @@
       last = s; v6Preview(); if (el.style.width) v6SaveSheet();
     }).observe($('v6Sheet'));
   }
-  new MutationObserver(function () {
-    const on = $('pop_v6').classList.contains('on');
-    $('v6Sheet').classList.toggle('on', on);
-    if (!on && V6S.edit) v6EditDone(false);
-    if (!on) V6S.comb = null;
-    if (on) v6Preview();
-  }).observe($('pop_v6'), { attributes: true, attributeFilter: ['class'] });
+  // shown / hidden by the Drawing Workspace
+  function v6Activate(on) {
+    v6Act = !!on;
+    $('pop_v6').classList.toggle('on', v6Act); $('v6Sheet').classList.toggle('on', v6Act);
+    if (!v6Act && V6S.edit) v6EditDone(false);
+    if (!v6Act) V6S.comb = null;
+    if (v6Act) v6Preview();
+  }
 
   document.querySelectorAll('#pop_v6 input, #pop_v6 select').forEach(function (el) {
     if (/^v6(Ns|NsR|Nb|PName|PMat)$/.test(el.id)) return;
@@ -926,37 +928,43 @@
   }
   document.querySelectorAll('#v6Seg button').forEach(function (b) { b.addEventListener('click', function () { v6SetMode(b.dataset.k); }); });
   V6S.def = v6Snap(); V6S.cfg = { '6v': v6Snap(), exp: v6Snap() };
-  // session: body ids change when a session is opened, so hand placements of parts are kept by body order
-  function v6Dump() {
+  // ---------- drawing state: one plain object (copy) per sheet; v6Grab reads it from the panel + V6S, v6Put writes it back
+  function v6Grab() {
     V6S.cfg[V6S.mode] = v6Snap(); V6S.st[V6S.mode] = v6StGet();
-    const idx = new Map(S.bodies.map(function (b, i) { return [String(b.id), i]; })), st = {};
-    for (const m of ['6v', 'exp']) {
-      const t = V6S.st[m] || {}, off = {};
-      for (const id in (t.off || {})) if (idx.has(id)) off[idx.get(id)] = t.off[id];
-      const grp = {};
-      for (const id in (t.grp || {})) if (idx.has(id)) grp[idx.get(id)] = t.grp[id].filter(function (x) { return idx.has(String(x)); }).map(function (x) { return idx.get(String(x)); });
-      st[m] = { R: t.R || null, pos: t.pos || null, iso: t.iso || null, tot: t.tot || null, off: off, grp: grp };
-    }
-    return { mode: V6S.mode, cfg: JSON.parse(JSON.stringify(V6S.cfg)), st: st, notes: JSON.parse(JSON.stringify(V6S.notes)), seq: V6S.seq };
+    return JSON.parse(JSON.stringify({ mode: V6S.mode, cfg: V6S.cfg, st: V6S.st, notes: V6S.notes, seq: V6S.seq }));
   }
-  function v6Load(d) {
+  function v6Blank() {
+    return { mode: '6v', cfg: { '6v': Object.assign({}, V6S.def), exp: Object.assign({}, V6S.def) }, st: { '6v': {}, exp: {} }, notes: { '6v': [], exp: [] }, seq: 1 };
+  }
+  function v6Put(d) {
     if (V6S.edit) v6EditDone(false);
-    d = d || {};
-    const ids = S.bodies.map(function (b) { return b.id; }), cf = d.cfg || {}, sd = d.st || {};
+    d = JSON.parse(JSON.stringify(d || v6Blank()));
+    const cf = d.cfg || {}, sd = d.st || {};
     V6S.cfg = { '6v': Object.assign({}, V6S.def, cf['6v']), exp: Object.assign({}, V6S.def, cf.exp) };
-    for (const m of ['6v', 'exp']) {
-      const t = sd[m] || {}, off = {};
-      for (const i in (t.off || {})) if (ids[i] !== undefined) off[ids[i]] = t.off[i];
-      const grp = {};
-      for (const i in (t.grp || {})) if (ids[i] !== undefined) grp[ids[i]] = t.grp[i].filter(function (j) { return ids[j] !== undefined; }).map(function (j) { return ids[j]; });
-      V6S.st[m] = { R: t.R, pos: t.pos, iso: t.iso, tot: t.tot, off: off, grp: grp };
-    }
+    for (const m of ['6v', 'exp']) { const t = sd[m] || {}; V6S.st[m] = { R: t.R, pos: t.pos, iso: t.iso, tot: t.tot, off: t.off || {}, grp: t.grp || {} }; }
     const nt = d.notes || {};
     V6S.notes = { '6v': nt['6v'] || [], exp: nt.exp || [] };
     V6S.seq = Math.max(d.seq || 1, 1 + Math.max.apply(null, [0].concat(V6S.notes['6v'], V6S.notes.exp).map(function (n) { return n.id || 0; })));
     V6S.mode = d.mode === 'exp' ? 'exp' : '6v'; v6Apply(V6S.cfg[V6S.mode]); v6StSet(V6S.st[V6S.mode]);
     V6S.nsel = null; V6S.psel = null; V6S.prev = null; V6S.comb = null; v6Sync(); v6Preview();
   }
+  // body references (hand placements, combined groups) through f: id -> other key (undefined = drop)
+  function v6MapIds(d, f) {
+    d = JSON.parse(JSON.stringify(d));
+    for (const m of ['6v', 'exp']) {
+      const t = (d.st || {})[m]; if (!t) continue;
+      const off = {}, grp = {};
+      for (const k in (t.off || {})) { const n = f(k); if (n !== undefined) off[n] = t.off[k]; }
+      for (const k in (t.grp || {})) { const n = f(k); if (n !== undefined) grp[n] = t.grp[k].map(function (x) { return f(String(x)); }).filter(function (x) { return x !== undefined; }); }
+      t.off = off; t.grp = grp;
+    }
+    return d;
+  }
+  // session: body ids change when a session is opened, so body references are kept by body order
+  function v6IdToIdx() { const idx = new Map(S.bodies.map(function (b, i) { return [String(b.id), i]; })); return function (k) { return idx.get(String(k)); }; }
+  function v6IdxToId() { const ids = S.bodies.map(function (b) { return b.id; }); return function (k) { return ids[+k]; }; }
+  function v6Dump() { return v6MapIds(v6Grab(), v6IdToIdx()); }
+  function v6Load(d) { v6Put(d ? v6MapIds(d, v6IdxToId()) : null); }
   $('v6Save').addEventListener('click', function () {
     v6Full().then(function (r) {
       download([r.blob], 'mrt_' + (r.o.exp ? 'exploded' : '6view') + '_' + r.o.dpi + 'dpi.' + r.o.fmt);

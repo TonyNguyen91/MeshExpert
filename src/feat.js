@@ -865,8 +865,9 @@
   }
   // the ribbon never scrolls sideways: when the window is narrow the groups get tighter step by step (spacing, two-line
   // labels, icon-only small buttons, icon-only big buttons) and, as a last resort, the whole row is scaled down to fit
-  function ribFit() {
-    const rb = $('ribbon'), pg = rb && rb.querySelector('.rpage.on'); if (!pg) return;
+  function ribFit(rb) {
+    if (!rb || !rb.nodeType) { const d = $('dwsRibbon'); if (d && d.offsetWidth) ribFit(d); rb = $('ribbon'); }
+    const pg = rb && rb.querySelector('.rpage.on'); if (!pg) return;
     const over = function () { return pg.scrollWidth > pg.clientWidth + 1; };
     pg.style.transform = ''; rb.style.height = '';
     rb.classList.remove('f1', 'f2', 'f5'); pg.querySelectorAll('.rgrp').forEach(function (g) { g.classList.remove('ic', 'ib'); });

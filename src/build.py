@@ -11,8 +11,8 @@ def r(p):
 core = r('core_base.js') + r('core_sketch.js') + r('core_dress.js') + r('core_extra.js') + '}\n'
 with open(os.path.join(HERE, 'core.js'), 'w', encoding='utf8') as f:
     f.write(core)
-out = (r('head.html') + '\n<script>\n/*CORE_BEGIN*/' + core + '/*CORE_END*/\n</script>\n\n'
-       '<script>\n' + r('manifold_embed.js') + '</script>\n\n<script>\n' + r('brep_embed.js') + '</script>\n\n<script>\n' + r('app2.js').replace('/*MODEL*/', r('model.js') + r('feat.js') + r('brep.js') + r('geo.js') + r('sla.js') + r('rd.js') + r('pat.js') + r('v6.js')) + '</script>\n</body>\n</html>\n')
+out = (r('head.html') + '\n<style>\n' + r('dws.css') + '</style>\n' + '\n<script>\n/*CORE_BEGIN*/' + core + '/*CORE_END*/\n</script>\n\n'
+       '<script>\n' + r('manifold_embed.js') + '</script>\n\n<script>\n' + r('brep_embed.js') + '</script>\n\n<script>\n' + r('app2.js').replace('/*MODEL*/', r('model.js') + r('feat.js') + r('brep.js') + r('geo.js') + r('sla.js') + r('rd.js') + r('pat.js') + r('v6.js') + r('dws.js')) + '</script>\n</body>\n</html>\n')
 with open(OUT, 'w', encoding='utf8') as f:
     f.write(out)
 print(len(out), 'bytes ->', os.path.normpath(OUT))
