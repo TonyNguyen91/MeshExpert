@@ -1,0 +1,206 @@
+# Browser test: Drawing Workspace phases 2-5 — source bodies (panel, pick in 3D, right-click Create Drawing Sheet, hide,
+# stable body ids through rename / save / load), views selected and deleted one by one, dimensions picked on a view
+# (reference kept / lost), associative update (revisions, Update Required / Missing / Update Failed, dependency per
+# sheet, preview Apply / Cancel, Update Selected Body), snapshots kept in the .mrtl, undo / redo, PDF (vector) export.
+# Run: python3 ui24.py <fixtures folder> [path to index.html]
+import sys,os,re,zlib,subprocess
+from playwright.sync_api import sync_playwright
+S=sys.argv[1]; PAGE=sys.argv[2] if len(sys.argv)>2 and sys.argv[2] else os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','index.html')
+fails=0
+def ok(name,cond,extra=''):
+    global fails
+    print(('ok   ' if cond else 'FAIL ')+name+('  '+str(extra) if extra!='' else ''))
+    if not cond: fails+=1
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path='/usr/bin/google-chrome',args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+    ctx=b.new_context(viewport={'width':1456,'height':819},offline=True,accept_downloads=True)
+    pg=ctx.new_page()
+    errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
+    dlg={'ans':True}
+    pg.on('dialog',lambda d: (d.accept() if dlg['ans'] else d.dismiss()) if d.type=='confirm' else d.accept('drawtest'))
+    pg.goto('file://'+os.path.abspath(PAGE))
+    def idle(): pg.wait_for_function("document.getElementById('busy').style.display!='flex'"); pg.wait_for_timeout(200)
+    def settle(): pg.wait_for_timeout(1600)
+    def tick(): pg.wait_for_timeout(700)
+    def uid(name): return pg.evaluate("n=>__mrt.S.bodies.find(b=>b.name==n).uid",name)
+    def chk(): return {c['name']:c for c in pg.evaluate("__mrt.dwCheck()")}
+    def npreps(): return pg.evaluate("__mrt.v6().prev?__mrt.v6().prev.sc6.preps.length:-1")
+    def act(): return pg.evaluate("(()=>{const D=__mrt.dw().doc;return D.sheets.find(s=>s.id==D.active).name})()")
+    def scr(x,y): r=pg.evaluate("a=>__mrt.v6Scr({x:a[0],y:a[1],w:0,h:0})",[x,y]); return r['x'],r['y']
+    pg.set_input_files('#file',[S+'/block.stl',S+'/cyl.stl',S+'/m_box.stl']); pg.wait_for_function("__mrt.S.bodies.length==3"); idle()
+    uids=pg.evaluate("__mrt.S.bodies.map(b=>b.uid)")
+    ok('Every body has its own stable id',len(set(uids))==3 and all(uids))
+    U={n:uid(n) for n in ['block','cyl','m_box']}
+    # ---------------- phase 2: source bodies
+    pg.click('#b_dws'); settle()
+    ok('Sheet 1 follows the 3D view until a list is set','theo 3D' in pg.inner_text('#dwsTree') and npreps()==3)
+    pg.click('#dwsRibbon .rpage.on button[data-act=src]'); pg.wait_for_timeout(300)
+    rows=pg.evaluate("[...document.querySelectorAll('#dwsSrcL .dwsSrcR')].map(r=>[r.querySelector('.nm').textContent,r.querySelector('.ty').textContent,r.querySelector('.c').checked])")
+    ok('Source Bodies panel: every body, type, checked',[r[0] for r in rows]==['block','cyl','m_box'] and all(r[1]=='Mesh' and r[2] for r in rows) and pg.inner_text('#dwsSrcN')=='Đã chọn 3 / 3',rows)
+    pg.fill('#dwsSrcQ','cyl'); pg.wait_for_timeout(150)
+    ok('Search filters the list',pg.evaluate("document.querySelectorAll('#dwsSrcL .dwsSrcR').length")==1)
+    pg.fill('#dwsSrcQ',''); pg.click('#dwsSrcNone'); pg.wait_for_timeout(100)
+    ok('Clear Selection',pg.inner_text('#dwsSrcN')=='Đã chọn 0 / 3')
+    pg.click('#dwsSrcL .dwsSrcR[data-uid="%s"] .c'%U['block']); pg.click('#dwsSrcL .dwsSrcR[data-uid="%s"] .c'%U['cyl']); pg.click('#dwsSrcOk'); settle()
+    ok('Apply: the sheet draws only block + cyl',pg.evaluate("__mrt.v6().src")==[U['block'],U['cyl']] and npreps()==2 and 'Source bodies (2)' in pg.inner_text('#dwsTree'))
+    pg.click('#dwsTree .dwsNode.body[data-uid="%s"] .eye'%U['cyl']); settle()
+    ok('Hide a source body: not drawn, still a source',npreps()==1 and pg.evaluate("__mrt.v6().src.length")==2 and pg.evaluate("__mrt.v6().hide")==[U['cyl']])
+    pg.click('#dwsTree .dwsNode.body[data-uid="%s"] .eye'%U['cyl']); settle()
+    ok('Show it again',npreps()==2)
+    pg.evaluate("n=>{const b=__mrt.S.bodies.find(b=>b.uid==n);b.name='Khoi A'}",U['block']); tick(); settle()
+    ok('Renamed body keeps its link, no update needed','Khoi A' in pg.inner_text('#dwsTree') and chk()['Sheet 1']['status']=='ok' and pg.evaluate("__mrt.v6().src")[0]==U['block'])
+    # pick in 3D
+    pg.click('#dwsRibbon .rpage.on button[data-act=src]'); pg.click('#dwsSrcPick'); pg.wait_for_timeout(300)
+    ok('Pick in 3D: workspace steps aside, 3D view usable',not pg.is_visible('#dws') and pg.is_visible('#dwsPick') and pg.evaluate("__mrt.dw().open"))
+    pg.evaluate("n=>{const S=__mrt.S;S.sel.clear();S.sel.add(S.bodies.find(b=>b.uid==n));}",U['m_box']); pg.wait_for_timeout(600)
+    ok('Pick bar counts the picked bodies','1 body' in pg.inner_text('#dwsPickN'))
+    pg.keyboard.press('Enter'); pg.wait_for_timeout(300)
+    ok('Enter: back to the panel with the picked bodies',pg.is_visible('#dws') and pg.is_visible('#dwsSrc') and pg.inner_text('#dwsSrcN')=='Đã chọn 1 / 3')
+    pg.click('#dwsSrcPick'); pg.wait_for_timeout(200); pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
+    ok('Esc: back without changing the panel',pg.is_visible('#dwsSrc') and pg.inner_text('#dwsSrcN')=='Đã chọn 1 / 3')
+    pg.click('#dwsSrcNo'); pg.wait_for_timeout(200)
+    ok('Cancel keeps the sheet as it was',pg.evaluate("__mrt.v6().src")==[U['block'],U['cyl']])
+    pg.keyboard.press('Control+s'); tick()
+    # right-click in 3D: Create Drawing Sheet
+    pg.click('#dwsBack'); pg.wait_for_timeout(300)
+    pg.evaluate("n=>{const S=__mrt.S;S.sel.clear();S.sel.add(S.bodies.find(b=>b.uid==n));__mrt.openMenu(300,300,S.bodies.find(b=>b.uid==n));}",U['m_box']); pg.wait_for_timeout(200)
+    ok('3D right-click menu has Create Drawing Sheet','Tạo Drawing Sheet' in pg.inner_text('#ctx'))
+    pg.click('#ctx div:has-text("Tạo Drawing Sheet")'); settle()
+    ok('Creates a sheet from the picked bodies and opens it',pg.is_visible('#dws') and act()=='Sheet 2' and pg.evaluate("__mrt.v6().src")==[U['m_box']] and npreps()==1)
+    pg.click('#dwsRibbon .rpage.on button[data-act=newSheet]'); settle()
+    pg.click('#dwsRibbon .rpage.on button[data-act=src]'); pg.click('#dwsSrcNone'); pg.click('#dwsSrcL .dwsSrcR[data-uid="%s"] .c'%U['block']); pg.click('#dwsSrcOk'); settle()
+    ok('Sheet 3 made from block',act()=='Sheet 3' and pg.evaluate("__mrt.v6().src")==[U['block']])
+    # ---------------- phase 3: views one by one
+    hv=pg.evaluate("(()=>{const h=__mrt.v6().prev.hits.find(h=>h.kind=='view'&&h.n=='top');const s=__mrt.v6Scr(h.r);return [s.x+s.w/2,s.y+s.h/2]})()")
+    pg.mouse.move(hv[0],hv[1]); pg.mouse.down(); pg.mouse.move(hv[0],hv[1]-30,steps=4); pg.mouse.up(); pg.wait_for_timeout(200)
+    top0=pg.evaluate("__mrt.v6().pos.top")
+    hl=pg.evaluate("(()=>{const h=__mrt.v6().prev.hits.find(h=>h.kind=='view'&&h.n=='left');const s=__mrt.v6Scr(h.r);return [s.x+s.w/2,s.y+s.h/2]})()")
+    pg.mouse.click(hl[0],hl[1]); pg.wait_for_timeout(200)
+    ok('Click selects a view (highlighted in the tree)',pg.evaluate("__mrt.v6().vsel")=='left' and pg.evaluate("document.querySelector('#dwsTree .dwsNode.view.on .nm').textContent").upper()=='TRÁI')
+    pg.keyboard.press('Delete'); settle()
+    ok('Delete removes only that view; others keep their place',not pg.is_checked('.v6v[data-v=left]') and abs(pg.evaluate("__mrt.v6().pos.top")-top0)<1e-9 and pg.evaluate("__mrt.v6().prev.hits.every(h=>h.n!='left')"))
+    pg.click('#dwsTree .dwsNode.view >> text=TRÊN',button='right'); pg.click('#ctx div:has-text("Về vị trí tự động")'); settle()
+    ok('A view back to its automatic place',pg.evaluate("__mrt.v6().pos.top===undefined"))
+    pg.click('#dwsRibbon .rpage.on button[data-act=all6]'); settle()
+    # ---------------- phase 4: dimension picked on the front view
+    sn=pg.evaluate("__mrt.v6().prev.snaps.filter(q=>q.view=='front')")
+    my=max(q['y'] for q in sn); bot=[q for q in sn if abs(q['y']-my)<1.5]
+    A=min(bot,key=lambda q:q['x']); B=max(bot,key=lambda q:q['x'])
+    pg.click('#dwsRibbon .rpage.on button[data-act=dim]'); pg.wait_for_timeout(200)
+    ok('Dimension tool on',pg.evaluate("!!__mrt.v6().dt"))
+    for q in (A,B):
+        x,y=scr(q['x'],q['y']); pg.mouse.move(x,y); pg.wait_for_timeout(80); pg.mouse.click(x,y); pg.wait_for_timeout(120)
+    x,y=scr((A['x']+B['x'])/2,my+60); pg.mouse.move(x,y); pg.wait_for_timeout(80); pg.mouse.click(x,y); pg.wait_for_timeout(300)
+    dims=pg.evaluate("__mrt.v6().dims['6v']")
+    ext=pg.evaluate("__mrt.v6().prev.sc6.ext[0]")
+    val=pg.evaluate("id=>__mrt.v6DimVal(id)",dims[0]['id']) if dims else None
+    ok('Horizontal dimension between two picked corners = body width',len(dims)==1 and dims[0]['t']=='h' and dims[0]['a']['uid']==U['block'] and val is not None and abs(val-ext)<1e-3,[dims[0]['t'] if dims else None,val,ext])
+    pg.keyboard.press('Escape'); pg.wait_for_timeout(150)
+    ok('Esc leaves the tool',not pg.evaluate("!!__mrt.v6().dt"))
+    pg.keyboard.press('Control+s'); tick()
+    did=dims[0]['id']
+    # ---------------- phase 4: associative update
+    ok('All sheets up to date at start',all(c['status']=='ok' for c in chk().values()),{k:v['status'] for k,v in chk().items()})
+    w0=pg.evaluate("__mrt.v6().prev.sc6.ext[0]")
+    pg.click('#dwsBack'); pg.wait_for_timeout(300)
+    # move block (placement) -> Sheet 1 and Sheet 3 need update, Sheet 2 (m_box) not
+    pg.evaluate("n=>{const b=__mrt.S.bodies.find(b=>b.uid==n);b.matrix[12]+=25;}",U['block'])
+    pg.click('#b_dws'); settle(); tick()
+    c=chk()
+    ok('Body A changed: sheets using it Update Required, the other Up to Date',c['Sheet 1']['status']=='upd' and c['Sheet 3']['status']=='upd' and c['Sheet 2']['status']=='ok',{k:v['status'] for k,v in c.items()})
+    ok('Tree shows the states','Cần cập nhật' in pg.inner_text('#dwsTree') and 'Cần cập nhật' in pg.inner_text('#dwsState'))
+    pg.click('#dwsRibbon .rpage.on button[data-act=check]'); pg.wait_for_timeout(300)
+    t=pg.inner_text('#dwsDlg')
+    ok('Check for Updates lists bodies / sheets / views, no Apply','Khoi A' in t and 'Sheet 1' in t and 'Sheet 3' in t and 'SHEET 3 · TRƯỚC' in t.upper() and not pg.is_visible('#dwsDlgOk'),t[:300])
+    pg.click('#dwsDlgNo'); pg.wait_for_timeout(150)
+    ok('Check changed nothing',chk()['Sheet 3']['status']=='upd')
+    # change the geometry itself (wider): the drawing keeps the old shape until updated
+    pg.evaluate("n=>{const b=__mrt.S.bodies.find(b=>b.uid==n);const P=new Float32Array(b.geo.positions);for(let i=0;i<P.length;i+=3)P[i]*=1.5;__mrt.setGeo(b,P,new Uint32Array(b.geo.indices));}",U['block']); tick(); settle()
+    ok('Before Update the sheet still shows the old geometry',abs(pg.evaluate("__mrt.v6().prev.sc6.ext[0]")-w0)<1e-6 and abs(pg.evaluate("id=>__mrt.v6DimVal(id)",did)-val)<1e-6)
+    pg.click('#dwsRibbon .rpage.on button[data-act=updSheet]'); pg.wait_for_timeout(300)
+    t=pg.inner_text('#dwsDlg')
+    ok('Update preview: changed body, views, dimension to check (reference lost)','Khoi A' in t and 'TRƯỚC' in t.upper() and 'MẤT THAM CHIẾU' in t and pg.is_visible('#dwsDlgOk'),t[:400])
+    pg.click('#dwsDlgNo'); pg.wait_for_timeout(200)
+    ok('Cancel: nothing updated',chk()['Sheet 3']['status']=='upd')
+    pos_before=pg.evaluate("JSON.stringify([__mrt.v6().pos,__mrt.v6().R,document.getElementById('v6Scale').value,document.getElementById('v6Paper').value])")
+    pg.click('#dwsRibbon .rpage.on button[data-act=updSheet]'); pg.click('#dwsDlgOk'); settle(); tick()
+    ok('Apply Update: Sheet 3 up to date, Sheet 1 still waiting',chk()['Sheet 3']['status']=='ok' and chk()['Sheet 1']['status']=='upd')
+    ok('Views regenerated with the new geometry',abs(pg.evaluate("__mrt.v6().prev.sc6.ext[0]")-1.5*w0)<1e-3,[pg.evaluate("__mrt.v6().prev.sc6.ext[0]"),1.5*w0])
+    ok('Layout, scale, rotation, paper kept',pg.evaluate("JSON.stringify([__mrt.v6().pos,__mrt.v6().R,document.getElementById('v6Scale').value,document.getElementById('v6Paper').value])")==pos_before)
+    ok('Dimension whose vertex is gone is marked lost (not shown as valid)',pg.evaluate("id=>__mrt.v6DimVal(id)",did) is None and did in pg.evaluate("__mrt.v6().prev.lostDims") and 'mất tham chiếu' in pg.inner_text('#dwsTree'))
+    # pick it again
+    h=pg.evaluate("id=>{const h=__mrt.v6().prev.hits.find(h=>h.kind=='dim'&&h.id==id);const s=__mrt.v6Scr(h.r);return [s.x+s.w/2,s.y+s.h/2]}",did)
+    pg.mouse.click(h[0],h[1],button='right'); pg.click('#ctx div:has-text("Chọn lại điểm")'); pg.wait_for_timeout(200)
+    sn=pg.evaluate("__mrt.v6().prev.snaps.filter(q=>q.view=='front')"); my=max(q['y'] for q in sn); bot=[q for q in sn if abs(q['y']-my)<1.5]
+    A=min(bot,key=lambda q:q['x']); B=max(bot,key=lambda q:q['x'])
+    for q in (A,B):
+        x,y=scr(q['x'],q['y']); pg.mouse.move(x,y); pg.wait_for_timeout(80); pg.mouse.click(x,y); pg.wait_for_timeout(120)
+    x,y=scr((A['x']+B['x'])/2,my+60); pg.mouse.move(x,y); pg.wait_for_timeout(80); pg.mouse.click(x,y); pg.wait_for_timeout(300)
+    v2=pg.evaluate("id=>__mrt.v6DimVal(id)",did)
+    ok('Re-picked dimension measures the new width',v2 is not None and abs(v2-1.5*w0)<1e-3 and len(pg.evaluate("__mrt.v6().dims['6v']"))==1,[v2])
+    # Update Selected Body from the tree
+    pg.click('#dwsTree .dwsNode.sheet >> text=Sheet 1'); settle()
+    pg.click('#dwsTree .dwsNode.body[data-uid="%s"]'%U['block']); pg.wait_for_timeout(200)
+    pg.click('#dwsRibbon .rpage.on button[data-act=updSel]'); pg.wait_for_timeout(300); pg.click('#dwsDlgOk'); settle(); tick()
+    ok('Update Selected Body: every sheet using it up to date',all(c['status']=='ok' for c in chk().values()),{k:v['status'] for k,v in chk().items()})
+    # missing body
+    pg.click('#dwsBack'); pg.wait_for_timeout(300)
+    pg.evaluate("n=>__mrt.delBodies([__mrt.S.bodies.find(b=>b.uid==n)])",U['cyl']); pg.wait_for_timeout(200)
+    pg.click('#b_dws'); settle(); tick()
+    ok('Deleted body: sheet marked Missing Source Body, still drawn from its snapshot',chk()['Sheet 1']['status']=='miss' and npreps()==2 and 'Thiếu body' in pg.inner_text('#dwsTree'))
+    ok('The missing body stays in the source list',U['cyl'] in pg.evaluate("__mrt.v6().src"))
+    # update failed (a body without triangles)
+    pg.click('#dwsTree .dwsNode.sheet >> text=Sheet 2'); settle()
+    pg.evaluate("n=>{const b=__mrt.S.bodies.find(b=>b.uid==n);__mrt.setGeo(b,new Float32Array(0),new Uint32Array(0));}",U['m_box']); tick()
+    pg.click('#dwsRibbon .rpage.on button[data-act=updSheet]'); pg.wait_for_timeout(300); pg.click('#dwsDlgOk'); settle(); tick()
+    ok('Update Failed shown',chk()['Sheet 2']['status']=='fail' and 'Lỗi cập nhật' in pg.inner_text('#dwsTree'))
+    # ---------------- session: links, states and snapshots survive save / load
+    pg.click('#dwsTree .dwsNode.sheet >> text=Sheet 3'); settle()
+    pg.click('#dwsBack'); pg.wait_for_timeout(300)
+    pg.evaluate("n=>{const b=__mrt.S.bodies.find(b=>b.uid==n);const P=new Float32Array(b.geo.positions);for(let i=1;i<P.length;i+=3)P[i]*=2;__mrt.setGeo(b,P,new Uint32Array(b.geo.indices));}",U['block'])
+    pg.click('#b_dws'); settle(); tick()
+    st0=chk(); ext0=pg.evaluate("__mrt.v6().prev.sc6.ext")
+    pg.evaluate("delete window.showSaveFilePicker")
+    with pg.expect_download(timeout=60000) as dl: pg.mouse.click(700,500); pg.keyboard.press('Control+Shift+S')
+    mrtl='/tmp/assoc.mrtl'; open(mrtl,'wb').write(open(dl.value.path(),'rb').read())
+    pg2=ctx.new_page(); pg2.on('pageerror',lambda e: errs.append(str(e))); pg2.goto('file://'+os.path.abspath(PAGE))
+    pg2.set_input_files('#file',[mrtl]); pg2.wait_for_function("__mrt.S.bodies.length==2"); pg2.wait_for_timeout(800)
+    ok('Stable ids saved in the session',sorted(pg2.evaluate("__mrt.S.bodies.map(b=>b.uid)"))==sorted([U['block'],U['m_box']]))
+    pg2.click('#b_dws'); pg2.wait_for_timeout(2500)
+    st1={c['name']:c for c in pg2.evaluate("__mrt.dwCheck()")}
+    ok('States after reopening',{k:v['status'] for k,v in st1.items()}=={k:v['status'] for k,v in st0.items()},{k:v['status'] for k,v in st1.items()})
+    ext1=pg2.evaluate("__mrt.v6().prev.sc6.ext")
+    ok('Not-yet-updated sheet still shows the old geometry after reopening (snapshot in the file)',all(abs(a-b)<1e-4 for a,b in zip(ext0,ext1)),[ext0,ext1])
+    pg2.click('#dwsTree .dwsNode.sheet >> text=Sheet 1'); pg2.wait_for_timeout(2500)
+    ok('Deleted body still drawn after reopening',pg2.evaluate("__mrt.v6().prev.sc6.preps.length")==2)
+    pg2.close()
+    # ---------------- undo / redo
+    pg.select_option('#v6Paper','A4'); tick()
+    pg.mouse.click(700,500); pg.keyboard.press('Control+z'); settle()
+    ok('Ctrl+Z undoes the sheet change',pg.input_value('#v6Paper')=='A3')
+    pg.keyboard.press('Control+y'); settle()
+    ok('Ctrl+Y redoes it',pg.input_value('#v6Paper')=='A4')
+    pg.keyboard.press('Control+z'); settle()
+    # ---------------- phase 5: PDF
+    with pg.expect_download(timeout=180000) as dl: pg.click('#dwsRibbon .rpage.on button[data-act=pdf]')
+    f=dl.value; pdf='/tmp/sheet.pdf'; open(pdf,'wb').write(open(f.path(),'rb').read())
+    info=subprocess.run(['pdfinfo',pdf],capture_output=True,text=True).stdout
+    ok('PDF of the sheet: valid, 1 page, A3 landscape',re.search(r'Pages:\s+1\n',info) is not None and re.search(r'Page size:\s+1190\.\d+ x 841\.\d+',info) is not None and f.suggested_filename=='Sheet 3.pdf',info[:300])
+    qc=subprocess.run(['qpdf','--check',pdf],capture_output=True,text=True)
+    ok('qpdf finds no damage',qc.returncode==0,qc.stdout[-200:]+qc.stderr[-200:])
+    raw=open(pdf,'rb').read()
+    streams=[zlib.decompress(m) for m in re.findall(rb'/FlateDecode >>\nstream\n(.*?)\nendstream',raw,re.S)]
+    cs=b''.join(streams)
+    ok('Edges and dimension lines are vector paths, texts are PDF text',cs.count(b' l\n')>20 and b'Tj' in cs and b'/DCTDecode' in raw and b'/Helvetica' in raw,(cs.count(b' l\n'),cs.count(b'Tj')))
+    ok('Dimension value written as text','mm'.encode() in cs)
+    subprocess.run(['pdftoppm','-r','30','-png',pdf,'/tmp/sheetpdf'],capture_output=True)
+    ok('PDF renders',os.path.exists('/tmp/sheetpdf-1.png') and os.path.getsize('/tmp/sheetpdf-1.png')>1000)
+    names=pg.evaluate("__mrt.dw().doc.sheets.map(s=>s.name)")
+    with pg.expect_download(timeout=300000) as dl: pg.click('#dwsRibbon .rpage.on button[data-act=pdfAll]')
+    pdf2='/tmp/all.pdf'; open(pdf2,'wb').write(open(dl.value.path(),'rb').read())
+    info=subprocess.run(['pdfinfo',pdf2],capture_output=True,text=True).stdout
+    ok('Export All Sheets: one page per sheet',re.search(r'Pages:\s+%d\n'%len(names),info) is not None,info[:200])
+    ok('Back on the sheet that was open',act()=='Sheet 3')
+    ok('No page errors',not errs,errs[:3])
+    b.close()
+print('FAILS',fails); sys.exit(1 if fails else 0)

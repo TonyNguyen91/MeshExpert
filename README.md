@@ -13,7 +13,7 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - `src/app2.js` — logic giao diện và thao tác.
 - `src/model.js` — môi trường sketch và danh sách sketch; `src/feat.js` — Extrude / Revolve, Boolean, các lệnh solid, phím tắt. Cả hai được chèn vào `app2.js` khi build.
 - `src/v6.js` — bộ máy vẽ bản vẽ: 6 view và Exploded view.
-- `src/dws.js`, `src/dws.css` — Drawing Workspace (không gian làm việc bản vẽ: Ribbon, Drawing Tree, Sheet, lưu phiên).
+- `src/dws.js`, `src/dws.css` — Drawing Workspace (Ribbon, Drawing Tree, Sheet, lưu phiên); `src/dwupd.js` — liên kết với mô hình 3D, cập nhật, hoàn tác; `src/dwsel.js` — Source Bodies; `src/dwexp.js` — xuất PDF.
 - `src/manifold_embed.js` — thư viện Manifold 3.5.4 (Apache 2.0, xem `src/MANIFOLD_LICENSE.txt`) nhúng sẵn, dùng cho Boolean.
 - `src/build.py` — ghép các file trên thành `index.html`: `python3 src/build.py`.
 - `src/test_core.js`, `src/test_cmp.js`, `src/test_split.js`, `src/test_repair.js`, `src/test_solid.js`, `src/test_sketch.js`, `src/test_dress.js` — kiểm thử lõi bằng Node.js (chạy `build.py` trước).
@@ -113,7 +113,33 @@ App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội 
 - Mỗi **Sheet** là một bản vẽ độc lập với cấu hình riêng (khổ giấy, hướng, tỉ lệ, view, vị trí, hiển thị, ghi chú; trong mỗi Sheet tab 6 Views và Exploded View vẫn là hai bản vẽ riêng). Chuyển Sheet không làm mất cấu hình của Sheet trước.
 - **Save** (Ctrl+S): lưu Sheet hiện tại → "Đã lưu". **Discard**: bỏ các thay đổi chưa Save (có hỏi lại), về đúng lần Save trước. **Duplicate** (Ctrl+D): tạo "Sheet … Copy" ngay sau, dữ liệu độc lập với bản gốc.
 - **Lưu tài liệu** (nút trên cùng) ghi cả phiên .mrtl gồm mọi Sheet (Ctrl+Shift+S: lưu thành file khác). Mở lại file .mrtl khôi phục đủ: tên bản vẽ, thứ tự, Sheet đang mở, thiết lập từng Sheet, trạng thái Đã lưu / Đã sửa. Phiên lưu từ bản cũ (chưa có Workspace) mở ra thành Sheet 1.
-- Trong Drawing Workspace các phím tắt của vùng 3D không tác dụng (Delete, Ctrl+Z… không đụng tới mô hình). Hoàn tác trong bản vẽ chưa có — dùng Discard.
+- Trong Drawing Workspace các phím tắt của vùng 3D không tác dụng (Delete, Ctrl+Z… không đụng tới mô hình). **Ctrl+Z / Ctrl+Y** hoàn tác / làm lại thay đổi của Sheet đang mở.
+
+### Source Bodies (body nguồn của Sheet)
+- Mỗi Sheet có danh sách body nguồn riêng; bản vẽ chỉ dựng từ các body đó. Nút **Source Bodies** (nhóm Sheet): danh sách mọi body (loại B-rep / Mesh), ô tìm theo tên, Chọn hết, Bỏ chọn, số body đã chọn, Áp dụng / Huỷ; nút "Hiện / Đang ẩn" để ẩn tạm một body trong bản vẽ mà vẫn giữ nó là body nguồn.
+- **Chọn trong 3D**: vùng 3D hiện lại để chọn như bình thường (Click, Ctrl+Click), **Enter** để dùng các body đang chọn, **Esc** để quay lại.
+- Trong vùng 3D: chọn body → chuột phải → **Tạo Drawing Sheet**: tự mở Drawing Workspace, tạo Sheet mới từ các body đó.
+- Sheet mới lấy các body đang chọn (nếu có) hoặc các body đang hiện. Sheet 1 của bản vẽ cũ "theo 3D" (đi theo các body đang hiện) cho tới khi chốt danh sách bằng Source Bodies.
+- Trong Drawing Tree, Sheet đang mở có mục **Views** (bấm để chọn view, chuột phải: Xoá view / Về vị trí tự động) và **Source bodies** (nút ◉ / ◌ ẩn hiện; chuột phải: Ẩn/Hiện, Bỏ khỏi Source Bodies, Cập nhật body này).
+- Body được nhận bằng **ID bền** (lưu trong file .mrtl), không theo tên: đổi tên body vẫn giữ liên kết.
+
+### View độc lập
+- Bấm một view trên bản vẽ để chọn (viền cam), **Delete** để xoá riêng view đó; các view khác giữ nguyên vị trí đã kéo. Chuột phải view: Xoá view, Về vị trí tự động.
+
+### Dimension (ghi kích thước bằng cách chọn điểm)
+- Tab 6 Views → **Dimension**: rê chuột lên view, điểm bắt (đầu cạnh nhìn thấy) hiện vòng cam; bấm điểm 1, bấm điểm 2 (cùng view), rồi bấm chỗ đặt đường kích thước: đặt phía trên/dưới → kích thước ngang, bên trái/phải → dọc, ở giữa → theo hướng 2 điểm. Tool vẫn bật để ghi tiếp; Esc để thôi.
+- Mỗi đầu kích thước gắn với **đỉnh của body** (ID body + toạ độ trong body), giá trị tự tính lại khi hình thay đổi mà đỉnh vẫn còn. Đỉnh không còn → kích thước hiện **đỏ, "? mất tham chiếu"**, không bao giờ hiện như còn đúng; chuột phải → **Chọn lại điểm** hoặc Xoá. Bấm chọn kích thước rồi kéo để dời đường kích thước; Delete để xoá.
+
+### Liên kết với mô hình 3D (Associative)
+- Khi tạo / Save Sheet, mỗi body nguồn được ghi lại phiên bản hình học (hash hình + vị trí; đổi tên, màu, ẩn/hiện không tính). Sửa hình hoặc di chuyển body trong 3D → các Sheet dùng body đó báo **Cần cập nhật** (Sheet khác vẫn **Đồng bộ**); bản vẽ vẫn giữ hình cũ cho tới khi cập nhật.
+- Trạng thái hiện trong Drawing Tree, tab Sheet và thanh dưới: **Đồng bộ** / **Cần cập nhật** / **Thiếu body** (body nguồn bị xoá — vẫn vẽ bằng hình cũ, không tự xoá khỏi bản vẽ) / **Lỗi cập nhật**.
+- Nhóm **Cập nhật**: **Kiểm tra** (chỉ liệt kê thay đổi), **Cập nhật Sheet**, **Cập nhật tất cả**, **Cập nhật body chọn** (body chọn trong mục Source bodies của cây, hoặc trong 3D). Trước khi cập nhật luôn có bảng xem trước: body đã đổi, Sheet bị ảnh hưởng, view sẽ tạo lại, body bị mất, kích thước cần kiểm tra (còn tham chiếu / mất tham chiếu) → **Áp dụng cập nhật** hoặc **Huỷ**.
+- Cập nhật chỉ dựng lại hình; giữ nguyên vị trí view, tỉ lệ, góc xoay, cỡ, màu, ánh sáng, nét, tên view, ghi chú, khổ giấy, thiết lập Exploded và vị trí linh kiện. Không thay đổi gì trong mô hình 3D.
+- File .mrtl lưu cả hình cũ mà các Sheet chưa cập nhật còn dùng, nên mở lại vẫn đúng trạng thái.
+
+### Xuất PDF
+- Nhóm **Xuất**: **PDF** (Sheet đang mở) và **PDF tất cả** (mọi Sheet, mỗi Sheet một trang, theo thứ tự Drawing Tree); cũng có trong menu chuột phải của Sheet / gốc bản vẽ. Trang PDF đúng khổ giấy.
+- Nét cạnh, nét khuất, đường kích thước, mũi tên và chữ là **vector** (phóng to vẫn sắc); phần tô màu / bóng của view là ảnh nhúng theo DPI của Sheet. Chữ dùng font Helvetica của PDF; chữ có dấu tiếng Việt ngoài bảng mã của font đó (ư, ơ, ộ…) được in vào lớp ảnh ở độ phân giải đầy đủ.
 - Mỗi Sheet có 2 bản vẽ (6 view / Exploded view) với thiết lập và vị trí riêng (xoay mô hình, chỗ các view / hình iso / linh kiện / ô tổng khối lượng, ghi chú).
 - **Tỉ lệ**: Vừa khổ, 5:1 … 1:10 hoặc **Tùy chọn** — nhập a : b bất kỳ (ví dụ 3 : 2) hoặc kéo thanh trượt (1:100 … 100:1).
 - **Xem trước nhẹ, zoom được**: lăn chuột trên bản vẽ để phóng to / thu nhỏ quanh con trỏ (hoặc thanh kéo % trên đầu cửa sổ xem trước); kéo chỗ trống (hoặc giữ chuột giữa) để dời; bấm đúp chỗ trống hoặc nút ⤢ để vừa khung. Khi zoom chỉ vẽ lại hình sẵn có nên rất mượt; nét sắc hơn được dựng lại sau khi dừng lăn một chút.

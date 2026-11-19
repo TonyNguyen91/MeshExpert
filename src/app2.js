@@ -161,7 +161,8 @@
     const b = {
       id: S.idSeq++, name: uniqueName(name), geo: geo, orig: o.orig || geo, matrix: m, matrix0: o.matrix0 ? o.matrix0.slice() : m.slice(),
       color: o.color ? o.color.slice() : nextColor(), opacity: o.opacity === undefined ? 1 : o.opacity, visible: o.visible !== false,
-      material: o.material || '', density: o.density || 0, off: [0, 0, 0], ana: null, stats: null, solid: o.solid || null
+      material: o.material || '', density: o.density || 0, off: [0, 0, 0], ana: null, stats: null, solid: o.solid || null,
+      uid: o.uid || dwNewUid()     // stable id (drawings refer to bodies by it)
     };
     if (o.index === undefined) S.bodies.push(b); else S.bodies.splice(o.index, 0, b);
     return b;
@@ -1935,7 +1936,7 @@
         [L('Phân tích undercut', 'Undercut analysis'), function () { openPop('undercut', true); $('bUc').click(); }, 'uc']);
       if (n >= 2) items.push([L('Kiểm tra va chạm', 'Collision check'), function () { openPop('collide', true); $('bCol').click(); }, 'col']);
       if (n === 2) items.push([L('So sánh 2 mesh', 'Compare the 2 meshes'), startCompare, 'cmp']);
-      items.push(null, [L('Tải STL', 'Download STL'), function () { $('bStl').click(); }, 'stl']);
+      items.push(null, [L('Tải STL', 'Download STL'), function () { $('bStl').click(); }, 'stl'], [L('Tạo Drawing Sheet', 'Create Drawing Sheet'), dwCreateFromSel, 'isov']);
     } else {
       items.push([L('Hiện tất cả', 'Show all'), function () { $('bShowAll').click(); }, 'show'], [L('Chọn tất cả', 'Tick all'), function () { $('bSelAll').click(); }, 'tick'],
         [L('Bỏ chọn tất cả', 'Untick all'), function () { $('bSelNone').click(); }, 'untick'], null, ['Fit', function () { sceneChanged(true); }, 'fit'], ['Iso', function () { setView('iso'); }, 'isov']);
@@ -2641,7 +2642,17 @@
         geos.set(b.geo, g);
       }
       meta.bodies.push({ name: b.name, color: b.color, opacity: b.opacity, visible: vis && vis.has(b) ? vis.get(b) : b.visible, matrix: b.matrix, matrix0: b.matrix0,
-        material: b.material, density: b.density, solid: b.solid || null, sel: S.sel.has(b), pos: g.pos, nv: g.nv, idx: g.idx, nt: g.nt });
+        material: b.material, density: b.density, solid: b.solid || null, sel: S.sel.has(b), uid: b.uid, pos: g.pos, nv: g.nv, idx: g.idx, nt: g.nt });
+    }
+    // geometry that drawing sheets still show but the model no longer has (not updated yet / deleted bodies)
+    meta.drawSnaps = [];
+    for (const sn of dwSnapsForSave()) {
+      let g = geos.get(sn.geo);
+      if (!g) {
+        g = { pos: off, nv: sn.geo.positions.length / 3, idx: off + sn.geo.positions.byteLength, nt: sn.geo.indices.length / 3 };
+        blobs.push(sn.geo.positions, sn.geo.indices); off += sn.geo.positions.byteLength + sn.geo.indices.byteLength; geos.set(sn.geo, g);
+      }
+      meta.drawSnaps.push({ rev: sn.rev, uid: sn.uid, name: sn.name, material: sn.material, density: sn.density, color: sn.color, matrix: sn.matrix, pos: g.pos, nv: g.nv, idx: g.idx, nt: g.nt });
     }
     let json = JSON.stringify(meta);
     let bytes = new TextEncoder().encode(json);
@@ -2658,10 +2669,11 @@
     clearAll();
     const geos = new Map();
     for (const o of meta.bodies) {
-      let g = geos.get(o.pos);
+      const gk = o.pos + ':' + o.nv + ':' + o.nt;      // empty geometries share an offset with the next one
+      let g = geos.get(gk);
       if (!g) {
         g = makeGeo(new Float32Array(buf.slice(base + o.pos, base + o.pos + o.nv * 12)), new Uint32Array(buf.slice(base + o.idx, base + o.idx + o.nt * 12)));
-        geos.set(o.pos, g);
+        geos.set(gk, g);
       }
       const b = addBody(o.name, g, o);
       if (o.sel) S.sel.add(b);
@@ -2675,7 +2687,13 @@
     if (meta.view) { mainCam.R = meta.view.R; mainCam.target = meta.view.target; mainCam.zoom = meta.view.zoom; }
     hist.undo.length = 0; hist.redo.length = 0; updateHistBtns();
     updateMeasList(); refresh();
-    if (meta.drawDoc) dwLoad(meta.drawDoc); else { v6Load(meta.drawing || null); dwLoad(null); }
+    const snaps = (meta.drawSnaps || []).map(function (o) {
+      const gk = o.pos + ':' + o.nv + ':' + o.nt;
+      let g = geos.get(gk);
+      if (!g) { g = makeGeo(new Float32Array(buf.slice(base + o.pos, base + o.pos + o.nv * 12)), new Uint32Array(buf.slice(base + o.idx, base + o.idx + o.nt * 12))); geos.set(gk, g); }
+      return { rev: o.rev, uid: o.uid, name: o.name, material: o.material, density: o.density, color: o.color, matrix: o.matrix, geo: g };
+    });
+    if (meta.drawDoc) dwLoad(meta.drawDoc, snaps); else { v6Load(meta.drawing || null); dwLoad(null, snaps); }
   }
   function clearAll() {
     for (const b of S.bodies.slice()) removeBody(b);
@@ -2787,5 +2805,5 @@
 /*MODEL*/
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwOpen: function () { dwOpen(); }, dwClose: function () { dwClose(); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwRev: function (b) { return dwRev(b); }, dwCheck: function () { return DW.doc ? DW.doc.sheets.map(function (s) { const c = dwCheck(s); return { name: s.name, status: c.status, changed: c.changed, missing: c.missing, dims: c.dims.map(function (d) { return [d.dm.id, d.ok]; }) }; }) : []; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();

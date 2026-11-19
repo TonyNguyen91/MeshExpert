@@ -715,7 +715,7 @@
   .dwsPh { display: flex; align-items: center; gap: 6px; padding: 5px 8px; font-weight: 600; font-size: 12px; color: #9fb0c3; border-bottom: 1px solid var(--line); background: #1a2028; user-select: none; }
   .dwsPh .grow { flex: 1; }
   .dwsPh button { padding: 0 6px; line-height: 18px; }
-  #dwsTree { overflow: auto; padding: 4px 0; max-height: 42%; flex: none; user-select: none; }
+  #dwsTree { overflow: auto; padding: 4px 0; max-height: 52%; flex: none; user-select: none; }
   .dwsNode { display: flex; align-items: center; gap: 6px; padding: 3px 8px; cursor: pointer; white-space: nowrap; font-size: 12.5px; border: 1px solid transparent; }
   .dwsNode:hover { background: #222a34; }
   .dwsNode.root { font-weight: 700; color: #e8eef5; }
@@ -723,7 +723,7 @@
   .dwsNode.on { background: rgba(240,160,48,.16); border-color: var(--accent); color: var(--accent); }
   .dwsNode .nm { overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
   .dwsNode .st { font-size: 10.5px; padding: 0 5px; border-radius: 8px; flex: none; }
-  .dwsNode .st.ok, .dwsTab .st.ok { color: #6fd08c; } .dwsNode .st.mod, .dwsTab .st.mod { color: #f0a030; }
+  .dwsNode .st.ok, .dwsTab .st.ok, .dwsNode .st.sv, .dwsTab .st.sv { color: #6fd08c; } .dwsNode .st.mod, .dwsTab .st.mod { color: #f0a030; }
   .dwsNode.dragover, .dwsTab.dragover { box-shadow: inset 0 2px 0 var(--accent); }
   .dwsNode input, .dwsTab input { width: 100%; padding: 0 3px; font-size: 12px; }
   #dwsProps { flex: 1; overflow: auto; min-height: 0; }
@@ -741,7 +741,34 @@
   #dwsBar .dwsBtns { display: flex; align-items: center; gap: 5px; flex: none; }
   #dwsBar .dwsBtns button { display: flex; align-items: center; gap: 5px; padding: 2px 10px; }
   #dwsState { font-size: 11.5px; color: #9fb0c3; align-self: center; white-space: nowrap; flex: none; }
-  #dwsState b.mod { color: #f0a030; } #dwsState b.ok { color: #6fd08c; }
+  #dwsState b.mod { color: #f0a030; } #dwsState b.ok, #dwsState b.sv { color: #6fd08c; }
+  .dwsNode.grp { padding-left: 34px; color: #7f93a8; font-size: 11px; cursor: default; text-transform: none; }
+  .dwsNode.grp:hover { background: transparent; }
+  .dwsNode.child { padding-left: 44px; font-size: 12px; }
+  .dwsNode.child.hid .nm { opacity: .5; text-decoration: line-through; }
+  .dwsNode.child.miss .nm { color: #e57373; }
+  .dwsNode.warn { color: #f0a030; cursor: default; }
+  .dwsNode .eye { padding: 0 4px; line-height: 14px; font-size: 11px; background: transparent; border-color: transparent; }
+  .dwsNode .eye:hover { border-color: var(--line); }
+  .dwsNode .st.upd, .dwsTab .st.upd { color: #f0a030; } .dwsNode .st.miss, .dwsNode .st.fail, .dwsTab .st.miss, .dwsTab .st.fail { color: #e57373; }
+  #dwsState b.upd { color: #f0a030; } #dwsState b.miss, #dwsState b.fail { color: #e57373; }
+  .dwsModal { position: absolute; inset: 0; background: rgba(8,10,13,.55); display: none; align-items: center; justify-content: center; z-index: 5; }
+  .dwsModal.on { display: flex; }
+  .dwsBox { background: #1b222b; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; width: min(560px, 92vw); max-height: 80vh; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+  .dwsBox h3 { margin: 0; font-size: 14px; } .dwsBox h4 { margin: 8px 0 2px; font-size: 12.5px; color: #9fb0c3; }
+  .dwsDlgB { overflow: auto; } .dwsDlgB ul { margin: 2px 0; padding-left: 18px; font-size: 12px; } .dwsDlgB ul.bad li { color: #e57373; } .dwsDlgB p.ok { color: #6fd08c; }
+  .dwsBtnRow { display: flex; align-items: center; gap: 6px; } .dwsBtnRow .grow { flex: 1; }
+  #dwsSrcQ { flex: 1; min-width: 80px; }
+  #dwsSrcL { overflow: auto; max-height: 50vh; border: 1px solid var(--line); border-radius: 4px; }
+  .dwsSrcR { display: flex; align-items: center; gap: 8px; padding: 3px 8px; border-bottom: 1px solid #222a34; cursor: pointer; font-size: 12.5px; }
+  .dwsSrcR .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dwsSrcR .ty { color: #8796a8; font-size: 11px; width: 54px; }
+  .dwsSrcR.miss .nm, .dwsSrcR.miss .ty { color: #e57373; }
+  .dwsSrcR .eye { padding: 0 6px; font-size: 11px; } .dwsSrcR .eye.off { color: #8796a8; }
+  #dwsSrcN { font-size: 12px; color: #9fb0c3; }
+  #dwsPick { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 17; display: none; gap: 6px; padding: 6px; background: rgba(20,24,29,.95); border: 1px solid var(--accent); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.5); }
+  #dwsPick.on { display: flex; }
+  #dwsRibbon .rcol > button.sb { align-self: flex-start; }
 </style>
 
 <script>
@@ -4366,7 +4393,8 @@ var wasm_bindgen = (function(exports) {
     const b = {
       id: S.idSeq++, name: uniqueName(name), geo: geo, orig: o.orig || geo, matrix: m, matrix0: o.matrix0 ? o.matrix0.slice() : m.slice(),
       color: o.color ? o.color.slice() : nextColor(), opacity: o.opacity === undefined ? 1 : o.opacity, visible: o.visible !== false,
-      material: o.material || '', density: o.density || 0, off: [0, 0, 0], ana: null, stats: null, solid: o.solid || null
+      material: o.material || '', density: o.density || 0, off: [0, 0, 0], ana: null, stats: null, solid: o.solid || null,
+      uid: o.uid || dwNewUid()     // stable id (drawings refer to bodies by it)
     };
     if (o.index === undefined) S.bodies.push(b); else S.bodies.splice(o.index, 0, b);
     return b;
@@ -6140,7 +6168,7 @@ var wasm_bindgen = (function(exports) {
         [L('Phân tích undercut', 'Undercut analysis'), function () { openPop('undercut', true); $('bUc').click(); }, 'uc']);
       if (n >= 2) items.push([L('Kiểm tra va chạm', 'Collision check'), function () { openPop('collide', true); $('bCol').click(); }, 'col']);
       if (n === 2) items.push([L('So sánh 2 mesh', 'Compare the 2 meshes'), startCompare, 'cmp']);
-      items.push(null, [L('Tải STL', 'Download STL'), function () { $('bStl').click(); }, 'stl']);
+      items.push(null, [L('Tải STL', 'Download STL'), function () { $('bStl').click(); }, 'stl'], [L('Tạo Drawing Sheet', 'Create Drawing Sheet'), dwCreateFromSel, 'isov']);
     } else {
       items.push([L('Hiện tất cả', 'Show all'), function () { $('bShowAll').click(); }, 'show'], [L('Chọn tất cả', 'Tick all'), function () { $('bSelAll').click(); }, 'tick'],
         [L('Bỏ chọn tất cả', 'Untick all'), function () { $('bSelNone').click(); }, 'untick'], null, ['Fit', function () { sceneChanged(true); }, 'fit'], ['Iso', function () { setView('iso'); }, 'isov']);
@@ -6846,7 +6874,17 @@ var wasm_bindgen = (function(exports) {
         geos.set(b.geo, g);
       }
       meta.bodies.push({ name: b.name, color: b.color, opacity: b.opacity, visible: vis && vis.has(b) ? vis.get(b) : b.visible, matrix: b.matrix, matrix0: b.matrix0,
-        material: b.material, density: b.density, solid: b.solid || null, sel: S.sel.has(b), pos: g.pos, nv: g.nv, idx: g.idx, nt: g.nt });
+        material: b.material, density: b.density, solid: b.solid || null, sel: S.sel.has(b), uid: b.uid, pos: g.pos, nv: g.nv, idx: g.idx, nt: g.nt });
+    }
+    // geometry that drawing sheets still show but the model no longer has (not updated yet / deleted bodies)
+    meta.drawSnaps = [];
+    for (const sn of dwSnapsForSave()) {
+      let g = geos.get(sn.geo);
+      if (!g) {
+        g = { pos: off, nv: sn.geo.positions.length / 3, idx: off + sn.geo.positions.byteLength, nt: sn.geo.indices.length / 3 };
+        blobs.push(sn.geo.positions, sn.geo.indices); off += sn.geo.positions.byteLength + sn.geo.indices.byteLength; geos.set(sn.geo, g);
+      }
+      meta.drawSnaps.push({ rev: sn.rev, uid: sn.uid, name: sn.name, material: sn.material, density: sn.density, color: sn.color, matrix: sn.matrix, pos: g.pos, nv: g.nv, idx: g.idx, nt: g.nt });
     }
     let json = JSON.stringify(meta);
     let bytes = new TextEncoder().encode(json);
@@ -6863,10 +6901,11 @@ var wasm_bindgen = (function(exports) {
     clearAll();
     const geos = new Map();
     for (const o of meta.bodies) {
-      let g = geos.get(o.pos);
+      const gk = o.pos + ':' + o.nv + ':' + o.nt;      // empty geometries share an offset with the next one
+      let g = geos.get(gk);
       if (!g) {
         g = makeGeo(new Float32Array(buf.slice(base + o.pos, base + o.pos + o.nv * 12)), new Uint32Array(buf.slice(base + o.idx, base + o.idx + o.nt * 12)));
-        geos.set(o.pos, g);
+        geos.set(gk, g);
       }
       const b = addBody(o.name, g, o);
       if (o.sel) S.sel.add(b);
@@ -6880,7 +6919,13 @@ var wasm_bindgen = (function(exports) {
     if (meta.view) { mainCam.R = meta.view.R; mainCam.target = meta.view.target; mainCam.zoom = meta.view.zoom; }
     hist.undo.length = 0; hist.redo.length = 0; updateHistBtns();
     updateMeasList(); refresh();
-    if (meta.drawDoc) dwLoad(meta.drawDoc); else { v6Load(meta.drawing || null); dwLoad(null); }
+    const snaps = (meta.drawSnaps || []).map(function (o) {
+      const gk = o.pos + ':' + o.nv + ':' + o.nt;
+      let g = geos.get(gk);
+      if (!g) { g = makeGeo(new Float32Array(buf.slice(base + o.pos, base + o.pos + o.nv * 12)), new Uint32Array(buf.slice(base + o.idx, base + o.idx + o.nt * 12))); geos.set(gk, g); }
+      return { rev: o.rev, uid: o.uid, name: o.name, material: o.material, density: o.density, color: o.color, matrix: o.matrix, geo: g };
+    });
+    if (meta.drawDoc) dwLoad(meta.drawDoc, snaps); else { v6Load(meta.drawing || null); dwLoad(null, snaps); }
   }
   function clearAll() {
     for (const b of S.bodies.slice()) removeBody(b);
@@ -10645,7 +10690,7 @@ var wasm_bindgen = (function(exports) {
   // the 6-view sheet and the exploded view are two separate drawings: each keeps its own panel values (cfg) and its own
   // placements (st: model turn, view / iso / part / totals positions); both are saved with the session (.mrtl)
   const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, tot: null, notes: { '6v': [], exp: [] }, nsel: null, psel: null,
-    prev: null, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null, grp: {}, comb: null, vz: 1, vp: [0, 0], lay: null, est: 0 };
+    prev: null, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null, grp: {}, comb: null, dims: { '6v': [], exp: [] }, src: null, hide: [], dt: null, dsel: null, vsel: null, vz: 1, vp: [0, 0], lay: null, est: 0 };
   const V6_PREVPX = 12e6;   // the preview never renders the sheet above this many pixels (zooming further only scales)
   let v6Act = false;   // the Drawing Workspace is open and shows the sheet
   const V6_PAIRS = [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
@@ -10674,7 +10719,10 @@ var wasm_bindgen = (function(exports) {
       fs: v6Num('v6Fs', 2.6), fb: $('v6Fb').checked, W: W, H: H, cut: cut, dpi: dpi,
       lw: v6Num('v6Lw', 0.25), ss: +$('v6SS').value || 1, fmt: fmt, q: v6Num('v6Q', 92) / 100, bg: fmt === 'jpg' ? 'w' : $('v6Bg').value };
   }
-  function v6Bodies() {
+  // bodies of the drawing: the sheet's source bodies (Drawing Workspace), drawn from the geometry the sheet was last
+  // updated to; a sheet without its own list follows the 3D view (shown bodies, or the picked ones)
+  function v6Bodies() { return dwBodies(); }
+  function v6Live() {
     const s = S.bodies.filter(function (b) { return b.visible && S.sel.has(b); });
     return s.length ? s : S.bodies.filter(function (b) { return b.visible; });
   }
@@ -10782,7 +10830,7 @@ var wasm_bindgen = (function(exports) {
       }
       NN[9 * t + 3 * c] = nx; NN[9 * t + 3 * c + 1] = ny; NN[9 * t + 3 * c + 2] = nz;
     }
-    return { b: b, W: W, I: I, N: N, NN: NN, fixed: fixed, sil: sil, lo: lo, hi: hi, color: [b.color[0] / 255, b.color[1] / 255, b.color[2] / 255] };
+    return { b: b, P: P, W: W, I: I, N: N, NN: NN, fixed: fixed, sil: sil, lo: lo, hi: hi, color: [b.color[0] / 255, b.color[1] / 255, b.color[2] / 255] };
   }
 
   function v6GL() {
@@ -10887,12 +10935,15 @@ var wasm_bindgen = (function(exports) {
     g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(fb); g.deleteRenderbuffer(cb); g.deleteRenderbuffer(db);
     const cv = document.createElement('canvas'); cv.width = vw; cv.height = vh;
     const c2 = cv.getContext('2d'); c2.putImageData(fill, 0, 0);
-    if (o.edge || o.col === 'white') {
+    const map = { R0: R0, U0: U0, S2: S2, vh: vh, ctr: sc6.ctr, D: D };
+    let vec = null, snaps = null;
+    if (o.edge || o.col === 'white' || o.snap) {
       // farthest depth of the 3x3 neighbourhood: an edge is hidden only when everything around it is in front
       const tmp = new Float32Array(vw * vh), dep = new Float32Array(vw * vh);
       for (let y = 0; y < vh; y++) for (let x = 0; x < vw; x++) { const i = y * vw + x; let m = raw[i]; if (x > 0 && raw[i - 1] > m) m = raw[i - 1]; if (x < vw - 1 && raw[i + 1] > m) m = raw[i + 1]; tmp[i] = m; }
       for (let y = 0; y < vh; y++) for (let x = 0; x < vw; x++) { const i = y * vw + x; let m = tmp[i]; if (y > 0 && tmp[i - vw] > m) m = tmp[i - vw]; if (y < vh - 1 && tmp[i + vw] > m) m = tmp[i + vw]; dep[i] = m; }
-      const vis = new Path2D(), hid = new Path2D(), tol = 1.5e-3, c = sc6.ctr;
+      const vis = new Path2D(), hid = new Path2D(), tol = 1.5e-3, c = sc6.ctr, VL = [], HL = [];
+      let cur = null;
       const proj = function (W, i) { const x = W[3 * i] - c[0], y = W[3 * i + 1] - c[1], z = W[3 * i + 2] - c[2]; return [(x * r[0] + y * r[1] + z * r[2] - R0) * S2, vh - (x * u[0] + y * u[1] + z * u[2] - U0) * S2, (x * d[0] + y * d[1] + z * d[2] - d0) / (d1 - d0)]; };
       const seg = function (A, B) {
         const n2 = Math.max(1, Math.ceil(Math.hypot(B[0] - A[0], B[1] - A[1]) / 0.75));
@@ -10900,24 +10951,42 @@ var wasm_bindgen = (function(exports) {
         for (let i = 0; i <= n2; i++) {
           const t = i / n2, x = A[0] + (B[0] - A[0]) * t, y = A[1] + (B[1] - A[1]) * t, z = A[2] + (B[2] - A[2]) * t, ix = Math.floor(x), iy = Math.floor(y);
           const on = ix < 0 || iy < 0 || ix >= vw || iy >= vh || dep[iy * vw + ix] >= z - tol ? 1 : 0;
-          if (on !== state) { if (state >= 0) (state ? vis : hid).lineTo(x, y); (on ? vis : hid).moveTo(x, y); state = on; }
-          if (i === n2) (state ? vis : hid).lineTo(x, y);
+          if (on !== state) {
+            if (state >= 0) { (state ? vis : hid).lineTo(x, y); if (cur) cur.push(x, y); }
+            (on ? vis : hid).moveTo(x, y); state = on;
+            if (o.vec) { cur = [x, y]; (on ? VL : HL).push(cur); }
+          }
+          if (i === n2) { (state ? vis : hid).lineTo(x, y); if (cur) cur.push(x, y); }
         }
+        cur = null;
       };
+      const seen = o.snap ? new Set() : null;
+      snaps = o.snap ? [] : null;
+      // edge ends seen from this side: the points a dimension can be picked on
+      const snap = function (p, i) {
+        const k = p.b.id + ':' + i; if (seen.has(k)) return; seen.add(k);
+        const q = proj(p.W, i), ix = Math.floor(q[0]), iy = Math.floor(q[1]);
+        if (ix >= 0 && iy >= 0 && ix < vw && iy < vh && dep[iy * vw + ix] < q[2] - 4 * tol) return;
+        snaps.push({ x: q[0], y: q[1], b: p.b.id, i: i });
+      };
+      const drawE = o.edge || o.col === 'white';
       for (const p of preps) {
-        for (const e of p.fixed) seg(proj(p.W, e[0]), proj(p.W, e[1]));
+        for (const e of p.fixed) { if (drawE) seg(proj(p.W, e[0]), proj(p.W, e[1])); if (seen) { snap(p, e[0]); snap(p, e[1]); } }
         const N = p.N;
         for (const e of p.sil) {
           const a = N[3 * e[2]] * d[0] + N[3 * e[2] + 1] * d[1] + N[3 * e[2] + 2] * d[2], b2 = N[3 * e[3]] * d[0] + N[3 * e[3] + 1] * d[1] + N[3 * e[3] + 2] * d[2];
-          if (a * b2 < 0 || (a === 0) !== (b2 === 0)) seg(proj(p.W, e[0]), proj(p.W, e[1]));
+          if (a * b2 < 0 || (a === 0) !== (b2 === 0)) { if (drawE) seg(proj(p.W, e[0]), proj(p.W, e[1])); if (seen) { snap(p, e[0]); snap(p, e[1]); } }
         }
       }
       const lw = lwPx * s2;
-      c2.lineCap = 'round'; c2.lineJoin = 'round';
-      if (o.hidden) { c2.save(); c2.strokeStyle = '#7d7d7d'; c2.lineWidth = Math.max(1, lw * 0.6); c2.setLineDash([4 * lw, 3 * lw]); c2.stroke(hid); c2.restore(); }
-      c2.strokeStyle = '#111111'; c2.lineWidth = lw; c2.stroke(vis);
+      if (drawE && o.vec) vec = { vis: VL, hid: o.hidden ? HL : [], lw: lw };
+      else if (drawE) {
+        c2.lineCap = 'round'; c2.lineJoin = 'round';
+        if (o.hidden) { c2.save(); c2.strokeStyle = '#7d7d7d'; c2.lineWidth = Math.max(1, lw * 0.6); c2.setLineDash([4 * lw, 3 * lw]); c2.stroke(hid); c2.restore(); }
+        c2.strokeStyle = '#111111'; c2.lineWidth = lw; c2.stroke(vis);
+      }
     }
-    return { cv: cv, ss: s2, pad: pad, w: er * sc, h: eu * sc, rc: (rg[0] + rg[1]) / 2, uc: (rg[2] + rg[3]) / 2 };
+    return { cv: cv, ss: s2, pad: pad, w: er * sc, h: eu * sc, rc: (rg[0] + rg[1]) / 2, uc: (rg[2] + rg[3]) / 2, map: map, vec: vec, snaps: snaps };
   }
 
   // ---------- layout (full-size sheet px; positions are fractions of the sheet, item centres)
@@ -10985,8 +11054,9 @@ var wasm_bindgen = (function(exports) {
       if (o.exp) {
         for (const it of plan.items) out.parts.push(Object.assign(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, o), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
       } else {
-        out.pos = V6S.pos || v6Auto(o, sc6.ext, sc).pos;
-        for (const n of v6Names(o)) out.views[n] = v6View(G, sc6, sc6.preps, v6Dirs(V6_VIEWS[n]), sc * k, ss, M.lw * k, o);
+        const ap = v6Auto(o, sc6.ext, sc).pos; out.pos = V6S.pos ? Object.assign({}, ap, V6S.pos) : ap;
+        const os = Object.assign({}, o, { snap: true });
+        for (const n of v6Names(o)) out.views[n] = v6View(G, sc6, sc6.preps, v6Dirs(V6_VIEWS[n]), sc * k, ss, M.lw * k, os);
         if (o.iso) out.iso = v6View(G, sc6, sc6.preps, v6Dirs(v6IsoSpec(o.az, o.el)), sc * k * o.isoK, ss, M.lw * k * Math.min(1, o.isoK), o);
       }
     } finally { v6Release(G, sc6); }
@@ -11002,13 +11072,21 @@ var wasm_bindgen = (function(exports) {
       f = f || 1;
       const w = v.w * f, h = v.h * f, x = cx - w / 2, y = cy - h / 2, pad = v.pad / v.ss * f;
       c2.drawImage(v.cv, x - pad, y - pad, v.cv.width / v.ss * f, v.cv.height / v.ss * f);
-      return { x: x, y: y, w: w, h: h };
+      const tr = { x0: x - pad, y0: y - pad, s: f / v.ss };
+      if (c2.__rec && v.vec) dwRecEdges(c2, v.vec, tr);
+      return { x: x, y: y, w: w, h: h, tr: tr };
     };
     c2.fillStyle = '#111'; c2.strokeStyle = '#111'; c2.setLineDash([]);
     const fnt = v6Font(font, o.fb);
     if (!o.exp) {
-      const pos = V6S.pos || R.pos;
+      const pos = V6S.pos ? Object.assign({}, R.pos, V6S.pos) : R.pos;
       for (const n of Object.keys(R.views)) { const c = v6Centre(pos, n); frames[n] = put(R.views[n], c[0] * W, c[1] * H); hits.push({ kind: 'view', n: n, r: frames[n] }); }
+      // points a dimension can be picked on (sheet px)
+      R.snaps = [];
+      for (const n of Object.keys(R.views)) {
+        const v = R.views[n], tr = frames[n].tr;
+        for (const q of (v.snaps || [])) R.snaps.push({ x: tr.x0 + q.x * tr.s, y: tr.y0 + q.y * tr.s, view: n, b: q.b, i: q.i });
+      }
       if (R.iso) {
         const ip = V6S.iso || v6IsoDefault(o, R, pos);
         // while its corner is dragged the iso picture is scaled on the fly; the next render redraws it sharp
@@ -11035,6 +11113,7 @@ var wasm_bindgen = (function(exports) {
         c2.save(); c2.translate(xd - 0.25 * font, (y0 + y1) / 2); c2.rotate(-Math.PI / 2);
         c2.font = fnt; c2.textAlign = 'center'; c2.textBaseline = 'bottom'; c2.fillText(v6Txt(v, o.unit), 0, 0); c2.restore();
       };
+      v6DrawDims(c2, o, R, frames, font, lw, fnt, arrow, hits, W, H);
       const ext = R.sc6.ext;
       if (o.dim) {
         const fx = frames.front || frames.back || frames.top || frames.bottom;
@@ -11079,6 +11158,7 @@ var wasm_bindgen = (function(exports) {
         hits.push({ kind: 'tot', r: { x: x0 - 3, y: y0 - 3, w: wm + 6, h: hh + 6 } });
       }
     }
+    R.frames = frames;
     if (o.scn) {
       c2.font = fnt; c2.textAlign = 'right'; c2.textBaseline = 'bottom';
       c2.fillText(L('Tỉ lệ ', 'Scale ') + v6Ratio(R.sc, o) + '    ' + L('Đơn vị: mm (in)', 'Units: mm (in)'), W - 1.5 * font, H - 1.2 * font);
@@ -11092,6 +11172,143 @@ var wasm_bindgen = (function(exports) {
     }
     return hits;
   }
+  // ---------- dimensions picked on a view: each end is a vertex of a body (stable body id + point in the body's own
+  // frame), found again in the geometry the sheet is drawn from; when that vertex is gone the dimension is marked lost
+  // dim = { id, view, a: {uid, L}, b: {uid, L}, t: 'h' | 'v' | 'a', o: place of the dimension line (mm in the view), la }
+  function v6DimVert(p, L) {
+    const key = L.join(',');
+    if (!p._dv) p._dv = new Map();
+    if (p._dv.has(key)) return p._dv.get(key);
+    const P = p.P, n = P.length / 3, diag = Math.hypot(p.hi[0] - p.lo[0], p.hi[1] - p.lo[1], p.hi[2] - p.lo[2]) || 1, tol = Math.pow(2e-4 * diag, 2) + 1e-12;
+    let best = -1, bd = Infinity;
+    for (let i = 0; i < n; i++) { const dx = P[3 * i] - L[0], dy = P[3 * i + 1] - L[1], dz = P[3 * i + 2] - L[2], d = dx * dx + dy * dy + dz * dz; if (d < bd) { bd = d; best = i; } }
+    const r = bd <= tol ? best : -1; p._dv.set(key, r); return r;
+  }
+  function v6RuToSheet(v, fr, r, u) { const m = v.map; return { x: fr.tr.x0 + (r - m.R0) * m.S2 * fr.tr.s, y: fr.tr.y0 + (m.vh - (u - m.U0) * m.S2) * fr.tr.s, r: r, u: u }; }
+  function v6SheetToRu(v, fr, x, y) { const m = v.map, px = (x - fr.tr.x0) / fr.tr.s, py = (y - fr.tr.y0) / fr.tr.s; return { r: px / m.S2 + m.R0, u: (m.vh - py) / m.S2 + m.U0 }; }
+  function v6DimLoc(R, frames, n, ref) {
+    const v = R.views[n], fr = frames[n]; if (!v || !fr || !ref || !v.map) return null;
+    const id = dwIdOf(ref.uid), p = R.sc6.preps.find(function (q) { return q.b.id === id; }); if (!p) return null;
+    const i = v6DimVert(p, ref.L); if (i < 0) return null;
+    const m = v.map, c = m.ctr, D = m.D, x = p.W[3 * i] - c[0], y = p.W[3 * i + 1] - c[1], z = p.W[3 * i + 2] - c[2];
+    return v6RuToSheet(v, fr, x * D.r[0] + y * D.r[1] + z * D.r[2], x * D.u[0] + y * D.u[1] + z * D.u[2]);
+  }
+  // is the reference still a vertex of the body as it is in the model now (no drawing needed)
+  function v6RefValid(ref) {
+    const b = S.bodies.find(function (x) { return x.uid === ref.uid; }); if (!b) return false;
+    const P = b.geo.positions; let lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity], bd = Infinity;
+    for (let i = 0; i < P.length; i += 3) {
+      for (let k = 0; k < 3; k++) { if (P[i + k] < lo[k]) lo[k] = P[i + k]; if (P[i + k] > hi[k]) hi[k] = P[i + k]; }
+      const dx = P[i] - ref.L[0], dy = P[i + 1] - ref.L[1], dz = P[i + 2] - ref.L[2], d = dx * dx + dy * dy + dz * dz; if (d < bd) bd = d;
+    }
+    const diag = Math.hypot(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]) || 1;
+    return bd <= Math.pow(2e-4 * diag, 2) + 1e-12;
+  }
+  // where the dimension line runs and what it measures (mm), from its two ends on the sheet
+  function v6DimGeom(v, fr, dm, A, B) {
+    if (dm.t === 'h') return { val: Math.abs(A.r - B.r), P1: v6RuToSheet(v, fr, A.r, dm.o), P2: v6RuToSheet(v, fr, B.r, dm.o) };
+    if (dm.t === 'v') return { val: Math.abs(A.u - B.u), P1: v6RuToSheet(v, fr, dm.o, A.u), P2: v6RuToSheet(v, fr, dm.o, B.u) };
+    const dr = B.r - A.r, du = B.u - A.u, l = Math.hypot(dr, du) || 1, nr = -du / l, nu = dr / l;
+    return { val: l, P1: v6RuToSheet(v, fr, A.r + nr * dm.o, A.u + nu * dm.o), P2: v6RuToSheet(v, fr, B.r + nr * dm.o, B.u + nu * dm.o) };
+  }
+  function v6DrawDims(c2, o, R, frames, font, lw, fnt, arrow, hits, W, H) {
+    const list = (V6S.dims['6v'] || []).slice(), lost = [];
+    if (V6S.dt && V6S.dt.tmp) list.push(V6S.dt.tmp);
+    for (const dm of list) {
+      const v = R.views[dm.view], fr = frames[dm.view]; if (!v || !fr) continue;
+      const A = v6DimLoc(R, frames, dm.view, dm.a), B = v6DimLoc(R, frames, dm.view, dm.b), tmp = V6S.dt && dm === V6S.dt.tmp;
+      c2.save(); c2.lineWidth = Math.max(1, lw * 0.55); c2.font = fnt; c2.textAlign = 'center'; c2.textBaseline = 'bottom';
+      if (!A || !B) {
+        // reference lost: never shown as if it were still right
+        lost.push(dm.id);
+        const la = dm.la || [0.5, 0.5, 0.55, 0.5], x1 = la[0] * W, y1 = la[1] * H, x2 = la[2] * W, y2 = la[3] * H;
+        c2.strokeStyle = c2.fillStyle = '#d32f2f'; c2.setLineDash([lw * 3, lw * 2]);
+        c2.beginPath(); c2.moveTo(x1, y1); c2.lineTo(x2, y2); c2.stroke(); c2.setLineDash([]);
+        c2.fillText('? ' + L('mất tham chiếu', 'reference lost'), (x1 + x2) / 2, (y1 + y2) / 2 - 0.3 * font);
+        hits.push({ kind: 'dim', id: dm.id, lost: true, r: { x: Math.min(x1, x2) - font, y: Math.min(y1, y2) - 1.4 * font, w: Math.abs(x2 - x1) + 2 * font, h: Math.abs(y2 - y1) + 1.8 * font } });
+        c2.restore(); continue;
+      }
+      const g = v6DimGeom(v, fr, dm, A, B), P1 = g.P1, P2 = g.P2;
+      if (!tmp) { const r5 = function (x) { return Math.round(x * 1e5) / 1e5; }; dm.la = [r5(P1.x / W), r5(P1.y / H), r5(P2.x / W), r5(P2.y / H)]; }
+      c2.strokeStyle = c2.fillStyle = tmp ? '#2f8cff' : '#111';
+      const ext = function (S0, E) {
+        const dx = E.x - S0.x, dy = E.y - S0.y, l = Math.hypot(dx, dy); if (l < 1e-6) return;
+        const g0 = Math.min(0.4 * font, l * 0.3), ux = dx / l, uy = dy / l;
+        c2.moveTo(S0.x + ux * g0, S0.y + uy * g0); c2.lineTo(E.x + ux * 0.5 * font, E.y + uy * 0.5 * font);
+      };
+      c2.beginPath(); ext(A, P1); ext(B, P2); c2.moveTo(P1.x, P1.y); c2.lineTo(P2.x, P2.y); c2.stroke();
+      if (Math.hypot(P2.x - P1.x, P2.y - P1.y) > 1e-6) { arrow(P2.x, P2.y, P1.x, P1.y); arrow(P1.x, P1.y, P2.x, P2.y); }
+      let ang = Math.atan2(P2.y - P1.y, P2.x - P1.x); if (ang > Math.PI / 2) ang -= Math.PI; if (ang < -Math.PI / 2) ang += Math.PI;
+      const mx = (P1.x + P2.x) / 2, my = (P1.y + P2.y) / 2, txt = v6Txt(g.val, o.unit), tw = c2.measureText(txt).width;
+      c2.translate(mx, my); c2.rotate(ang); c2.fillText(txt, 0, -0.25 * font);
+      c2.restore();
+      if (!tmp) {
+        const xs = [A.x, B.x, P1.x, P2.x, mx - tw / 2, mx + tw / 2], ys = [A.y, B.y, P1.y, P2.y, my - 1.3 * font, my + 0.3 * font];
+        const x0 = Math.min.apply(null, xs), y0 = Math.min.apply(null, ys);
+        hits.push({ kind: 'dim', id: dm.id, r: { x: x0, y: y0, w: Math.max.apply(null, xs) - x0, h: Math.max.apply(null, ys) - y0 }, P1: P1, P2: P2 });
+      }
+    }
+    R.lostDims = lost;
+  }
+  function v6DimVal(id) {
+    const R = V6S.prev, dm = v6Dim(id); if (!R || !dm || !R.frames) return null;
+    const A = v6DimLoc(R, R.frames, dm.view, dm.a), B = v6DimLoc(R, R.frames, dm.view, dm.b); if (!A || !B) return null;
+    return v6DimGeom(R.views[dm.view], R.frames[dm.view], dm, A, B).val;
+  }
+  function v6Dim(id) { return (V6S.dims['6v'] || []).find(function (d) { return d.id === id; }); }
+  // dimension tool: pick two points on one view, then place the line (its direction picks horizontal / vertical / aligned)
+  function v6DimTool(on) {
+    V6S.dt = on ? { a: null, b: null, view: null, hov: null, tmp: null, redo: null } : null;
+    V6S.dsel = null;
+    if (on && V6S.mode !== '6v') { V6S.dt = null; flash(L('Kích thước ghi trên các view của tab 6 Views', 'Dimensions go on the views of the 6 Views tab')); }
+    $('v6Prev').style.cursor = V6S.dt ? 'crosshair' : 'default';
+    v6Paint();
+    if (typeof dwSyncRibbon === 'function') dwSyncRibbon();
+  }
+  function v6DimRef(q) {
+    const p = V6S.prev.sc6.preps.find(function (x) { return x.b.id === q.b; }); if (!p) return null;
+    return { uid: dwUidOf(q.b), L: [p.P[3 * q.i], p.P[3 * q.i + 1], p.P[3 * q.i + 2]] };
+  }
+  function v6DimPlace(t) {
+    const dt = V6S.dt, R = V6S.prev, fr = R.frames[dt.view], v = R.views[dt.view];
+    const A = v6DimLoc(R, R.frames, dt.view, dt.a), B = v6DimLoc(R, R.frames, dt.view, dt.b); if (!A || !B) return null;
+    const M = v6SheetToRu(v, fr, t.x, t.y), r0 = Math.min(A.r, B.r), r1 = Math.max(A.r, B.r), u0 = Math.min(A.u, B.u), u1 = Math.max(A.u, B.u);
+    const oU = M.u > u1 ? M.u - u1 : M.u < u0 ? u0 - M.u : 0, oR = M.r > r1 ? M.r - r1 : M.r < r0 ? r0 - M.r : 0;
+    const dm = { id: dt.redo || 0, view: dt.view, a: dt.a, b: dt.b };
+    if (oU > 0 && (oR === 0 || oU >= oR)) { dm.t = 'h'; dm.o = M.u; }
+    else if (oR > 0) { dm.t = 'v'; dm.o = M.r; }
+    else { const dr = B.r - A.r, du = B.u - A.u, l = Math.hypot(dr, du) || 1; dm.t = 'a'; dm.o = ((M.r - A.r) * -du + (M.u - A.u) * dr) / l; }
+    return dm;
+  }
+  function v6DimSnap(t) {
+    const R = V6S.prev, Ly = V6S.lay; if (!R || !R.snaps || !Ly) return null;
+    const lim = 10 * Ly.dpr / Ly.s; let best = null, bd = lim * lim;
+    for (const q of R.snaps) { if (V6S.dt && V6S.dt.a && q.view !== V6S.dt.view) continue; const d = (q.x - t.x) * (q.x - t.x) + (q.y - t.y) * (q.y - t.y); if (d < bd) { bd = d; best = q; } }
+    return best;
+  }
+  function v6DimClick(t) {
+    const dt = V6S.dt, q = dt.hov;
+    if (!dt.a) { if (q) { dt.a = v6DimRef(q); dt.view = q.view; dt.ap = q; } }
+    else if (!dt.b) { if (q && !(q.b === dt.ap.b && q.i === dt.ap.i)) { dt.b = v6DimRef(q); dt.tmp = v6DimPlace(t); } }
+    else {
+      const dm = v6DimPlace(t);
+      if (dm) {
+        if (dt.redo) { const old = v6Dim(dt.redo); Object.assign(old, dm, { id: dt.redo }); delete old.la; V6S.dt = null; $('v6Prev').style.cursor = 'default'; }
+        else { dm.id = V6S.seq++; V6S.dims['6v'].push(dm); V6S.dt = { a: null, b: null, view: null, hov: null, tmp: null, redo: null }; }
+        V6S.dsel = dm.id;
+      }
+    }
+    v6Paint();
+    if (typeof dwSyncRibbon === 'function') dwSyncRibbon();
+  }
+  function v6DelDim(id) { const L2 = V6S.dims['6v'], d = v6Dim(id || V6S.dsel); if (d) L2.splice(L2.indexOf(d), 1); V6S.dsel = null; v6Paint(); }
+  // one view at a time: delete it, or send it back to its automatic place
+  function v6DelView(n) {
+    if (n === 'iso') { $('v6Iso').checked = false; $('v6Iso').dispatchEvent(new Event('change', { bubbles: true })); }
+    else { const c = document.querySelector('.v6v[data-v=' + n + ']'); if (c) { c.checked = false; c.dispatchEvent(new Event('change', { bubbles: true })); } }
+    V6S.vsel = null; v6Preview();
+  }
+  function v6ViewAuto(n) { if (n === 'iso') V6S.iso = null; else if (V6S.pos) delete V6S.pos[n]; v6Preview(); }
   // default place of the iso picture: the free corner right of the Top view (or top right)
   function v6IsoDefault(o, R, pos) {
     const v = R.iso, W = o.W * (R.k || 1), H = o.H * (R.k || 1), x = Math.min(0.97 - v.w / 2 / W, Math.max(pos.right || 0.75, 0.62)), y = Math.max(0.03 + v.h / 2 / H, (pos.top !== undefined && o.views.top ? pos.top : 0.2));
@@ -11208,7 +11425,7 @@ var wasm_bindgen = (function(exports) {
     try {
       const L = v6Layout(o), k = v6WantK(o, L), big = o.W * o.H * k * k;
       V6S.prev = Object.assign(await v6Render(o, k, big > 3e6 ? 1 : Math.min(2, o.ss), true), { o: o, k: k });
-      v6Paint();
+      v6Paint(); dwRenderOk();
       $('v6Zoom').textContent = o.W + ' × ' + o.H + ' px';
       // expected size: a small copy of the sheet encoded the same way, scaled up by area (larger pictures compress better)
       if (big <= 2.5e6 || !V6S.est) {
@@ -11220,7 +11437,7 @@ var wasm_bindgen = (function(exports) {
       v6Info(o, V6S.prev, V6S.est);
     } catch (e) {
       const g = pc.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#fff'; g.fillRect(0, 0, pc.width, pc.height); g.fillStyle = '#a33'; g.font = '13px sans-serif'; g.fillText(e.message, 10, 22);
-      V6S.prev = null; v6Info(o, null, 0);
+      V6S.prev = null; v6Info(o, null, 0); dwRenderFail(e.message);
     } finally { v6Busy = false; if (v6Again) { v6Again = false; v6Preview(); } }
   }
   function v6Paint(hover) {
@@ -11257,6 +11474,14 @@ var wasm_bindgen = (function(exports) {
       if ((h.kind === 'note' && h.id === V6S.nsel) || ((h.kind === 'part' || h.kind === 'label') && h.id === V6S.psel)) box(h, '#f0a030');
       else if (hover && h === hover) box(h, '#2f8cff');
     }
+    if (V6S.comb === null) for (const h of q.hits) {
+      if ((h.kind === 'view' && h.n === V6S.vsel) || (h.kind === 'iso' && V6S.vsel === 'iso') || (h.kind === 'dim' && h.id === V6S.dsel)) box(h, '#f0a030');
+    }
+    if (V6S.dt) {
+      const dot = function (q, fill) { c2.beginPath(); c2.arc(q.x, q.y, 5 * u, 0, Math.PI * 2); c2.lineWidth = 1.5 * u; c2.strokeStyle = '#ff7a00'; if (fill) { c2.fillStyle = '#ff7a00'; c2.fill(); } c2.stroke(); };
+      if (V6S.dt.ap) dot(V6S.dt.ap, true);
+      if (V6S.dt.hov) dot(V6S.dt.hov, false);
+    }
     const isoH = q.hits.find(function (h) { return h.kind === 'isoR'; });
     if (isoH && hover && (hover.kind === 'iso' || hover.kind === 'isoR')) {
       c2.save(); c2.fillStyle = '#2f8cff'; c2.strokeStyle = '#fff'; c2.lineWidth = u;
@@ -11278,7 +11503,7 @@ var wasm_bindgen = (function(exports) {
     let best = null;
     for (const h of q.hits) if (x >= h.r.x - m && x <= h.r.x + h.r.w + m && y >= h.r.y - m && y <= h.r.y + h.r.h + m) {
       // notes and labels over pictures
-      const rank = { isoR: 4, note: 3, tot: 3, label: 2, part: 1, iso: 1, view: 0 };
+      const rank = { isoR: 4, note: 3, tot: 3, dim: 3, label: 2, part: 1, iso: 1, view: 0 };
       if (!best || rank[h.kind] >= rank[best.kind]) best = h;
     }
     return { h: best, x: x, y: y };
@@ -11359,22 +11584,28 @@ var wasm_bindgen = (function(exports) {
         if (id !== null && v6CombCands().has(id)) v6CombAdd(id); else v6CombEnd();
         e.preventDefault(); return;
       }
+      if (V6S.dt) { V6S.dt.hov = v6DimSnap(t); v6DimClick(t); e.preventDefault(); return; }
+      V6S.vsel = h && h.kind === 'view' ? h.n : h && (h.kind === 'iso' || h.kind === 'isoR') ? 'iso' : null;
+      V6S.dsel = h && h.kind === 'dim' ? h.id : null;
+      if (h && h.kind === 'dim') { V6S.drag = { h: h, x: t.x, y: t.y, dim: h.id }; v6Paint(h); e.preventDefault(); return; }
       if (!h) V6S.pan = { x: e.clientX, y: e.clientY, vp: V6S.vp.slice() };
       if (V6S.edit) v6EditDone(true);
       V6S.nsel = h && h.kind === 'note' ? h.id : null;
       if (h && (h.kind === 'part' || h.kind === 'label')) V6S.psel = h.id; else if (h) V6S.psel = null;
       if (h && h.kind === 'note') { const n = v6Note(h.id); $('v6Ns').value = $('v6NsR').value = n.size; $('v6Nb').checked = n.bold; }
       v6PartRow(); v6Paint(h);
+      if (typeof dwRefresh === 'function') dwRefresh(false);
       if (!h) return;
-      if (h.kind === 'view' && !V6S.pos) V6S.pos = JSON.parse(JSON.stringify(V6S.prev.pos));
-      if ((h.kind === 'iso' || h.kind === 'isoR') && !V6S.iso) V6S.iso = v6IsoDefault(V6S.prev.o, V6S.prev, V6S.pos || V6S.prev.pos);
-      if (h.kind === 'tot' && !V6S.tot) V6S.tot = (V6S.prev.totPos || [0.95, 0.95]).slice();
+      // placements are taken over only when something is really moved (a click alone changes nothing)
+      const pos0 = Object.assign({}, V6S.prev.pos, V6S.pos || {}), iso0 = V6S.iso || ((h.kind === 'iso' || h.kind === 'isoR') && V6S.prev.iso ? v6IsoDefault(V6S.prev.o, V6S.prev, pos0) : null);
+      const tot0 = V6S.tot || (V6S.prev.totPos || [0.95, 0.95]).slice();
       if (h.kind === 'isoR') {
         const f = V6S.prev.hits.find(function (x) { return x.kind === 'iso'; }).r, c = [f.x + f.w / 2, f.y + f.h / 2];
         V6S.drag = { h: h, x: t.x, y: t.y, c: c, d0: Math.max(4, Math.hypot(t.x - c[0], t.y - c[1])), k0: V6S.prev.o.isoK, k: V6S.prev.o.isoK };
+        if (!V6S.iso) V6S.iso = iso0;
         e.preventDefault(); return;
       }
-      V6S.drag = { tot: V6S.tot && V6S.tot.slice(), h: h, x: t.x, y: t.y, pos: JSON.parse(JSON.stringify(V6S.pos)), iso: V6S.iso && V6S.iso.slice(), off: (V6S.off[h.id] || [0, 0]).slice(), note: h.kind === 'note' ? [v6Note(h.id).x, v6Note(h.id).y] : null };
+      V6S.drag = { tot: tot0.slice(), h: h, x: t.x, y: t.y, pos: JSON.parse(JSON.stringify(pos0)), iso: iso0 && iso0.slice(), off: (V6S.off[h.id] || [0, 0]).slice(), note: h.kind === 'note' ? [v6Note(h.id).x, v6Note(h.id).y] : null };
       e.preventDefault();
     });
     pc.addEventListener('dblclick', function (e) { const t = v6Hit(e); if (t && t.h && (t.h.kind === 'note' || t.h.kind === 'label' || t.h.kind === 'part')) v6Edit(t.h); else if (t && !t.h) v6Fit(); });
@@ -11388,6 +11619,17 @@ var wasm_bindgen = (function(exports) {
       e.preventDefault();
       if (V6S.comb !== null) { v6CombEnd(); return; }
       const t = v6Hit(e), h = t && t.h;
+      if (V6S.dt) { v6DimTool(false); return; }
+      if (h && h.kind === 'dim') {
+        V6S.dsel = h.id; v6Paint(h);
+        showMenu([[L('Chọn lại điểm', 'Pick the points again'), function () { v6DimTool(true); if (V6S.dt) V6S.dt.redo = h.id; }, 'edit'], [L('Xoá kích thước', 'Delete dimension'), function () { v6DelDim(h.id); }, 'del']], e.clientX, e.clientY);
+        return;
+      }
+      if (h && V6S.mode === '6v' && (h.kind === 'view' || h.kind === 'iso')) {
+        const n = h.kind === 'iso' ? 'iso' : h.n; V6S.vsel = n; v6Paint(h);
+        showMenu([[L('Xoá view', 'Delete view'), function () { v6DelView(n); }, 'del'], [L('Về vị trí tự động', 'Back to the automatic place'), function () { v6ViewAuto(n); }, 'home']], e.clientX, e.clientY);
+        return;
+      }
       if (!h || V6S.mode !== 'exp' || (h.kind !== 'part' && h.kind !== 'label')) return;
       V6S.psel = h.id; v6PartRow(); v6Paint(h);
       const items = [[L('Combine (gộp body cùng khối lượng)', 'Combine (bodies of the same mass)'), function () { v6CombStart(h.id); }, 'merge']];
@@ -11398,6 +11640,20 @@ var wasm_bindgen = (function(exports) {
       if (!V6S.prev) return;
       if (V6S.pan) { V6S.vp = [V6S.pan.vp[0] + e.clientX - V6S.pan.x, V6S.pan.vp[1] + e.clientY - V6S.pan.y]; pc.style.cursor = 'grabbing'; v6Paint(); return; }
       const t = v6Hit(e); if (!t) return;
+      if (V6S.dt && !V6S.drag) {
+        if (e.target !== pc) return;
+        V6S.dt.hov = v6DimSnap(t);
+        if (V6S.dt.a && V6S.dt.b) V6S.dt.tmp = v6DimPlace(t);
+        pc.style.cursor = 'crosshair'; v6Paint(); return;
+      }
+      if (V6S.drag && V6S.drag.dim) {
+        const dm = v6Dim(V6S.drag.dim), R = V6S.prev, v = dm && R.views[dm.view], fr = dm && R.frames[dm.view];
+        if (dm && v && fr) {
+          const A = v6DimLoc(R, R.frames, dm.view, dm.a), B = v6DimLoc(R, R.frames, dm.view, dm.b), M = v6SheetToRu(v, fr, t.x, t.y);
+          if (A && B) { if (dm.t === 'h') dm.o = M.u; else if (dm.t === 'v') dm.o = M.r; else { const dr = B.r - A.r, du = B.u - A.u, l = Math.hypot(dr, du) || 1; dm.o = ((M.r - A.r) * -du + (M.u - A.u) * dr) / l; } }
+        }
+        v6Paint(V6S.drag.h); return;
+      }
       if (!V6S.drag) {
         if (e.target !== pc) return;
         const h = t.h;
@@ -11406,7 +11662,8 @@ var wasm_bindgen = (function(exports) {
         return;
       }
       const D = V6S.drag, h = D.h, dx = (t.x - D.x) / V6S.lay.W, dy = (t.y - D.y) / V6S.lay.H;
-      if (Math.abs(t.x - D.x) + Math.abs(t.y - D.y) > 2) D.moved = true;
+      if (Math.abs(t.x - D.x) + Math.abs(t.y - D.y) > 2 * V6S.lay.dpr / V6S.lay.s) D.moved = true;
+      if (!D.moved && h.kind !== 'isoR') return;
       if (h.kind === 'view') {
         const P = JSON.parse(JSON.stringify(D.pos));
         if (h.n === 'front') { P.front = [P.front[0] + dx, P.front[1] + dy]; ['left', 'right', 'back'].forEach(function (k) { P[k] += dx; }); ['top', 'bottom'].forEach(function (k) { P[k] += dy; }); }
@@ -11429,10 +11686,17 @@ var wasm_bindgen = (function(exports) {
     });
     pc.addEventListener('mouseleave', function () { if (!V6S.drag && V6S.hov) { V6S.hov = null; v6Paint(); } });
     window.addEventListener('keydown', function (e) {
-      if (v6Act && V6S.comb !== null && e.key === 'Escape') { v6CombEnd(); e.preventDefault(); e.stopPropagation(); return; }
-      if (!v6Act || !V6S.nsel || V6S.edit) return;
+      if (!v6Act || V6S.edit) return;
+      if (V6S.comb !== null && e.key === 'Escape') { v6CombEnd(); e.preventDefault(); e.stopPropagation(); return; }
+      if (V6S.dt && e.key === 'Escape') {
+        if (V6S.dt.a && !V6S.dt.redo) { V6S.dt = { a: null, b: null, view: null, hov: null, tmp: null, redo: null }; v6Paint(); } else v6DimTool(false);
+        e.preventDefault(); e.stopPropagation(); return;
+      }
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
-      if (e.key === 'Delete' || e.key === 'Backspace') { v6DelNote(); e.preventDefault(); e.stopPropagation(); }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (V6S.nsel) v6DelNote(); else if (V6S.dsel) v6DelDim(); else if (V6S.vsel && V6S.mode === '6v') v6DelView(V6S.vsel); else return;
+        e.preventDefault(); e.stopPropagation();
+      }
     }, true);
   })();
   function v6DelNote() { const L2 = V6S.notes[V6S.mode], n = v6Note(V6S.nsel); if (n) L2.splice(L2.indexOf(n), 1); V6S.nsel = null; v6Paint(); }
@@ -11517,7 +11781,7 @@ var wasm_bindgen = (function(exports) {
     n.addEventListener('input', function () { r.value = n.value; });
   });
   // views switched or the sheet changed: a hand placement would no longer fit
-  document.querySelectorAll('.v6v').forEach(function (c) { c.addEventListener('change', function () { V6S.pos = null; }); });
+  // a view switched on gets its automatic place, the others stay where they were put
   ['v6Scale', 'v6ScA', 'v6ScB', 'v6ScR', 'v6Paper', 'v6Ori', 'v6Dim', 'v6Lbl', 'v6ScN', 'v6Zm', 'v6Fs'].forEach(function (id) { $(id).addEventListener('change', function () { V6S.pos = null; V6S.iso = null; }); });
   $('v6Iso').addEventListener('change', function () { V6S.iso = null; });
   $('v6Ex').addEventListener('change', function () { V6S.off = {}; });
@@ -11549,6 +11813,7 @@ var wasm_bindgen = (function(exports) {
   function v6StSet(t) { t = t || {}; V6S.R = t.R || [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; V6S.pos = t.pos || null; V6S.iso = t.iso || null; V6S.off = t.off || {}; V6S.tot = t.tot || null; V6S.grp = t.grp || {}; }
   function v6SetMode(m) {
     if (V6S.edit) v6EditDone(false);
+    V6S.dt = null; V6S.dsel = null; V6S.vsel = null;
     V6S.comb = null;
     if (m !== V6S.mode) { V6S.cfg[V6S.mode] = v6Snap(); V6S.st[V6S.mode] = v6StGet(); V6S.mode = m; v6Apply(V6S.cfg[m]); v6StSet(V6S.st[m]); }
     V6S.nsel = null; V6S.psel = null; v6Sync(); v6Preview();
@@ -11558,10 +11823,10 @@ var wasm_bindgen = (function(exports) {
   // ---------- drawing state: one plain object (copy) per sheet; v6Grab reads it from the panel + V6S, v6Put writes it back
   function v6Grab() {
     V6S.cfg[V6S.mode] = v6Snap(); V6S.st[V6S.mode] = v6StGet();
-    return JSON.parse(JSON.stringify({ mode: V6S.mode, cfg: V6S.cfg, st: V6S.st, notes: V6S.notes, seq: V6S.seq }));
+    return JSON.parse(JSON.stringify({ mode: V6S.mode, cfg: V6S.cfg, st: V6S.st, notes: V6S.notes, seq: V6S.seq, dims: V6S.dims, src: V6S.src, hide: V6S.hide }));
   }
   function v6Blank() {
-    return { mode: '6v', cfg: { '6v': Object.assign({}, V6S.def), exp: Object.assign({}, V6S.def) }, st: { '6v': {}, exp: {} }, notes: { '6v': [], exp: [] }, seq: 1 };
+    return { mode: '6v', cfg: { '6v': Object.assign({}, V6S.def), exp: Object.assign({}, V6S.def) }, st: { '6v': {}, exp: {} }, notes: { '6v': [], exp: [] }, seq: 1, dims: { '6v': [], exp: [] }, src: null, hide: [] };
   }
   function v6Put(d) {
     if (V6S.edit) v6EditDone(false);
@@ -11571,9 +11836,11 @@ var wasm_bindgen = (function(exports) {
     for (const m of ['6v', 'exp']) { const t = sd[m] || {}; V6S.st[m] = { R: t.R, pos: t.pos, iso: t.iso, tot: t.tot, off: t.off || {}, grp: t.grp || {} }; }
     const nt = d.notes || {};
     V6S.notes = { '6v': nt['6v'] || [], exp: nt.exp || [] };
-    V6S.seq = Math.max(d.seq || 1, 1 + Math.max.apply(null, [0].concat(V6S.notes['6v'], V6S.notes.exp).map(function (n) { return n.id || 0; })));
+    const dd = d.dims || {}; V6S.dims = { '6v': dd['6v'] || [], exp: dd.exp || [] };
+    V6S.src = Array.isArray(d.src) ? d.src.slice() : null; V6S.hide = Array.isArray(d.hide) ? d.hide.slice() : [];
+    V6S.seq = Math.max(d.seq || 1, 1 + Math.max.apply(null, [0].concat(V6S.notes['6v'], V6S.notes.exp, V6S.dims['6v']).map(function (n) { return n.id || 0; })));
     V6S.mode = d.mode === 'exp' ? 'exp' : '6v'; v6Apply(V6S.cfg[V6S.mode]); v6StSet(V6S.st[V6S.mode]);
-    V6S.nsel = null; V6S.psel = null; V6S.prev = null; V6S.comb = null; v6Sync(); v6Preview();
+    V6S.nsel = null; V6S.psel = null; V6S.prev = null; V6S.comb = null; V6S.dt = null; V6S.dsel = null; V6S.vsel = null; v6Sync(); v6Preview();
   }
   // body references (hand placements, combined groups) through f: id -> other key (undefined = drop)
   function v6MapIds(d, f) {
@@ -11612,12 +11879,14 @@ var wasm_bindgen = (function(exports) {
   // as it is underneath; going back changes nothing in the model.
   //
   // Drawing document  DW.doc = { v, id, name (null = "Drawing of <model>"), created, modified, active, sheets: [sheet] }
-  // Sheet             { id, name, saved, work, dirty }
+  // Sheet             { id, name, saved, work, dirty, rev: {body uid: revision drawn from}, fail }
   //   work  = the sheet as it is on the canvas now; saved = what "Save" (sheet) last kept. Both are drawing states of
   //   v6.js (v6Grab form: panel values + placements per drawing type, notes), independent copies per sheet.
-  // The document goes into the session file (.mrtl) as meta.drawDoc, body references by body order (as v6Dump).
-  const DW = { open: false, doc: null, sig: '', ren: null, drag: null, side: 320 };
-  const DW_VER = 1;
+  // The document goes into the session file (.mrtl) as meta.drawDoc (v2: body references by stable body id), with the
+  // snapshots of geometry that sheets still show (meta.drawSnaps). Other parts: dwupd.js (revisions, update, undo),
+  // dwsel.js (source bodies), dwexp.js (PDF).
+  const DW = { open: false, doc: null, sig: '', ren: null, drag: null, side: 320, pick: false, bsel: null, dlg: null };
+  const DW_VER = 2;
   function dwUid(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
   function dwClone(o) { return JSON.parse(JSON.stringify(o)); }
   function dwModelName() {
@@ -11626,20 +11895,21 @@ var wasm_bindgen = (function(exports) {
   }
   function dwDocName() { const d = dwDoc(); return d.name || 'Drawing of "' + dwModelName() + '"'; }
   function dwNewDoc(state) {
-    const st = state || v6Blank(), sh = { id: dwUid('s'), name: 'Sheet 1', saved: dwClone(st), work: dwClone(st), dirty: false };
+    const st = state || v6Blank(), sh = { id: dwUid('s'), name: 'Sheet 1', saved: dwClone(st), work: dwClone(st), dirty: false, rev: {} };
     return { v: DW_VER, id: dwUid('d'), name: null, created: Date.now(), modified: Date.now(), active: sh.id, sheets: [sh] };
   }
-  function dwDoc() { if (!DW.doc) DW.doc = dwNewDoc(v6Grab()); return DW.doc; }
+  function dwDoc() { if (!DW.doc) { DW.doc = dwNewDoc(v6Grab()); dwBaseline(DW.doc.sheets[0], v6Live().map(function (b) { return b.uid; })); } return DW.doc; }
   function dwSheet(id) { return dwDoc().sheets.find(function (s) { return s.id === id; }); }
   function dwCur() { const d = dwDoc(); return dwSheet(d.active) || d.sheets[0]; }
   // compare two drawing states by what they hold (defaults filled in; note counter and the open ribbon tab ignored)
   function dwCanon(st) {
-    st = st || {}; const I = [[1, 0, 0], [0, 1, 0], [0, 0, 1]], out = { cfg: {}, st: {}, notes: {} };
+    st = st || {}; const I = [[1, 0, 0], [0, 1, 0], [0, 0, 1]], out = { cfg: {}, st: {}, notes: {}, dims: {}, src: st.src || null, hide: st.hide || [] };
     for (const m of ['6v', 'exp']) {
       out.cfg[m] = Object.assign({}, V6S.def, (st.cfg || {})[m]);
       const t = (st.st || {})[m] || {};
       out.st[m] = { R: t.R || I, pos: t.pos || null, iso: t.iso || null, off: t.off || {}, tot: t.tot || null, grp: t.grp || {} };
       out.notes[m] = (st.notes || {})[m] || [];
+      out.dims[m] = ((st.dims || {})[m] || []).map(function (d) { return [d.id, d.view, d.a, d.b, d.t, d.o]; });
     }
     return JSON.stringify(out);
   }
@@ -11647,8 +11917,9 @@ var wasm_bindgen = (function(exports) {
   function dwCapture() {
     if (!DW.doc) return;
     const s = dwCur(); s.work = v6Grab(); s.dirty = dwCanon(s.work) !== dwCanon(s.saved);
+    dwHistNote(s, JSON.stringify(s.work));
   }
-  function dwShow(s) { DW.doc.active = s.id; v6Put(s.work); dwTabSet(s.work.mode); }
+  function dwShow(s) { DW.doc.active = s.id; DW.bsel = null; v6Put(s.work); dwTabSet(s.work.mode); dwHistReset(s); }
   // ---------- sheet commands
   function dwOpenSheet(id) {
     const d = dwDoc(); if (id === d.active || !dwSheet(id)) return;
@@ -11660,16 +11931,21 @@ var wasm_bindgen = (function(exports) {
     let nm = base, k = 2; while (names.has(nm)) nm = base + ' ' + (k++);
     return nm;
   }
-  function dwNewSheet() {
+  // a new sheet is made from the given bodies, or the picked ones, or the shown ones
+  function dwNewSheet(uids) {
     dwCapture();
-    const d = dwDoc(), st = v6Blank(), s = { id: dwUid('s'), name: dwNextName(), saved: dwClone(st), work: dwClone(st), dirty: false };
+    if (!Array.isArray(uids)) uids = (S.sel.size ? Array.from(S.sel).filter(function (b) { return b.visible; }) : S.bodies.filter(function (b) { return b.visible; })).map(function (b) { return b.uid; });
+    if (!uids.length) uids = S.bodies.map(function (b) { return b.uid; });
+    const d = dwDoc(), st = v6Blank(); st.src = uids.slice();
+    const s = { id: dwUid('s'), name: dwNextName(), saved: dwClone(st), work: dwClone(st), dirty: false, rev: {} };
+    dwBaseline(s, uids);
     d.sheets.push(s); d.modified = Date.now(); dwShow(s); dwRefresh(true);
     return s;
   }
   function dwDupSheet(id) {
     dwCapture();
     const d = dwDoc(), src = dwSheet(id || d.active); if (!src) return null;
-    const s = { id: dwUid('s'), name: dwNextName(src.name + ' Copy'), saved: dwClone(src.work), work: dwClone(src.work), dirty: false };
+    const s = { id: dwUid('s'), name: dwNextName(src.name + ' Copy'), saved: dwClone(src.work), work: dwClone(src.work), dirty: false, rev: dwClone(src.rev || {}), fail: src.fail };
     d.sheets.splice(d.sheets.indexOf(src) + 1, 0, s); d.modified = Date.now(); dwShow(s); dwRefresh(true);
     flash(L('Đã tạo ', 'Created ') + s.name);
     return s;
@@ -11679,13 +11955,14 @@ var wasm_bindgen = (function(exports) {
     if (!confirm(L('Xoá ' + s.name + '? Không hoàn tác được.', 'Delete ' + s.name + '? This cannot be undone.'))) return;
     dwCapture();
     const i = d.sheets.indexOf(s); d.sheets.splice(i, 1); d.modified = Date.now();
-    if (!d.sheets.length) { const st = v6Blank(); d.sheets.push({ id: dwUid('s'), name: 'Sheet 1', saved: dwClone(st), work: dwClone(st), dirty: false }); }
+    if (!d.sheets.length) { const st = v6Blank(); d.sheets.push({ id: dwUid('s'), name: 'Sheet 1', saved: dwClone(st), work: dwClone(st), dirty: false, rev: {} }); }
     if (d.active === id || !dwSheet(d.active)) dwShow(d.sheets[Math.min(i, d.sheets.length - 1)]);
     dwRefresh(true);
   }
   function dwSaveSheet() {
     dwCapture();
     const s = dwCur(); s.saved = dwClone(s.work); s.dirty = false; dwDoc().modified = Date.now();
+    dwBaseline(s, dwSrcOf(s));     // new source bodies get their revision; changed ones still wait for Update
     dwRefresh(true); flash(L('Đã lưu ', 'Saved ') + s.name);
   }
   function dwDiscard() {
@@ -11716,21 +11993,27 @@ var wasm_bindgen = (function(exports) {
   // ---------- session (.mrtl)
   function dwDump() {
     const d = dwDoc(); dwCapture();
-    const f = v6IdToIdx();
+    const f = function (k) { return dwUidOf(k); };
     return { v: DW_VER, id: d.id, name: d.name, created: d.created, modified: d.modified, active: d.active,
-      sheets: d.sheets.map(function (s) { return { id: s.id, name: s.name, saved: v6MapIds(s.saved, f), work: v6MapIds(s.work, f), dirty: s.dirty }; }) };
+      sheets: d.sheets.map(function (s) { return { id: s.id, name: s.name, saved: v6MapIds(s.saved, f), work: v6MapIds(s.work, f), dirty: s.dirty, rev: s.rev || {}, fail: !!s.fail }; }) };
   }
   // d = meta.drawDoc of a session, or null: a new document whose Sheet 1 is the drawing now on the engine
-  // (that is how sessions saved before the workspace existed come in: their drawing becomes Sheet 1)
-  function dwLoad(d) {
+  // (that is how sessions saved before the workspace existed come in: their drawing becomes Sheet 1).
+  // snaps = geometry snapshots of the session. Version 1 documents referred to bodies by their order.
+  function dwLoad(d, snaps) {
+    dwSnapsLoad(snaps); DWU.hist.clear();
     if (d && d.sheets && d.sheets.length) {
-      const f = v6IdxToId();
+      const f = (d.v || 1) < 2 ? v6IdxToId() : function (k) { return dwIdOf(k); };
       DW.doc = { v: DW_VER, id: d.id || dwUid('d'), name: d.name || null, created: d.created || Date.now(), modified: d.modified || Date.now(), active: d.active,
-        sheets: d.sheets.map(function (s) { const w = v6MapIds(s.work || s.saved || v6Blank(), f); return { id: s.id || dwUid('s'), name: s.name || 'Sheet', saved: v6MapIds(s.saved || w, f), work: w, dirty: !!s.dirty }; }) };
+        sheets: d.sheets.map(function (s) {
+          const w = v6MapIds(s.work || s.saved || v6Blank(), f);
+          return { id: s.id || dwUid('s'), name: s.name || 'Sheet', saved: v6MapIds(s.saved || s.work || v6Blank(), f), work: w, dirty: !!s.dirty, rev: s.rev || {}, fail: !!s.fail };
+        }) };
       if (!dwSheet(DW.doc.active)) DW.doc.active = DW.doc.sheets[0].id;
       v6Put(dwCur().work);
-    } else DW.doc = dwNewDoc(v6Grab());
-    DW.sig = '';
+      dwSnapCurrent();
+    } else { DW.doc = dwNewDoc(v6Grab()); dwBaseline(DW.doc.sheets[0], dwSrcOf(DW.doc.sheets[0])); }
+    DW.sig = ''; DW.bsel = null;
     if (DW.open) { dwTabSet(dwCur().work.mode); dwRefresh(true); }
   }
   // ---------- open / close
@@ -11743,6 +12026,8 @@ var wasm_bindgen = (function(exports) {
   }
   function dwClose() {
     if (DW.ren) DW.ren.done(true);
+    if (DW.pick) dwPickEnd(false);
+    v6DimTool(false);
     dwCapture(); v6Activate(false);
     DW.open = false; document.body.classList.remove('dws-on'); closeMenu();
     if (typeof dirty !== 'undefined') dirty = true;
@@ -11757,7 +12042,7 @@ var wasm_bindgen = (function(exports) {
     six: '<rect x="9" y="2.5" width="6" height="5" fill="#3d6fa8" stroke="#2b557f"/><rect x="9" y="9" width="6" height="6" fill="#4f86c4" stroke="#2b557f"/><rect x="2.5" y="9" width="5" height="6" fill="#3d6fa8" stroke="#2b557f"/><rect x="16.5" y="9" width="5" height="6" fill="#3d6fa8" stroke="#2b557f"/><rect x="9" y="16.5" width="6" height="5" fill="#3d6fa8" stroke="#2b557f"/>',
     arrange: '<rect x="3" y="4" width="7" height="6" fill="#4f86c4" stroke="#2b557f"/><rect x="14" y="4" width="7" height="6" fill="#4f86c4" stroke="#2b557f"/><rect x="3" y="14" width="7" height="6" fill="#4f86c4" stroke="#2b557f"/><path d="M14 17h7M17.5 13.5v7" stroke="#f0a030" stroke-width="1.8"/>',
     rotR: '<path d="M18 8a7 7 0 1 0 1.5 6" stroke="#9cc4ee" stroke-width="1.8"/><path d="M19 3v5h-5" stroke="#f0a030" stroke-width="1.8"/>',
-    rotL: '<path d="M6 8a7 7 0 1 1-1.5 6" stroke="#9cc4ee" stroke-width="1.8"/><path d="M5 3v5h5" stroke="#f0a030" stroke-width="1.8"/>',
+    rotL: '<g transform="translate(24 0) scale(-1 1)"><path d="M18 8a7 7 0 1 0 1.5 6" stroke="#9cc4ee" stroke-width="1.8"/><path d="M19 3v5h-5" stroke="#f0a030" stroke-width="1.8"/></g>',
     tip: '<path d="M5 7h10a4 4 0 0 1 0 8H8" stroke="#9cc4ee" stroke-width="1.8"/><path d="M11 12l-3 3 3 3" stroke="#f0a030" stroke-width="1.8"/>',
     edge: '<path d="M4 18L12 4l8 14z" stroke="#e8eef5" stroke-width="1.8"/>',
     hid: '<path d="M4 18L12 4l8 14z" stroke="#e8eef5" stroke-width="1.5"/><path d="M8 13h8" stroke="#9cc4ee" stroke-dasharray="2 2"/>',
@@ -11777,6 +12062,12 @@ var wasm_bindgen = (function(exports) {
     save: '<path d="M5 4h11l3 3v13H5z" fill="#1f2a36" stroke="#9cc4ee"/><rect x="8" y="4" width="7" height="5" fill="#4f86c4"/><rect x="8" y="13" width="8" height="6" fill="#e8eef5"/>',
     discard: '<path d="M6 6l12 12M18 6L6 18" stroke="#e57373" stroke-width="1.8"/>',
     dup: '<rect x="8" y="8" width="11" height="12" fill="#1f2a36" stroke="#9cc4ee"/><path d="M5 16V4h11" stroke="#9cc4ee"/><path d="M13.5 11v6M10.5 14h6" stroke="#f0a030" stroke-width="1.6"/>',
+    src: '<rect x="3" y="12" width="8" height="8" fill="#4f86c4" stroke="#2b557f"/><rect x="13" y="12" width="8" height="8" fill="#3d6fa8" stroke="#2b557f"/><path d="M7 10V5h10v5M12 5V2" stroke="#f0a030" stroke-width="1.6"/>',
+    check: '<circle cx="10.5" cy="10.5" r="6" stroke="#9cc4ee" stroke-width="1.8"/><path d="M15 15l5 5" stroke="#9cc4ee" stroke-width="2"/><path d="M8 10.5l2 2 3.5-4" stroke="#6fd08c" stroke-width="1.8"/>',
+    upd: '<path d="M19 8a8 8 0 0 0-14 2M5 16a8 8 0 0 0 14-2" stroke="#9cc4ee" stroke-width="1.8"/><path d="M19 3v5h-5M5 21v-5h5" stroke="#f0a030" stroke-width="1.8"/>',
+    pdf: '<path d="M5 3h10l4 4v14H5z" fill="#1f2a36" stroke="#e57373"/><path d="M8 16h8M8 13h8M8 10h5" stroke="#e8eef5"/>',
+    dimt: '<path d="M4 6v12M20 6v12M4 12h16" stroke="#9cc4ee" stroke-width="1.5"/><path d="M7 10l-3 2 3 2M17 10l3 2-3 2" stroke="#f0a030" stroke-width="1.5"/><circle cx="4" cy="6" r="1.6" fill="#f0a030"/><circle cx="20" cy="6" r="1.6" fill="#f0a030"/>',
+    undo: '<path d="M9 7L4 12l5 5" stroke="#9cc4ee" stroke-width="1.8"/><path d="M4 12h10a6 6 0 0 1 0 12" stroke="#9cc4ee" stroke-width="1.8"/>',
     drawing: '<path d="M3 2h13l5 5v15H3z" fill="#e8eef5" stroke="#9cc4ee"/><rect x="5.5" y="5" width="4.5" height="3.5" fill="#3d6fa8"/><rect x="5.5" y="10" width="4.5" height="4.5" fill="#4f86c4"/><rect x="11.5" y="10" width="3.5" height="4.5" fill="#3d6fa8"/>'
   };
   function dwIco(k, n) { n = n || 16; return '<svg viewBox="0 0 24 24" width="' + n + '" height="' + n + '" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">' + (DW_IC[k] || '') + '</svg>'; }
@@ -11796,7 +12087,14 @@ var wasm_bindgen = (function(exports) {
     return dwGrp('Sheet', 'Sheet', dwBB('data-act="newSheet"', 'sheet', 'Sheet mới', 'New Sheet', 'Tạo Sheet mới trong bản vẽ', 'Add a new sheet to the drawing') +
       dwCol('<div class="dwsRow">' + dwSel('v6Paper', 'Khổ giấy', 'Paper size') + dwSel('v6Ori', 'Hướng giấy', 'Orientation') + '</div>' +
         dwSB('data-act="fit"', 'fit', 'Vừa khung', 'Fit to Sheet', 'Cả tờ giấy vừa khung nhìn (bấm đúp chỗ trống cũng được)', 'Whole sheet in view (or double-click an empty spot)') +
-        dwSB('data-act="props" data-on="props"', 'props', 'Bảng thuộc tính', 'Properties', 'Ẩn / hiện bảng thuộc tính Sheet bên phải', 'Show / hide the sheet properties on the right')));
+        dwSB('data-act="props" data-on="props"', 'props', 'Bảng thuộc tính', 'Properties', 'Ẩn / hiện bảng thuộc tính Sheet bên phải', 'Show / hide the sheet properties on the right')) +
+      dwBB('data-act="src"', 'src', 'Source Bodies', 'Source Bodies', 'Chọn body nguồn của Sheet (danh sách hoặc chọn trong 3D)', 'Pick the source bodies of the sheet (list or in 3D)'));
+  }
+  function dwUpdGrp() {
+    return dwGrp('Cập nhật', 'Update', dwBB('data-act="check"', 'check', 'Kiểm tra', 'Check for Updates', 'So bản vẽ với mô hình 3D, chỉ liệt kê thay đổi (không cập nhật)', 'Compare the drawing with the 3D model and list the changes (no update)') +
+      dwCol(dwSB('data-act="updSheet"', 'upd', 'Cập nhật Sheet', 'Update Sheet', 'Cập nhật các view lỗi thời của Sheet này (xem trước rồi xác nhận)', 'Update the out-of-date views of this sheet (preview, then confirm)') +
+        dwSB('data-act="updAll"', 'upd', 'Cập nhật tất cả', 'Update All Sheets', 'Cập nhật mọi Sheet bị ảnh hưởng', 'Update every affected sheet') +
+        dwSB('data-act="updSel"', 'upd', 'Cập nhật body chọn', 'Update Selected Body', 'Chỉ cập nhật body đang chọn trong Drawing Tree (hoặc trong 3D)', 'Update only the body picked in the Drawing Tree (or in 3D)')));
   }
   function dwDisplayGrp() {
     return dwGrp('Hiển thị', 'Display', dwCol(dwSB('data-chk="#v6Edge"', 'edge', 'Nét cạnh', 'Show Edges') + dwSB('data-chk="#v6Hid"', 'hid', 'Nét khuất', 'Hidden Lines')) +
@@ -11806,7 +12104,8 @@ var wasm_bindgen = (function(exports) {
   function dwOutGrp() {
     return dwGrp('Chú thích', 'Annotate', dwBB('data-click="#v6AddT"', 'text', 'Thêm chữ', 'Add Text', 'Thêm ghi chú chữ (kéo để dời, bấm đúp để sửa, Delete để xoá)', 'Add a text note (drag to move, double-click to edit, Delete to remove)')) +
       dwGrp('Xuất', 'Export', dwCol(dwSB('data-act="png"', 'png', 'PNG', 'PNG', 'Xuất Sheet này thành ảnh PNG', 'Export this sheet as PNG') + dwSB('data-act="jpg"', 'jpg', 'JPG', 'JPG', 'Xuất Sheet này thành ảnh JPG', 'Export this sheet as JPG') +
-        dwSB('data-click="#v6Copy"', 'copy', 'Chép ảnh', 'Copy', 'Chép ảnh Sheet vào clipboard', 'Copy the sheet picture to the clipboard')));
+        dwSB('data-click="#v6Copy"', 'copy', 'Chép ảnh', 'Copy', 'Chép ảnh Sheet vào clipboard', 'Copy the sheet picture to the clipboard')) +
+        dwCol(dwSB('data-act="pdf"', 'pdf', 'PDF', 'PDF', 'Xuất Sheet này thành PDF (nét vector)', 'Export this sheet as PDF (vector lines)') + dwSB('data-act="pdfAll"', 'pdf', 'PDF tất cả', 'All Sheets PDF', 'Xuất mọi Sheet vào một file PDF theo thứ tự Drawing Tree', 'All sheets into one PDF, in Drawing Tree order')));
   }
   function dwRibbonHtml() {
     const v = function (k, vi, en) { return dwSB('data-chk=".v6v[data-v=' + k + ']"', 'front', vi, en, 'Bật / tắt view ' + vi, 'Show / hide the ' + en); };
@@ -11823,8 +12122,9 @@ var wasm_bindgen = (function(exports) {
       dwGrp('Thuộc tính view', 'View Properties', dwCol('<div class="dwsRow">' + dwT('Tỉ lệ', 'Scale') + dwSel('v6Scale', 'Tỉ lệ bản vẽ', 'Drawing scale') + '</div>' +
           dwSlider('Cỡ', 'Size', 'v6ZmR', 'v6Zm', 'Cỡ hình khi tỉ lệ là Vừa khổ (%)', 'Picture size with Fit scale (%)') +
           dwSlider('Iso', 'Iso', 'v6IsoKR', 'v6IsoK', 'Cỡ hình iso (%)', 'Size of the iso picture (%)')) +
-        dwCol(dwSB('data-chk="#v6Lbl"', 'name', 'Tên view', 'View Names') + dwSB('data-chk="#v6Dim"', 'dim', 'Kích thước', 'Dimensions', 'Kích thước bao', 'Overall dimensions') + dwSB('data-chk="#v6ScN"', 'scale', 'Ghi tỉ lệ', 'Scale Note'))) +
-      dwOutGrp();
+        dwCol(dwSB('data-chk="#v6Lbl"', 'name', 'Tên view', 'View Names') + dwSB('data-chk="#v6Dim"', 'dim', 'Kích thước bao', 'Overall Size', 'Kích thước bao của mô hình', 'Overall dimensions of the model') + dwSB('data-chk="#v6ScN"', 'scale', 'Ghi tỉ lệ', 'Scale Note'))) +
+      dwGrp('Kích thước', 'Dimension', dwBB('data-act="dim"', 'dimt', 'Dimension', 'Dimension', 'Ghi kích thước: chọn 2 điểm trên một view rồi bấm chỗ đặt đường kích thước (ngang / dọc / theo hướng tuỳ chỗ đặt). Esc để thôi', 'Dimension: pick 2 points on a view, then click where the line goes (horizontal / vertical / aligned from where you place it). Esc to stop')) +
+      dwUpdGrp() + dwOutGrp();
     const exp = dwSheetGrp() +
       dwGrp('Explode', 'Explode', dwCol(dwSlider('Độ tách', 'Distance', 'v6ExR', 'v6Ex', 'Mức tách các linh kiện ra khỏi tâm cụm (%)', 'How far the parts move out from the centre (%)') +
           dwSB('data-act="resetExp"', 'reset', 'Bỏ vị trí kéo tay', 'Reset Explode', 'Đưa các linh kiện về vị trí tách tự động', 'Put the parts back where the automatic explode places them') +
@@ -11838,7 +12138,7 @@ var wasm_bindgen = (function(exports) {
           dwSlider('Nghiêng', 'Tilt', 'v6ElR', 'v6El', 'Góc nhìn từ trên xuống (°)', 'Angle looking down (°)'))) +
       dwGrp('Thông tin', 'Information', dwCol(dwSB('data-chk="#v6PN"', 'name', 'Tên linh kiện', 'Component Name') + dwSB('data-chk="#v6PM"', 'mass', 'Vật liệu + khối lượng', 'Material + Mass') +
         dwSB('data-chk="#v6Tot"', 'mass', 'Tổng khối lượng', 'Total Mass', 'Tổng khối lượng theo vật liệu (góc dưới phải, kéo để dời)', 'Total mass per material (bottom right, drag to move)'))) +
-      dwDisplayGrp() + dwOutGrp();
+      dwDisplayGrp() + dwUpdGrp() + dwOutGrp();
     return '<div class="rpage" data-k="6v">' + six + '</div><div class="rpage" data-k="exp">' + exp + '</div>';
   }
   // ---------- building the workspace
@@ -11857,7 +12157,15 @@ var wasm_bindgen = (function(exports) {
       '<div id="dwsBar"><div id="dwsTabsS"></div><span id="dwsState"></span><div class="dwsBtns">' +
       '<button id="dwsSave" class="primary"' + dwTip('Lưu Sheet hiện tại (Ctrl+S): giữ toàn bộ view, vị trí, tỉ lệ, hiển thị, ghi chú', 'Save the current sheet (Ctrl+S): keeps every view, position, scale, display setting and note') + '>' + dwIco('save') + dwT('Save', 'Save') + '</button>' +
       '<button id="dwsDiscard"' + dwTip('Bỏ các thay đổi chưa lưu của Sheet hiện tại (về lần Save trước)', 'Drop the unsaved changes of the current sheet (back to its last Save)') + '>' + dwIco('discard') + dwT('Discard', 'Discard') + '</button>' +
-      '<button id="dwsDup"' + dwTip('Nhân bản Sheet hiện tại (Ctrl+D)', 'Duplicate the current sheet (Ctrl+D)') + '>' + dwIco('dup') + dwT('Duplicate', 'Duplicate') + '</button></div></div>';
+      '<button id="dwsDup"' + dwTip('Nhân bản Sheet hiện tại (Ctrl+D)', 'Duplicate the current sheet (Ctrl+D)') + '>' + dwIco('dup') + dwT('Duplicate', 'Duplicate') + '</button></div></div>' +
+      '<div id="dwsDlg" class="dwsModal"><div class="dwsBox"><div class="dwsDlgB"></div><div class="dwsBtnRow"><button id="dwsDlgOk" class="primary"></button><button id="dwsDlgNo"></button></div></div></div>' +
+      '<div id="dwsSrc" class="dwsModal"><div class="dwsBox"><h3>' + dwT('Source Bodies', 'Source Bodies') + '</h3>' +
+      '<div class="dwsBtnRow"><input type="search" id="dwsSrcQ"' + dwTip('Tìm body theo tên', 'Find a body by name') + '><button id="dwsSrcAll">' + dwT('Chọn hết', 'Select All') + '</button><button id="dwsSrcNone">' + dwT('Bỏ chọn', 'Clear') + '</button>' +
+      '<button id="dwsSrcPick"' + dwTip('Chọn body trực tiếp trong vùng 3D (Click / Ctrl+Click), Enter để dùng, Esc để quay lại', 'Pick bodies right in the 3D view (click / Ctrl+click), Enter to use them, Esc to come back') + '>' + dwT('Chọn trong 3D', 'Pick in 3D') + '</button></div>' +
+      '<div id="dwsSrcL"></div><div class="dwsBtnRow"><span id="dwsSrcN"></span><span class="grow"></span><button id="dwsSrcOk" class="primary">' + dwT('Áp dụng', 'Apply') + '</button><button id="dwsSrcNo">' + dwT('Huỷ', 'Cancel') + '</button></div></div></div>';
+    const pk = document.createElement('div'); pk.id = 'dwsPick';
+    pk.innerHTML = '<button id="dwsPickOk" class="primary"><span id="dwsPickN"></span></button><button id="dwsPickNo">' + dwT('Huỷ (Esc)', 'Cancel (Esc)') + '</button>';
+    document.body.appendChild(pk);
     document.body.appendChild(w);
     // the drawing engine's sheet window and panel live inside the workspace
     const cv = $('v6Sheet'), pp = $('pop_v6');
@@ -11879,7 +12187,19 @@ var wasm_bindgen = (function(exports) {
   // ribbon -> panel controls (the panel stays the one place the drawing reads its settings from)
   function dwFire(el) { el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }
   const DW_ACT = {
-    newSheet: dwNewSheet,
+    newSheet: function () { dwNewSheet(); },
+    src: function () { dwSrcOpen(); },
+    check: function () { dwUpdDialog('all', null, true); },
+    updSheet: function () { dwUpdDialog('sheet'); },
+    updAll: function () { dwUpdDialog('all'); },
+    updSel: function () {
+      const u = DW.bsel ? [DW.bsel] : Array.from(S.sel).map(function (b) { return b.uid; });
+      if (!u.length) { flash(L('Chọn một body trong Drawing Tree (mục Source bodies) trước', 'Pick a body in the Drawing Tree (Source bodies) first')); return; }
+      dwUpdDialog('all', u);
+    },
+    pdf: function () { const s = dwCur(); dwExportPdf([s.id], s.name).catch(showError); },
+    pdfAll: function () { dwExportPdf(dwDoc().sheets.map(function (s) { return s.id; }), dwDocName()).catch(showError); },
+    dim: function () { v6DimTool(!V6S.dt); },
     fit: function () { v6Fit(); },
     props: function () { $('dwsProps').classList.toggle('off'); dwSyncRibbon(); },
     all6: function () { document.querySelectorAll('.v6v').forEach(function (c) { if (!c.checked) { c.checked = true; dwFire(c); } }); },
@@ -11918,6 +12238,7 @@ var wasm_bindgen = (function(exports) {
     r.querySelectorAll('button[data-on=props]').forEach(function (b) { b.classList.toggle('on', !$('dwsProps').classList.contains('off')); });
     const sel = V6S.psel !== null && V6S.psel !== undefined;
     r.querySelectorAll('button[data-act=comb]').forEach(function (b) { b.classList.toggle('hl', V6S.comb !== null); });
+    r.querySelectorAll('button[data-act=dim]').forEach(function (b) { b.classList.toggle('hl', !!V6S.dt); });
     r.querySelectorAll('button[data-act=sep]').forEach(function (b) { b.disabled = !(sel && (V6S.grp[V6S.psel] || []).length); });
   }
   function dwTabSet(k) {
@@ -11930,32 +12251,54 @@ var wasm_bindgen = (function(exports) {
   }
   document.querySelectorAll('#dwsTabs .rtab').forEach(function (b) { b.addEventListener('click', function () { dwTabSet(b.dataset.k); }); });
   // ---------- tree + sheet bar
-  function dwStatus(s) { return s.dirty ? ['mod', L('Đã sửa', 'Modified'), L('Có thay đổi chưa Save', 'Has changes not saved')] : ['ok', L('Đã lưu', 'Saved'), L('Đã Save', 'Saved')]; }
+  function dwStatus(s) { return s.dirty ? ['mod', L('Đã sửa', 'Modified'), L('Có thay đổi chưa Save', 'Has changes not saved')] : ['sv', L('Đã lưu', 'Saved'), L('Đã Save', 'Saved')]; }
   function dwRefresh(force) {
     if (!DW.open && !force) return;
-    const d = dwDoc();
-    const sig = [lang, dwDocName(), d.active].concat(d.sheets.map(function (s) { return s.id + '|' + s.name + '|' + (s.dirty ? 1 : 0); })).join('\n');
+    const d = dwDoc(), chk = d.sheets.map(function (x) { return dwCheck(x); }), cur = dwCur(), cc = chk[d.sheets.indexOf(cur)];
+    const views = dwViewsOf(cur), src = dwSrcOf(cur), hide = dwHideOf(cur), lost = (V6S.prev && V6S.prev.lostDims) || [];
+    const sig = [lang, dwDocName(), d.active, DW.bsel, V6S.vsel, views.join(','), src.join(','), hide.join(','), lost.join(','), S.bodies.map(function (b) { return b.uid + b.name; }).join(',')]
+      .concat(d.sheets.map(function (x, i) { return x.id + '|' + x.name + '|' + (x.dirty ? 1 : 0) + '|' + chk[i].status + '|' + chk[i].changed.join(',') + '|' + chk[i].missing.join(','); })).join('\n');
     if (!force && sig === DW.sig) { dwSyncRibbon(); return; }
-    if (DW.ren) return;   // renaming: redraw after
+    if (DW.ren || (DW.drag && !force)) return;   // renaming / dragging: redraw after
     DW.sig = sig;
     $('dwsDocName').textContent = dwDocName();
     const tr = $('dwsTree'); tr.innerHTML = '';
-    const root = document.createElement('div'); root.className = 'dwsNode root'; root.dataset.root = '1';
-    root.innerHTML = dwIco('drawing', 15) + '<span class="nm"></span>'; root.querySelector('.nm').textContent = dwDocName(); root.title = dwDocName();
-    tr.appendChild(root);
+    const node = function (cls, html, data) {
+      const n = document.createElement('div'); n.className = 'dwsNode ' + cls; n.innerHTML = html;
+      for (const k in (data || {})) n.dataset[k] = data[k];
+      tr.appendChild(n); return n;
+    };
+    const badge = function (st) { return '<span class="st ' + st[0] + '" title="' + dwEsc(st[2]) + '">' + (st[0] === 'ok' ? '✓' : st[0] === 'upd' ? '⟳ ' : st[0] === 'mod' || st[0] === 'sv' ? '● ' : '✖ ') + (st[0] === 'ok' ? '' : dwEsc(st[1])) + '</span>'; };
+    const root = node('root', dwIco('drawing', 15) + '<span class="nm"></span>', { root: '1' }); root.querySelector('.nm').textContent = dwDocName(); root.title = dwDocName();
     const bar = $('dwsTabsS'); bar.innerHTML = '';
-    d.sheets.forEach(function (s) {
-      const st = dwStatus(s);
-      const n = document.createElement('div'); n.className = 'dwsNode sheet' + (s.id === d.active ? ' on' : ''); n.dataset.id = s.id; n.draggable = true;
-      n.innerHTML = dwIco('sheet', 15) + '<span class="nm"></span><span class="st ' + st[0] + '" title="' + dwEsc(st[2]) + '">● ' + dwEsc(st[1]) + '</span>';
-      n.querySelector('.nm').textContent = s.name; tr.appendChild(n);
-      const t = document.createElement('div'); t.className = 'dwsTab' + (s.id === d.active ? ' on' : ''); t.dataset.id = s.id; t.draggable = true;
-      t.innerHTML = '<span class="nm"></span><span class="st ' + st[0] + '" title="' + dwEsc(st[2]) + '">●</span>'; t.querySelector('.nm').textContent = s.name;
-      bar.appendChild(t);
+    d.sheets.forEach(function (x, i) {
+      const sv = dwStatus(x), up = dwUpdState(chk[i].status);
+      const n = node('sheet' + (x.id === d.active ? ' on' : ''), dwIco('sheet', 15) + '<span class="nm"></span>' + badge(sv) + badge(up), { id: x.id });
+      n.draggable = true; n.querySelector('.nm').textContent = x.name;
+      if (x.fail && x.failMsg) n.title = x.failMsg;
+      const t = document.createElement('div'); t.className = 'dwsTab' + (x.id === d.active ? ' on' : ''); t.dataset.id = x.id; t.draggable = true;
+      t.innerHTML = '<span class="nm"></span><span class="st ' + sv[0] + '" title="' + dwEsc(sv[2]) + '">●</span>' + (up[0] !== 'ok' ? '<span class="st ' + up[0] + '" title="' + dwEsc(up[2]) + '">' + (up[0] === 'upd' ? '⟳' : '✖') + '</span>' : '');
+      t.querySelector('.nm').textContent = x.name; bar.appendChild(t);
+      if (x.id !== d.active) return;
+      // the open sheet: its views and its source bodies
+      node('grp', '<span class="nm">' + dwEsc(L('Views', 'Views')) + ' (' + views.length + ')</span>');
+      views.forEach(function (v) {
+        const vn = node('child view' + (V6S.vsel === v ? ' on' : ''), dwIco(v === 'iso' ? 'iso' : v === 'Exploded view' ? 'explode' : 'front', 13) + '<span class="nm"></span>' + badge(dwUpdState(chk[i].changed.length ? 'upd' : chk[i].missing.length ? 'miss' : 'ok')), { view: v });
+        vn.querySelector('.nm').textContent = dwViewName(v);
+      });
+      node('grp', '<span class="nm">' + dwEsc(L('Source bodies', 'Source bodies')) + ' (' + src.length + (hide.length ? ', ' + L('ẩn ', 'hidden ') + hide.length : '') + ')</span>' + (V6S.src ? '' : '<span class="st ok" title="' + dwEsc(L('Sheet này theo các body đang hiện trong 3D — mở Source Bodies để chốt danh sách', 'This sheet follows the bodies shown in 3D — open Source Bodies to fix the list')) + '">' + dwEsc(L('theo 3D', 'follows 3D')) + '</span>'));
+      src.forEach(function (u) {
+        const b = dwBodyByUid(u), hid = hide.indexOf(u) >= 0, ch = chk[i].changed.indexOf(u) >= 0, ms = !b;
+        const st = ms ? badge(dwUpdState('miss')) : ch ? badge(dwUpdState('upd')) : '';
+        const bn = node('child body' + (DW.bsel === u ? ' on' : '') + (hid ? ' hid' : '') + (ms ? ' miss' : ''), dwIco('front', 13) + '<span class="nm"></span>' + st +
+          '<button class="eye" type="button" title="' + dwEsc(hid ? L('Hiện lại trong bản vẽ', 'Show in the drawing again') : L('Ẩn tạm trong bản vẽ (vẫn là body nguồn)', 'Hide in the drawing for now (stays a source body)')) + '">' + (hid ? '◌' : '◉') + '</button>', { uid: u });
+        bn.querySelector('.nm').textContent = b ? b.name + (b.solid ? ' · B-rep' : '') : dwSnapName(u, x);
+      });
+      if (lost.length) node('child warn', '<span class="nm">⚠ ' + lost.length + ' ' + dwEsc(L('kích thước mất tham chiếu', 'dimension(s) lost their reference')) + '</span>');
     });
     const add = document.createElement('div'); add.className = 'dwsTab add'; add.textContent = '+'; add.dataset.add = '1'; add.title = L('Sheet mới', 'New sheet'); bar.appendChild(add);
-    const cur = dwCur(), cs = dwStatus(cur);
-    $('dwsState').innerHTML = '<span></span> · <b class="' + cs[0] + '">' + dwEsc(cs[1]) + '</b>'; $('dwsState').firstChild.textContent = cur.name;
+    const cs = dwStatus(cur), us = dwUpdState(cc.status);
+    $('dwsState').innerHTML = '<span></span> · <b class="' + cs[0] + '">' + dwEsc(cs[1]) + '</b> · <b class="' + us[0] + '" title="' + dwEsc(us[2]) + '">' + dwEsc(us[1]) + '</b>'; $('dwsState').firstChild.textContent = cur.name;
     dwSyncRibbon();
   }
   // inline rename in the tree or on a sheet tab
@@ -11978,37 +12321,73 @@ var wasm_bindgen = (function(exports) {
     const c = $(cid);
     c.addEventListener('click', function (e) {
       const n = dwNodeOf(e); if (!n || DW.ren) return;
+      if (n.dataset.uid && e.target.closest('.eye')) { dwSrcHide(n.dataset.uid, dwHideOf(dwCur()).indexOf(n.dataset.uid) < 0); return; }
       if (n.dataset.add) dwNewSheet(); else if (n.dataset.id) dwOpenSheet(n.dataset.id);
+      else if (n.dataset.view) { V6S.vsel = n.dataset.view === 'Exploded view' ? null : n.dataset.view; v6Paint(); dwRefresh(true); }
+      else if (n.dataset.uid) { DW.bsel = DW.bsel === n.dataset.uid ? null : n.dataset.uid; dwRefresh(true); }
     });
-    c.addEventListener('dblclick', function (e) { const n = dwNodeOf(e); if (!n || n.dataset.add) return; dwStartRename(n, n.dataset.id || null); });
+    c.addEventListener('dblclick', function (e) { const n = dwNodeOf(e); if (!n || n.dataset.add || !(n.dataset.id || n.dataset.root)) return; dwStartRename(n, n.dataset.id || null); });
     c.addEventListener('contextmenu', function (e) {
       e.preventDefault(); const n = dwNodeOf(e); if (!n || n.dataset.add) return;
       if (n.dataset.root) {
-        showMenu([[L('Sheet mới', 'New Sheet'), dwNewSheet, 'dup'], [L('Đổi tên bản vẽ', 'Rename Drawing'), function () { dwStartRename(n, null); }, 'ren']], e.clientX, e.clientY);
+        showMenu([[L('Sheet mới', 'New Sheet'), function () { dwNewSheet(); }, 'dup'], [L('Đổi tên bản vẽ', 'Rename Drawing'), function () { dwStartRename(n, null); }, 'ren'], null,
+          [L('Xuất tất cả Sheet (PDF)', 'Export All Sheets (PDF)'), DW_ACT.pdfAll, 'stl'], [L('Cập nhật tất cả Sheet', 'Update All Sheets'), DW_ACT.updAll, 'undo']], e.clientX, e.clientY);
         return;
       }
+      if (n.dataset.view) {
+        const v = n.dataset.view; if (v === 'Exploded view') return;
+        V6S.vsel = v; v6Paint();
+        showMenu([[L('Xoá view', 'Delete view'), function () { v6DelView(v); }, 'del'], [L('Về vị trí tự động', 'Back to the automatic place'), function () { v6ViewAuto(v); }, 'home']], e.clientX, e.clientY);
+        return;
+      }
+      if (n.dataset.uid) {
+        const u = n.dataset.uid, hid = dwHideOf(dwCur()).indexOf(u) >= 0; DW.bsel = u; dwRefresh(true);
+        showMenu([[hid ? L('Hiện trong bản vẽ', 'Show in the drawing') : L('Ẩn trong bản vẽ', 'Hide in the drawing'), function () { dwSrcHide(u, !hid); }, hid ? 'show' : 'hide'],
+          [L('Bỏ khỏi Source Bodies', 'Remove from Source Bodies'), function () { dwSrcDrop(u); }, 'del'], [L('Cập nhật body này', 'Update this body'), function () { dwUpdDialog('all', [u]); }, 'undo']], e.clientX, e.clientY);
+        return;
+      }
+      if (!n.dataset.id) return;
       const id = n.dataset.id;
       showMenu([[L('Mở', 'Open'), function () { dwOpenSheet(id); }, 'show'], [L('Đổi tên', 'Rename'), function () { dwStartRename(n, id); }, 'ren'],
         [L('Nhân bản', 'Duplicate'), function () { dwDupSheet(id); }, 'dup'], [L('Xoá', 'Delete'), function () { dwDelSheet(id); }, 'del'], null,
-        [L('Xuất PNG', 'Export as PNG'), function () { dwExport(id, 'png').catch(showError); }, 'stl'], [L('Xuất JPG', 'Export as JPG'), function () { dwExport(id, 'jpg').catch(showError); }, 'stl']], e.clientX, e.clientY);
+        [L('Xuất PNG', 'Export as PNG'), function () { dwExport(id, 'png').catch(showError); }, 'stl'], [L('Xuất JPG', 'Export as JPG'), function () { dwExport(id, 'jpg').catch(showError); }, 'stl'],
+        [L('Xuất PDF', 'Export as PDF'), function () { const sh = dwSheet(id); dwExportPdf([id], sh.name).catch(showError); }, 'stl'], null,
+        [L('Cập nhật Sheet', 'Update Sheet'), function () { dwOpenSheet(id); dwUpdDialog('sheet'); }, 'undo']], e.clientX, e.clientY);
     });
     // reorder by drag and drop
     c.addEventListener('dragstart', function (e) { const n = dwNodeOf(e); if (!n || !n.dataset.id) { e.preventDefault(); return; } DW.drag = n.dataset.id; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', n.dataset.id); } catch (er) { } });
     c.addEventListener('dragover', function (e) {
       if (!DW.drag) return; const n = dwNodeOf(e); e.preventDefault();
       c.querySelectorAll('.dragover').forEach(function (x) { x.classList.remove('dragover'); });
-      if (n && (n.dataset.id || n.dataset.add)) n.classList.add('dragover');
+      if (n && (n.dataset.id || n.dataset.add || n.dataset.root)) n.classList.add('dragover');
     });
     c.addEventListener('drop', function (e) {
       e.preventDefault(); const n = dwNodeOf(e), id = DW.drag; DW.drag = null;
       c.querySelectorAll('.dragover').forEach(function (x) { x.classList.remove('dragover'); });
       if (!id || !n) return;
+      if (!(n.dataset.add || n.dataset.root || n.dataset.id)) return;
       if (n.dataset.add || n.dataset.root) dwMoveSheet(id, n.dataset.root ? dwDoc().sheets[0].id : null);
       else dwMoveSheet(id, n.dataset.id);
     });
     c.addEventListener('dragend', function () { DW.drag = null; c.querySelectorAll('.dragover').forEach(function (x) { x.classList.remove('dragover'); }); });
   });
-  $('dwsTreeAdd').addEventListener('click', dwNewSheet);
+  $('dwsTreeAdd').addEventListener('click', function () { dwNewSheet(); });
+  $('dwsDlgOk').addEventListener('click', function () { if (DW.dlg) DW.dlg(true); });
+  $('dwsDlgNo').addEventListener('click', function () { if (DW.dlg) DW.dlg(false); });
+  $('dwsSrcQ').addEventListener('input', function () { DWS.q = this.value; dwSrcList(); });
+  $('dwsSrcQ').addEventListener('keydown', function (e) { e.stopPropagation(); if (e.key === 'Escape') dwSrcCancel(); });
+  $('dwsSrcL').addEventListener('click', function (e) {
+    const r = e.target.closest('.dwsSrcR'); if (!r) return; const u = r.dataset.uid;
+    if (e.target.closest('.eye')) { e.preventDefault(); if (DWS.hid.has(u)) DWS.hid.delete(u); else DWS.hid.add(u); dwSrcList(); return; }
+    if (e.target.classList.contains('c')) { if (e.target.checked) DWS.chk.add(u); else { DWS.chk.delete(u); DWS.hid.delete(u); } dwSrcList(); }
+  });
+  $('dwsSrcAll').addEventListener('click', function () { const q = DWS.q.trim().toLowerCase(); dwSrcRows().forEach(function (r) { if (!q || r.name.toLowerCase().indexOf(q) >= 0) DWS.chk.add(r.uid); }); dwSrcList(); });
+  $('dwsSrcNone').addEventListener('click', function () { DWS.chk.clear(); DWS.hid.clear(); dwSrcList(); });
+  $('dwsSrcPick').addEventListener('click', dwPickStart);
+  $('dwsSrcOk').addEventListener('click', dwSrcApply);
+  $('dwsSrcNo').addEventListener('click', dwSrcCancel);
+  $('dwsPickOk').addEventListener('click', function () { dwPickEnd(true); });
+  $('dwsPickNo').addEventListener('click', function () { dwPickEnd(false); });
   $('dwsSave').addEventListener('click', dwSaveSheet);
   $('dwsDiscard').addEventListener('click', dwDiscard);
   $('dwsDup').addEventListener('click', function () { dwDupSheet(); });
@@ -12028,23 +12407,430 @@ var wasm_bindgen = (function(exports) {
   // the 3D workspace's shortcuts do not act (its undo would change the model behind the drawing)
   window.addEventListener('keydown', function (e) {
     if (!DW.open) return;
+    if (DW.pick) {
+      if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); dwPickEnd(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); dwPickEnd(false); }
+      return;     // the 3D viewport works as usual while picking
+    }
+    if (DW.dlg) { if (e.key === 'Escape') DW.dlg(false); else if (e.key === 'Enter' && $('dwsDlgOk').style.display !== 'none') DW.dlg(true); e.stopPropagation(); return; }
+    if ($('dwsSrc').classList.contains('on')) { if (e.key === 'Escape') { dwSrcCancel(); e.stopPropagation(); } else if (e.key === 'Enter' && e.target.id !== 'dwsSrcQ') { dwSrcApply(); e.stopPropagation(); } return; }
     const k = (e.key || '').toLowerCase(), tag = e.target && e.target.tagName;
     const typing = tag === 'TEXTAREA' || tag === 'SELECT' || (tag === 'INPUT' && ['checkbox', 'radio', 'range', 'color', 'button'].indexOf(e.target.type) < 0);
     if ((e.ctrlKey || e.metaKey) && !e.altKey) {
       if (k === 's') { e.preventDefault(); e.stopPropagation(); if (e.shiftKey) { dwCapture(); saveSessionAs().catch(showError); } else dwSaveSheet(); return; }
       if (k === 'd') { e.preventDefault(); e.stopPropagation(); dwDupSheet(); return; }
-      if ((k === 'z' || k === 'y') && !typing) { e.preventDefault(); e.stopPropagation(); flash(L('Hoàn tác trong Drawing chưa có — dùng Discard để về lần Save trước', 'Undo is not in Drawing yet — Discard goes back to the last Save')); return; }
+      if ((k === 'z' || k === 'y') && !typing) { e.preventDefault(); e.stopPropagation(); dwUndo(k === 'y' || (k === 'z' && e.shiftKey)); return; }
     }
     if (typing) return;
     e.stopPropagation();
   }, true);
   // follow the canvas: working copy, Modified / Saved, ribbon states
-  setInterval(function () { if (!DW.open || DW.ren) return; dwCapture(); dwRefresh(false); }, 500);
+  setInterval(function () { if (!DW.open) return; if (DW.pick) { dwPickCount(); return; } if (DW.ren) return; dwCapture(); dwRefresh(false); }, 500);
   window.addEventListener('resize', function () { if (DW.open) ribFit($('dwsRibbon')); });
+
+  // ===================== Drawing: associative link to the 3D model =====================
+  // Every body has a stable id (b.uid, kept in the session file). A body's revision = hash of its geometry + its
+  // placement; renaming, colour or showing / hiding do not change it. A sheet keeps, per source body, the revision it was
+  // last drawn from (sheet.rev[uid]) and the drawing keeps showing that geometry (a snapshot) until the sheet is updated,
+  // so a change in 3D marks the sheet "Update Required" instead of silently redrawing it. A body deleted from the model
+  // stays in the drawing from its snapshot and is marked missing.
+  // Dependency: source body -> views of a sheet -> sheet -> document; updating touches only sheets that use the body.
+  const DWU = { geoHash: new WeakMap(), snaps: new Map(), negId: new Map(), negSeq: -1, hist: new Map() };
+  function dwNewUid() { return 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function dwGeoHash(geo) {
+    let h = DWU.geoHash.get(geo); if (h) return h;
+    let a = 0x811c9dc5 | 0, b = 0x01000193 ^ 0x5bd1e995;
+    const mix = function (arr) {
+      const u = new Uint32Array(arr.buffer, arr.byteOffset, arr.byteLength >> 2);
+      for (let i = 0; i < u.length; i++) { const x = u[i]; a = Math.imul(a ^ x, 16777619); b = Math.imul(b ^ (x + i), 2246822519) ^ (b >>> 13); }
+      a = Math.imul(a ^ u.length, 16777619);
+    };
+    mix(geo.positions); mix(geo.indices);
+    h = (a >>> 0).toString(36) + (b >>> 0).toString(36) + '.' + geo.positions.length;
+    DWU.geoHash.set(geo, h); return h;
+  }
+  function dwRev(b) { return dwGeoHash(b.geo) + '@' + Array.from(b.matrix).map(function (v) { return +(+v).toFixed(6); }).join(','); }
+  function dwBodyByUid(uid) { return S.bodies.find(function (b) { return b.uid === uid; }) || null; }
+  function dwSnapTake(b) {
+    const r = dwRev(b);
+    if (!DWU.snaps.has(r)) DWU.snaps.set(r, { rev: r, uid: b.uid, name: b.name, material: b.material, density: b.density, color: b.color.slice(), matrix: Array.from(b.matrix), geo: b.geo });
+    return r;
+  }
+  // ids the drawing engine uses: real body ids, negative ids for bodies that only live on in a snapshot
+  function dwIdOf(uid) { const b = dwBodyByUid(uid); if (b) return b.id; if (!DWU.negId.has(uid)) DWU.negId.set(uid, DWU.negSeq--); return DWU.negId.get(uid); }
+  function dwUidOf(id) {
+    id = +id;
+    if (id < 0) { for (const e of DWU.negId) if (e[1] === id) return e[0]; return undefined; }
+    const b = S.bodies.find(function (x) { return x.id === id; }); return b ? b.uid : undefined;
+  }
+  function dwProxy(b, r) {
+    if (!r || r === dwRev(b)) return b;
+    const sn = DWU.snaps.get(r); if (!sn) return b;
+    const p = Object.create(b); p.geo = sn.geo; p.matrix = sn.matrix; p.solid = null; p.stats = null; p.geoBrep = false; p.stale = true;
+    return p;
+  }
+  function dwGhost(uid, sn) {
+    return { id: dwIdOf(uid), uid: uid, name: sn.name, geo: sn.geo, orig: sn.geo, matrix: sn.matrix, matrix0: sn.matrix, color: sn.color, opacity: 1, visible: true,
+      material: sn.material, density: sn.density, off: [0, 0, 0], ana: null, stats: null, solid: null, ghost: true };
+  }
+  function dwSnapName(uid, s) { const r = s && s.rev && s.rev[uid], sn = r && DWU.snaps.get(r); return sn ? sn.name : uid; }
+  // the bodies the open sheet draws
+  function dwBodies() {
+    const s = DW.doc ? dwCur() : null, rev = (s && s.rev) || {};
+    if (!V6S.src) return v6Live().map(function (b) { return dwProxy(b, rev[b.uid]); });
+    const out = [];
+    for (const u of V6S.src) {
+      if (V6S.hide.indexOf(u) >= 0) continue;
+      const b = dwBodyByUid(u);
+      if (b) out.push(dwProxy(b, rev[u]));
+      else { const sn = DWU.snaps.get(rev[u]); if (sn) out.push(dwGhost(u, sn)); }
+    }
+    return out;
+  }
+  // source bodies of a sheet (a sheet without its own list follows the bodies shown in 3D)
+  function dwSrcOf(s) { const st = s.id === dwDoc().active && DW.doc ? { src: V6S.src } : s.work; return st.src ? st.src.slice() : v6Live().map(function (b) { return b.uid; }); }
+  function dwHideOf(s) { return (s.id === dwDoc().active ? V6S.hide : s.work.hide) || []; }
+  function dwBaseline(s, uids, all) {
+    s.rev = s.rev || {};
+    for (const u of uids) { const b = dwBodyByUid(u); if (b && (all || !s.rev[u])) s.rev[u] = dwSnapTake(b); }
+  }
+  function dwViewsOf(s) {
+    const st = s.id === dwDoc().active ? v6Grab() : s.work, m = st.mode === 'exp' ? 'exp' : '6v', c = st.cfg[m] || {};
+    if (m === 'exp') return ['Exploded view'];
+    const n = V6_ORDER.filter(function (k) { return c['v:' + k] === true; });
+    if (c.v6Iso) n.push('iso');
+    return n;
+  }
+  function dwViewName(n) { return n === 'iso' ? 'ISO' : n === 'Exploded view' ? n : L(V6_VIEWS[n].vi, V6_VIEWS[n].en); }
+  // what changed for one sheet
+  function dwCheck(s) {
+    const deps = dwSrcOf(s), rev = s.rev || {}, changed = [], missing = [], dims = [];
+    for (const u of deps) { const b = dwBodyByUid(u); if (!b) missing.push(u); else if (rev[u] && rev[u] !== dwRev(b)) changed.push(u); }
+    const st = s.id === dwDoc().active ? { dims: V6S.dims } : s.work;
+    for (const dm of ((st.dims || {})['6v'] || [])) {
+      const us = [dm.a.uid, dm.b.uid];
+      if (us.some(function (u) { return changed.indexOf(u) >= 0 || missing.indexOf(u) >= 0 || !dwBodyByUid(u); })) dims.push({ dm: dm, ok: v6RefValid(dm.a) && v6RefValid(dm.b) });
+    }
+    const status = s.fail || s.rfail ? 'fail' : missing.length ? 'miss' : changed.length ? 'upd' : 'ok';
+    return { s: s, deps: deps, changed: changed, missing: missing, dims: dims, status: status };
+  }
+  function dwUpdState(st) {
+    return { ok: ['ok', L('Đồng bộ', 'Up to Date'), L('Bản vẽ khớp với mô hình 3D', 'The drawing matches the 3D model')],
+      upd: ['upd', L('Cần cập nhật', 'Update Required'), L('Mô hình 3D đã đổi, bản vẽ còn theo hình cũ', 'The 3D model changed; the drawing still shows the old shape')],
+      miss: ['miss', L('Thiếu body', 'Missing Source Body'), L('Body nguồn đã bị xoá khỏi mô hình', 'A source body was deleted from the model')],
+      fail: ['fail', L('Lỗi cập nhật', 'Update Failed'), L('Không cập nhật được view', 'The views could not be updated')] }[st];
+  }
+  // plan of an update: scope 'all' | 'sheet' | 'sel' (only the given bodies)
+  function dwUpdPlan(scope, only) {
+    dwCapture();
+    const sheets = scope === 'all' ? dwDoc().sheets : [dwCur()], items = [];
+    for (const s of sheets) {
+      const c = dwCheck(s);
+      if (only) { c.changed = c.changed.filter(function (u) { return only.indexOf(u) >= 0; }); c.missing = c.missing.filter(function (u) { return only.indexOf(u) >= 0; }); c.dims = c.dims.filter(function (d) { return only.indexOf(d.dm.a.uid) >= 0 || only.indexOf(d.dm.b.uid) >= 0; }); }
+      if (c.changed.length || c.missing.length || c.dims.length || s.fail || s.rfail) items.push(c);
+    }
+    return items;
+  }
+  function dwApplyUpd(items) {
+    for (const c of items) {
+      const s = c.s;
+      try {
+        for (const u of c.changed) {
+          const b = dwBodyByUid(u);
+          if (!b || !b.geo || !b.geo.indices || !b.geo.indices.length) throw new Error(L('Body không còn tam giác: ', 'Body has no triangles: ') + (b ? b.name : u));
+          s.rev[u] = dwSnapTake(b);
+        }
+        s.fail = false; s.rfail = false; s.failMsg = '';
+      } catch (e) { s.fail = true; s.failMsg = e.message; }
+    }
+    DW.sig = ''; v6Preview(); dwRefresh(true);
+  }
+  // the engine could (not) draw the open sheet
+  function dwRenderFail(msg) { if (!DW.doc) return; const s = dwCur(); if (dwSrcOf(s).length && !s.rfail) { s.rfail = true; s.failMsg = msg; dwRefresh(true); } }
+  function dwRenderOk() { if (!DW.doc) return; const s = dwCur(); if (s.rfail) { s.rfail = false; dwRefresh(true); } }
+  // snapshots the session must carry: geometry a sheet still shows but the model no longer has
+  function dwSnapsForSave() {
+    const need = new Map();
+    if (!DW.doc) return [];
+    for (const s of DW.doc.sheets) for (const u in (s.rev || {})) {
+      const r = s.rev[u], b = dwBodyByUid(u);
+      if ((!b || dwRev(b) !== r) && DWU.snaps.has(r)) need.set(r, DWU.snaps.get(r));
+    }
+    return Array.from(need.values());
+  }
+  function dwSnapsLoad(list) {
+    DWU.snaps.clear(); DWU.negId.clear(); DWU.negSeq = -1;
+    for (const sn of (list || [])) DWU.snaps.set(sn.rev, sn);
+  }
+  // after a document is loaded: geometry the sheets are up to date with gets its snapshot now (before any edit)
+  function dwSnapCurrent() {
+    if (!DW.doc) return;
+    for (const s of DW.doc.sheets) for (const u in (s.rev || {})) { const b = dwBodyByUid(u); if (b && dwRev(b) === s.rev[u]) dwSnapTake(b); }
+  }
+  // ---------- update dialog (Check for Updates / Update ...): list first, apply only after confirming
+  function dwUpdDialog(scope, only, checkOnly) {
+    const items = dwUpdPlan(scope, only);
+    const d = $('dwsDlg'), box = d.querySelector('.dwsDlgB');
+    const esc = dwEsc, nm = function (u, s) { const b = dwBodyByUid(u); return b ? b.name : dwSnapName(u, s); };
+    let h = '<h3>' + esc(checkOnly ? L('Kiểm tra thay đổi', 'Check for Updates') : L('Xem trước cập nhật', 'Update Preview')) + '</h3>';
+    if (!items.length) h += '<p class="ok">' + esc(L('Bản vẽ đã đồng bộ với mô hình 3D.', 'The drawing is up to date with the 3D model.')) + '</p>';
+    const changedAll = new Set(), sheetsAff = [], views = [], miss = [], dims = [];
+    for (const c of items) {
+      c.changed.forEach(function (u) { changedAll.add(nm(u, c.s)); });
+      if (c.changed.length || c.s.fail) { sheetsAff.push(c.s.name + (c.s.fail ? ' (' + L('lỗi lần trước', 'failed before') + ')' : '')); dwViewsOf(c.s).forEach(function (v) { views.push(c.s.name + ' · ' + dwViewName(v)); }); }
+      c.missing.forEach(function (u) { miss.push(nm(u, c.s) + ' (' + c.s.name + ')'); });
+      c.dims.forEach(function (x) { dims.push(c.s.name + ' · ' + L('kích thước ', 'dimension ') + '#' + x.dm.id + ' — ' + (x.ok ? L('tham chiếu còn, giá trị sẽ tính lại', 'reference kept, value recomputed') : L('MẤT THAM CHIẾU — cần chọn lại điểm', 'REFERENCE LOST — pick the points again'))); });
+    }
+    const sec = function (t, arr, cls) { if (!arr.length) return ''; return '<h4>' + esc(t) + ' (' + arr.length + ')</h4><ul class="' + (cls || '') + '">' + arr.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; };
+    h += sec(L('Body đã thay đổi', 'Changed bodies'), Array.from(changedAll)) + sec(L('Sheet bị ảnh hưởng', 'Affected sheets'), sheetsAff) + sec(L('View sẽ tạo lại', 'Views to regenerate'), views) +
+      sec(L('Body bị mất (giữ hình cũ, không xoá khỏi bản vẽ)', 'Missing bodies (kept from the old shape, not removed)'), miss, 'bad') + sec(L('Kích thước / chú thích cần kiểm tra', 'Dimensions / annotations to check'), dims);
+    box.innerHTML = h;
+    const canApply = !checkOnly && items.some(function (c) { return c.changed.length || c.s.fail; });
+    $('dwsDlgOk').style.display = canApply ? '' : 'none';
+    $('dwsDlgOk').textContent = L('Áp dụng cập nhật', 'Apply Update');
+    $('dwsDlgNo').textContent = checkOnly || !canApply ? L('Đóng', 'Close') : L('Huỷ', 'Cancel');
+    DW.dlg = function (ok) { d.classList.remove('on'); DW.dlg = null; if (ok && canApply) { dwApplyUpd(items); flash(L('Đã cập nhật bản vẽ', 'Drawing updated')); } };
+    d.classList.add('on');
+    return items;
+  }
+  // ---------- undo / redo of a sheet (snapshots of its state as it changes)
+  function dwHist(s) { let h = DWU.hist.get(s.id); if (!h) { h = { u: [], r: [], last: null }; DWU.hist.set(s.id, h); } return h; }
+  function dwHistNote(s, j) {
+    const h = dwHist(s);
+    if (h.last !== null && h.last !== j) { h.u.push(h.last); if (h.u.length > 80) h.u.shift(); h.r = []; }
+    h.last = j;
+  }
+  function dwHistReset(s) { const h = dwHist(s); h.last = JSON.stringify(v6Grab()); }
+  function dwUndo(redo) {
+    if (!DW.doc) return;
+    dwCapture();
+    const s = dwCur(), h = dwHist(s), from = redo ? h.r : h.u, to = redo ? h.u : h.r;
+    if (!from.length) { flash(redo ? L('Không còn gì để làm lại', 'Nothing to redo') : L('Không còn gì để hoàn tác', 'Nothing to undo')); return; }
+    to.push(h.last); const j = from.pop();
+    s.work = JSON.parse(j); v6Put(s.work); h.last = JSON.stringify(v6Grab());
+    s.dirty = dwCanon(s.work) !== dwCanon(s.saved); DW.sig = ''; dwRefresh(true);
+  }
+
+  // ===================== Drawing: source bodies of a sheet =====================
+  // Source bodies = the bodies a sheet is made from (list of stable body ids, V6S.src of the open sheet; null = follow the
+  // bodies shown in 3D). Hidden bodies (V6S.hide) stay sources but are not drawn. Displayed = sources - hidden.
+  // Picked in the Source Bodies panel, or in the 3D viewport with the normal selection (click / Ctrl+click), Enter to use
+  // the picked bodies, Esc to go back; or right-click bodies in 3D > Create Drawing Sheet.
+  const DWS = { chk: null, hid: null, q: '' };
+  function dwBodyType(b) { return b.solid ? 'B-rep' : 'Mesh'; }
+  function dwSrcOpen(keep) {
+    dwCapture();
+    if (!keep) {
+      const s = dwCur();
+      DWS.chk = new Set(V6S.src ? V6S.src : v6Live().map(function (b) { return b.uid; }));
+      DWS.hid = new Set(V6S.hide); DWS.q = ''; DWS.miss = V6S.src ? V6S.src.filter(function (u) { return !dwBodyByUid(u); }) : []; DWS.sheet = s.id;
+    }
+    $('dwsSrcQ').value = DWS.q;
+    dwSrcList(); $('dwsSrc').classList.add('on'); $('dwsSrcQ').focus();
+  }
+  function dwSrcRows() {
+    const rows = S.bodies.map(function (b) { return { uid: b.uid, name: b.name, type: dwBodyType(b), miss: false }; });
+    for (const u of (DWS.miss || [])) rows.push({ uid: u, name: dwSnapName(u, dwSheet(DWS.sheet)), type: '—', miss: true });
+    return rows;
+  }
+  function dwSrcList() {
+    const q = DWS.q.trim().toLowerCase(), list = $('dwsSrcL'); list.innerHTML = '';
+    const rows = dwSrcRows();
+    for (const r of rows) {
+      if (q && r.name.toLowerCase().indexOf(q) < 0) continue;
+      const el = document.createElement('label'); el.className = 'dwsSrcR' + (r.miss ? ' miss' : ''); el.dataset.uid = r.uid;
+      el.innerHTML = '<input type="checkbox" class="c"><span class="nm"></span><span class="ty"></span><button class="eye" type="button"></button>';
+      el.querySelector('.c').checked = DWS.chk.has(r.uid);
+      el.querySelector('.nm').textContent = r.name;
+      el.querySelector('.ty').textContent = r.miss ? L('Mất', 'Missing') : r.type;
+      const eye = el.querySelector('.eye'), hid = DWS.hid.has(r.uid);
+      eye.textContent = hid ? L('Đang ẩn', 'Hidden') : L('Hiện', 'Shown'); eye.classList.toggle('off', hid); eye.disabled = !DWS.chk.has(r.uid);
+      eye.title = L('Ẩn tạm trong bản vẽ (vẫn là body nguồn)', 'Hide in the drawing for now (stays a source body)');
+      list.appendChild(el);
+    }
+    const n = rows.filter(function (r) { return DWS.chk.has(r.uid); }).length;
+    $('dwsSrcN').textContent = L('Đã chọn ', 'Selected ') + n + ' / ' + rows.length;
+  }
+  function dwSrcApply() {
+    const rows = dwSrcRows(), src = rows.map(function (r) { return r.uid; }).filter(function (u) { return DWS.chk.has(u); });
+    if (!src.length) { flash(L('Chọn ít nhất một body', 'Pick at least one body')); return; }
+    V6S.src = src; V6S.hide = src.filter(function (u) { return DWS.hid.has(u); });
+    const s = dwCur(); dwBaseline(s, src);
+    $('dwsSrc').classList.remove('on'); V6S.prev = null; v6Preview(); dwCapture(); dwRefresh(true);
+  }
+  function dwSrcCancel() { $('dwsSrc').classList.remove('on'); }
+  // ---------- picking in the 3D viewport
+  function dwPickStart() {
+    DW.pick = true; $('dwsSrc').classList.remove('on');
+    S.sel.clear(); for (const b of S.bodies) if (DWS.chk.has(b.uid)) S.sel.add(b);
+    if (typeof refresh === 'function') refresh();
+    document.body.classList.remove('dws-on'); $('dwsPick').classList.add('on'); dwPickCount();
+    if (typeof dirty !== 'undefined') dirty = true;
+  }
+  function dwPickCount() { if (DW.pick) $('dwsPickN').textContent = L('Dùng ', 'Use ') + S.sel.size + L(' body đang chọn (Enter)', ' picked bodies (Enter)'); }
+  function dwPickEnd(ok) {
+    if (!DW.pick) return;
+    DW.pick = false; $('dwsPick').classList.remove('on'); document.body.classList.add('dws-on');
+    if (ok) { DWS.chk = new Set(Array.from(S.sel).map(function (b) { return b.uid; })); DWS.hid = new Set(Array.from(DWS.hid).filter(function (u) { return DWS.chk.has(u); })); }
+    dwSrcOpen(true);
+  }
+  // right-click in 3D: a new sheet made from the picked bodies
+  function dwCreateFromSel() {
+    const uids = (S.sel.size ? Array.from(S.sel) : S.bodies.filter(function (b) { return b.visible; })).map(function (b) { return b.uid; });
+    if (!DW.open) dwOpen();
+    dwNewSheet(uids);
+  }
+  // ---------- tree: hide / show a source body, drop it from the sources
+  function dwSrcHide(uid, on) {
+    if (!V6S.src) V6S.src = v6Live().map(function (b) { return b.uid; });
+    const i = V6S.hide.indexOf(uid);
+    if (on && i < 0) V6S.hide.push(uid); else if (!on && i >= 0) V6S.hide.splice(i, 1);
+    V6S.prev = null; v6Preview(); dwCapture(); dwRefresh(true);
+  }
+  function dwSrcDrop(uid) {
+    if (!V6S.src) V6S.src = v6Live().map(function (b) { return b.uid; });
+    if (V6S.src.length <= 1) { flash(L('Sheet cần ít nhất một body nguồn', 'A sheet needs at least one source body')); return; }
+    V6S.src = V6S.src.filter(function (u) { return u !== uid; }); V6S.hide = V6S.hide.filter(function (u) { return u !== uid; });
+    V6S.prev = null; v6Preview(); dwCapture(); dwRefresh(true);
+  }
+
+  // ===================== Drawing: export (PNG / JPG per sheet, PDF per sheet or all sheets) =====================
+  // PDF pages are built from the drawing itself, not from a picture of it: edges, hidden lines, dimension lines, arrows
+  // and texts are vector (texts with the PDF's Helvetica; a text with letters outside its character set, such as
+  // Vietnamese ư / ơ / ộ, goes into the picture layer at full resolution); the shaded fill of the views is one JPEG under
+  // the vectors. Page size = the sheet's paper size; one page per sheet in Drawing Tree order.
+  function dwAnsi(s) { for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); if (c > 255 || (c >= 128 && c < 160)) return false; } return true; }
+  // a 2D context that draws pictures on `real` and records lines / texts as vectors (sheet px)
+  function dwRecCtx(real) {
+    const ops = []; let path = [];
+    const tp = function (x, y) { const m = real.getTransform(); return [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]; };
+    const sc = function () { const m = real.getTransform(); return Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)); };
+    const H = {
+      __rec: ops, __tp: tp,
+      beginPath: function () { path = []; },
+      moveTo: function (x, y) { path.push(['m'].concat(tp(x, y))); },
+      lineTo: function (x, y) { path.push(['l'].concat(tp(x, y))); },
+      closePath: function () { path.push(['h']); },
+      stroke: function () { const k = sc(); ops.push({ t: 'S', p: path.slice(), w: real.lineWidth * k, c: real.strokeStyle, d: real.getLineDash().map(function (v) { return v * k; }) }); },
+      fill: function () { ops.push({ t: 'F', p: path.slice(), c: real.fillStyle }); },
+      fillText: function (s, x, y) {
+        s = String(s);
+        if (!dwAnsi(s) || !s.trim()) { real.fillText(s, x, y); return; }
+        const m = real.measureText(s), al = real.textAlign, w = m.width, f = real.font, bl = real.textBaseline;
+        const dx = al === 'center' ? -w / 2 : (al === 'right' || al === 'end') ? -w : 0;
+        const asc = m.actualBoundingBoxAscent; real.textBaseline = 'alphabetic'; const ascA = real.measureText(s).actualBoundingBoxAscent; real.textBaseline = bl;
+        const yb = y - asc + ascA, px = parseFloat((f.match(/([\d.]+)px/) || [0, 12])[1]), bold = /bold|[6-9]00/.test(f);
+        real.font = (bold ? 'bold ' : '') + px + 'px Arial, Helvetica, "Liberation Sans", sans-serif'; const wa = real.measureText(s).width; real.font = f;
+        const t = real.getTransform();
+        ops.push({ t: 'T', s: s, x: x + dx, y: yb, size: px, bold: bold, hz: wa > 0 ? w / wa : 1, m: [t.a, t.b, t.c, t.d, t.e, t.f], c: real.fillStyle });
+      }
+    };
+    return new Proxy(real, {
+      get: function (t, k) { if (k in H) return H[k]; const v = t[k]; return typeof v === 'function' ? v.bind(t) : v; },
+      set: function (t, k, v) { t[k] = v; return true; }
+    });
+  }
+  // a view's edge lines (view px) onto the record, through the view -> sheet placement
+  function dwRecEdges(c2, vec, tr) {
+    const conv = function (lines) {
+      const p = [];
+      for (const ln of lines) for (let i = 0; i < ln.length; i += 2) { const q = c2.__tp(tr.x0 + ln[i] * tr.s, tr.y0 + ln[i + 1] * tr.s); p.push([i ? 'l' : 'm', q[0], q[1]]); }
+      return p;
+    };
+    if (vec.hid.length) { const w = Math.max(1, vec.lw * 0.6) * tr.s; c2.__rec.push({ t: 'S', p: conv(vec.hid), w: w, c: '#7d7d7d', d: [4 * vec.lw * tr.s, 3 * vec.lw * tr.s], cap: 1 }); }
+    if (vec.vis.length) c2.__rec.push({ t: 'S', p: conv(vec.vis), w: vec.lw * tr.s, c: '#111111', d: [], cap: 1 });
+  }
+  // one page: the open sheet at full size
+  async function dwPdfPage() {
+    const o = v6Sync(); o.vec = true; o.bg = 'w';
+    const R = await v6Render(o, 1, o.ss); R.k = 1;
+    const cv = document.createElement('canvas'); cv.width = o.W; cv.height = o.H;
+    const c2 = cv.getContext('2d'); c2.fillStyle = '#fff'; c2.fillRect(0, 0, o.W, o.H);
+    const rec = dwRecCtx(c2); v6Compose(rec, o, R, 1);
+    const jb = await new Promise(function (r) { cv.toBlob(r, 'image/jpeg', 0.92); });
+    return { W: o.W, H: o.H, dpi: o.dpi, jpg: new Uint8Array(await jb.arrayBuffer()), ops: rec.__rec };
+  }
+  function dwCss(c) {
+    c = String(c || '#000').trim();
+    let m = c.match(/^#([0-9a-f]{3})$/i); if (m) return [0, 1, 2].map(function (i) { return parseInt(m[1][i] + m[1][i], 16) / 255; });
+    m = c.match(/^#([0-9a-f]{6})/i); if (m) return [0, 2, 4].map(function (i) { return parseInt(m[1].substr(i, 2), 16) / 255; });
+    m = c.match(/rgba?\(([^)]+)\)/); if (m) return m[1].split(',').slice(0, 3).map(function (v) { return (+v) / 255; });
+    return [0, 0, 0];
+  }
+  function dwN(v) { return (Math.round(v * 1000) / 1000).toString(); }
+  function dwLatin1(str) { const u = new Uint8Array(str.length); for (let i = 0; i < str.length; i++) u[i] = str.charCodeAt(i) & 255; return u; }
+  function dwPdfStr(s) { return '(' + s.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)') + ')'; }
+  function dwPdfOps(ops) {
+    const out = [];
+    const path = function (p) { for (const q of p) out.push(q[0] === 'h' ? 'h' : dwN(q[1]) + ' ' + dwN(q[2]) + ' ' + q[0]); };
+    for (const op of ops) {
+      const c = dwCss(op.c).map(dwN).join(' ');
+      if (op.t === 'S') {
+        if (!op.p.length) continue;
+        out.push(c + ' RG', dwN(Math.max(0.1, op.w)) + ' w', '1 J 1 j', '[' + (op.d || []).map(dwN).join(' ') + '] 0 d'); path(op.p); out.push('S');
+      } else if (op.t === 'F') { if (!op.p.length) continue; out.push(c + ' rg'); path(op.p); out.push('f'); }
+      else if (op.t === 'T') {
+        const m = op.m, sz = op.size, hz = op.hz;
+        const tm = [m[0] * hz * sz, m[1] * hz * sz, -m[2] * sz, -m[3] * sz, m[0] * op.x + m[2] * op.y + m[4], m[1] * op.x + m[3] * op.y + m[5]];
+        out.push(c + ' rg', 'BT /' + (op.bold ? 'F2' : 'F1') + ' 1 Tf ' + tm.map(dwN).join(' ') + ' Tm ' + dwPdfStr(op.s) + ' Tj ET');
+      }
+    }
+    return out.join('\n');
+  }
+  async function dwDeflate(u8) {
+    if (!window.CompressionStream) return null;
+    const st = new Blob([u8]).stream().pipeThrough(new CompressionStream('deflate'));
+    return new Uint8Array(await new Response(st).arrayBuffer());
+  }
+  async function dwPdfBuild(pages) {
+    const parts = [], offs = []; let len = 0;
+    const add = function (x) { const b = typeof x === 'string' ? dwLatin1(x) : x; parts.push(b); len += b.length; };
+    const obj = function (n, chunks) { offs[n] = len; add(n + ' 0 obj\n'); chunks.forEach(add); add('\nendobj\n'); };
+    add('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n');
+    const np = pages.length, kids = pages.map(function (p, i) { return (5 + 3 * i) + ' 0 R'; }).join(' ');
+    obj(1, ['<< /Type /Catalog /Pages 2 0 R >>']);
+    obj(2, ['<< /Type /Pages /Kids [' + kids + '] /Count ' + np + ' >>']);
+    obj(3, ['<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>']);
+    obj(4, ['<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>']);
+    for (let i = 0; i < np; i++) {
+      const p = pages[i], s = 72 / p.dpi, wpt = p.W * s, hpt = p.H * s, n = 5 + 3 * i;
+      const content = 'q\n' + dwN(wpt) + ' 0 0 ' + dwN(hpt) + ' 0 0 cm\n/Im0 Do\nQ\nq\n' + dwN(s) + ' 0 0 ' + dwN(-s) + ' 0 ' + dwN(hpt) + ' cm\n' + dwPdfOps(p.ops) + '\nQ\n';
+      const raw = dwLatin1(content), z = await dwDeflate(raw);
+      obj(n, ['<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + dwN(wpt) + ' ' + dwN(hpt) + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im0 ' + (n + 2) + ' 0 R >> >> /Contents ' + (n + 1) + ' 0 R >>']);
+      obj(n + 1, ['<< /Length ' + (z || raw).length + (z ? ' /Filter /FlateDecode' : '') + ' >>\nstream\n', z || raw, '\nendstream']);
+      obj(n + 2, ['<< /Type /XObject /Subtype /Image /Width ' + p.W + ' /Height ' + p.H + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + p.jpg.length + ' >>\nstream\n', p.jpg, '\nendstream']);
+    }
+    const nobj = 5 + 3 * np, xref = len;
+    let x = 'xref\n0 ' + nobj + '\n0000000000 65535 f \n';
+    for (let i = 1; i < nobj; i++) x += String(offs[i]).padStart(10, '0') + ' 00000 n \n';
+    add(x + 'trailer\n<< /Size ' + nobj + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF\n');
+    return new Blob(parts, { type: 'application/pdf' });
+  }
+  // PDF of some sheets (ids, Drawing Tree order), the open sheet comes back afterwards
+  async function dwExportPdf(ids, fname) {
+    const d = dwDoc(); dwCapture();
+    const keep = d.active, pages = [];
+    setBusy(true, L('Đang dựng PDF…', 'Building the PDF…'));
+    await new Promise(function (r) { setTimeout(r, 30); });
+    try {
+      for (const id of ids) {
+        const s = dwSheet(id); if (!s) continue;
+        if (d.active !== id) { d.active = id; v6Put(s.work); }
+        pages.push(await dwPdfPage());
+      }
+    } finally {
+      const k = dwSheet(keep); d.active = keep; v6Put(k.work); dwTabSet(k.work.mode); dwHistReset(k);
+      setBusy(false);
+    }
+    const blob = await dwPdfBuild(pages);
+    download([blob], fname.replace(/[\\/:*?"<>|]+/g, '_') + '.pdf');
+    flash(L('Đã xuất PDF ', 'Exported PDF ') + pages.length + L(' trang, ', ' page(s), ') + v6Size(blob.size));
+    return blob;
+  }
 
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwOpen: function () { dwOpen(); }, dwClose: function () { dwClose(); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwRev: function (b) { return dwRev(b); }, dwCheck: function () { return DW.doc ? DW.doc.sheets.map(function (s) { const c = dwCheck(s); return { name: s.name, status: c.status, changed: c.changed, missing: c.missing, dims: c.dims.map(function (d) { return [d.dm.id, d.ok]; }) }; }) : []; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();
 </script>
 </body>
