@@ -34,9 +34,9 @@
   function dwCanon(st) {
     st = st || {}; const I = [[1, 0, 0], [0, 1, 0], [0, 0, 1]], out = { cfg: {}, st: {}, notes: {}, rects: {}, dims: {}, src: st.src || null, hide: st.hide || [] };
     for (const m of ['6v', 'exp']) {
-      out.cfg[m] = Object.assign({}, V6S.def, (st.cfg || {})[m]);
+      out.cfg[m] = Object.assign({}, V6S.def, v6CfgMig((st.cfg || {})[m]));
       const t = (st.st || {})[m] || {};
-      out.st[m] = { R: t.R || I, pos: t.pos || null, iso: t.iso || null, off: t.off || {}, tot: t.tot || null, grp: t.grp || {} };
+      out.st[m] = { R: t.R || I, pos: t.pos || null, iso: t.iso || null, off: t.off || {}, tot: t.tot || null, grp: t.grp || {}, odo: t.odo || {} };
       out.notes[m] = (st.notes || {})[m] || [];
       out.rects[m] = (st.rects || {})[m] || [];
       out.dims[m] = ((st.dims || {})[m] || []).map(function (d) { return [d.id, d.view, d.a, d.b, d.t, d.o]; });
@@ -276,7 +276,7 @@
           dwWhen('scale=c', '<div class="dwsRow"' + dwTip('Tỉ lệ tùy chọn a : b', 'Custom scale a : b') + '><input type="range" data-bind="v6ScR"><input type="number" data-bind="v6ScA"><span>:</span><input type="number" data-bind="v6ScB"></div>') +
           '') +
         dwBB('data-click="#v6Auto"', 'arrange', 'Xếp tự động', 'Auto Arrange', 'Căn các hình chiếu cách đều nhau và cách đều viền bản vẽ, giữ nguyên cỡ hình', 'Space the views evenly between each other and the sheet border, keeping their size')) +
-      dwGrp('Chú thích', 'Annotation', dwCol(dwSB('data-chk="#v6Lbl"', 'name', 'Tên view', 'View Names') + dwSB('data-chk="#v6Dim"', 'dim', 'Kích thước bao', 'Overall Size', 'Kích thước bao của mô hình', 'Overall dimensions of the model') + dwSB('data-chk="#v6ScN"', 'scale', 'Ghi tỉ lệ', 'Scale Note')) +
+      dwGrp('Chú thích', 'Annotation', dwCol(dwSB('data-chk="#v6Lbl"', 'name', 'Tên view', 'View Names') + dwSB('data-chk="#v6ScN"', 'scale', 'Ghi tỉ lệ', 'Scale Note')) + dwCol(dwSB('data-chk="#v6DimW"', 'dim', 'Dài', 'Length', 'Kích thước bao: chiều dài (kéo đường kích thước để dời)', 'Overall size: length (drag the dimension line to move it)') + dwSB('data-chk="#v6DimD"', 'dim', 'Rộng', 'Width', 'Kích thước bao: chiều rộng (kéo đường kích thước để dời)', 'Overall size: width (drag the dimension line to move it)') + dwSB('data-chk="#v6DimH"', 'dim', 'Cao', 'Height', 'Kích thước bao: chiều cao (kéo đường kích thước để dời)', 'Overall size: height (drag the dimension line to move it)')) +
         dwBB('data-act="dim"', 'dimt', 'Dimension', 'Dimension', 'Ghi kích thước: chọn 2 điểm trên một view rồi bấm chỗ đặt đường kích thước (ngang / dọc / theo hướng tuỳ chỗ đặt). Esc để thôi', 'Dimension: pick 2 points on a view, then click where the line goes (horizontal / vertical / aligned from where you place it). Esc to stop'));
     const exp = dwGrp('Explode', 'Explode', dwCol(dwSlider('Explode', 'Explode', 'v6ExR', 'v6Ex', 'Kéo để tách các linh kiện ra khỏi tâm cụm (0 = cụm lắp nguyên, %)', 'Drag to pull the parts out from the centre (0 = assembled, %)') +
           dwSB('data-act="resetExp"', 'reset', 'Bỏ vị trí kéo tay', 'Reset Explode', 'Đưa các linh kiện về vị trí tách tự động', 'Put the parts back where the automatic explode places them') +
@@ -317,7 +317,9 @@
           dwSliderS('JPG', 'JPG', 'v6QR', 'v6Q', 'Chất lượng JPG (%)', 'JPG quality (%)'))) +
       dwGrp('Thông tin', 'Info', '<div class="rcol dwsInfo" id="dwsInfo"></div>') +
       dwOutGrp();
-    return '<div class="rpage" data-k="6v">' + six + '</div><div class="rpage" data-k="exp">' + exp + '</div><div class="rpage" data-k="set">' + set + '</div>';
+    const typ = dwGrp('Loại bản vẽ', 'Drawing Type', '<button class="bb dwsType" data-act="type2d"' + dwTip('Chọn loại bản vẽ của Sheet: 6 Views hoặc Exploded View (hỏi trước khi đổi)', 'Pick the drawing type of the sheet: 6 Views or Exploded View (asks before switching)') + '>' +
+      dwIco('drawing', 30) + '<span>2D Type</span><small class="dwsTypeL"></small></button>').replace('class="rgrp"', 'class="rgrp keep dwsTypeG"');
+    return '<div class="rpage" data-k="6v">' + six + typ + '</div><div class="rpage" data-k="exp">' + exp + typ + '</div><div class="rpage" data-k="set">' + set + '</div>';
   }
   // ---------- building the workspace
   (function () {
@@ -326,7 +328,7 @@
       '<div id="dwsHd"><span class="dwsLogo">' + dwIco('drawing', 20) + 'Drawing Workspace</span><span class="dwsDoc" id="dwsDocName"></span><span class="grow"></span>' +
       '<button id="dwsSaveDoc"' + dwTip('Lưu tài liệu: ghi cả phiên (.mrtl) gồm mọi Sheet — Ctrl+Shift+S để lưu thành file khác', 'Save document: writes the session (.mrtl) with every sheet — Ctrl+Shift+S saves as another file') + '>' + dwIco('save') + dwT('Lưu tài liệu', 'Save Document') + '</button>' +
       '<button id="dwsBack" class="primary"' + dwTip('Quay lại 3D Workspace (bản vẽ vẫn giữ nguyên)', 'Back to the 3D workspace (the drawing stays as it is)') + '>' + dwIco('back') + dwT('3D Workspace', '3D Workspace') + '</button></div>' +
-      '<div id="dwsTop"><div id="dwsTabs"><button class="rtab" data-k="6v">6 Views</button><button class="rtab" data-k="exp">Exploded View</button><button class="rtab" data-k="set">Export</button></div>' +
+      '<div id="dwsTop"><div id="dwsTabs"><button class="rtab" data-k="draw">Drawing</button><button class="rtab" data-k="set">Export</button></div>' +
       '<div id="dwsRibbon" class="ribfit">' + dwRibbonHtml() + '</div></div>' +
       '<div id="dwsMid"><div id="dwsLeft">' +
       '<div class="dwsPh">' + dwIco('src', 14) + '<span>Source Bodies</span><span id="dwsSrcCnt" class="cnt"></span><span class="grow"></span>' +
@@ -384,6 +386,7 @@
     dim: function () { v6DimTool(!V6S.dt); },
     fit: function () { v6Fit(); },
     png: function () { dwExport(null, 'png').catch(showError); },
+    type2d: function (b) { dwTypeMenu(b); },
     eachPng: function () { dwExportEach('png').catch(showError); },
     eachJpg: function () { dwExportEach('jpg').catch(showError); },
     eachPdf: function () { dwExportEach('pdf').catch(showError); },
@@ -401,7 +404,7 @@
   };
   $('dwsRibbon').addEventListener('click', function (e) {
     const b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.act && DW_ACT[b.dataset.act]) DW_ACT[b.dataset.act]();
+    if (b.dataset.act && DW_ACT[b.dataset.act]) DW_ACT[b.dataset.act](b);
     else if (b.dataset.click) $(b.dataset.click.slice(1)).click();
     else if (b.dataset.chk) { const c = document.querySelector(b.dataset.chk); if (c) { c.checked = !c.checked; dwFire(c); } }
     dwSyncRibbon();
@@ -421,6 +424,7 @@
     r.querySelectorAll('button[data-chk]').forEach(function (b) { const c = document.querySelector(b.dataset.chk); b.classList.toggle('on', !!(c && c.checked)); });
     r.querySelectorAll('[data-text]').forEach(function (el) { const t = $(el.dataset.text); el.textContent = t ? t.textContent : ''; });
     r.querySelectorAll('.dwsWhen').forEach(function (el) { const c = el.dataset.when.split('='); el.style.display = $('v6' + c[0][0].toUpperCase() + c[0].slice(1)).value === c[1] ? '' : 'none'; });
+    r.querySelectorAll('.dwsTypeL').forEach(function (e) { e.textContent = V6S.mode === 'exp' ? 'Exploded View' : '6 Views'; });
     const iso = $('v6Iso').checked;
     r.querySelectorAll('.rpage[data-k="6v"] [data-bind=v6AzR], .rpage[data-k="6v"] [data-bind=v6Az], .rpage[data-k="6v"] [data-bind=v6ElR], .rpage[data-k="6v"] [data-bind=v6El], .rpage[data-k="6v"] [data-bind=v6IsoKR], .rpage[data-k="6v"] [data-bind=v6IsoK]').forEach(function (el) { el.disabled = !iso; el.closest('.dwsRow').classList.toggle('off', !iso); });
     const inf = $('dwsInfo'); if (inf) inf.title = $('v6Info').innerText;
@@ -432,15 +436,17 @@
     r.querySelectorAll('button[data-act=rect]').forEach(function (b) { b.classList.toggle('on', !!V6S.rt); });
     r.querySelectorAll('button[data-act=sep]').forEach(function (b) { b.disabled = !(sel && (V6S.grp[V6S.psel] || []).length); });
   }
+  // tabs: Drawing (its groups follow the drawing type: page 6v or exp) and Export. k = 'draw' | '6v' | 'exp' | 'set'
   function dwTabSet(k) {
+    if (k === 'draw') k = V6S.mode === 'exp' ? 'exp' : '6v';
     k = k === 'exp' || k === 'set' ? k : '6v';
-    document.querySelectorAll('#dwsTabs .rtab').forEach(function (b) { b.classList.toggle('on', b.dataset.k === k); });
+    document.querySelectorAll('#dwsTabs .rtab').forEach(function (b) { b.classList.toggle('on', b.dataset.k === (k === 'set' ? 'set' : 'draw')); });
     document.querySelectorAll('#dwsRibbon .rpage').forEach(function (p) { p.classList.toggle('on', p.dataset.k === k); });
     if (k !== 'set' && V6S.mode !== k) v6SetMode(k);
     if (DW.open) setTimeout(function () { ribFit($('dwsRibbon')); }, 0);
     dwSyncRibbon();
   }
-  // switching the drawing type of the sheet (6 Views <-> Exploded View) asks first; the Export tab never does
+  // switching the drawing type of the sheet (6 Views <-> Exploded View, button 2D Type) asks first
   function dwTabAsk(k) {
     if ((k === '6v' || k === 'exp') && V6S.mode !== k && DW.open) {
       const ok = confirm(k === 'exp' ? L('Chuyển Sheet này sang bản vẽ Exploded View?\n(Thiết lập của bản vẽ 6 Views vẫn được giữ.)', 'Switch this sheet to the Exploded View drawing?\n(The 6 Views settings are kept.)')
@@ -449,7 +455,11 @@
     }
     dwTabSet(k);
   }
-  document.querySelectorAll('#dwsTabs .rtab').forEach(function (b) { b.addEventListener('click', function () { dwTabAsk(b.dataset.k); }); });
+  document.querySelectorAll('#dwsTabs .rtab').forEach(function (b) { b.addEventListener('click', function () { dwTabSet(b.dataset.k); }); });
+  function dwTypeMenu(btn) {
+    const r = btn.getBoundingClientRect(), ck = function (m, t) { return (V6S.mode === m ? '✓ ' : '') + t; };
+    showMenu([[ck('6v', '6 Views'), function () { dwTabAsk('6v'); }, 'dot'], [ck('exp', 'Exploded View'), function () { dwTabAsk('exp'); }, 'dot']], r.left, r.bottom + 2);
+  }
   // another sheet opened: the Export tab stays open, otherwise the tab of the sheet's drawing type
   function dwTabKeep(mode) { const t = document.querySelector('#dwsTabs .rtab.on'); dwTabSet(t && t.dataset.k === 'set' ? 'set' : mode); }
   // ---------- tree + sheet bar

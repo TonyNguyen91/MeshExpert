@@ -60,9 +60,9 @@ with sync_playwright() as p:
     ok('Dragging the corner makes the iso bigger',k>85 and i2[4]>i1[4]*1.6 and pg.input_value('#v6IsoKR')==pg.input_value('#v6IsoK'),[k,i1[4],i2[4]])
     ok('Iso keeps its centre while resized',abs(i2[0]-i1[0])<3 and abs(i2[1]-i1[1])<3,[i1[:2],i2[:2]])
     # ---- exploded view: own settings
-    pg.click('#dwsTabs [data-k=exp]'); settle()
+    pg.evaluate("__mrt.dwType('exp')"); settle()
     ok('Exploded view starts from its own settings',pg.input_value('#v6Paper')=='A3' and pg.input_value('#v6Scale')=='0' and not pg.is_visible('#dwsRibbon .rpage.on input[data-bind=v6IsoK]'),[pg.input_value('#v6Paper'),pg.input_value('#v6Scale')])
-    ok('Mode switch marked',pg.evaluate("document.querySelector('#dwsTabs .rtab.on').dataset.k")=='exp' and pg.inner_text('#v6ShT')=='Exploded view')
+    ok('Mode switch marked',pg.evaluate("document.querySelector('#dwsRibbon .rpage.on').dataset.k")=='exp' and pg.inner_text('#v6ShT')=='Exploded view')
     t=hit('tot'); ok('Totals box on the sheet',t is not None and pg.is_checked('#v6Tot'))
     W,H=t[6],t[7]
     ok('Totals box bottom right by default',t[2]+t[4]>W*0.85 and t[3]+t[5]>H*0.85,[t[2]+t[4],W,t[3]+t[5],H])
@@ -76,10 +76,10 @@ with sync_playwright() as p:
     t2=hit('tot'); ok('Totals box can be moved',abs(t2[2]-t[2])>100 and abs(t2[3]-t[3])>50,[t[2:4],t2[2:4]])
     sv('#v6Fs','7'); sv('#v6Paper','A2'); settle()
     # back to 6 view: its settings come back untouched
-    pg.click('#dwsTabs [data-k="6v"]'); settle()
+    pg.evaluate("__mrt.dwType('6v')"); settle()
     ok('6 view keeps its own paper / scale / iso',pg.input_value('#v6Paper')=='A4' and pg.input_value('#v6Scale')=='c' and pg.is_checked('#v6Iso') and pg.input_value('#v6Fs')=='5',[pg.input_value('#v6Paper'),pg.input_value('#v6Scale'),pg.input_value('#v6Fs')])
     ok('6 view has no totals box',hit('tot') is None)
-    pg.click('#dwsTabs [data-k=exp]'); settle()
+    pg.evaluate("__mrt.dwType('exp')"); settle()
     tp=pg.evaluate("__mrt.v6().tot")
     ok('Exploded view keeps its settings and the moved totals',pg.input_value('#v6Paper')=='A2' and pg.input_value('#v6Fs')=='7' and tp is not None,[pg.input_value('#v6Paper'),tp])
     sc('#v6Tot',False); settle(); ok('Totals can be switched off',hit('tot') is None); sc('#v6Tot',True); settle()
@@ -96,7 +96,7 @@ with sync_playwright() as p:
     ok('Session restores the exploded view as the open drawing',st[0]=='exp' and pg.input_value('#v6Paper')=='A2' and pg.input_value('#v6Fs')=='7',st)
     ok('Session restores the moved totals box',st[1] is not None and abs(st[1][0]-tp[0])<1e-6 and abs(st[1][1]-tp[1])<1e-6,[st[1],tp])
     ok('Session restores the 6-view settings and iso size',st[3]=='A4' and st[4]=='c' and float(st[5])==k and st[2],st)
-    pg.click('#dwsTabs [data-k="6v"]'); settle()
+    pg.evaluate("__mrt.dwType('6v')"); settle()
     ok('6 view after reopening: custom scale and iso size',pg.input_value('#v6Scale')=='c' and float(pg.input_value('#v6IsoK'))==k and hit('iso') is not None)
     ok('No page errors',not errs,errs[:3])
     b.close()

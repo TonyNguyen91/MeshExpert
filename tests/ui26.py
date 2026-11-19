@@ -84,7 +84,7 @@ with sync_playwright() as p:
     txt=subprocess.run(['pdftotext','/tmp/ui26.pdf','-'],capture_output=True,text=True).stdout
     ok('PDF writes the note in Times Italic (vector text)','LINE ONE' in txt and '/F8 ' in b''.join(zlib.decompress(m) for m in re.findall(rb'/FlateDecode >>\nstream\n(.*?)\nendstream',pdf,re.S)).decode('latin1'),fonts[:300])
     # ---- body picked in a list lights up (6 views)
-    pg.click('#dwsTabs [data-k="6v"]'); settle()
+    pg.evaluate("__mrt.dwType('6v')"); settle()
     def orange():
         return pg.evaluate("""(()=>{const q=__mrt.v6().prev;let n=0;for(const k in q.views){const c=q.views[k].cv,d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;for(let i=0;i<d.length;i+=4)if(d[i+3]>200&&d[i]>110&&d[i]>d[i+1]*1.35&&d[i+1]>d[i+2]*1.6)n++;}return n})()""")
     o0=orange()
@@ -95,7 +95,7 @@ with sync_playwright() as p:
     pg.click('#dwsTree .dwsNode.body[data-uid="%s"]'%U['cyl']); settle()
     ok('Picking it again clears the highlight',orange()==0)
     # ---- exploded: list -> sheet, sheet -> list
-    pg.click('#dwsTabs [data-k=exp]'); settle()
+    pg.evaluate("__mrt.dwType('exp')"); settle()
     pg.click('#dwsSrcList .dwsSrcI[data-uid="%s"]'%U['block']); settle()
     st=pg.evaluate("n=>{const V=__mrt.v6(),pt=V.prev.parts.find(p=>p.b.uid==n);const c=pt.cv,d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let k=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>200&&d[i]>110&&d[i]>d[i+1]*1.35&&d[i+1]>d[i+2]*1.6)k++;return [V.psel===pt.id,k]}",U['block'])
     ok('Exploded: body picked in the left list is the picked part, orange on the sheet',st[0] and st[1]>300,st)

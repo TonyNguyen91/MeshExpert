@@ -100,7 +100,7 @@ with sync_playwright() as p:
     with pg.expect_download(timeout=180000) as dl: clk('#v6Save')
     if OUT: open(os.path.join(OUT,'v6_iso.png'),'wb').write(open(dl.value.path(),'rb').read())
     # ---- exploded view
-    pg.click('#dwsTabs [data-k=exp]'); settle()
+    pg.evaluate("__mrt.dwType('exp')"); settle()
     ok('Exploded view opens the same panel in its own mode',pg.evaluate("document.getElementById('v6ShT').textContent")=='Exploded view' and pg.is_visible('#dwsRibbon .rpage.on input[data-bind=v6Ex]') and not pg.is_visible('#dwsRibbon .rpage.on button[data-chk=".v6v[data-v=top]"]'))
     parts=pg.evaluate("__mrt.v6().prev.parts.length"); ok('One picture per part',parts==2,parts)
     p0=hit('part',pg.evaluate("__mrt.S.bodies[1].id"))

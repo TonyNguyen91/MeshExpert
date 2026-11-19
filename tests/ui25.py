@@ -50,7 +50,7 @@ with sync_playwright() as p:
     ov=[(m,n) for m in F for n in F if m<n and F[m][0]<F[n][0]+F[n][2] and F[n][0]<F[m][0]+F[m][2] and F[m][1]<F[n][1]+F[n][3] and F[n][1]<F[m][1]+F[m][3]]
     ok('No two views overlap',not ov,ov)
     # without names / dims the gaps are exactly equal (pictures are the boxes)
-    pg.evaluate("for(const id of ['v6Lbl','v6Dim','v6ScN']){const e=document.getElementById(id);if(e.checked){e.checked=false;e.dispatchEvent(new Event('change',{bubbles:true}))}}"); settle()
+    pg.evaluate("for(const id of ['v6Lbl','v6DimW','v6DimD','v6DimH','v6ScN']){const e=document.getElementById(id);if(e.checked){e.checked=false;e.dispatchEvent(new Event('change',{bubbles:true}))}}"); settle()
     pg.click('#dwsRibbon .rpage.on button[data-click="#v6Auto"]'); settle()
     c=frames(); F=c['f']; W=c['W']; H=c['H']
     def gaps(spans,L):
@@ -69,7 +69,7 @@ with sync_playwright() as p:
     if OUT:
         pg.screenshot(path=os.path.join(OUT,'ui25_auto.png'))
     # Exploded keeps its own Auto Arrange (back to automatic placements)
-    pg.click('#dwsTabs [data-k=exp]'); settle()
+    pg.evaluate("__mrt.dwType('exp')"); settle()
     pg.evaluate("__mrt.v6().off={1:[0.1,0.1]}")
     pg.click('#dwsRibbon .rpage.on button[data-click="#v6Auto"]'); settle()
     ok('Exploded Auto Arrange places every part (its own layout)',pg.evaluate("(()=>{const V=__mrt.v6();return V.prev.parts.every(p=>V.off[p.id]&&V.off[p.id][0]!=0.1)})()"))
