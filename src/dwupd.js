@@ -48,9 +48,9 @@
   // the bodies the open sheet draws
   function dwBodies() {
     const s = DW.doc ? dwCur() : null, rev = (s && s.rev) || {};
-    if (!V6S.src) return v6Live().map(function (b) { return dwProxy(b, rev[b.uid]); });
+    if (!DW.doc) return v6Live();
     const out = [];
-    for (const u of V6S.src) {
+    for (const u of (V6S.src || dwDocSrc())) {
       if (V6S.hide.indexOf(u) >= 0) continue;
       const b = dwBodyByUid(u);
       if (b) out.push(dwProxy(b, rev[u]));
@@ -58,8 +58,8 @@
     }
     return out;
   }
-  // source bodies of a sheet (a sheet without its own list follows the bodies shown in 3D)
-  function dwSrcOf(s) { const st = s.id === dwDoc().active && DW.doc ? { src: V6S.src } : s.work; return st.src ? st.src.slice() : v6Live().map(function (b) { return b.uid; }); }
+  // bodies of a sheet: its own list, or every source body of the document
+  function dwSrcOf(s) { const st = s.id === dwDoc().active ? { src: V6S.src } : s.work; return st.src ? st.src.slice() : dwDocSrc().slice(); }
   function dwHideOf(s) { return (s.id === dwDoc().active ? V6S.hide : s.work.hide) || []; }
   function dwBaseline(s, uids, all) {
     s.rev = s.rev || {};

@@ -22,6 +22,9 @@ with sync_playwright() as p:
         else: d.accept('drawdoc')
     pg.on('dialog',ondlg)
     pg.goto('file://'+os.path.abspath(PAGE))
+    def sv(sel,v): pg.evaluate("a=>{const e=document.querySelector(a[0]);e.value=a[1];e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}",[sel,str(v)])
+    def sc(sel,on): pg.evaluate("a=>{const e=document.querySelector(a[0]);if(e.checked!==a[1]){e.checked=a[1];e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}}",[sel,on])
+    def clk(sel): pg.eval_on_selector(sel,"e=>e.click()")
     def idle(): pg.wait_for_function("document.getElementById('busy').style.display!='flex'"); pg.wait_for_timeout(200)
     def settle(): pg.wait_for_timeout(1500)
     def tick(): pg.wait_for_timeout(700)   # the workspace follows the canvas every 0.5 s
@@ -37,7 +40,7 @@ with sync_playwright() as p:
     pg.click('#b_dws'); settle()
     ok('Drawing Workspace covers the window',pg.is_visible('#dws') and pg.evaluate("(()=>{const r=document.getElementById('dws').getBoundingClientRect();return r.left==0&&r.top==0&&r.width==innerWidth&&r.height==innerHeight})()"))
     ok('Has ribbon, sheet canvas, Drawing Tree and sheet bar',all(pg.is_visible(x) for x in ['#dwsRibbon','#dwsCanvas #v6Prev','#dwsTree','#dwsBar','#dwsSave','#dwsDiscard','#dwsDup']))
-    ok('Two ribbon tabs: 6 Views, Exploded View',pg.evaluate("[...document.querySelectorAll('#dwsTabs .rtab')].map(b=>b.textContent)")==['6 Views','Exploded View'])
+    ok('Ribbon tabs: 6 Views, Exploded View, Sheet & Xuất',pg.evaluate("[...document.querySelectorAll('#dwsTabs .rtab')].map(b=>b.textContent)")==['6 Views','Exploded View','Sheet & Xuất'])
     titles=pg.evaluate("[...document.querySelectorAll('#dwsRibbon .rpage.on .rtitle')].map(e=>e.textContent)")
     ok('6 Views ribbon groups',all(t in titles for t in ['Sheet','Tạo view','Bố trí','Hiển thị','Thuộc tính view','Xuất']),titles)
     ok('Every ribbon button has an icon and a name / tooltip',pg.evaluate("[...document.querySelectorAll('#dwsRibbon button')].every(b=>b.querySelector('svg')&&(b.textContent.trim()||b.title))"))
@@ -46,7 +49,7 @@ with sync_playwright() as p:
     ok('Starts with Sheet 1, highlighted, Saved',tree()==['Sheet 1'] and pg.evaluate("document.querySelector('#dwsTree .dwsNode.sheet').classList.contains('on')") and 'Đã lưu' in pg.inner_text('#dwsTree .dwsNode.sheet'))
     for w in (1456,1100):
         pg.set_viewport_size({'width':w,'height':819}); pg.wait_for_timeout(400)
-        r=pg.evaluate("(()=>{const r=document.getElementById('dwsRibbon'),p=r.querySelector('.rpage.on');return [p.scrollWidth,p.clientWidth,getComputedStyle(r).overflowX]})()")
+        r=pg.evaluate("(()=>{const r=document.getElementById('dwsRibbon'),p=r.querySelector('.rpage.on'),g=[...p.querySelectorAll('.rgrp')].pop().getBoundingClientRect(),rb=r.getBoundingClientRect();return [Math.round(g.right),Math.round(rb.right),getComputedStyle(r).overflowX]})()")
         ok('Drawing ribbon fits without a scroll bar at %d px'%w,r[0]<=r[1]+1 and r[2]=='hidden',r)
     pg.set_viewport_size({'width':1456,'height':819}); settle()
     # ---- ribbon drives the drawing
@@ -70,7 +73,7 @@ with sync_playwright() as p:
     ok('Back on Sheet 2 (from the sheet bar): A4 again',pg.input_value('#v6Paper')=='A4' and act()['name']=='Sheet 2')
     # ---- save / discard
     pg.click('#dwsSave'); tick()
-    pg.select_option('#v6Paper','A2'); tick()
+    sv('#v6Paper','A2'); tick()
     ok('Modified after a change',act()['dirty'])
     dlg['ans']=False; pg.click('#dwsDiscard'); settle()
     ok('Discard cancelled keeps the change',pg.input_value('#v6Paper')=='A2' and act()['dirty'])
@@ -79,7 +82,7 @@ with sync_playwright() as p:
     # ---- duplicate (independent)
     pg.mouse.click(700,400); pg.keyboard.press('Control+d'); settle()
     ok('Ctrl+D: "Sheet 2 Copy" right after Sheet 2',tree()==['Sheet 1','Sheet 2','Sheet 2 Copy'] and act()['name']=='Sheet 2 Copy' and pg.input_value('#v6Paper')=='A4')
-    pg.select_option('#v6Paper','A1'); tick()
+    sv('#v6Paper','A1'); tick()
     s2=[s for s in doc()['sheets'] if s['name']=='Sheet 2'][0]
     ok('Copy is independent of the original',s2['pap6']=='A4' and act()['pap6']=='A1',[s2['pap6'],act()['pap6']])
     pg.click('#dwsDup'); settle()

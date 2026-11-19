@@ -77,3 +77,25 @@
   #dwsPick { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 17; display: none; gap: 6px; padding: 6px; background: rgba(20,24,29,.95); border: 1px solid var(--accent); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.5); }
   #dwsPick.on { display: flex; }
   #dwsRibbon .rcol > button.sb { align-self: flex-start; }
+  #dwsLeft { width: 230px; flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--line); background: #161b21; min-height: 0; }
+  #dwsLeft .dwsPh .cnt { color: #7f93a8; font-weight: 400; }
+  #dwsSplitL { width: 5px; flex: none; cursor: col-resize; } #dwsSplitL:hover { background: #2a3442; }
+  #dwsSrcList { flex: 1; overflow: auto; padding: 3px 0; user-select: none; }
+  .dwsSrcI { display: flex; align-items: center; gap: 6px; padding: 4px 8px; font-size: 12.5px; cursor: pointer; border: 1px solid transparent; }
+  .dwsSrcI:hover { background: #222a34; } .dwsSrcI.on { background: rgba(240,160,48,.16); border-color: var(--accent); }
+  .dwsSrcI .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dwsSrcI .ty { color: #7f93a8; font-size: 10.5px; } .dwsSrcI .us { color: #7f93a8; font-size: 10.5px; min-width: 14px; text-align: right; }
+  .dwsSrcI .st.upd { color: #f0a030; } .dwsSrcI .st.miss { color: #e57373; font-size: 11px; white-space: nowrap; }
+  .dwsSrcI.miss .nm { color: #e57373; }
+  .dwsSrcI .rep { padding: 0 6px; font-size: 11px; line-height: 17px; border-color: #e57373; color: #f2b8b8; }
+  .dwsSrcE { color: #7f93a8; font-size: 12px; padding: 8px; }
+  #dwsProps { display: none !important; }
+  #dwsTree { max-height: none; flex: 1; }
+  .dwsNode .del, .dwsNode .addb { padding: 0 5px; line-height: 14px; font-size: 11px; background: transparent; border-color: transparent; }
+  .dwsNode .del:hover, .dwsNode .addb:hover { border-color: var(--line); }
+  #dwsRibbon .dwsTxt { width: 110px; padding: 1px 4px; }
+  #dwsRibbon input[type=color] { width: 26px; height: 20px; padding: 0; border: 1px solid #2a3340; background: none; }
+  #dwsRibbon .rcol .dwsWhen { display: contents; }
+  .dwsInfo { font-size: 9.5px; line-height: 11.5px; color: #9fb0c3; min-width: 220px; max-width: 300px; overflow: hidden; }
+  .dwsInfo #v6Info { margin: 0; padding: 0; } .dwsInfo b { color: #c9d6e3; font-weight: 600; }
+  #dwsRibbon.f5 .rcol input[type=range] { width: 46px; } #dwsRibbon.f5 select { max-width: 84px; } #dwsRibbon.f5 .rcol input[type=number] { width: 40px; } #dwsRibbon.f5 .dwsTxt { width: 80px; }
