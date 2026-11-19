@@ -16,6 +16,7 @@ with sync_playwright() as p:
     ctx=b.new_context(viewport={'width':1456,'height':819},offline=True,accept_downloads=True)
     pg=ctx.new_page()
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
+    pg.on('dialog',lambda d: d.accept('drawtest') if d.type=='prompt' else d.accept())
     pg.goto('file://'+os.path.abspath(PAGE))
     def sv(sel,v): pg.evaluate("a=>{const e=document.querySelector(a[0]);e.value=a[1];e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}",[sel,str(v)])
     def sc(sel,on): pg.evaluate("a=>{const e=document.querySelector(a[0]);if(e.checked!==a[1]){e.checked=a[1];e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}}",[sel,on])
@@ -83,7 +84,7 @@ with sync_playwright() as p:
     ok('Exploded view keeps its settings and the moved totals',pg.input_value('#v6Paper')=='A2' and pg.input_value('#v6Fs')=='7' and tp is not None,[pg.input_value('#v6Paper'),tp])
     sc('#v6Tot',False); settle(); ok('Totals can be switched off',hit('tot') is None); sc('#v6Tot',True); settle()
     # ---- session round trip (.mrtl)
-    pg.evaluate("delete window.showSaveFilePicker"); pg.on('dialog',lambda d: d.accept('drawtest'))
+    pg.evaluate("delete window.showSaveFilePicker"); pass
     with pg.expect_download(timeout=60000) as dl: pg.mouse.click(5,300); pg.keyboard.press('Control+Shift+S')
     path=dl.value.path(); mrtl='/tmp/drawtest.mrtl'; open(mrtl,'wb').write(open(path,'rb').read())
     pg.evaluate("__mrt.v6Load(null)"); settle()

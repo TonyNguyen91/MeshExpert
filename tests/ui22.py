@@ -14,6 +14,7 @@ with sync_playwright() as p:
     b=p.chromium.launch(executable_path='/usr/bin/google-chrome',args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
     pg=b.new_context(viewport={'width':1456,'height':819},offline=True,accept_downloads=True).new_page()
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
+    pg.on('dialog',lambda d: d.accept())
     pg.goto('file://'+os.path.abspath(PAGE))
     def sv(sel,v): pg.evaluate("a=>{const e=document.querySelector(a[0]);e.value=a[1];e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}",[sel,str(v)])
     def sc(sel,on): pg.evaluate("a=>{const e=document.querySelector(a[0]);if(e.checked!==a[1]){e.checked=a[1];e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}}",[sel,on])
@@ -77,7 +78,7 @@ with sync_playwright() as p:
     ok('Wheel zooms in on the part under the mouse',vz>2 and p3b[8]>w0*2 and abs(p3b[0]-p3[0])<40 and abs(p3b[1]-p3[1])<40,[vz,w0,p3b[8],p3[:2],p3b[:2]])
     ok('Zoom step is light (repaint only, ms per step)',dt<80,round(dt,1))
     ok('Slider follows the zoom',abs(float(pg.input_value('#v6Vz'))-vz*100)<3,[pg.input_value('#v6Vz'),vz])
-    settle()
+    settle(); pg.wait_for_timeout(3500)   # the sharp render waits for 3 s of rest
     k1=pg.evaluate("__mrt.v6().prev.k"); ok('Sharper render made after zooming',k1>k0*1.5,[k0,k1])
     p3c=hit('part',ids[3])
     pg.mouse.move(p3c[0],p3c[1]); pg.mouse.down(); pg.mouse.move(p3c[0]+60,p3c[1]+30,steps=5); pg.mouse.up(); pg.wait_for_timeout(200)

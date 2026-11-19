@@ -19,7 +19,8 @@
   // placements (st: model turn, view / iso / part / totals positions); both are saved with the session (.mrtl)
   const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, tot: null, notes: { '6v': [], exp: [] }, nsel: null, psel: null, rects: { '6v': [], exp: [] }, rsel: null, rt: null, hl: null,
     prev: null, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null, grp: {}, comb: null, dims: { '6v': [], exp: [] }, src: null, hide: [], dt: null, dsel: null, vsel: null, vz: 1, vp: [0, 0], lay: null, est: 0 };
-  const V6_PREVPX = 12e6;   // the preview never renders the sheet above this many pixels (zooming further only scales)
+  const V6_PREVPX = 12e6;
+  const V6_REST = 3000;     // ms of rest after zoom / pan before the sheet is drawn sharp again   // the preview never renders the sheet above this many pixels (zooming further only scales)
   let v6Act = false;   // the Drawing Workspace is open and shows the sheet
   const V6_PAIRS = [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
     ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK'], ['v6RsR', 'v6Rs'], ['v6RwR', 'v6Rw']];
@@ -39,7 +40,7 @@
     if (W * H > V6_MAXPX) { const k = Math.sqrt(V6_MAXPX / (W * H)); W = Math.floor(W * k); H = Math.floor(H * k); cut = true; }
     const fmt = $('v6Fmt').value, scv = $('v6Scale').value;
     const scale = scv === 'c' ? Math.max(1e-3, (parseFloat($('v6ScA').value) || 1) / (parseFloat($('v6ScB').value) || 1)) : parseFloat(scv) || 0;
-    return { isoK: Math.max(0.1, Math.min(5, v6Num('v6IsoK', 100) / 100)), tot: exp && $('v6Tot').checked, exp: exp, views: views, iso: !exp && $('v6Iso').checked, az: v6Num('v6Az', 45), el: v6Num('v6El', 30), spread: v6Num('v6Ex', 80) / 100,
+    return { isoK: Math.max(0.1, Math.min(5, v6Num('v6IsoK', 100) / 100)), tot: exp && $('v6Tot').checked, exp: exp, views: views, iso: !exp && $('v6Iso').checked, az: v6Num('v6Az', 45), el: v6Num('v6El', 30), spread: v6Num('v6Ex', 0) / 100,
       pn: $('v6PN').checked, pm: $('v6PM').checked,
       col: $('v6Col').value, one: v6Hex($('v6One').value), light: $('v6Light').value, fine: $('v6Fine').checked,
       edge: $('v6Edge').checked, hidden: $('v6Hid').checked, ang: v6Num('v6Ang', 30), dim: !exp && $('v6Dim').checked, unit: $('v6Unit').value,
@@ -718,10 +719,39 @@
     V6S.iso = best ? fr(best.it.c, best.it.r) : null;
     return true;
   }
-  // Auto Arrange (exploded): every part (with its name / material lines) keeps its size; the parts are laid out in rows,
-  // top to bottom in their current height order and left to right in their current order, the gaps in a row equal the
-  // gaps to the side borders and the gaps between rows equal those to the top / bottom border. The number of rows is
-  // the one that leaves the widest gaps. The totals box goes back to the bottom right corner and its strip is kept free.
+  // Auto Arrange (exploded): every part (with its name / material lines) keeps its size and is laid out in rows (height
+  // order top to bottom, left to right inside a row) so the gaps in a row equal the gaps to the sides of its area and
+  // the gaps between rows equal those to the top / bottom. The number of rows is the one that leaves the widest gaps.
+  // Frames: a part inside or over a frame is laid out inside that frame; the other parts go into the largest free area
+  // of the sheet that touches no frame (nor the totals box / scale note), so nothing lands on a frame.
+  function v6Rows(list, A) {
+    const W = A.x1 - A.x0, H = A.y1 - A.y0, byY = list.slice().sort(function (a, b) { return a.cy - b.cy || a.cx - b.cx; });
+    const totW = list.reduce(function (s2, it) { return s2 + it.w; }, 0);
+    let best = null;
+    for (let nr = 1; nr <= list.length; nr++) {
+      const rows = []; let cur = [], done = 0;
+      for (let i = 0; i < byY.length; i++) {
+        cur.push(byY[i]); done += byY[i].w;
+        const left = byY.length - i - 1, need = nr - rows.length - 1;
+        if (need > 0 && (left === need || done >= totW * (rows.length + 1) / nr)) { rows.push(cur); cur = []; }
+      }
+      if (cur.length) rows.push(cur);
+      const rh = rows.map(function (r) { return Math.max.apply(null, r.map(function (it) { return it.h; })); });
+      const gy = (H - rh.reduce(function (a, b) { return a + b; }, 0)) / (rows.length + 1);
+      const gx = rows.map(function (r) { return (W - r.reduce(function (a, it) { return a + it.w; }, 0)) / (r.length + 1); });
+      const sc = Math.min(gy, Math.min.apply(null, gx));
+      if (!best || sc > best.sc + 1e-6) best = { sc: sc, rows: rows, rh: rh, gy: gy, gx: gx };
+    }
+    const out = [];
+    let y = A.y0 + best.gy;
+    best.rows.forEach(function (r, i) {
+      r.sort(function (a, b) { return a.cx - b.cx; });
+      let x = A.x0 + best.gx[i];
+      for (const it of r) { out.push({ it: it, cx: x + it.w / 2, cy: y + best.rh[i] / 2 }); x += it.w + best.gx[i]; }
+      y += best.rh[i] + best.gy;
+    });
+    return { sc: best.sc, out: out };
+  }
   function v6AutoExp() {
     const R = V6S.prev; if (!R || !R.hits || !R.o || !R.o.exp) return false;
     const o = R.o, k = R.k || 1, M = v6Metrics(o), f = M.font, W = o.W, H = o.H;
@@ -736,43 +766,56 @@
     }
     if (!items.length) return false;
     items.forEach(function (it) { it.w = it.x1 - it.x0; it.h = it.y1 - it.y0; it.cx = (it.x0 + it.x1) / 2; it.cy = (it.y0 + it.y1) / 2; });
-    const th = R.hits.find(function (h) { return h.kind === 'tot'; });
-    const avH = H - (o.scn ? 2.6 * f : 0) - (th ? th.r.h / k + 1.2 * f : 0);
-    const byY = items.slice().sort(function (a, b) { return a.cy - b.cy; });
-    const totW = items.reduce(function (s2, it) { return s2 + it.w; }, 0);
-    let best = null;
-    for (let nr = 1; nr <= items.length; nr++) {
-      // split the height order into nr rows of about the same total width
-      const rows = []; let cur = [], acc = 0, done = 0;
-      for (let i = 0; i < byY.length; i++) {
-        cur.push(byY[i]); acc += byY[i].w; done += byY[i].w;
-        const left = byY.length - i - 1, need = nr - rows.length - 1;
-        if (need > 0 && (left === need || done >= totW * (rows.length + 1) / nr)) { rows.push(cur); cur = []; acc = 0; }
-      }
-      if (cur.length) rows.push(cur);
-      const rh = rows.map(function (r) { return Math.max.apply(null, r.map(function (it) { return it.h; })); });
-      const gy = (avH - rh.reduce(function (a, b) { return a + b; }, 0)) / (rows.length + 1);
-      const gx = rows.map(function (r) { return (W - r.reduce(function (a, it) { return a + it.w; }, 0)) / (r.length + 1); });
-      const sc = Math.min(gy, Math.min.apply(null, gx));
-      if (!best || sc > best.sc + 1e-6) best = { sc: sc, rows: rows, rh: rh, gy: gy, gx: gx };
-    }
-    let y = best.gy;
-    best.rows.forEach(function (r, i) {
-      r.sort(function (a, b) { return a.cx - b.cx; });
-      let x = best.gx[i];
-      const yc = y + best.rh[i] / 2;
-      for (const it of r) {
-        // new centre of the part picture -> offset from its automatic explode place
-        const pt = R.parts.find(function (q) { return q.id === it.id; }), P = R.plan;
-        if (pt && it.pc) {
-          const px = x + it.w / 2 + (it.pc[0] - it.cx), py = yc + (it.pc[1] - it.cy);
-          const ax = W / 2 + (pt.cx - P.bx) * R.sc, ay = H / 2 - (pt.cy - P.by) * R.sc;
-          V6S.off[it.id] = [(px - ax) / W, (py - ay) / H];
-        }
-        x += it.w + best.gx[i];
-      }
-      y += best.rh[i] + best.gy;
+    // frames (full-size px) and what has to stay free
+    const frames = (V6S.rects.exp || []).map(function (fr) {
+      const lw = Math.max(1, (fr.lw || 0.5) * M.ppmm), tp = fr.title ? 1.4 * (fr.ts || 5) * M.ppmm : 0;
+      return { id: fr.id, x0: fr.x * W, y0: fr.y * H, x1: (fr.x + fr.w) * W, y1: (fr.y + fr.h) * H, lw: lw, tp: tp, list: [] };
     });
+    const out = [];
+    for (const it of items) {
+      let bf = null, ba = 0;
+      for (const fr of frames) {
+        const a = Math.max(0, Math.min(it.x1, fr.x1) - Math.max(it.x0, fr.x0)) * Math.max(0, Math.min(it.y1, fr.y1) - Math.max(it.y0, fr.y0));
+        if (a > ba) { ba = a; bf = fr; }
+      }
+      if (bf) bf.list.push(it); else out.push(it);
+    }
+    for (const fr of frames) if (fr.list.length) {
+      const r = v6Rows(fr.list, { x0: fr.x0 + fr.lw, y0: fr.y0 + fr.lw, x1: fr.x1 - fr.lw, y1: fr.y1 - fr.lw });
+      r.out.forEach(v6ExpPut);
+    }
+    if (out.length) {
+      const c = 0.6 * f, obs = frames.map(function (fr) { return { x0: fr.x0 - c, y0: fr.y0 - fr.tp - c, x1: fr.x1 + c, y1: fr.y1 + c }; });
+      const th = R.hits.find(function (h) { return h.kind === 'tot'; });
+      if (th) { const tw = th.r.w / k, thh = th.r.h / k, bx = W - 1.5 * f, by = H - 1.2 * f - (o.scn ? 1.7 * f : 0); obs.push({ x0: bx - tw - c, y0: by - thh - c, x1: W, y1: H }); }
+      if (o.scn) obs.push({ x0: W * 0.55, y0: H - 2.6 * f, x1: W, y1: H });
+      const xs = [0, W], ys = [0, H];
+      for (const b of obs) { xs.push(b.x0, b.x1); ys.push(b.y0, b.y1); }
+      const ux = Array.from(new Set(xs.map(function (v) { return Math.max(0, Math.min(W, v)); }))).sort(function (a, b) { return a - b; });
+      const uy = Array.from(new Set(ys.map(function (v) { return Math.max(0, Math.min(H, v)); }))).sort(function (a, b) { return a - b; });
+      const need = out.reduce(function (s2, it) { return s2 + it.w * it.h; }, 0), wMax = Math.max.apply(null, out.map(function (it) { return it.w; })), hMax = Math.max.apply(null, out.map(function (it) { return it.h; }));
+      let best = null;
+      for (let a = 0; a < ux.length; a++) for (let b = a + 1; b < ux.length; b++) {
+        if (ux[b] - ux[a] < wMax) continue;
+        for (let p = 0; p < uy.length; p++) for (let q = p + 1; q < uy.length; q++) {
+          const A = { x0: ux[a], x1: ux[b], y0: uy[p], y1: uy[q] };
+          if (A.y1 - A.y0 < hMax || (A.x1 - A.x0) * (A.y1 - A.y0) < need) continue;
+          if (obs.some(function (o2) { return o2.x0 < A.x1 - 1e-6 && o2.x1 > A.x0 + 1e-6 && o2.y0 < A.y1 - 1e-6 && o2.y1 > A.y0 + 1e-6; })) continue;
+          const r = v6Rows(out, A);
+          if (!best || r.sc > best.sc) best = r;
+        }
+      }
+      // nothing free is big enough: the whole sheet, above the totals strip
+      if (!best) best = v6Rows(out, { x0: 0, y0: 0, x1: W, y1: H - (o.scn ? 2.6 * f : 0) - (th ? th.r.h / k + 1.2 * f : 0) });
+      best.out.forEach(v6ExpPut);
+    }
+    function v6ExpPut(q) {
+      const it = q.it, pt = R.parts.find(function (x) { return x.id === it.id; }), P = R.plan;
+      if (!pt || !it.pc) return;
+      const px = q.cx + (it.pc[0] - it.cx), py = q.cy + (it.pc[1] - it.cy);
+      const ax = W / 2 + (pt.cx - P.bx) * R.sc, ay = H / 2 - (pt.cy - P.by) * R.sc;
+      V6S.off[it.id] = [(px - ax) / W, (py - ay) / H];
+    }
     V6S.tot = null;
     return true;
   }
@@ -953,7 +996,7 @@
       const cv = v6CacheGet(q, 7 * dpr / s);
       c2.imageSmoothingEnabled = true; c2.imageSmoothingQuality = s > 1.5 ? 'low' : 'medium';
       c2.drawImage(cv, 0, 0, o.W * q.k, o.H * q.k);
-      clearTimeout(v6CrispT); v6CrispT = setTimeout(function () { if (!V6S.pan && !V6S.drag) v6Paint(V6S.hov); }, 220);
+      clearTimeout(v6CrispT); v6CrispT = setTimeout(function () { if (!V6S.pan && !V6S.drag) v6Paint(V6S.hov); }, V6_REST);
     } else {
       V6S.hs = 7 * dpr / s;
       q.hits = v6Compose(c2, o, q, q.k);
@@ -986,6 +1029,13 @@
       const W2 = o.W * q.k, H2 = o.H * q.k;
       c2.save(); c2.strokeStyle = '#2f8cff'; c2.lineWidth = 1.5 * u; c2.setLineDash([5 * u, 4 * u]); c2.strokeRect(fr0.x * W2 - 4 * u, fr0.y * H2 - 4 * u, fr0.w * W2 + 8 * u, fr0.h * H2 + 8 * u);
       c2.setLineDash([]); c2.fillStyle = '#2f8cff'; c2.fillRect((fr0.x + fr0.w) * W2 - 5 * u, (fr0.y + fr0.h) * H2 - 5 * u, 10 * u, 10 * u); c2.restore();
+    }
+    if (V6S.snapG) {
+      const W2 = o.W * q.k, H2 = o.H * q.k;
+      c2.save(); c2.strokeStyle = '#2f8cff'; c2.lineWidth = 1 * u; c2.setLineDash([6 * u, 4 * u]); c2.beginPath();
+      for (const x of V6S.snapG.x) { c2.moveTo(x * W2, 0); c2.lineTo(x * W2, H2); }
+      for (const y of V6S.snapG.y) { c2.moveTo(0, y * H2); c2.lineTo(W2, y * H2); }
+      c2.stroke(); c2.restore();
     }
     if (V6S.rt && V6S.rt.a) {
       const a = V6S.rt.a, b = V6S.rt.b || a;
@@ -1041,7 +1091,7 @@
       const want = v6WantK(q.o, v6Layout(q.o));
       if (want > q.k * 1.2) { V6S.kx = 1.8; v6PreviewNow(); }
       else if (want < q.k * 0.3) { V6S.kx = 1; v6PreviewNow(); }
-    }, 500);
+    }, V6_REST);
   }
   function v6Fit() { V6S.vz = 1; V6S.vp = [0, 0]; v6ZoomUI(); v6PaintFast(); v6ZoomCheck(); }
   // ---------- combine parts of the same mass into one picture (exploded view)
@@ -1150,6 +1200,21 @@
         showMenu([[L('Chọn lại điểm', 'Pick the points again'), function () { v6DimTool(true); if (V6S.dt) V6S.dt.redo = h.id; }, 'edit'], [L('Xoá kích thước', 'Delete dimension'), function () { v6DelDim(h.id); }, 'del']], e.clientX, e.clientY);
         return;
       }
+      if (h && h.kind === 'note') {
+        const n = v6Note(h.id); V6S.nsel = h.id; v6NoteCtl(n); v6Paint(h);
+        const al = function (a) { return function () { n.align = a; v6NoteCtl(n); v6Paint(); }; }, tg = function (k2) { return function () { n[k2] = !n[k2]; v6NoteCtl(n); v6Paint(); }; };
+        const ck = function (on, t) { return (on ? '✓ ' : '') + t; };
+        showMenu([[ck((n.align || 'left') === 'left', L('Căn trái', 'Align left')), al('left'), 'dot'], [ck(n.align === 'center', L('Căn giữa', 'Align centre')), al('center'), 'dot'], [ck(n.align === 'right', L('Căn phải', 'Align right')), al('right'), 'dot'], null,
+          [ck(n.bold, L('Đậm', 'Bold')), tg('bold'), 'dot'], [ck(n.italic, L('Nghiêng', 'Italic')), tg('italic'), 'dot'], [ck(n.under, L('Gạch chân', 'Underline')), tg('under'), 'dot'], null,
+          [L('Sửa chữ', 'Edit text'), function () { v6Edit(h); }, 'ren'], [L('Xoá ghi chú', 'Delete note'), function () { v6DelNote(); }, 'del']], e.clientX, e.clientY);
+        return;
+      }
+      if (h && (h.kind === 'rect' || h.kind === 'rectR')) {
+        V6S.rsel = h.id; v6RectCtl(); v6Paint(h);
+        const ht = V6S.prev.hits.find(function (x) { return x.kind === 'rect' && x.id === h.id && x.title; }) || h;
+        showMenu([[L('Sửa tên khung', 'Rename frame'), function () { v6Edit(Object.assign({}, ht, { kind: 'rect' })); }, 'ren'], [L('Xoá khung', 'Delete frame'), function () { v6DelRect(); }, 'del']], e.clientX, e.clientY);
+        return;
+      }
       if (h && V6S.mode === '6v' && (h.kind === 'view' || h.kind === 'iso')) {
         const n = h.kind === 'iso' ? 'iso' : h.n; V6S.vsel = n; v6Paint(h);
         showMenu([[L('Xoá view', 'Delete view'), function () { v6DelView(n); }, 'del'], [L('Về vị trí tự động', 'Back to the automatic place'), function () { v6ViewAuto(n); }, 'home']], e.clientX, e.clientY);
@@ -1200,8 +1265,8 @@
       else if (h.kind === 'part' || h.kind === 'label') V6S.off[h.id] = [D.off[0] + dx, D.off[1] + dy];
       else if (h.kind === 'note') { const n = v6Note(h.id); n.x = D.note[0] + dx; n.y = D.note[1] + dy; }
       else if (h.kind === 'tot') V6S.tot = [D.tot[0] + dx, D.tot[1] + dy];
-      else if (h.kind === 'rect') { const f = v6Rect(h.id); f.x = D.rect[0] + dx; f.y = D.rect[1] + dy; }
-      else if (h.kind === 'rectR') { const f = v6Rect(h.id); f.w = Math.max(0.01, D.rect[2] + dx); f.h = Math.max(0.01, D.rect[3] + dy); }
+      else if (h.kind === 'rect') { const f = v6Rect(h.id); f.x = D.rect[0] + dx; f.y = D.rect[1] + dy; v6RectSnap(f, false); }
+      else if (h.kind === 'rectR') { const f = v6Rect(h.id); f.w = Math.max(0.01, D.rect[2] + dx); f.h = Math.max(0.01, D.rect[3] + dy); v6RectSnap(f, true); }
       else if (h.kind === 'isoR') D.k = Math.max(0.1, Math.min(5, D.k0 * Math.hypot(t.x - D.c[0], t.y - D.c[1]) / D.d0));
       v6PaintSoon(h);
     });
@@ -1209,7 +1274,7 @@
       if (V6S.pan) { V6S.pan = null; pc.style.cursor = 'grab'; }
       if (V6S.rt && V6S.rt.a) { v6RectMake(V6S.rt.a, V6S.rt.b); return; }
       const D = V6S.drag; if (!D) return;
-      V6S.drag = null;
+      V6S.drag = null; V6S.snapG = null;
       if (D.h.kind === 'isoR' && D.k !== D.k0) { $('v6IsoK').value = $('v6IsoKR').value = Math.round(D.k * 100); v6Paint(V6S.hov); v6Preview(); return; }
       v6Paint(V6S.hov);
     });
@@ -1251,6 +1316,24 @@
   });
   // frames: drawn by dragging on the sheet with the Frame tool; edge / name drag to move, corner to resize
   function v6Rect(id) { return (V6S.rects[V6S.mode] || []).find(function (f) { return f.id === id; }); }
+  // a moved / resized frame lines up with the edges of the other frames (within ~8 screen px); guides show the line
+  function v6RectSnap(f, size) {
+    const Ly = V6S.lay; V6S.snapG = null; if (!Ly) return;
+    const tx = 8 * Ly.dpr / Ly.s / Ly.W, ty = 8 * Ly.dpr / Ly.s / Ly.H, others = (V6S.rects[V6S.mode] || []).filter(function (g) { return g !== f; });
+    if (!others.length) return;
+    const ex = [], ey = [];
+    others.forEach(function (g) { ex.push(g.x, g.x + g.w); ey.push(g.y, g.y + g.h); });
+    const near = function (vals, list, t) {
+      let best = null;
+      for (const v of vals) for (const e of list) { const d = e - v; if (Math.abs(d) <= t && (!best || Math.abs(d) < Math.abs(best.d))) best = { d: d, at: e }; }
+      return best;
+    };
+    const G = { x: [], y: [] };
+    const bx = near(size ? [f.x + f.w] : [f.x, f.x + f.w], ex, tx), by = near(size ? [f.y + f.h] : [f.y, f.y + f.h], ey, ty);
+    if (bx) { if (size) f.w = Math.max(0.01, f.w + bx.d); else f.x += bx.d; G.x.push(bx.at); }
+    if (by) { if (size) f.h = Math.max(0.01, f.h + by.d); else f.y += by.d; G.y.push(by.at); }
+    if (G.x.length || G.y.length) V6S.snapG = G;
+  }
   function v6RectCtl() { const f = v6Rect(V6S.rsel); if (!f) return; $('v6Rc').value = f.color || '#e53935'; $('v6Rs').value = $('v6RsR').value = f.ts || 5; $('v6Rw').value = $('v6RwR').value = f.lw || 0.5; }
   function v6RectTool(on) {
     V6S.rt = on ? { a: null, b: null } : null;

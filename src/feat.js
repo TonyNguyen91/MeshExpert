@@ -877,7 +877,7 @@
     for (const cls of ['ic', 'ib']) {
       if (!over()) break;
       const gs = Array.from(pg.querySelectorAll('.rgrp')).filter(function (g) { return g.querySelector(cls === 'ic' ? '.rcol button.sb' : 'button.bb'); })
-        .sort(function (a, b) { return b.offsetWidth - a.offsetWidth; });
+        .sort(function (a, b) { return (a.classList.contains('keep') - b.classList.contains('keep')) || b.offsetWidth - a.offsetWidth; });   // .keep groups (e.g. Export) lose their text last
       for (const g of gs) { if (!over()) break; g.classList.add(cls); }
     }
     if (over()) rb.classList.add('f5');
@@ -900,4 +900,31 @@
     document.querySelectorAll('.popb[data-pop="' + k + '"]').forEach(function (b) { b.classList.toggle('on', show); });
     if (show && el.parentNode && el.parentNode.id === 'dock') el.scrollIntoView({ block: 'nearest' });
   }
-  document.querySelectorAll('[data-pop]').forEach(function (b) { b.addEventListener('click', function () { openPop(b.dataset.pop, b.classList.contains('popx') ? false : undefined); }); });
+  document.querySelectorAll('[data-pop]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      const x = b.classList.contains('popx');
+      openPop(b.dataset.pop, x ? false : undefined);
+      // closing a panel with its X: back to the plain select pointer
+      if (x && S.tool !== 'select' && !S.sk) setTool('select');
+    });
+  });
+  // a ribbon command whose dialog is open stays lit (orange) until the dialog closes; closing it goes back to Select
+  const DLG_BTN = ['bSketch', 'bExtrude', 'bRevolve', 'b_boolean', 'b_fillet', 'b_chamfer', 'b_shell', 'b_draft', 'b_pattern', 'b_moveface', 'b_replace'];
+  let dlgPrev = '';
+  function dlgOpenBtns() {
+    const on = [];
+    if (S.sk || $('skplane').style.display === 'block' || S.tool === 'skplane') on.push('bSketch');
+    if (S.fd && $('fdlg').style.display === 'block') on.push(S.fd.type === 'revolve' ? 'bRevolve' : 'bExtrude');
+    if (S.od && $('odlg').style.display === 'block') on.push('b_' + S.od.cmd);
+    if ($('pop_pat') && $('pop_pat').classList.contains('on')) on.push('b_pattern');
+    return on;
+  }
+  function dlgWatch() {
+    const on = dlgOpenBtns(), key = on.join(',');
+    if (key === dlgPrev) return;
+    DLG_BTN.forEach(function (id) { const b = $(id); if (b) b.classList.toggle('on', on.indexOf(id) >= 0); });
+    const closed = dlgPrev && dlgPrev.split(',').some(function (id) { return on.indexOf(id) < 0; });
+    dlgPrev = key;
+    if (closed && !on.length && S.tool !== 'select') setTool('select');
+  }
+  setInterval(dlgWatch, 200);

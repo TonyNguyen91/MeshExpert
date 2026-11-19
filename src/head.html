@@ -31,7 +31,8 @@
   #top label { display: flex; gap: 4px; align-items: center; cursor: pointer; white-space: nowrap; }
   #top .grow { flex: 1; }
   #wrap { flex: 1; display: flex; min-height: 0; }
-  #left { width: 280px; min-width: 280px; display: flex; flex-direction: column; overflow: hidden; background: var(--panel); border-right: 1px solid var(--line); padding: 0; }
+  #leftSplit { position: absolute; top: 0; right: 0; width: 6px; height: 100%; cursor: col-resize; z-index: 5; } #leftSplit:hover, #leftSplit.on { background: rgba(240,160,48,.35); }
+  #left { position: relative; width: var(--leftW, 364px); min-width: var(--leftW, 364px); display: flex; flex-direction: column; overflow: hidden; background: var(--panel); border-right: 1px solid var(--line); padding: 0; }
   #leftTop { flex: none; padding: 8px 8px 6px; border-bottom: 1px solid var(--line); }
   #leftScroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; }
   #expBox .eg { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 4px; }
@@ -344,7 +345,7 @@
 </div>
 
 <div id="wrap">
-<div id="left">
+<div id="left"><div id="leftSplit" title="Kéo để đổi bề rộng (bấm đúp: mặc định)" data-en-title="Drag to change the width (double-click: default)"></div>
   <div id="leftTop"><div class="bg" id="expBox"><div class="bgt" data-en="Export">Xuất file</div>
     <div class="eg">
       <button id="bStl" class="lb" title="Tải STL body tick" data-en-title="Download ticked STL"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m-3-3l3 3 3-3" stroke="#f0a030" stroke-width="1.6"/><path d="M2.5 11v2.5h11V11" stroke="#9cc4ee"/></svg><span data-en="Ticked STL">Tải STL tick</span></button>
@@ -607,7 +608,7 @@
     <div class="row v6isorow"><span class="lbl" data-en="Iso turn" title="Góc xoay quanh trục đứng" data-en-title="Angle about the vertical axis">Góc xoay</span><input type="range" id="v6AzR" min="-180" max="180" step="1" value="45" style="width:70px"><input type="number" id="v6Az" class="s" value="45" min="-180" max="180" step="1"><span class="unit">°</span></div>
     <div class="row v6isorow"><span class="lbl" data-en="Iso tilt" title="Góc nhìn từ trên xuống" data-en-title="Angle looking down">Góc nghiêng</span><input type="range" id="v6ElR" min="-89" max="89" step="0.5" value="30" style="width:70px"><input type="number" id="v6El" class="s" value="30" min="-89" max="89" step="0.5"><span class="unit">°</span></div>
     <div class="row v6isok"><span class="lbl" data-en="Iso size" title="Cỡ hình iso so với các view (kéo góc hình iso trên bản vẽ cũng được)" data-en-title="Size of the iso picture against the views (or drag its corner on the sheet)">Cỡ iso</span><input type="range" id="v6IsoKR" min="10" max="500" step="1" value="100" style="width:70px"><input type="number" id="v6IsoK" class="s" value="100" min="10" max="500" step="1"><span class="unit">%</span></div>
-    <div class="row v6mE"><span class="lbl" data-en="Spread" title="Mức tách các linh kiện ra khỏi tâm cụm" data-en-title="How far the parts move out from the centre of the assembly">Độ tách</span><input type="range" id="v6ExR" min="0" max="300" step="5" value="80" style="width:70px"><input type="number" id="v6Ex" class="s" value="80" min="0" max="300" step="5"><span class="unit">%</span></div>
+    <div class="row v6mE"><span class="lbl" data-en="Spread" title="Mức tách các linh kiện ra khỏi tâm cụm" data-en-title="How far the parts move out from the centre of the assembly">Độ tách</span><input type="range" id="v6ExR" min="0" max="300" step="5" value="0" style="width:70px"><input type="number" id="v6Ex" class="s" value="0" min="0" max="300" step="5"><span class="unit">%</span></div>
     <div class="row v6mE"><label><input type="checkbox" id="v6PN" checked> <span data-en="Part names">Tên linh kiện</span></label><label><input type="checkbox" id="v6PM" checked> <span data-en="Material + mass">Vật liệu + khối lượng</span></label><label title="Tổng khối lượng theo từng vật liệu, mặc định ở góc dưới phải (kéo để dời)" data-en-title="Total mass per material, bottom right by default (drag to move)"><input type="checkbox" id="v6Tot" checked> <span data-en="Totals">Tổng khối lượng</span></label></div>
     <div class="row v6mE v6part"><span class="lbl" data-en="Part">Linh kiện</span><input type="text" id="v6PName" style="width:110px" title="Đổi tên body (cập nhật cây body)" data-en-title="Rename the body (updates the body list)"><select id="v6PMat" title="Vật liệu của body" data-en-title="Material of the body"></select><span class="unit" id="v6PMass"></span></div>
     <div class="row"><span class="lbl" data-en="Colour">Màu</span><select id="v6Col"><option value="view" data-en="As the 3D view">Như 3D view</option><option value="one" data-en="One colour">Một màu</option><option value="white" data-en="White (drawing)">Trắng (nét vẽ)</option></select><input type="color" id="v6One" value="#8fa9c4" title="Màu cho toàn bộ mô hình" data-en-title="Colour for the whole model"><span class="lbl" data-en="Light">Sáng</span><select id="v6Light"><option value="studio" data-en="Studio (smooth)">Studio (mượt)</option><option value="view" data-en="As the 3D view">Như 3D view</option></select><label title="Chia lưới lại khối B-rep theo độ phân giải ảnh" data-en-title="Re-tessellate B-rep solids to the picture resolution"><input type="checkbox" id="v6Fine" checked> <span data-en="Fine B-rep">B-rep mịn</span></label></div>

@@ -1237,9 +1237,25 @@
   }
 
   // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
-  const BL_DEF = { cn: 120, ct: 58, cm: 58 };
+  const BL_DEF = { cn: 200, ct: 58, cm: 58 };
   let blCols = Object.assign({}, BL_DEF);
-  try { Object.assign(blCols, JSON.parse(localStorage.getItem('mx.blCols') || '{}')); } catch (e) { }
+  try { Object.assign(blCols, JSON.parse(localStorage.getItem('mx.blCols') || '{}')); if (blCols.cn === 120) blCols.cn = BL_DEF.cn; } catch (e) { }
+  // the body panel: 1.3 x the old 280 px by default, the edge drags (kept), double-click = default
+  const LEFT_DEF = 364;
+  function leftW(w) {
+    w = w === null ? LEFT_DEF : Math.max(240, Math.min(Math.round(innerWidth * 0.6), Math.round(w)));
+    document.documentElement.style.setProperty('--leftW', w + 'px');
+    try { if (w === LEFT_DEF) localStorage.removeItem('mx.leftW'); else localStorage.setItem('mx.leftW', String(w)); } catch (e) { }
+    if (typeof ribFit === 'function') setTimeout(ribFit, 0);
+  }
+  try { const w = +localStorage.getItem('mx.leftW'); if (w) leftW(w); } catch (e) { }
+  (function () {
+    const sp = $('leftSplit'); let d = null;
+    sp.addEventListener('mousedown', function (e) { if (e.button !== 0) return; d = { x: e.clientX, w: $('left').offsetWidth }; sp.classList.add('on'); e.preventDefault(); });
+    window.addEventListener('mousemove', function (e) { if (d) leftW(d.w + e.clientX - d.x); });
+    window.addEventListener('mouseup', function () { if (d) { d = null; sp.classList.remove('on'); } });
+    sp.addEventListener('dblclick', function () { leftW(null); });
+  })();
   function blColApply() { const el = $('bodyList'); for (const k in blCols) el.style.setProperty('--' + k, blCols[k] + 'px'); }
   function blColSet(k, v) { blCols[k] = v === null ? BL_DEF[k] : Math.max(30, Math.min(900, v)); blColApply(); try { localStorage.setItem('mx.blCols', JSON.stringify(blCols)); } catch (e) { } }
   function blColDrag(e) {
@@ -2805,5 +2821,5 @@
 /*MODEL*/
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwRev: function (b) { return dwRev(b); }, dwCheck: function () { return DW.doc ? DW.doc.sheets.map(function (s) { const c = dwCheck(s); return { name: s.name, status: c.status, changed: c.changed, missing: c.missing, dims: c.dims.map(function (d) { return [d.dm.id, d.ok]; }) }; }) : []; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwRev: function (b) { return dwRev(b); }, dwCheck: function () { return DW.doc ? DW.doc.sheets.map(function (s) { const c = dwCheck(s); return { name: s.name, status: c.status, changed: c.changed, missing: c.missing, dims: c.dims.map(function (d) { return [d.dm.id, d.ok]; }) }; }) : []; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, v6Paint: function () { v6Paint(); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();

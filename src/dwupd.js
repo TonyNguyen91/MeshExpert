@@ -167,17 +167,18 @@
   // ---------- undo / redo of a sheet (snapshots of its state as it changes)
   function dwHist(s) { let h = DWU.hist.get(s.id); if (!h) { h = { u: [], r: [], last: null }; DWU.hist.set(s.id, h); } return h; }
   function dwHistNote(s, j) {
-    const h = dwHist(s);
-    if (h.last !== null && h.last !== j) { h.u.push(h.last); if (h.u.length > 80) h.u.shift(); h.r = []; }
-    h.last = j;
+    // compared by content (dwCanon): values the drawing only derives while drawing (dimension label anchors) are not steps
+    const h = dwHist(s), c = dwCanon(JSON.parse(j));
+    if (h.last !== null && h.lastC !== c) { h.u.push(h.last); if (h.u.length > 80) h.u.shift(); h.r = []; }
+    h.last = j; h.lastC = c;
   }
-  function dwHistReset(s) { const h = dwHist(s); h.last = JSON.stringify(v6Grab()); }
+  function dwHistReset(s) { const h = dwHist(s); h.last = JSON.stringify(v6Grab()); h.lastC = dwCanon(JSON.parse(h.last)); }
   function dwUndo(redo) {
     if (!DW.doc) return;
     dwCapture();
     const s = dwCur(), h = dwHist(s), from = redo ? h.r : h.u, to = redo ? h.u : h.r;
     if (!from.length) { flash(redo ? L('Không còn gì để làm lại', 'Nothing to redo') : L('Không còn gì để hoàn tác', 'Nothing to undo')); return; }
     to.push(h.last); const j = from.pop();
-    s.work = JSON.parse(j); v6Put(s.work); h.last = JSON.stringify(v6Grab());
+    s.work = JSON.parse(j); v6Put(s.work); h.last = JSON.stringify(v6Grab()); h.lastC = dwCanon(JSON.parse(h.last));
     s.dirty = dwCanon(s.work) !== dwCanon(s.saved); DW.sig = ''; dwRefresh(true);
   }

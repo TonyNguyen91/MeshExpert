@@ -15,6 +15,7 @@ with sync_playwright() as p:
     ctx=b.new_context(viewport={'width':1456,'height':819},offline=True)
     pg=ctx.new_page()
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
+    pg.on('dialog',lambda d: d.accept())
     pg.goto('file://'+os.path.abspath(PAGE))
     def sv(sel,v): pg.evaluate("a=>{const e=document.querySelector(a[0]);e.value=a[1];e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}",[sel,str(v)])
     def idle(): pg.wait_for_function("document.getElementById('busy').style.display!='flex'"); pg.wait_for_timeout(200)

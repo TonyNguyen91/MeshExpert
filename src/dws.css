@@ -11,7 +11,7 @@
   #dwsTabs { display: flex; gap: 2px; margin-top: 4px; margin-bottom: -1px; }
   #dwsRibbon { background: #171c22; border: 1px solid var(--line); border-radius: 0 6px 6px 6px; margin: 0 0 4px; overflow: hidden; min-width: 0; }
   #dwsRibbon select { padding: 1px 3px; max-width: 108px; }
-  #dwsRibbon .rcol input[type=range] { width: 74px; }
+  #dwsRibbon .rcol input[type=range] { width: 74px; flex: none; }
   #dwsRibbon .rcol input[type=number] { width: 48px; padding: 1px 3px; }
   #dwsRibbon .rcol .dwsRow { display: flex; align-items: center; gap: 4px; height: 21px; white-space: nowrap; }
   #dwsRibbon .rcol .dwsRow > span { font-size: 11.5px; color: #b9c6d4; }
@@ -96,10 +96,14 @@
   #dwsRibbon .dwsTxt { width: 110px; padding: 1px 4px; }
   #dwsRibbon input[type=color] { width: 26px; height: 20px; padding: 0; border: 1px solid #2a3340; background: none; }
   #dwsRibbon .rcol .dwsWhen { display: contents; }
-  .dwsInfo { font-size: 9.5px; line-height: 11.5px; color: #9fb0c3; min-width: 220px; max-width: 300px; overflow: hidden; }
+  .dwsInfo { font-size: 9.5px; line-height: 12px; color: #9fb0c3; width: 150px; min-width: 0; overflow: hidden; white-space: nowrap; }
+  .dwsInfo #v6Info { overflow: hidden; text-overflow: ellipsis; }
   .dwsInfo #v6Info { margin: 0; padding: 0; } .dwsInfo b { color: #c9d6e3; font-weight: 600; }
   #dwsRibbon.f5 .rcol input[type=range] { width: 46px; } #dwsRibbon.f5 select { max-width: 84px; } #dwsRibbon.f5 .rcol input[type=number] { width: 40px; } #dwsRibbon.f5 .dwsTxt { width: 80px; }
   .dwsNode .tw { width: 12px; flex: none; text-align: center; color: #9aa7b6; margin-left: -16px; font-size: 11px; }
   .dwsNode .tw:hover { color: var(--accent); }
   #dwsRibbon input[type=number]::-webkit-inner-spin-button, #dwsRibbon input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   #dwsRibbon input[type=number] { -moz-appearance: textfield; }
+  .dwsRow.off { opacity: .4; }
+  #dwsRibbon .dwsRow.sm input[type=range] { width: 52px; } #dwsRibbon .dwsRow.sm input[type=number] { width: 40px; }
+  #dwsRibbon .dwsRow.sel2 select { max-width: 62px; }

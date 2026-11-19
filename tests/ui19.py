@@ -16,7 +16,7 @@ with sync_playwright() as p:
     b=p.chromium.launch(executable_path='/usr/bin/google-chrome',args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
     pg=b.new_context(viewport={'width':1456,'height':819},offline=True).new_page()
     errs=[]; pg.on('console',lambda m: print('CON',m.text) if 'B-rep' in m.text else None); pg.on('pageerror',lambda e: errs.append(str(e))); pg.on('dialog',lambda d: d.accept())
-    pg.goto('file://'+os.path.abspath(PAGE))
+    pg.goto('file://'+os.path.abspath(PAGE)); pg.evaluate("localStorage.setItem('mx.leftW','280')"); pg.reload()   # the old panel width: the picked edge must not sit under the Pattern panel
     def idle(): pg.wait_for_function("document.getElementById('busy').style.display!='flex'"); pg.wait_for_timeout(200)
     def scr(pt): return pg.evaluate("p=>{const q=__mrt.project(p);const r=document.getElementById('gl').getBoundingClientRect();return [q[0]+r.left,q[1]+r.top]}",pt)
     def click(pt): c=scr(pt); pg.mouse.click(c[0],c[1]); pg.wait_for_timeout(200)
