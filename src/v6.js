@@ -17,12 +17,12 @@
   const V6_MAXPX = 150e6, V6_MAXVIEW = 64e6;
   // the 6-view sheet and the exploded view are two separate drawings: each keeps its own panel values (cfg) and its own
   // placements (st: model turn, view / iso / part / totals positions); both are saved with the session (.mrtl)
-  const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, tot: null, notes: { '6v': [], exp: [] }, nsel: null, psel: null,
+  const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, tot: null, notes: { '6v': [], exp: [] }, nsel: null, psel: null, rects: { '6v': [], exp: [] }, rsel: null, rt: null, hl: null,
     prev: null, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null, grp: {}, comb: null, dims: { '6v': [], exp: [] }, src: null, hide: [], dt: null, dsel: null, vsel: null, vz: 1, vp: [0, 0], lay: null, est: 0 };
   const V6_PREVPX = 12e6;   // the preview never renders the sheet above this many pixels (zooming further only scales)
   let v6Act = false;   // the Drawing Workspace is open and shows the sheet
   const V6_PAIRS = [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
-    ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK']];
+    ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK'], ['v6RsR', 'v6Rs'], ['v6RwR', 'v6Rw']];
   let v6gl = null;
 
   function v6Num(id, def) { const v = parseFloat($(id).value); return isFinite(v) ? v : def; }
@@ -249,7 +249,7 @@
     const draw = function (mode) {
       g.clearColor(1, 1, 1, mode === 0 ? 1 : 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT); g.uniform1i(U.uMode, mode); g.uniform1i(U.uLight, light);
       for (const p of preps) {
-        g.uniform3fv(U.uC, o.col === 'white' ? [1, 1, 1] : o.col === 'one' ? o.one : p.color);
+        g.uniform3fv(U.uC, o.hl && p.b.uid === o.hl ? [1, 0.55, 0.12] : o.col === 'white' ? [1, 1, 1] : o.col === 'one' ? o.one : p.color);
         g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n);
       }
     };
@@ -393,6 +393,11 @@
 
   // ---------- the sheet: pictures, dimensions, names, notes, drawn at k x full size; returns hit boxes
   function v6Font(px, bold) { return (bold ? 'bold ' : '') + Math.round(px) + 'px "Segoe UI", Arial, sans-serif'; }
+  const V6_FALL = { 'Times New Roman': 'Times, serif', Georgia: '"Times New Roman", serif', Cambria: '"Times New Roman", serif', 'Courier New': 'Courier, monospace', Consolas: '"Courier New", monospace' };
+  function v6NoteFont(n, px) {
+    const f = n.font || 'Arial';
+    return (n.italic ? 'italic ' : '') + (n.bold ? 'bold ' : '') + Math.round(px) + 'px "' + f + '", ' + (V6_FALL[f] || 'Arial, sans-serif');
+  }
   function v6Compose(c2, o, R, k) {
     const W = o.W * k, H = o.H * k, M = v6Metrics(o), font = M.font * k, lw = M.lw * k, hits = [], frames = {};
     c2.imageSmoothingEnabled = true; c2.imageSmoothingQuality = 'high';
@@ -493,10 +498,30 @@
     }
     // notes
     for (const n of V6S.notes[V6S.mode]) {
-      const px = n.size * M.ppmm * k, ls = n.text.split('\n');
-      c2.font = v6Font(px, n.bold); c2.textAlign = 'left'; c2.textBaseline = 'top'; c2.fillStyle = '#111';
-      let wm = 0; ls.forEach(function (s, i) { c2.fillText(s, n.x * W, n.y * H + i * px * 1.25); wm = Math.max(wm, c2.measureText(s).width); });
+      const px = n.size * M.ppmm * k, ls = n.text.split('\n'), col = n.color || '#111111', al = n.align || 'left';
+      c2.font = v6NoteFont(n, px); c2.textAlign = 'left'; c2.textBaseline = 'top'; c2.fillStyle = col;
+      const ws = ls.map(function (t) { return c2.measureText(t).width; }), wm = Math.max.apply(null, [0].concat(ws));
+      ls.forEach(function (t, i) {
+        const x = n.x * W + (al === 'center' ? (wm - ws[i]) / 2 : al === 'right' ? wm - ws[i] : 0), y = n.y * H + i * px * 1.25;
+        c2.fillText(t, x, y);
+        if (n.under && t.trim()) { c2.strokeStyle = col; c2.lineWidth = Math.max(1, px * 0.06); c2.setLineDash([]); c2.beginPath(); c2.moveTo(x, y + px * 1.02); c2.lineTo(x + ws[i], y + px * 1.02); c2.stroke(); }
+      });
+      c2.fillStyle = '#111'; c2.strokeStyle = '#111';
       hits.push({ kind: 'note', id: n.id, r: { x: n.x * W - 3, y: n.y * H - 3, w: wm + 6, h: ls.length * px * 1.25 + 6 } });
+    }
+    // frames around groups of parts, the group name over the top left corner
+    for (const f of (V6S.rects[V6S.mode] || [])) {
+      const x = f.x * W, y = f.y * H, w = f.w * W, h = f.h * H, col = f.color || '#e53935', lw = Math.max(1, (f.lw || 0.5) * M.ppmm * k), fp = (f.ts || 5) * M.ppmm * k;
+      c2.save(); c2.strokeStyle = col; c2.lineWidth = lw; c2.setLineDash([]); c2.lineJoin = 'miter';
+      c2.beginPath(); c2.moveTo(x, y); c2.lineTo(x + w, y); c2.lineTo(x + w, y + h); c2.lineTo(x, y + h); c2.closePath(); c2.stroke();
+      let tw = 0;
+      if (f.title) { c2.font = v6Font(fp, true); c2.fillStyle = col; c2.textAlign = 'left'; c2.textBaseline = 'bottom'; c2.fillText(f.title, x + 0.2 * fp, y - lw / 2 - 0.25 * fp); tw = c2.measureText(f.title).width; }
+      c2.restore();
+      const m = Math.max(lw, 3), hs = V6S.hs || 7;
+      hits.push({ kind: 'rect', id: f.id, r: { x: x - m, y: y - m, w: w + 2 * m, h: 2 * m } }, { kind: 'rect', id: f.id, r: { x: x - m, y: y + h - m, w: w + 2 * m, h: 2 * m } },
+        { kind: 'rect', id: f.id, r: { x: x - m, y: y - m, w: 2 * m, h: h + 2 * m } }, { kind: 'rect', id: f.id, r: { x: x + w - m, y: y - m, w: 2 * m, h: h + 2 * m } });
+      if (f.title) hits.push({ kind: 'rect', id: f.id, title: true, r: { x: x, y: y - lw / 2 - 1.3 * fp, w: tw + 0.4 * fp, h: 1.3 * fp } });
+      hits.push({ kind: 'rectR', id: f.id, r: { x: x + w - hs, y: y + h - hs, w: 2 * hs, h: 2 * hs } });
     }
     return hits;
   }
@@ -693,6 +718,64 @@
     V6S.iso = best ? fr(best.it.c, best.it.r) : null;
     return true;
   }
+  // Auto Arrange (exploded): every part (with its name / material lines) keeps its size; the parts are laid out in rows,
+  // top to bottom in their current height order and left to right in their current order, the gaps in a row equal the
+  // gaps to the side borders and the gaps between rows equal those to the top / bottom border. The number of rows is
+  // the one that leaves the widest gaps. The totals box goes back to the bottom right corner and its strip is kept free.
+  function v6AutoExp() {
+    const R = V6S.prev; if (!R || !R.hits || !R.o || !R.o.exp) return false;
+    const o = R.o, k = R.k || 1, M = v6Metrics(o), f = M.font, W = o.W, H = o.H;
+    const items = [];
+    for (const h of R.hits) {
+      if (h.kind !== 'part' && h.kind !== 'label') continue;
+      let it = items.find(function (x) { return x.id === h.id; });
+      const r = { x0: h.r.x / k, y0: h.r.y / k, x1: (h.r.x + h.r.w) / k, y1: (h.r.y + h.r.h) / k };
+      if (!it) { it = { id: h.id, x0: r.x0, y0: r.y0, x1: r.x1, y1: r.y1, pc: null }; items.push(it); }
+      else { it.x0 = Math.min(it.x0, r.x0); it.y0 = Math.min(it.y0, r.y0); it.x1 = Math.max(it.x1, r.x1); it.y1 = Math.max(it.y1, r.y1); }
+      if (h.kind === 'part') it.pc = [(h.r.x + h.r.w / 2) / k, (h.r.y + h.r.h / 2) / k];
+    }
+    if (!items.length) return false;
+    items.forEach(function (it) { it.w = it.x1 - it.x0; it.h = it.y1 - it.y0; it.cx = (it.x0 + it.x1) / 2; it.cy = (it.y0 + it.y1) / 2; });
+    const th = R.hits.find(function (h) { return h.kind === 'tot'; });
+    const avH = H - (o.scn ? 2.6 * f : 0) - (th ? th.r.h / k + 1.2 * f : 0);
+    const byY = items.slice().sort(function (a, b) { return a.cy - b.cy; });
+    const totW = items.reduce(function (s2, it) { return s2 + it.w; }, 0);
+    let best = null;
+    for (let nr = 1; nr <= items.length; nr++) {
+      // split the height order into nr rows of about the same total width
+      const rows = []; let cur = [], acc = 0, done = 0;
+      for (let i = 0; i < byY.length; i++) {
+        cur.push(byY[i]); acc += byY[i].w; done += byY[i].w;
+        const left = byY.length - i - 1, need = nr - rows.length - 1;
+        if (need > 0 && (left === need || done >= totW * (rows.length + 1) / nr)) { rows.push(cur); cur = []; acc = 0; }
+      }
+      if (cur.length) rows.push(cur);
+      const rh = rows.map(function (r) { return Math.max.apply(null, r.map(function (it) { return it.h; })); });
+      const gy = (avH - rh.reduce(function (a, b) { return a + b; }, 0)) / (rows.length + 1);
+      const gx = rows.map(function (r) { return (W - r.reduce(function (a, it) { return a + it.w; }, 0)) / (r.length + 1); });
+      const sc = Math.min(gy, Math.min.apply(null, gx));
+      if (!best || sc > best.sc + 1e-6) best = { sc: sc, rows: rows, rh: rh, gy: gy, gx: gx };
+    }
+    let y = best.gy;
+    best.rows.forEach(function (r, i) {
+      r.sort(function (a, b) { return a.cx - b.cx; });
+      let x = best.gx[i];
+      const yc = y + best.rh[i] / 2;
+      for (const it of r) {
+        // new centre of the part picture -> offset from its automatic explode place
+        const pt = R.parts.find(function (q) { return q.id === it.id; }), P = R.plan;
+        if (pt && it.pc) {
+          const px = x + it.w / 2 + (it.pc[0] - it.cx), py = yc + (it.pc[1] - it.cy);
+          const ax = W / 2 + (pt.cx - P.bx) * R.sc, ay = H / 2 - (pt.cy - P.by) * R.sc;
+          V6S.off[it.id] = [(px - ax) / W, (py - ay) / H];
+        }
+        x += it.w + best.gx[i];
+      }
+      y += best.rh[i] + best.gy;
+    });
+    V6S.tot = null;
+    return true;
+  }
   // default place of the iso picture: the free corner right of the Top view (or top right)
   function v6IsoDefault(o, R, pos) {
     const v = R.iso, W = o.W * (R.k || 1), H = o.H * (R.k || 1), x = Math.min(0.97 - v.w / 2 / W, Math.max(pos.right || 0.75, 0.62)), y = Math.max(0.03 + v.h / 2 / H, (pos.top !== undefined && o.views.top ? pos.top : 0.2));
@@ -800,14 +883,16 @@
     const x0 = (bw - cw) / 2 + V6S.vp[0], y0 = (bh - ch) / 2 + V6S.vp[1];
     return { dpr: dpr, bw: bw, bh: bh, x0: x0, y0: y0, cw: cw, ch: ch, kd: cw * dpr / o.W };
   }
-  function v6WantK(o, L) { return Math.min(L.kd, Math.sqrt(V6_PREVPX / (o.W * o.H))); }
+  // render size of the preview: the screen size; after zooming in, 1.8x ahead so the next zoom steps need no new render
+  function v6WantK(o, L, ahead) { return Math.min(L.kd * (ahead || 1), Math.sqrt(V6_PREVPX / (o.W * o.H))); }
   async function v6PreviewNow() {
     if (!v6Act) return;
     if (v6Busy) { v6Again = true; return; }
     v6Busy = true;
     const o = v6Sync(), pc = $('v6Prev');
+    o.hl = V6S.hl;
     try {
-      const L = v6Layout(o), k = v6WantK(o, L), big = o.W * o.H * k * k;
+      const L = v6Layout(o), k = v6WantK(o, L, V6S.vz > 1.05 ? V6S.kx || 1 : 1), big = o.W * o.H * k * k;
       V6S.prev = Object.assign(await v6Render(o, k, big > 3e6 ? 1 : Math.min(2, o.ss), true), { o: o, k: k });
       v6Paint(); dwRenderOk();
       $('v6Zoom').textContent = o.W + ' × ' + o.H + ' px';
@@ -824,9 +909,34 @@
       V6S.prev = null; v6Info(o, null, 0); dwRenderFail(e.message);
     } finally { v6Busy = false; if (v6Again) { v6Again = false; v6Preview(); } }
   }
-  function v6Paint(hover) {
+  // Smooth preview: zoom, pan and hover only scale a cached bitmap of the composed sheet (drawn once at the render size)
+  // and redraw the selection boxes; the sharp vector compose at screen resolution follows once the mouse rests.
+  let v6Raf = 0, v6RafFull = false, v6RafHov, v6CrispT = 0;
+  const v6Cache = { cv: null, gen: -1, q: null };
+  function v6PaintFast() { v6Sched(false); }
+  function v6PaintSoon(h) { v6RafHov = h; v6Sched(true); }
+  function v6Sched(full) {
+    v6RafFull = v6RafFull || full;
+    if (v6Raf) return;
+    v6Raf = requestAnimationFrame(function () { const f = v6RafFull; v6Raf = 0; v6RafFull = false; if (f) v6Paint(v6RafHov); else v6Paint(V6S.hov, true); });
+  }
+  function v6CacheGet(q, hs) {
+    if (v6Cache.cv && v6Cache.gen === V6S.cgen && v6Cache.q === q) return v6Cache.cv;
+    const o = q.o, w = Math.max(1, Math.round(o.W * q.k)), h = Math.max(1, Math.round(o.H * q.k));
+    const cv = v6Cache.cv && v6Cache.cv.width === w && v6Cache.cv.height === h ? v6Cache.cv : document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    // the cached copy must not change the drawing state (dimension label anchors are written while composing)
+    const g = cv.getContext('2d'), hits = q.hits, dl = (V6S.dims[V6S.mode] || []).map(function (d) { return d.la; });
+    V6S.hs = hs; v6Compose(g, o, q, q.k); V6S.hs = 0; q.hits = hits;
+    (V6S.dims[V6S.mode] || []).forEach(function (d, i) { if (dl[i] === undefined) delete d.la; else d.la = dl[i]; });
+    v6Cache.cv = cv; v6Cache.gen = V6S.cgen; v6Cache.q = q;
+    return cv;
+  }
+  function v6Paint(hover, fast) {
     const q = V6S.prev, pc = $('v6Prev'); if (!q) return;
     if (hover === undefined) hover = V6S.hov;
+    if (!fast) { V6S.cgen = (V6S.cgen || 0) + 1; clearTimeout(v6CrispT); }
+    else if (!q.hits) fast = false;
     const c2 = pc.getContext('2d'), o = q.o, L = v6Layout(o), dpr = L.dpr, s = L.kd / q.k;
     const sx = L.x0 * dpr, sy = L.y0 * dpr, sw = L.cw * dpr, sh = L.ch * dpr;
     V6S.lay = { ox: sx, oy: sy, s: s, dpr: dpr, W: o.W * q.k, H: o.H * q.k };
@@ -839,9 +949,18 @@
       for (let y = y0 - ((y0 - sy) % t); y < y1; y += t) for (let x = x0 - ((x0 - sx) % t); x < x1; x += t) if ((Math.round((x - sx) / t) + Math.round((y - sy) / t)) % 2) c2.fillRect(x, y, t, t);
     }
     c2.setTransform(s, 0, 0, s, sx, sy);
-    V6S.hs = 7 * dpr / s;
-    q.hits = v6Compose(c2, o, q, q.k);
-    V6S.hs = 0;
+    if (fast) {
+      const cv = v6CacheGet(q, 7 * dpr / s);
+      c2.imageSmoothingEnabled = true; c2.imageSmoothingQuality = s > 1.5 ? 'low' : 'medium';
+      c2.drawImage(cv, 0, 0, o.W * q.k, o.H * q.k);
+      clearTimeout(v6CrispT); v6CrispT = setTimeout(function () { if (!V6S.pan && !V6S.drag) v6Paint(V6S.hov); }, 220);
+    } else {
+      V6S.hs = 7 * dpr / s;
+      q.hits = v6Compose(c2, o, q, q.k);
+      V6S.hs = 0;
+      // cached copy for the next zoom / pan, keeps the same generation as this compose
+      v6Cache.gen = -1;
+    }
     const u = dpr / s;
     const box = function (h, col, fill) {
       c2.save(); if (fill) { c2.fillStyle = fill; c2.fillRect(h.r.x - 4 * u, h.r.y - 4 * u, h.r.w + 8 * u, h.r.h + 8 * u); }
@@ -860,6 +979,17 @@
     }
     if (V6S.comb === null) for (const h of q.hits) {
       if ((h.kind === 'view' && h.n === V6S.vsel) || (h.kind === 'iso' && V6S.vsel === 'iso') || (h.kind === 'dim' && h.id === V6S.dsel)) box(h, '#f0a030');
+    }
+    // the picked frame: dashed outline + resize handle
+    const fr0 = V6S.rsel !== null && (V6S.rects[V6S.mode] || []).find(function (f) { return f.id === V6S.rsel; });
+    if (fr0) {
+      const W2 = o.W * q.k, H2 = o.H * q.k;
+      c2.save(); c2.strokeStyle = '#2f8cff'; c2.lineWidth = 1.5 * u; c2.setLineDash([5 * u, 4 * u]); c2.strokeRect(fr0.x * W2 - 4 * u, fr0.y * H2 - 4 * u, fr0.w * W2 + 8 * u, fr0.h * H2 + 8 * u);
+      c2.setLineDash([]); c2.fillStyle = '#2f8cff'; c2.fillRect((fr0.x + fr0.w) * W2 - 5 * u, (fr0.y + fr0.h) * H2 - 5 * u, 10 * u, 10 * u); c2.restore();
+    }
+    if (V6S.rt && V6S.rt.a) {
+      const a = V6S.rt.a, b = V6S.rt.b || a;
+      c2.save(); c2.strokeStyle = $('v6Rc').value; c2.lineWidth = 1.5 * u; c2.setLineDash([6 * u, 4 * u]); c2.strokeRect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])); c2.restore();
     }
     if (V6S.dt) {
       const dot = function (q, fill) { c2.beginPath(); c2.arc(q.x, q.y, 5 * u, 0, Math.PI * 2); c2.lineWidth = 1.5 * u; c2.strokeStyle = '#ff7a00'; if (fill) { c2.fillStyle = '#ff7a00'; c2.fill(); } c2.stroke(); };
@@ -887,7 +1017,7 @@
     let best = null;
     for (const h of q.hits) if (x >= h.r.x - m && x <= h.r.x + h.r.w + m && y >= h.r.y - m && y <= h.r.y + h.r.h + m) {
       // notes and labels over pictures
-      const rank = { isoR: 4, note: 3, tot: 3, dim: 3, label: 2, part: 1, iso: 1, view: 0 };
+      const rank = { isoR: 4, rectR: 4, note: 3, tot: 3, dim: 3, rect: 2.5, label: 2, part: 1, iso: 1, view: 0 };
       if (!best || rank[h.kind] >= rank[best.kind]) best = h;
     }
     return { h: best, x: x, y: y };
@@ -900,7 +1030,7 @@
     if (mx === undefined) { mx = 0; my = 0; }
     V6S.vp = [mx - (mx - V6S.vp[0]) * f, my - (my - V6S.vp[1]) * f];
     if (z <= 1.0001) V6S.vp = [V6S.vp[0] * Math.min(1, z), V6S.vp[1] * Math.min(1, z)];
-    V6S.vz = z; v6ZoomUI(); v6Paint();
+    V6S.vz = z; v6ZoomUI(); v6PaintFast();
     v6ZoomCheck();
   }
   let v6ZTimer = 0;
@@ -909,10 +1039,11 @@
     v6ZTimer = setTimeout(function () {
       const q = V6S.prev; if (!q) return;
       const want = v6WantK(q.o, v6Layout(q.o));
-      if (want > q.k * 1.15 || want < q.k * 0.55) v6PreviewNow();
-    }, 260);
+      if (want > q.k * 1.2) { V6S.kx = 1.8; v6PreviewNow(); }
+      else if (want < q.k * 0.3) { V6S.kx = 1; v6PreviewNow(); }
+    }, 500);
   }
-  function v6Fit() { V6S.vz = 1; V6S.vp = [0, 0]; v6ZoomUI(); v6Paint(); v6ZoomCheck(); }
+  function v6Fit() { V6S.vz = 1; V6S.vp = [0, 0]; v6ZoomUI(); v6PaintFast(); v6ZoomCheck(); }
   // ---------- combine parts of the same mass into one picture (exploded view)
   function v6CombCands() {
     const q = V6S.prev, out = new Set(); if (!q || V6S.comb === null) return out;
@@ -935,17 +1066,20 @@
   function v6Edit(h) {
     const ed = $('v6Ed'), t = $('v6EdT'), ms = $('v6EdM'), br = document.querySelector('#v6Sheet .v6body').getBoundingClientRect(), sr = v6Scr(h.r);
     let b = null, n = null;
+    let fr = null;
     if (h.kind === 'note') { n = v6Note(h.id); t.value = n.text; t.rows = Math.max(2, n.text.split('\n').length); ms.style.display = 'none'; }
+    else if (h.kind === 'rect') { fr = v6Rect(h.id); if (!fr) return; t.value = fr.title || ''; t.rows = 1; ms.style.display = 'none'; }
     else { b = S.bodies.find(function (x) { return x.id === h.id; }); if (!b) return; t.value = b.name; t.rows = 1; v6MatOpts(ms); ms.value = MATS.some(function (m) { return m[0] === b.material; }) ? b.material : ''; ms.style.display = ''; }
     ed.style.display = 'block';
     ed.style.left = Math.max(0, Math.min(br.width - 220, sr.x - br.left)) + 'px';
     ed.style.top = Math.max(0, Math.min(br.height - 110, sr.y + sr.h - br.top + 4)) + 'px';
     t.focus(); t.select();
-    V6S.edit = { n: n, b: b };
+    V6S.edit = { n: n, b: b, f: fr };
   }
   function v6EditDone(ok) {
     const E = V6S.edit; $('v6Ed').style.display = 'none'; V6S.edit = null;
     if (!E || !ok) return;
+    if (E.f) { E.f.title = $('v6EdT').value.replace(/\n/g, ' ').trim(); v6Paint(); return; }
     if (E.n) { const v = $('v6EdT').value; if (v.trim()) E.n.text = v; else { const L2 = V6S.notes[V6S.mode]; L2.splice(L2.indexOf(E.n), 1); V6S.nsel = null; } v6Paint(); }
     else if (E.b) { v6SetName(E.b, $('v6EdT').value.replace(/\n/g, ' ')); v6SetMat(E.b, $('v6EdM').value); v6PartRow(); v6Paint(); v6Preview(); }
   }
@@ -969,6 +1103,9 @@
         e.preventDefault(); return;
       }
       if (V6S.dt) { V6S.dt.hov = v6DimSnap(t); v6DimClick(t); e.preventDefault(); return; }
+      if (V6S.rt) { V6S.rt.a = [t.x, t.y]; V6S.rt.b = null; e.preventDefault(); return; }
+      V6S.rsel = h && (h.kind === 'rect' || h.kind === 'rectR') ? h.id : null;
+      if (V6S.rsel !== null) v6RectCtl();
       V6S.vsel = h && h.kind === 'view' ? h.n : h && (h.kind === 'iso' || h.kind === 'isoR') ? 'iso' : null;
       V6S.dsel = h && h.kind === 'dim' ? h.id : null;
       if (h && h.kind === 'dim') { V6S.drag = { h: h, x: t.x, y: t.y, dim: h.id }; v6Paint(h); e.preventDefault(); return; }
@@ -976,13 +1113,17 @@
       if (V6S.edit) v6EditDone(true);
       V6S.nsel = h && h.kind === 'note' ? h.id : null;
       if (h && (h.kind === 'part' || h.kind === 'label')) V6S.psel = h.id; else if (h) V6S.psel = null;
-      if (h && h.kind === 'note') { const n = v6Note(h.id); $('v6Ns').value = $('v6NsR').value = n.size; $('v6Nb').checked = n.bold; }
+      if (h && h.kind === 'note') v6NoteCtl(v6Note(h.id));
       v6PartRow(); v6Paint(h);
+      v6PickToList(h);
       if (typeof dwRefresh === 'function') dwRefresh(false);
       if (!h) return;
       // placements are taken over only when something is really moved (a click alone changes nothing)
       const pos0 = Object.assign({}, V6S.prev.pos, V6S.pos || {}), iso0 = V6S.iso || ((h.kind === 'iso' || h.kind === 'isoR') && V6S.prev.iso ? v6IsoDefault(V6S.prev.o, V6S.prev, pos0) : null);
       const tot0 = V6S.tot || (V6S.prev.totPos || [0.95, 0.95]).slice();
+      if (h.kind === 'rect' || h.kind === 'rectR') {
+        const f = v6Rect(h.id); V6S.drag = { h: h, x: t.x, y: t.y, rect: [f.x, f.y, f.w, f.h] }; e.preventDefault(); return;
+      }
       if (h.kind === 'isoR') {
         const f = V6S.prev.hits.find(function (x) { return x.kind === 'iso'; }).r, c = [f.x + f.w / 2, f.y + f.h / 2];
         V6S.drag = { h: h, x: t.x, y: t.y, c: c, d0: Math.max(4, Math.hypot(t.x - c[0], t.y - c[1])), k0: V6S.prev.o.isoK, k: V6S.prev.o.isoK };
@@ -992,7 +1133,7 @@
       V6S.drag = { tot: tot0.slice(), h: h, x: t.x, y: t.y, pos: JSON.parse(JSON.stringify(pos0)), iso: iso0 && iso0.slice(), off: (V6S.off[h.id] || [0, 0]).slice(), note: h.kind === 'note' ? [v6Note(h.id).x, v6Note(h.id).y] : null };
       e.preventDefault();
     });
-    pc.addEventListener('dblclick', function (e) { const t = v6Hit(e); if (t && t.h && (t.h.kind === 'note' || t.h.kind === 'label' || t.h.kind === 'part')) v6Edit(t.h); else if (t && !t.h) v6Fit(); });
+    pc.addEventListener('dblclick', function (e) { const t = v6Hit(e); if (t && t.h && (t.h.kind === 'note' || t.h.kind === 'label' || t.h.kind === 'part' || t.h.kind === 'rect')) v6Edit(t.h); else if (t && !t.h) v6Fit(); });
     pc.addEventListener('wheel', function (e) {
       if (!V6S.prev) return;
       e.preventDefault();
@@ -1022,13 +1163,14 @@
     });
     window.addEventListener('mousemove', function (e) {
       if (!V6S.prev) return;
-      if (V6S.pan) { V6S.vp = [V6S.pan.vp[0] + e.clientX - V6S.pan.x, V6S.pan.vp[1] + e.clientY - V6S.pan.y]; pc.style.cursor = 'grabbing'; v6Paint(); return; }
+      if (V6S.pan) { V6S.vp = [V6S.pan.vp[0] + e.clientX - V6S.pan.x, V6S.pan.vp[1] + e.clientY - V6S.pan.y]; pc.style.cursor = 'grabbing'; v6PaintFast(); return; }
       const t = v6Hit(e); if (!t) return;
+      if (V6S.rt) { if (V6S.rt.a) { V6S.rt.b = [t.x, t.y]; v6PaintFast(); } if (e.target === pc) pc.style.cursor = 'crosshair'; return; }
       if (V6S.dt && !V6S.drag) {
         if (e.target !== pc) return;
         V6S.dt.hov = v6DimSnap(t);
         if (V6S.dt.a && V6S.dt.b) V6S.dt.tmp = v6DimPlace(t);
-        pc.style.cursor = 'crosshair'; v6Paint(); return;
+        pc.style.cursor = 'crosshair'; v6PaintSoon(); return;
       }
       if (V6S.drag && V6S.drag.dim) {
         const dm = v6Dim(V6S.drag.dim), R = V6S.prev, v = dm && R.views[dm.view], fr = dm && R.frames[dm.view];
@@ -1036,13 +1178,13 @@
           const A = v6DimLoc(R, R.frames, dm.view, dm.a), B = v6DimLoc(R, R.frames, dm.view, dm.b), M = v6SheetToRu(v, fr, t.x, t.y);
           if (A && B) { if (dm.t === 'h') dm.o = M.u; else if (dm.t === 'v') dm.o = M.r; else { const dr = B.r - A.r, du = B.u - A.u, l = Math.hypot(dr, du) || 1; dm.o = ((M.r - A.r) * -du + (M.u - A.u) * dr) / l; } }
         }
-        v6Paint(V6S.drag.h); return;
+        v6PaintSoon(V6S.drag.h); return;
       }
       if (!V6S.drag) {
         if (e.target !== pc) return;
         const h = t.h;
-        pc.style.cursor = V6S.comb !== null ? (h && v6CombCands().has(h.id) ? 'copy' : 'default') : !h ? 'grab' : h.kind === 'isoR' ? 'nwse-resize' : h.kind === 'view' ? (h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize') : 'move';
-        if (h !== V6S.hov) { V6S.hov = h; v6Paint(h); }
+        pc.style.cursor = V6S.comb !== null ? (h && v6CombCands().has(h.id) ? 'copy' : 'default') : !h ? 'grab' : h.kind === 'isoR' || h.kind === 'rectR' ? 'nwse-resize' : h.kind === 'view' ? (h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize') : 'move';
+        if (h !== V6S.hov) { V6S.hov = h; v6PaintFast(); }
         return;
       }
       const D = V6S.drag, h = D.h, dx = (t.x - D.x) / V6S.lay.W, dy = (t.y - D.y) / V6S.lay.H;
@@ -1058,27 +1200,31 @@
       else if (h.kind === 'part' || h.kind === 'label') V6S.off[h.id] = [D.off[0] + dx, D.off[1] + dy];
       else if (h.kind === 'note') { const n = v6Note(h.id); n.x = D.note[0] + dx; n.y = D.note[1] + dy; }
       else if (h.kind === 'tot') V6S.tot = [D.tot[0] + dx, D.tot[1] + dy];
+      else if (h.kind === 'rect') { const f = v6Rect(h.id); f.x = D.rect[0] + dx; f.y = D.rect[1] + dy; }
+      else if (h.kind === 'rectR') { const f = v6Rect(h.id); f.w = Math.max(0.01, D.rect[2] + dx); f.h = Math.max(0.01, D.rect[3] + dy); }
       else if (h.kind === 'isoR') D.k = Math.max(0.1, Math.min(5, D.k0 * Math.hypot(t.x - D.c[0], t.y - D.c[1]) / D.d0));
-      v6Paint(h);
+      v6PaintSoon(h);
     });
     window.addEventListener('mouseup', function () {
       if (V6S.pan) { V6S.pan = null; pc.style.cursor = 'grab'; }
+      if (V6S.rt && V6S.rt.a) { v6RectMake(V6S.rt.a, V6S.rt.b); return; }
       const D = V6S.drag; if (!D) return;
       V6S.drag = null;
       if (D.h.kind === 'isoR' && D.k !== D.k0) { $('v6IsoK').value = $('v6IsoKR').value = Math.round(D.k * 100); v6Paint(V6S.hov); v6Preview(); return; }
       v6Paint(V6S.hov);
     });
-    pc.addEventListener('mouseleave', function () { if (!V6S.drag && V6S.hov) { V6S.hov = null; v6Paint(); } });
+    pc.addEventListener('mouseleave', function () { if (!V6S.drag && V6S.hov) { V6S.hov = null; v6PaintFast(); } });
     window.addEventListener('keydown', function (e) {
       if (!v6Act || V6S.edit) return;
       if (V6S.comb !== null && e.key === 'Escape') { v6CombEnd(); e.preventDefault(); e.stopPropagation(); return; }
+      if (V6S.rt && e.key === 'Escape') { V6S.rt = null; $('v6Prev').style.cursor = 'default'; v6Paint(); e.preventDefault(); e.stopPropagation(); return; }
       if (V6S.dt && e.key === 'Escape') {
         if (V6S.dt.a && !V6S.dt.redo) { V6S.dt = { a: null, b: null, view: null, hov: null, tmp: null, redo: null }; v6Paint(); } else v6DimTool(false);
         e.preventDefault(); e.stopPropagation(); return;
       }
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (V6S.nsel) v6DelNote(); else if (V6S.dsel) v6DelDim(); else if (V6S.vsel && V6S.mode === '6v') v6DelView(V6S.vsel); else return;
+        if (V6S.nsel) v6DelNote(); else if (V6S.rsel !== null) v6DelRect(); else if (V6S.dsel) v6DelDim(); else if (V6S.vsel && V6S.mode === '6v') v6DelView(V6S.vsel); else return;
         e.preventDefault(); e.stopPropagation();
       }
     }, true);
@@ -1086,15 +1232,59 @@
   function v6DelNote() { const L2 = V6S.notes[V6S.mode], n = v6Note(V6S.nsel); if (n) L2.splice(L2.indexOf(n), 1); V6S.nsel = null; v6Paint(); }
   $('v6AddT').addEventListener('click', function () {
     if (!V6S.prev) return;
-    const n = { id: V6S.seq++, text: L('Ghi chú', 'Note'), x: 0.06, y: 0.06, size: v6Num('v6Ns', 4), bold: $('v6Nb').checked };
+    const n = Object.assign({ id: V6S.seq++, text: L('Ghi chú', 'Note'), x: 0.06, y: 0.06 }, v6NoteVals());
     V6S.notes[V6S.mode].push(n); V6S.nsel = n.id; v6Paint();
     const h = (V6S.prev.hits || []).find(function (x) { return x.kind === 'note' && x.id === n.id; });
     if (h) v6Edit(h);
   });
   $('v6DelT').addEventListener('click', v6DelNote);
-  ['v6Ns', 'v6NsR', 'v6Nb'].forEach(function (id) {
-    $(id).addEventListener('input', function () { const n = v6Note(V6S.nsel); if (!n) return; n.size = v6Num('v6Ns', n.size); n.bold = $('v6Nb').checked; v6Paint(); });
+  // note style: size, bold, font, alignment, italic, underline, colour (the picked note; the next note starts with them)
+  function v6NoteVals() { return { size: v6Num('v6Ns', 4), bold: $('v6Nb').checked, font: $('v6Nf').value, align: $('v6Na').value, italic: $('v6Ni').checked, under: $('v6Nu').checked, color: $('v6Nc').value }; }
+  function v6NoteCtl(n) {
+    if (!n) return;
+    $('v6Ns').value = $('v6NsR').value = n.size; $('v6Nb').checked = !!n.bold; $('v6Nf').value = n.font || 'Arial'; $('v6Na').value = n.align || 'left';
+    $('v6Ni').checked = !!n.italic; $('v6Nu').checked = !!n.under; $('v6Nc').value = n.color || '#111111';
+  }
+  ['v6Ns', 'v6NsR', 'v6Nb', 'v6Nf', 'v6Na', 'v6Ni', 'v6Nu', 'v6Nc'].forEach(function (id) {
+    const f = function () { const n = v6Note(V6S.nsel); if (!n) return; Object.assign(n, v6NoteVals()); v6Paint(); };
+    $(id).addEventListener('input', f); $(id).addEventListener('change', f);
   });
+  // frames: drawn by dragging on the sheet with the Frame tool; edge / name drag to move, corner to resize
+  function v6Rect(id) { return (V6S.rects[V6S.mode] || []).find(function (f) { return f.id === id; }); }
+  function v6RectCtl() { const f = v6Rect(V6S.rsel); if (!f) return; $('v6Rc').value = f.color || '#e53935'; $('v6Rs').value = $('v6RsR').value = f.ts || 5; $('v6Rw').value = $('v6RwR').value = f.lw || 0.5; }
+  function v6RectTool(on) {
+    V6S.rt = on ? { a: null, b: null } : null;
+    if (on) { V6S.dt = null; v6CombEnd(); }
+    $('v6Prev').style.cursor = on ? 'crosshair' : 'default'; v6Paint();
+  }
+  function v6RectMake(a, b) {
+    const Ly = V6S.lay; V6S.rt = null; $('v6Prev').style.cursor = 'default';
+    if (!Ly) return;
+    b = b || a;
+    let x = Math.min(a[0], b[0]) / Ly.W, y = Math.min(a[1], b[1]) / Ly.H, w = Math.abs(b[0] - a[0]) / Ly.W, h = Math.abs(b[1] - a[1]) / Ly.H;
+    if (Math.abs(b[0] - a[0]) * Ly.s / Ly.dpr < 8 || Math.abs(b[1] - a[1]) * Ly.s / Ly.dpr < 8) { w = 0.3; h = 0.25; x = Math.min(x, 0.98 - w); y = Math.min(y, 0.98 - h); }
+    const L2 = V6S.rects[V6S.mode] || (V6S.rects[V6S.mode] = []);
+    const f = { id: V6S.seq++, x: x, y: y, w: w, h: h, color: $('v6Rc').value, title: L('Cụm ', 'Group ') + (L2.length + 1), ts: v6Num('v6Rs', 5), lw: v6Num('v6Rw', 0.5) };
+    L2.push(f); V6S.rsel = f.id; V6S.nsel = null; V6S.psel = null; v6Paint();
+    const ht = (V6S.prev.hits || []).find(function (q) { return q.kind === 'rect' && q.id === f.id && q.title; });
+    if (ht) v6Edit(ht);
+  }
+  function v6DelRect() { const L2 = V6S.rects[V6S.mode] || [], f = v6Rect(V6S.rsel); if (f) L2.splice(L2.indexOf(f), 1); V6S.rsel = null; v6Paint(); }
+  $('v6AddR').addEventListener('click', function () { v6RectTool(!V6S.rt); });
+  $('v6DelR').addEventListener('click', v6DelRect);
+  ['v6Rc', 'v6Rs', 'v6RsR', 'v6Rw', 'v6RwR'].forEach(function (id) {
+    const f = function () { const r = v6Rect(V6S.rsel); if (!r) return; r.color = $('v6Rc').value; r.ts = v6Num('v6Rs', 5); r.lw = v6Num('v6Rw', 0.5); v6Paint(); };
+    $(id).addEventListener('input', f); $(id).addEventListener('change', f);
+  });
+  // a part picked on the exploded sheet lights up in the body lists (and the other way round, see dwBodyPick)
+  function v6PickToList(h) {
+    if (typeof DW === 'undefined' || !DW.doc || V6S.mode !== 'exp') return;
+    let u = null;
+    if (h && (h.kind === 'part' || h.kind === 'label')) { const pt = V6S.prev.parts.find(function (x) { return x.id === h.id; }); u = pt && pt.b.uid; }
+    else if (h) u = null; else return;
+    if (u === DW.bsel && u === V6S.hl) return;
+    DW.bsel = u; V6S.hl = u; dwRefresh(true); v6Preview();
+  }
   // part row in the panel: rename / material of the selected part, straight onto the body
   v6MatOpts($('v6PMat'));
   $('v6PName').addEventListener('change', function () { const b = S.bodies.find(function (x) { return x.id === V6S.psel; }); if (b) { v6SetName(b, this.value); v6PartRow(); v6Paint(); } });
@@ -1179,6 +1369,7 @@
   $('v6Tip').addEventListener('click', function () { v6Rot([[1, 0, 0], [0, 0, -1], [0, 1, 0]]); });
   $('v6Auto').addEventListener('click', function () {
     if (V6S.mode !== 'exp' && v6AutoEven()) { v6Preview(); return; }
+    if (V6S.mode === 'exp' && v6AutoExp()) { v6Paint(); return; }
     V6S.pos = null; V6S.iso = null; V6S.off = {}; v6Preview();
   });
   // custom scale a : b — the slider runs on a log scale from 1:100 to 100:1
@@ -1189,7 +1380,7 @@
   });
   ['v6ScA', 'v6ScB'].forEach(function (id) { $(id).addEventListener('input', v6ScSync); });
   // ---------- the two drawings (6 view / Exploded view): own settings, switched in the panel, saved with the session
-  function v6Ctls() { return Array.from(document.querySelectorAll('#pop_v6 input, #pop_v6 select')).filter(function (el) { return el.type !== 'range' && !/^v6(Ns|Nb|PName|PMat)$/.test(el.id); }); }
+  function v6Ctls() { return Array.from(document.querySelectorAll('#pop_v6 input, #pop_v6 select')).filter(function (el) { return el.type !== 'range' && !/^v6(Ns|Nb|Nf|Na|Ni|Nu|Nc|Rc|Rs|Rw|PName|PMat)$/.test(el.id); }); }
   function v6Key(el) { return el.id || (el.dataset.v ? 'v:' + el.dataset.v : ''); }
   function v6Snap() { const c = {}; v6Ctls().forEach(function (el) { const k = v6Key(el); if (k) c[k] = el.type === 'checkbox' ? el.checked : el.value; }); return c; }
   function v6Apply(c) {
@@ -1203,17 +1394,17 @@
     V6S.dt = null; V6S.dsel = null; V6S.vsel = null;
     V6S.comb = null;
     if (m !== V6S.mode) { V6S.cfg[V6S.mode] = v6Snap(); V6S.st[V6S.mode] = v6StGet(); V6S.mode = m; v6Apply(V6S.cfg[m]); v6StSet(V6S.st[m]); }
-    V6S.nsel = null; V6S.psel = null; v6Sync(); v6Preview();
+    V6S.nsel = null; V6S.psel = null; V6S.rsel = null; V6S.rt = null; v6Sync(); v6Preview();
   }
   document.querySelectorAll('#v6Seg button').forEach(function (b) { b.addEventListener('click', function () { v6SetMode(b.dataset.k); }); });
   V6S.def = v6Snap(); V6S.cfg = { '6v': v6Snap(), exp: v6Snap() };
   // ---------- drawing state: one plain object (copy) per sheet; v6Grab reads it from the panel + V6S, v6Put writes it back
   function v6Grab() {
     V6S.cfg[V6S.mode] = v6Snap(); V6S.st[V6S.mode] = v6StGet();
-    return JSON.parse(JSON.stringify({ mode: V6S.mode, cfg: V6S.cfg, st: V6S.st, notes: V6S.notes, seq: V6S.seq, dims: V6S.dims, src: V6S.src, hide: V6S.hide }));
+    return JSON.parse(JSON.stringify({ mode: V6S.mode, cfg: V6S.cfg, st: V6S.st, notes: V6S.notes, rects: V6S.rects, seq: V6S.seq, dims: V6S.dims, src: V6S.src, hide: V6S.hide }));
   }
   function v6Blank() {
-    return { mode: '6v', cfg: { '6v': Object.assign({}, V6S.def), exp: Object.assign({}, V6S.def) }, st: { '6v': {}, exp: {} }, notes: { '6v': [], exp: [] }, seq: 1, dims: { '6v': [], exp: [] }, src: null, hide: [] };
+    return { mode: '6v', cfg: { '6v': Object.assign({}, V6S.def), exp: Object.assign({}, V6S.def) }, st: { '6v': {}, exp: {} }, notes: { '6v': [], exp: [] }, rects: { '6v': [], exp: [] }, seq: 1, dims: { '6v': [], exp: [] }, src: null, hide: [] };
   }
   function v6Put(d) {
     if (V6S.edit) v6EditDone(false);
@@ -1223,11 +1414,12 @@
     for (const m of ['6v', 'exp']) { const t = sd[m] || {}; V6S.st[m] = { R: t.R, pos: t.pos, iso: t.iso, tot: t.tot, off: t.off || {}, grp: t.grp || {} }; }
     const nt = d.notes || {};
     V6S.notes = { '6v': nt['6v'] || [], exp: nt.exp || [] };
+    const rc = d.rects || {}; V6S.rects = { '6v': rc['6v'] || [], exp: rc.exp || [] };
     const dd = d.dims || {}; V6S.dims = { '6v': dd['6v'] || [], exp: dd.exp || [] };
     V6S.src = Array.isArray(d.src) ? d.src.slice() : null; V6S.hide = Array.isArray(d.hide) ? d.hide.slice() : [];
-    V6S.seq = Math.max(d.seq || 1, 1 + Math.max.apply(null, [0].concat(V6S.notes['6v'], V6S.notes.exp, V6S.dims['6v']).map(function (n) { return n.id || 0; })));
+    V6S.seq = Math.max(d.seq || 1, 1 + Math.max.apply(null, [0].concat(V6S.notes['6v'], V6S.notes.exp, V6S.rects['6v'], V6S.rects.exp, V6S.dims['6v']).map(function (n) { return n.id || 0; })));
     V6S.mode = d.mode === 'exp' ? 'exp' : '6v'; v6Apply(V6S.cfg[V6S.mode]); v6StSet(V6S.st[V6S.mode]);
-    V6S.nsel = null; V6S.psel = null; V6S.prev = null; V6S.comb = null; V6S.dt = null; V6S.dsel = null; V6S.vsel = null; v6Sync(); v6Preview();
+    V6S.nsel = null; V6S.psel = null; V6S.rsel = null; V6S.rt = null; V6S.prev = null; V6S.comb = null; V6S.dt = null; V6S.dsel = null; V6S.vsel = null; v6Sync(); v6Preview();
   }
   // body references (hand placements, combined groups) through f: id -> other key (undefined = drop)
   function v6MapIds(d, f) {
@@ -1253,8 +1445,20 @@
       const e = $('v6Est'); if (e) e.textContent = v6Size(r.blob.size) + ' (' + r.o.fmt.toUpperCase() + L(', đã lưu)', ', saved)');
     }).catch(showError);
   });
+  // copy: a picture sized for an e-mail (long side ~2000 px, white background, lines at least ~1.3 px), whatever the
+  // export settings are
+  const V6_MAILPX = 2000;
+  async function v6MailBlob() {
+    const o = v6Sync(); o.fmt = 'png'; o.bg = 'w';
+    const k = Math.min(1, V6_MAILPX / Math.max(o.W, o.H)), ppmm = o.dpi / 25.4;
+    o.lw = Math.max(o.lw, 1.3 / (ppmm * k));
+    const R = await v6Render(o, k, 2), cv = v6Sheet(o, R, k);
+    return { blob: await new Promise(function (r) { cv.toBlob(r, 'image/png'); }), w: cv.width, h: cv.height };
+  }
   $('v6Copy').addEventListener('click', function () {
-    v6Full('png').then(function (r) {
-      return navigator.clipboard.write([new ClipboardItem({ 'image/png': r.blob })]).then(function () { flash(L('Đã chép ảnh vào clipboard', 'Picture copied to the clipboard')); });
-    }).catch(showError);
+    setBusy(true, L('Đang chép ảnh…', 'Copying the picture…'));
+    v6MailBlob().then(function (r) {
+      setBusy(false);
+      return navigator.clipboard.write([new ClipboardItem({ 'image/png': r.blob })]).then(function () { flash(L('Đã chép ảnh vào clipboard (', 'Picture copied to the clipboard (') + r.w + ' × ' + r.h + ' px)'); });
+    }).catch(function (e) { setBusy(false); showError(e); });
   });

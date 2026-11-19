@@ -4,6 +4,14 @@
   // and texts are vector (texts with the PDF's Helvetica; a text with letters outside its character set, such as
   // Vietnamese ư / ơ / ộ, goes into the picture layer at full resolution); the shaded fill of the views is one JPEG under
   // the vectors. Page size = the sheet's paper size; one page per sheet in Drawing Tree order.
+  // PDF standard fonts: Helvetica / Times / Courier in 4 styles each (F1..F12); a canvas font maps by its first family
+  const DW_PDFFONT = { H: ['Helvetica', 'Helvetica-Bold', 'Helvetica-Oblique', 'Helvetica-BoldOblique'], T: ['Times-Roman', 'Times-Bold', 'Times-Italic', 'Times-BoldItalic'], C: ['Courier', 'Courier-Bold', 'Courier-Oblique', 'Courier-BoldOblique'] };
+  const DW_PDFCSS = { H: 'Arial, Helvetica, "Liberation Sans", sans-serif', T: '"Times New Roman", Times, "Liberation Serif", serif', C: '"Courier New", Courier, "Liberation Mono", monospace' };
+  function dwFam(f) {
+    const first = String(f).replace(/^.*?[\d.]+px\s*/, '').split(',')[0].replace(/["']/g, '').trim().toLowerCase();
+    return /times|georgia|cambria|garamond|^serif$/.test(first) ? 'T' : /courier|consolas|mono/.test(first) ? 'C' : 'H';
+  }
+  function dwFontRes(op) { const fi = ['H', 'T', 'C'].indexOf(op.fam || 'H') * 4 + (op.bold ? 1 : 0) + (op.it ? 2 : 0); return 'F' + (fi + 1); }
   function dwAnsi(s) { for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); if (c > 255 || (c >= 128 && c < 160)) return false; } return true; }
   // a 2D context that draws pictures on `real` and records lines / texts as vectors (sheet px)
   function dwRecCtx(real) {
@@ -24,10 +32,11 @@
         const m = real.measureText(s), al = real.textAlign, w = m.width, f = real.font, bl = real.textBaseline;
         const dx = al === 'center' ? -w / 2 : (al === 'right' || al === 'end') ? -w : 0;
         const asc = m.actualBoundingBoxAscent; real.textBaseline = 'alphabetic'; const ascA = real.measureText(s).actualBoundingBoxAscent; real.textBaseline = bl;
-        const yb = y - asc + ascA, px = parseFloat((f.match(/([\d.]+)px/) || [0, 12])[1]), bold = /bold|[6-9]00/.test(f);
-        real.font = (bold ? 'bold ' : '') + px + 'px Arial, Helvetica, "Liberation Sans", sans-serif'; const wa = real.measureText(s).width; real.font = f;
+        const yb = y - asc + ascA, px = parseFloat((f.match(/([\d.]+)px/) || [0, 12])[1]), bold = /bold|[6-9]00/.test(f), it = /italic|oblique/.test(f);
+        const fam = dwFam(f);
+        real.font = (it ? 'italic ' : '') + (bold ? 'bold ' : '') + px + 'px ' + DW_PDFCSS[fam]; const wa = real.measureText(s).width; real.font = f;
         const t = real.getTransform();
-        ops.push({ t: 'T', s: s, x: x + dx, y: yb, size: px, bold: bold, hz: wa > 0 ? w / wa : 1, m: [t.a, t.b, t.c, t.d, t.e, t.f], c: real.fillStyle });
+        ops.push({ t: 'T', s: s, x: x + dx, y: yb, size: px, bold: bold, it: it, fam: fam, hz: wa > 0 ? w / wa : 1, m: [t.a, t.b, t.c, t.d, t.e, t.f], c: real.fillStyle });
       }
     };
     return new Proxy(real, {
@@ -77,7 +86,7 @@
       else if (op.t === 'T') {
         const m = op.m, sz = op.size, hz = op.hz;
         const tm = [m[0] * hz * sz, m[1] * hz * sz, -m[2] * sz, -m[3] * sz, m[0] * op.x + m[2] * op.y + m[4], m[1] * op.x + m[3] * op.y + m[5]];
-        out.push(c + ' rg', 'BT /' + (op.bold ? 'F2' : 'F1') + ' 1 Tf ' + tm.map(dwN).join(' ') + ' Tm ' + dwPdfStr(op.s) + ' Tj ET');
+        out.push(c + ' rg', 'BT /' + dwFontRes(op) + ' 1 Tf ' + tm.map(dwN).join(' ') + ' Tm ' + dwPdfStr(op.s) + ' Tj ET');
       }
     }
     return out.join('\n');
@@ -92,24 +101,64 @@
     const add = function (x) { const b = typeof x === 'string' ? dwLatin1(x) : x; parts.push(b); len += b.length; };
     const obj = function (n, chunks) { offs[n] = len; add(n + ' 0 obj\n'); chunks.forEach(add); add('\nendobj\n'); };
     add('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n');
-    const np = pages.length, kids = pages.map(function (p, i) { return (5 + 3 * i) + ' 0 R'; }).join(' ');
+    const np = pages.length, P0 = 15, kids = pages.map(function (p, i) { return (P0 + 3 * i) + ' 0 R'; }).join(' ');
     obj(1, ['<< /Type /Catalog /Pages 2 0 R >>']);
     obj(2, ['<< /Type /Pages /Kids [' + kids + '] /Count ' + np + ' >>']);
-    obj(3, ['<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>']);
-    obj(4, ['<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>']);
+    const fonts = DW_PDFFONT.H.concat(DW_PDFFONT.T, DW_PDFFONT.C);
+    fonts.forEach(function (nm, i) { obj(3 + i, ['<< /Type /Font /Subtype /Type1 /BaseFont /' + nm + ' /Encoding /WinAnsiEncoding >>']); });
+    const fres = fonts.map(function (nm, i) { return '/F' + (i + 1) + ' ' + (3 + i) + ' 0 R'; }).join(' ');
     for (let i = 0; i < np; i++) {
-      const p = pages[i], s = 72 / p.dpi, wpt = p.W * s, hpt = p.H * s, n = 5 + 3 * i;
+      const p = pages[i], s = 72 / p.dpi, wpt = p.W * s, hpt = p.H * s, n = P0 + 3 * i;
       const content = 'q\n' + dwN(wpt) + ' 0 0 ' + dwN(hpt) + ' 0 0 cm\n/Im0 Do\nQ\nq\n' + dwN(s) + ' 0 0 ' + dwN(-s) + ' 0 ' + dwN(hpt) + ' cm\n' + dwPdfOps(p.ops) + '\nQ\n';
       const raw = dwLatin1(content), z = await dwDeflate(raw);
-      obj(n, ['<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + dwN(wpt) + ' ' + dwN(hpt) + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im0 ' + (n + 2) + ' 0 R >> >> /Contents ' + (n + 1) + ' 0 R >>']);
+      obj(n, ['<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + dwN(wpt) + ' ' + dwN(hpt) + '] /Resources << /Font << ' + fres + ' >> /XObject << /Im0 ' + (n + 2) + ' 0 R >> >> /Contents ' + (n + 1) + ' 0 R >>']);
       obj(n + 1, ['<< /Length ' + (z || raw).length + (z ? ' /Filter /FlateDecode' : '') + ' >>\nstream\n', z || raw, '\nendstream']);
       obj(n + 2, ['<< /Type /XObject /Subtype /Image /Width ' + p.W + ' /Height ' + p.H + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + p.jpg.length + ' >>\nstream\n', p.jpg, '\nendstream']);
     }
-    const nobj = 5 + 3 * np, xref = len;
+    const nobj = P0 + 3 * np, xref = len;
     let x = 'xref\n0 ' + nobj + '\n0000000000 65535 f \n';
     for (let i = 1; i < nobj; i++) x += String(offs[i]).padStart(10, '0') + ' 00000 n \n';
     add(x + 'trailer\n<< /Size ' + nobj + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF\n');
     return new Blob(parts, { type: 'application/pdf' });
+  }
+  // every sheet into its own file (PNG / JPG / PDF), file name = sheet name; with the folder picker (when the browser has
+  // it) all files go into one chosen folder, otherwise they are downloaded one after the other
+  async function dwExportEach(fmt) {
+    const d = dwDoc(); dwCapture();
+    let dir = null;
+    if (window.showDirectoryPicker) {
+      try { dir = await window.showDirectoryPicker({ mode: 'readwrite' }); }
+      catch (e) { if (e && e.name === 'AbortError') return; dir = null; }
+    }
+    const keep = d.active, out = [], used = {};
+    setBusy(true, L('Đang xuất từng Sheet…', 'Exporting each sheet…'));
+    await new Promise(function (r) { setTimeout(r, 30); });
+    try {
+      for (const s of d.sheets) {
+        if (d.active !== s.id) { d.active = s.id; v6Put(s.work); }
+        let blob;
+        if (fmt === 'pdf') blob = await dwPdfBuild([await dwPdfPage()]);
+        else {
+          const o = v6Sync(); o.fmt = fmt; o.bg = fmt === 'png' ? $('v6Bg').value : 'w';
+          const R = await v6Render(o, 1, o.ss); blob = await v6Encode(v6Sheet(o, R, 1), o);
+        }
+        let nm = (s.name || 'Sheet').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'Sheet', base = nm, i = 2;
+        while (used[nm.toLowerCase()]) nm = base + ' (' + (i++) + ')';
+        used[nm.toLowerCase()] = 1;
+        out.push([nm + '.' + fmt, blob]);
+      }
+    } finally {
+      const k = dwSheet(keep); d.active = keep; v6Put(k.work); dwTabKeep(k.work.mode); dwHistReset(k);
+      setBusy(false);
+    }
+    if (dir) {
+      for (const f of out) { const fh = await dir.getFileHandle(f[0], { create: true }), w = await fh.createWritable(); await w.write(f[1]); await w.close(); }
+      flash(L('Đã lưu ', 'Saved ') + out.length + L(' file vào thư mục ', ' file(s) into the folder ') + dir.name);
+    } else {
+      for (const f of out) { download([f[1]], f[0]); await new Promise(function (r) { setTimeout(r, 350); }); }
+      flash(L('Đã xuất ', 'Exported ') + out.length + ' file ' + fmt.toUpperCase());
+    }
+    return out.map(function (f) { return f[0]; });
   }
   // PDF of some sheets (ids, Drawing Tree order), the open sheet comes back afterwards
   async function dwExportPdf(ids, fname) {
@@ -124,7 +173,7 @@
         pages.push(await dwPdfPage());
       }
     } finally {
-      const k = dwSheet(keep); d.active = keep; v6Put(k.work); dwTabSet(k.work.mode); dwHistReset(k);
+      const k = dwSheet(keep); d.active = keep; v6Put(k.work); dwTabKeep(k.work.mode); dwHistReset(k);
       setBusy(false);
     }
     const blob = await dwPdfBuild(pages);

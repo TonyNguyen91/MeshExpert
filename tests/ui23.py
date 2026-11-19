@@ -127,7 +127,7 @@ with sync_playwright() as p:
     # ---- exploded tab is a separate drawing of the sheet
     pg.click('#dwsTabs [data-k=exp]'); settle()
     titles=pg.evaluate("[...document.querySelectorAll('#dwsRibbon .rpage.on .rtitle')].map(e=>e.textContent)")
-    ok('Exploded View ribbon groups',titles==['Explode','Thông tin'] and pg.inner_text('#v6ShT')=='Exploded view',titles)
+    ok('Exploded View ribbon groups',titles==['Explode','Thông tin','Khung'] and pg.inner_text('#v6ShT')=='Exploded view',titles)
     pg.click('#dwsRibbon .rpage.on button[data-chk="#v6PN"]'); settle()
     ok('Component Name toggle',not pg.is_checked('#v6PN'))
     pg.click('#dwsRibbon .rpage.on button[data-act=comb]'); pg.wait_for_timeout(200)

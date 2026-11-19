@@ -13,7 +13,7 @@
   // The document goes into the session file (.mrtl) as meta.drawDoc (v2: body references by stable body id), with the
   // snapshots of geometry that sheets still show (meta.drawSnaps). Other parts: dwupd.js (revisions, update, undo),
   // dwsel.js (source bodies), dwexp.js (PDF).
-  const DW = { open: false, doc: null, sig: '', ren: null, drag: null, side: 320, pick: false, bsel: null, dlg: null };
+  const DW = { open: false, doc: null, sig: '', ren: null, drag: null, side: 320, pick: false, bsel: null, dlg: null, fold: {} };
   const DW_VER = 3;
   function dwUid(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
   function dwClone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -48,7 +48,19 @@
     const s = dwCur(); s.work = v6Grab(); s.dirty = dwCanon(s.work) !== dwCanon(s.saved);
     dwHistNote(s, JSON.stringify(s.work));
   }
-  function dwShow(s) { DW.doc.active = s.id; DW.bsel = null; v6Put(s.work); dwTabSet(s.work.mode); dwHistReset(s); }
+  function dwShow(s) { DW.doc.active = s.id; DW.bsel = null; V6S.hl = null; v6Put(s.work); dwTabKeep(s.work.mode); dwHistReset(s); }
+  // a body picked in one of the lists lights up orange on the sheet (6 views and exploded); on the exploded sheet it is
+  // also the picked part
+  function dwBodyPick(u) {
+    DW.bsel = u; DW.sig = '';
+    const was = V6S.hl; V6S.hl = u;
+    if (V6S.mode === 'exp' && V6S.prev) {
+      const pt = u ? V6S.prev.parts.find(function (x) { return x.b.uid === u; }) : null;
+      V6S.psel = pt ? pt.id : null; v6PartRow();
+    }
+    dwRefresh(true);
+    if (was !== u) v6Preview(); else v6Paint();
+  }
   // ---------- sheet commands
   function dwOpenSheet(id) {
     const d = dwDoc(); if (id === d.active || !dwSheet(id)) return;
@@ -147,7 +159,7 @@
       v6Put(dwCur().work);
       dwSnapCurrent();
     } else { DW.doc = dwNewDoc(v6Grab()); dwBaseline(DW.doc.sheets[0], DW.doc.src); }
-    DW.sig = ''; DW.bsel = null;
+    DW.sig = ''; DW.bsel = null; V6S.hl = null;
     if (DW.open) { dwTabSet(dwCur().work.mode); dwRefresh(true); }
   }
   // ---------- open / close
@@ -204,6 +216,7 @@
     pdf: '<path d="M5 3h10l4 4v14H5z" fill="#1f2a36" stroke="#e57373"/><path d="M8 16h8M8 13h8M8 10h5" stroke="#e8eef5"/>',
     dimt: '<path d="M4 6v12M20 6v12M4 12h16" stroke="#9cc4ee" stroke-width="1.5"/><path d="M7 10l-3 2 3 2M17 10l3 2-3 2" stroke="#f0a030" stroke-width="1.5"/><circle cx="4" cy="6" r="1.6" fill="#f0a030"/><circle cx="20" cy="6" r="1.6" fill="#f0a030"/>',
     undo: '<path d="M9 7L4 12l5 5" stroke="#9cc4ee" stroke-width="1.8"/><path d="M4 12h10a6 6 0 0 1 0 12" stroke="#9cc4ee" stroke-width="1.8"/>',
+    frame: '<rect x="3" y="7" width="18" height="13" stroke="#e57373" stroke-width="1.8"/><path d="M5 4h8" stroke="#e8eef5" stroke-width="1.8"/>',
     drawing: '<path d="M3 2h13l5 5v15H3z" fill="#e8eef5" stroke="#9cc4ee"/><rect x="5.5" y="5" width="4.5" height="3.5" fill="#3d6fa8"/><rect x="5.5" y="10" width="4.5" height="4.5" fill="#4f86c4"/><rect x="11.5" y="10" width="3.5" height="4.5" fill="#3d6fa8"/>'
   };
   function dwIco(k, n) { n = n || 16; return '<svg viewBox="0 0 24 24" width="' + n + '" height="' + n + '" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">' + (DW_IC[k] || '') + '</svg>'; }
@@ -237,8 +250,11 @@
   }
   function dwOutGrp() {
     return dwGrp('Xuất', 'Export', dwCol(dwSB('data-act="png"', 'png', 'PNG', 'PNG', 'Xuất Sheet này thành ảnh PNG', 'Export this sheet as PNG') + dwSB('data-act="jpg"', 'jpg', 'JPG', 'JPG', 'Xuất Sheet này thành ảnh JPG', 'Export this sheet as JPG') +
-        dwSB('data-click="#v6Copy"', 'copy', 'Chép ảnh', 'Copy', 'Chép ảnh Sheet vào clipboard', 'Copy the sheet picture to the clipboard')) +
-      dwCol(dwSB('data-act="pdf"', 'pdf', 'PDF', 'PDF', 'Xuất Sheet này thành PDF (nét vector)', 'Export this sheet as PDF (vector lines)') + dwSB('data-act="pdfAll"', 'pdf', 'PDF tất cả', 'All Sheets PDF', 'Xuất mọi Sheet vào một file PDF theo thứ tự Drawing Tree', 'All sheets into one PDF, in Drawing Tree order')));
+        dwSB('data-click="#v6Copy"', 'copy', 'Chép ảnh', 'Copy', 'Chép ảnh Sheet vào clipboard (cỡ vừa để gửi mail, không theo thiết lập xuất)', 'Copy the sheet picture to the clipboard (e-mail size, not the export settings)')) +
+      dwCol(dwSB('data-act="pdf"', 'pdf', 'PDF', 'PDF', 'Xuất Sheet này thành PDF (nét vector)', 'Export this sheet as PDF (vector lines)') + dwSB('data-act="pdfAll"', 'pdf', 'PDF gộp', 'All Sheets PDF', 'Xuất mọi Sheet vào một file PDF theo thứ tự Drawing Tree', 'All sheets into one PDF, in Drawing Tree order')) +
+      dwCol(dwSB('data-act="eachPng"', 'png', 'PNG từng Sheet', 'PNG per Sheet', 'Mỗi Sheet một file PNG riêng, tên file = tên Sheet', 'One PNG file per sheet, named after the sheet') +
+        dwSB('data-act="eachJpg"', 'jpg', 'JPG từng Sheet', 'JPG per Sheet', 'Mỗi Sheet một file JPG riêng, tên file = tên Sheet', 'One JPG file per sheet, named after the sheet') +
+        dwSB('data-act="eachPdf"', 'pdf', 'PDF từng Sheet', 'PDF per Sheet', 'Mỗi Sheet một file PDF riêng, tên file = tên Sheet', 'One PDF file per sheet, named after the sheet')));
   }
   function dwRibbonHtml() {
     const v = function (k, vi, en) { return dwSB('data-chk=".v6v[data-v=' + k + ']"', 'front', vi, en, 'Bật / tắt view ' + vi, 'Show / hide the ' + en); };
@@ -260,7 +276,12 @@
         dwSB('data-chk="#v6Tot"', 'mass', 'Tổng khối lượng', 'Total Mass', 'Tổng khối lượng theo vật liệu (góc dưới phải, kéo để dời)', 'Total mass per material (bottom right, drag to move)')) +
         dwCol('<div class="dwsRow"' + dwTip('Tên body của linh kiện đang chọn trên bản vẽ (đổi cả trong 3D)', 'Name of the body of the part picked on the sheet (renames it in 3D too)') + '>' + dwT('Tên', 'Name') + '<input type="text" data-bind="v6PName" class="dwsTxt"></div>' +
           '<div class="dwsRow">' + dwT('Vật liệu', 'Material') + dwSel('v6PMat', 'Vật liệu của linh kiện đang chọn', 'Material of the picked part') + '</div>' +
-          '<div class="dwsRow"><span data-text="v6PMass"></span></div>'));
+          '<div class="dwsRow"><span data-text="v6PMass"></span></div>')) +
+      dwGrp('Khung', 'Frames', dwBB('data-act="rect"', 'frame', 'Khung', 'Frame', 'Kẻ khung chữ nhật chia khu vực một cụm: kéo trên bản vẽ (bấm một điểm = khung mặc định). Kéo cạnh / tên để dời, kéo góc để đổi cỡ, bấm đúp tên để sửa, Delete để xoá. Esc để thôi', 'Draw a rectangle around the parts of one group: drag on the sheet (a click gives a default frame). Drag an edge / the name to move, the corner to resize, double-click the name to edit, Delete to remove. Esc to stop') +
+        dwCol('<div class="dwsRow">' + dwT('Màu', 'Colour') + '<input type="color" data-bind="v6Rc"' + dwTip('Màu khung đang chọn (và khung mới)', 'Colour of the picked frame (and new frames)') + '></div>' +
+          dwSlider('Tên', 'Name', 'v6RsR', 'v6Rs', 'Cỡ chữ tên khung (mm)', 'Size of the frame name (mm)') +
+          dwSlider('Nét', 'Line', 'v6RwR', 'v6Rw', 'Bề dày nét khung (mm)', 'Frame line width (mm)')) +
+        dwSB('data-click="#v6DelR"', 'discard', 'Xoá', 'Delete', 'Xoá khung đang chọn (Delete)', 'Delete the picked frame (Delete)'));
     const set = dwSheetGrp() +
       dwGrp('Hướng nhìn', 'Orientation', dwCol(dwSB('data-click="#v6RotZ"', 'rotR', 'Xoay 90°', 'Rotate 90°', 'Xoay mô hình 90° quanh trục đứng (đổi mặt Trước)', 'Turn the model 90° about the vertical axis (changes the Front)') +
           dwSB('data-click="#v6RotZm"', 'rotL', 'Xoay -90°', 'Rotate -90°', 'Xoay mô hình -90° quanh trục đứng', 'Turn the model -90° about the vertical axis') +
@@ -274,9 +295,12 @@
           '<div class="dwsRow">' + dwT('Đơn vị', 'Units') + dwSel('v6Unit', 'Đơn vị ghi kích thước', 'Units of the dimensions') + '</div>') +
         dwCol(dwChk('#v6Fb', 'Chữ đậm', 'Bold Text', 'Chữ kích thước, tên view, tên linh kiện đậm', 'Bold dimension, view and part texts'))) +
       dwGrp('Ghi chú', 'Notes', dwBB('data-click="#v6AddT"', 'text', 'Thêm chữ', 'Add Text', 'Thêm ghi chú chữ (kéo để dời, bấm đúp để sửa, Delete để xoá)', 'Add a text note (drag to move, double-click to edit, Delete to remove)') +
-        dwCol(dwSlider('Cỡ', 'Size', 'v6NsR', 'v6Ns', 'Cỡ chữ của ghi chú đang chọn (mm)', 'Size of the selected note (mm)') +
-          dwChk('#v6Nb', 'Đậm', 'Bold', 'Ghi chú đang chọn in đậm', 'Selected note in bold') +
-          dwSB('data-click="#v6DelT"', 'discard', 'Xoá ghi chú', 'Delete Note', 'Xoá ghi chú đang chọn (Delete)', 'Delete the selected note (Delete)'))) +
+        dwCol('<div class="dwsRow">' + dwSel('v6Nf', 'Font chữ của ghi chú đang chọn', 'Font of the selected note') + dwSel('v6Na', 'Căn lề các dòng của ghi chú', 'Alignment of the note lines') + '</div>' +
+          dwSlider('Cỡ', 'Size', 'v6NsR', 'v6Ns', 'Cỡ chữ của ghi chú đang chọn (mm)', 'Size of the selected note (mm)') +
+          '<div class="dwsRow">' + dwT('Màu', 'Colour') + '<input type="color" data-bind="v6Nc"' + dwTip('Màu chữ của ghi chú đang chọn', 'Colour of the selected note') + '></div>') +
+        dwCol(dwChk('#v6Nb', 'Đậm', 'Bold', 'Ghi chú đang chọn in đậm', 'Selected note in bold') +
+          dwChk('#v6Ni', 'Nghiêng', 'Italic', 'Ghi chú đang chọn in nghiêng', 'Selected note in italics') +
+          dwChk('#v6Nu', 'Gạch chân', 'Underline', 'Gạch chân ghi chú đang chọn', 'Underline the selected note'))) +
       dwGrp('Ảnh xuất', 'Picture', dwCol(dwSlider('DPI', 'DPI', 'v6DpiR', 'v6Dpi', 'Độ phân giải ảnh / PDF', 'Resolution of the picture / PDF') +
           '<div class="dwsRow">' + dwT('Khử răng', 'Smoothing') + dwSel('v6SS', 'Khử răng cưa: dựng ảnh lớn hơn rồi thu nhỏ', 'Anti-aliasing: draw larger, then scale down') + dwT('Nền', 'Background') + dwSel('v6Bg', 'Nền ảnh PNG', 'PNG background') + '</div>' +
           dwSlider('JPG', 'JPG', 'v6QR', 'v6Q', 'Chất lượng JPG (%)', 'JPG quality (%)')) +
@@ -349,6 +373,10 @@
     dim: function () { v6DimTool(!V6S.dt); },
     fit: function () { v6Fit(); },
     png: function () { dwExport(null, 'png').catch(showError); },
+    eachPng: function () { dwExportEach('png').catch(showError); },
+    eachJpg: function () { dwExportEach('jpg').catch(showError); },
+    eachPdf: function () { dwExportEach('pdf').catch(showError); },
+    rect: function () { v6RectTool(!V6S.rt); },
     jpg: function () { dwExport(null, 'jpg').catch(showError); },
     resetExp: function () { V6S.off = {}; v6Preview(); },
     comb: function () {
@@ -387,6 +415,7 @@
     const sel = V6S.psel !== null && V6S.psel !== undefined;
     r.querySelectorAll('button[data-act=comb]').forEach(function (b) { b.classList.toggle('hl', V6S.comb !== null); });
     r.querySelectorAll('button[data-act=dim]').forEach(function (b) { b.classList.toggle('hl', !!V6S.dt); });
+    r.querySelectorAll('button[data-act=rect]').forEach(function (b) { b.classList.toggle('on', !!V6S.rt); });
     r.querySelectorAll('button[data-act=sep]').forEach(function (b) { b.disabled = !(sel && (V6S.grp[V6S.psel] || []).length); });
   }
   function dwTabSet(k) {
@@ -398,13 +427,15 @@
     dwSyncRibbon();
   }
   document.querySelectorAll('#dwsTabs .rtab').forEach(function (b) { b.addEventListener('click', function () { dwTabSet(b.dataset.k); }); });
+  // another sheet opened: the Export tab stays open, otherwise the tab of the sheet's drawing type
+  function dwTabKeep(mode) { const t = document.querySelector('#dwsTabs .rtab.on'); dwTabSet(t && t.dataset.k === 'set' ? 'set' : mode); }
   // ---------- tree + sheet bar
   function dwStatus(s) { return s.dirty ? ['mod', L('Đã sửa', 'Modified'), L('Có thay đổi chưa Save', 'Has changes not saved')] : ['sv', L('Đã lưu', 'Saved'), L('Đã Save', 'Saved')]; }
   function dwRefresh(force) {
     if (!DW.open && !force) return;
     const d = dwDoc(), chk = d.sheets.map(function (x) { return dwCheck(x); }), cur = dwCur(), cc = chk[d.sheets.indexOf(cur)];
     const views = dwViewsOf(cur), src = dwSrcOf(cur), hide = dwHideOf(cur), lost = (V6S.prev && V6S.prev.lostDims) || [];
-    const sig = [lang, dwDocName(), d.active, DW.bsel, V6S.vsel, views.join(','), src.join(','), hide.join(','), lost.join(','), dwDocSrc().join(','), S.bodies.map(function (b) { return b.uid + b.name; }).join(',')]
+    const sig = [lang, dwDocName(), d.active, DW.bsel, JSON.stringify(DW.fold), V6S.vsel, views.join(','), src.join(','), hide.join(','), lost.join(','), dwDocSrc().join(','), S.bodies.map(function (b) { return b.uid + b.name; }).join(',')]
       .concat(d.sheets.map(function (x, i) { return x.id + '|' + x.name + '|' + (x.dirty ? 1 : 0) + '|' + chk[i].status + '|' + chk[i].changed.join(',') + '|' + chk[i].missing.join(','); })).join('\n');
     if (!force && sig === DW.sig) { dwSyncRibbon(); return; }
     if (DW.ren || (DW.drag && !force)) return;   // renaming / dragging: redraw after
@@ -421,13 +452,14 @@
     const bar = $('dwsTabsS'); bar.innerHTML = '';
     d.sheets.forEach(function (x, i) {
       const sv = dwStatus(x), up = dwUpdState(chk[i].status);
-      const n = node('sheet' + (x.id === d.active ? ' on' : ''), dwIco('sheet', 15) + '<span class="nm"></span>' + badge(sv) + badge(up), { id: x.id });
+      const open = x.id === d.active && !DW.fold[x.id];
+      const n = node('sheet' + (x.id === d.active ? ' on' : ''), '<span class="tw" title="' + dwEsc(open ? L('Thu gọn', 'Collapse') : L('Mở rộng', 'Expand')) + '">' + (open ? '▾' : '▸') + '</span>' + dwIco('sheet', 15) + '<span class="nm"></span>' + badge(sv) + badge(up), { id: x.id });
       n.draggable = true; n.querySelector('.nm').textContent = x.name;
       if (x.fail && x.failMsg) n.title = x.failMsg;
       const t = document.createElement('div'); t.className = 'dwsTab' + (x.id === d.active ? ' on' : ''); t.dataset.id = x.id; t.draggable = true;
       t.innerHTML = '<span class="nm"></span><span class="st ' + sv[0] + '" title="' + dwEsc(sv[2]) + '">●</span>' + (up[0] !== 'ok' ? '<span class="st ' + up[0] + '" title="' + dwEsc(up[2]) + '">' + (up[0] === 'upd' ? '⟳' : '✖') + '</span>' : '');
       t.querySelector('.nm').textContent = x.name; bar.appendChild(t);
-      if (x.id !== d.active) return;
+      if (!open) return;
       // the open sheet: its views and its source bodies
       node('grp', '<span class="nm">' + dwEsc(L('Views', 'Views')) + ' (' + views.length + ')</span>');
       views.forEach(function (v) {
@@ -481,9 +513,13 @@
         showMenu(dwDocSrc().filter(function (u) { return list.indexOf(u) < 0; }).map(function (u) { const b = dwBodyByUid(u); return [b ? b.name : dwSnapAny(u), function () { dwSrcBack(u); }, 'dup']; }), r.left, r.bottom);
         return;
       }
+      if (n.dataset.id && e.target.closest('.tw')) {
+        if (n.dataset.id !== dwDoc().active) { DW.fold[n.dataset.id] = false; dwOpenSheet(n.dataset.id); } else DW.fold[n.dataset.id] = !DW.fold[n.dataset.id];
+        dwRefresh(true); return;
+      }
       if (n.dataset.add) dwNewSheet(); else if (n.dataset.id) dwOpenSheet(n.dataset.id);
       else if (n.dataset.view) { V6S.vsel = n.dataset.view === 'Exploded view' ? null : n.dataset.view; v6Paint(); dwRefresh(true); }
-      else if (n.dataset.uid) { DW.bsel = DW.bsel === n.dataset.uid ? null : n.dataset.uid; dwRefresh(true); }
+      else if (n.dataset.uid) dwBodyPick(DW.bsel === n.dataset.uid ? null : n.dataset.uid);
     });
     c.addEventListener('dblclick', function (e) { const n = dwNodeOf(e); if (!n || n.dataset.add || !(n.dataset.id || n.dataset.root)) return; dwStartRename(n, n.dataset.id || null); });
     c.addEventListener('contextmenu', function (e) {
@@ -500,7 +536,7 @@
         return;
       }
       if (n.dataset.uid) {
-        const u = n.dataset.uid, hid = dwHideOf(dwCur()).indexOf(u) >= 0; DW.bsel = u; dwRefresh(true);
+        const u = n.dataset.uid, hid = dwHideOf(dwCur()).indexOf(u) >= 0; dwBodyPick(u);
         showMenu([[hid ? L('Hiện trong Sheet', 'Show in the sheet') : L('Ẩn trong Sheet', 'Hide in the sheet'), function () { dwSrcHide(u, !hid); }, hid ? 'show' : 'hide'],
           [L('Bỏ khỏi Sheet này', 'Remove from this sheet'), function () { dwSrcDrop(u); }, 'del'], [L('Cập nhật body này', 'Update this body'), function () { dwUpdDialog('all', [u]); }, 'undo']], e.clientX, e.clientY);
         return;
@@ -536,11 +572,11 @@
   $('dwsSrcList').addEventListener('click', function (e) {
     const r = e.target.closest('.dwsSrcI'); if (!r) return; const u = r.dataset.uid;
     if (e.target.closest('.rep')) { dwSrcOpen('replace', u); return; }
-    DW.bsel = DW.bsel === u ? null : u; DW.sig = ''; dwRefresh(true);
+    dwBodyPick(DW.bsel === u ? null : u);
   });
   $('dwsSrcList').addEventListener('contextmenu', function (e) {
     e.preventDefault(); const r = e.target.closest('.dwsSrcI'); if (!r) return; const u = r.dataset.uid, b = dwBodyByUid(u);
-    DW.bsel = u; DW.sig = ''; dwRefresh(true);
+    dwBodyPick(u);
     showMenu([[L('Thay thế bằng body khác…', 'Replace with another body…'), function () { dwSrcOpen('replace', u); }, 'edit'], [L('Thay thế: chọn trong 3D', 'Replace: pick in 3D'), function () { dwPickStart('replace', u); }, 'edit'],
       [L('Cập nhật body này', 'Update this body'), function () { dwUpdDialog('all', [u]); }, 'undo'], null,
       [L('Bỏ khỏi Source Bodies', 'Remove from the Source Bodies'), function () { dwSrcRemoveDoc(u); }, 'del']].filter(function (x, i) { return b || i !== 2; }), e.clientX, e.clientY);

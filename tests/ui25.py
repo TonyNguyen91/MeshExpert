@@ -71,7 +71,7 @@ with sync_playwright() as p:
     pg.click('#dwsTabs [data-k=exp]'); settle()
     pg.evaluate("__mrt.v6().off={1:[0.1,0.1]}")
     pg.click('#dwsRibbon .rpage.on button[data-click="#v6Auto"]'); settle()
-    ok('Exploded Auto Arrange drops hand placements',pg.evaluate("Object.keys(__mrt.v6().off).length")==0)
+    ok('Exploded Auto Arrange places every part (its own layout)',pg.evaluate("(()=>{const V=__mrt.v6();return V.prev.parts.every(p=>V.off[p.id]&&V.off[p.id][0]!=0.1)})()"))
     ok('No page errors',not errs,errs[:3])
     b.close()
 print('FAILS',fails); sys.exit(1 if fails else 0)

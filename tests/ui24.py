@@ -192,7 +192,7 @@ with sync_playwright() as p:
     ok('Deleted body still drawn after reopening',pg2.evaluate("__mrt.v6().prev.sc6.preps.length")==2)
     pg2.close()
     # ---------------- undo / redo
-    sv('#v6Paper','A4'); tick()
+    sv('#v6Paper','A4'); settle(); tick()
     pg.mouse.click(700,500); pg.keyboard.press('Control+z'); settle()
     ok('Ctrl+Z undoes the sheet change',pg.input_value('#v6Paper')=='A3')
     pg.keyboard.press('Control+y'); settle()
