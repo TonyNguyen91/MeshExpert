@@ -5,9 +5,10 @@ Công cụ chỉnh sửa mesh STL/OBJ chạy offline trong trình duyệt. Mở 
 App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội bộ: mọi thư viện đều nằm sẵn trong `index.html`, và chính sách bảo mật (Content-Security-Policy) trong file chặn mọi kết nối mạng.
 
 ## Phiên bản
-Phiên bản hiện tại: **v1.0.0** — hiện cạnh tên app (góc trên trái), trên tiêu đề cửa sổ và ở đầu Drawing Workspace. Mỗi bản vá tăng số cuối (v1.0.1, v1.0.2…), mỗi đợt tính năng mới tăng số giữa; số phiên bản nằm ở `APP_VER` trong `src/app2.js` và ở đầu dòng mô tả của commit tương ứng.
+Phiên bản hiện tại: **v1.1.0** — hiện cạnh tên app (góc trên trái), trên tiêu đề cửa sổ và ở đầu Drawing Workspace. Mỗi bản vá tăng số cuối (v1.0.1, v1.0.2…), mỗi đợt tính năng mới tăng số giữa; số phiên bản nằm ở `APP_VER` trong `src/app2.js` và ở đầu dòng mô tả của commit tương ứng.
 
 ### Nhật ký thay đổi
+- **v1.1.0** (20/11/2026) — Sheet bản vẽ luôn theo mô hình 3D mới nhất: bỏ cột Source Bodies, bỏ body "mất" / Thay thế, bỏ Kiểm tra / Cập nhật và hình cũ (snapshot) trong file phiên, bỏ Save / Discard và trạng thái Đã lưu / Đã sửa / Cần cập nhật của Sheet (thay đổi được giữ ngay; Ctrl+S lưu phiên). Body của Sheet = mọi body của mô hình, ẩn / hiện riêng từng Sheet (thêm "Chỉ hiện body này", "Hiện mọi body"). Bấm body trong danh sách → sáng cam ngay, không dựng lại hình.
 - **v1.0.0** (20/11/2026) — Bắt đầu đánh số phiên bản. Sửa lỗi không bỏ được body đã bị xoá khỏi mô hình 3D ("✖ Mất") khỏi Source Bodies: câu hỏi xác nhận nay là hộp thoại của app (hộp xác nhận của trình duyệt có thể bị tắt cho trang và tự trả lời "Huỷ"); phím Delete bỏ body đang chọn (chọn ở cột Source Bodies → bỏ khỏi Source Bodies; chọn ở "Body của Sheet" → bỏ khỏi Sheet); Sheet chỉ còn một body đã mất vẫn bỏ được body đó; menu chuột phải của body đã mất trong cây có "Bỏ khỏi Source Bodies"; menu cột trái có "Bỏ mọi body đang mất (n)"; hộp Kiểm tra / Cập nhật có nút "Bỏ body bị mất khỏi Source Bodies".
 
 ## Cấu trúc
@@ -19,7 +20,7 @@ Phiên bản hiện tại: **v1.0.0** — hiện cạnh tên app (góc trên tr�
 - `src/app2.js` — logic giao diện và thao tác.
 - `src/model.js` — môi trường sketch và danh sách sketch; `src/feat.js` — Extrude / Revolve, Boolean, các lệnh solid, phím tắt. Cả hai được chèn vào `app2.js` khi build.
 - `src/v6.js` — bộ máy vẽ bản vẽ: 6 view và Exploded view.
-- `src/dws.js`, `src/dws.css` — Drawing Workspace (Ribbon, Drawing Tree, Sheet, lưu phiên); `src/dwupd.js` — liên kết với mô hình 3D, cập nhật, hoàn tác; `src/dwsel.js` — Source Bodies; `src/dwexp.js` — xuất PDF.
+- `src/dws.js`, `src/dws.css` — Drawing Workspace (Ribbon, Drawing Tree, Sheet, lưu phiên); `src/dwupd.js` — body của bản vẽ (luôn theo 3D) + hoàn tác; `src/dwsel.js` — ẩn / hiện body theo Sheet, Tạo Drawing Sheet; `src/dwexp.js` — xuất PDF.
 - `src/manifold_embed.js` — thư viện Manifold 3.5.4 (Apache 2.0, xem `src/MANIFOLD_LICENSE.txt`) nhúng sẵn, dùng cho Boolean.
 - `src/build.py` — ghép các file trên thành `index.html`: `python3 src/build.py`.
 - `src/test_core.js`, `src/test_cmp.js`, `src/test_split.js`, `src/test_repair.js`, `src/test_solid.js`, `src/test_sketch.js`, `src/test_dress.js` — kiểm thử lõi bằng Node.js (chạy `build.py` trước).
@@ -114,7 +115,7 @@ Phiên bản hiện tại: **v1.0.0** — hiện cạnh tên app (góc trên tr�
 
 ## Drawing Workspace (Chụp → Drawing)
 - Nút **Drawing** chuyển sang **Drawing Workspace**: một màn hình làm việc riêng che toàn cửa sổ. Mô hình 3D, danh sách body, lựa chọn và góc nhìn vẫn giữ nguyên bên dưới; nút **3D Workspace** (góc trên phải) để quay lại.
-- Bố cục: **Ribbon** phía trên (tab **Drawing** và **Export**), cột trái **Source Bodies** (cố định), **Sheet Canvas** ở giữa, **Drawing Tree** bên phải (kéo mép cột để đổi bề rộng), **thanh Sheet** phía dưới (các tab Sheet + nút Save / Discard / Duplicate + trạng thái). Bảng thuộc tính cũ đã bỏ — mọi thiết lập nằm trên ribbon.
+- Bố cục: **Ribbon** phía trên (tab **Drawing** và **Export**), **Sheet Canvas** ở giữa, **Drawing Tree** bên phải (kéo mép cột để đổi bề rộng), **thanh Sheet** phía dưới (các tab Sheet + nút Save / Discard / Duplicate + trạng thái). Bảng thuộc tính cũ đã bỏ — mọi thiết lập nằm trên ribbon.
 - Tab **Drawing** gộp 6 Views và Exploded View: nút **2D Type** (ngoài cùng bên phải) chọn loại bản vẽ của Sheet — 6 Views hoặc Exploded View (hỏi xác nhận trước khi đổi; thiết lập mỗi loại vẫn giữ) — và ribbon hiện các nhóm của loại đó.
 - Loại 6 Views: Tạo view (bật/tắt Trước/Trên/Dưới/Trái/Phải/Sau, Isometric — nút sáng khi view đang hiện), Isometric (góc xoay, góc nghiêng, cỡ hình iso — chỉ dùng được khi bật Isometric), Tỉ lệ & bố trí (tỉ lệ + tỉ lệ tuỳ chọn a : b, **Xếp tự động**: các hình chiếu cách đều nhau và cách đều viền, giữ nguyên cỡ; tính cả tên view, kích thước bao, dòng ghi tỉ lệ; hình iso vào ô trống cho khoảng cách lớn nhất, ưu tiên góc trên phải), Chú thích (tên view, ghi tỉ lệ, kích thước bao tách 3 loại bật / tắt riêng: **Dài**, **Rộng**, **Cao**; Dimension). Đường gióng của kích thước bao bắt đầu sát điểm ngoài cùng thật của vật thể (vd. góc vát), kéo đường kích thước để dời xa / gần (được lưu theo mm trên giấy).
 - Loại Exploded View: Explode (thanh **Explode** — mặc định 0 = cụm lắp nguyên, kéo để tách các linh kiện —, bỏ vị trí kéo tay, **Xếp tự động**, Combine, Tách ra), Góc nhìn (góc xoay / nghiêng cả cụm), Thông tin (tên linh kiện, vật liệu + khối lượng, tổng khối lượng; tên / vật liệu / khối lượng linh kiện đang chọn), **Khung** (kẻ khung chữ nhật chia khu vực các part rời của một cụm: bấm Khung rồi kéo trên bản vẽ, bấm một điểm = khung mặc định; tên cụm trên cạnh trên, bấm đúp hoặc chuột phải để sửa; kéo cạnh / tên để dời, kéo góc để đổi cỡ — cạnh tự bắt thẳng hàng (ngang và dọc) với cạnh các khung khác, có đường gióng xanh; màu mặc định đỏ, đổi được; cỡ chữ tên, bề dày nét; Delete hoặc chuột phải → Xoá; có trong PDF dạng nét vector).
@@ -123,20 +124,20 @@ Phiên bản hiện tại: **v1.0.0** — hiện cạnh tên app (góc trên tr�
 - Ribbon Export (chức năng chung, áp dụng cho loại bản vẽ đang mở): Sheet (Sheet mới, khổ, hướng, W × H khi khổ Tùy chọn, vừa khung), Hướng nhìn (xoay ±90°, lật 90°, cỡ hình), Hiển thị (nét cạnh, nét khuất, B-rep mịn, màu + màu đơn, ánh sáng, góc nét), Nét & chữ (bề dày nét, cỡ chữ, đơn vị, chữ đậm), Ghi chú (thêm chữ, font, cỡ, màu, đậm, nghiêng, gạch chân; **căn trái / giữa / phải bằng chuột phải lên ghi chú**), Ảnh xuất (DPI, khử răng cưa, nền PNG, chất lượng JPG — gọn), Thông tin (khổ / ảnh / mô hình / tỉ lệ / dung lượng, rê chuột để xem đủ), Xuất (luôn hiện đủ chữ: PNG, JPG, PDF, PNG / JPG / PDF từng Sheet — mỗi Sheet một file, tên = tên Sheet —, PDF gộp, Chép ảnh cỡ gửi mail).
 - Mặc định bản vẽ mới: nét 0,01 mm, cỡ chữ kích thước 5 mm, 300 DPI.
 - Bản xem trước mượt: lăn chuột / kéo / rê chuột chỉ phóng ảnh đã dựng của tờ giấy; dừng tay khoảng 3 giây thì chữ và hình chiếu mới được vẽ sắc lại (đỡ khựng); phóng to nhiều thì dựng ảnh mới trước 1,8 lần nên ít phải dựng lại.
-- Chọn body trong cột Source Bodies hoặc trong "Body của Sheet" → body sáng màu cam trên bản vẽ (6 Views và Exploded); ở Exploded bấm một linh kiện trên bản vẽ → body đó sáng trong cả hai danh sách. Bấm lại để bỏ.
+- Bấm một body trong "Body của Sheet" → body đó sáng màu cam trên bản vẽ (6 Views và Exploded) ngay lập tức, không phải dựng lại hình (màu cam lấy từ mặt nạ từng body của lần dựng hình trước); ở Exploded bấm một linh kiện trên bản vẽ → body đó sáng trong danh sách. Bấm lại để bỏ.
 - Drawing Tree: mũi tên ▾ / ▸ cạnh Sheet để thu gọn / mở các view và body của Sheet.
 - **Drawing Tree**: gốc `Drawing of "<tên model>"` (tên lấy từ tên phiên, hoặc tên body đầu tiên) và các Sheet. Bấm để mở Sheet; Sheet đang mở được tô sáng; mỗi Sheet ghi **Đã lưu** / **Đã sửa**. Bấm đúp để đổi tên; kéo thả để đổi thứ tự (cả trong cây lẫn trên thanh Sheet). Chuột phải gốc: Sheet mới, Đổi tên bản vẽ. Chuột phải Sheet: Mở, Đổi tên, Nhân bản, Xoá (có hỏi lại), Xuất PNG, Xuất JPG.
 - Mỗi **Sheet** là một bản vẽ độc lập với cấu hình riêng (khổ giấy, hướng, tỉ lệ, view, vị trí, hiển thị, ghi chú; trong mỗi Sheet tab 6 Views và Exploded View vẫn là hai bản vẽ riêng). Chuyển Sheet không làm mất cấu hình của Sheet trước.
-- **Save** (Ctrl+S): lưu Sheet hiện tại → "Đã lưu". **Discard**: bỏ các thay đổi chưa Save (có hỏi lại), về đúng lần Save trước. **Duplicate** (Ctrl+D): tạo "Sheet … Copy" ngay sau, dữ liệu độc lập với bản gốc.
+- **Không có Save / Discard theo Sheet**: mọi thay đổi trên Sheet được giữ ngay. **Duplicate** (Ctrl+D) nhân bản Sheet. **Ctrl+S** trong Drawing Workspace lưu cả phiên (.mrtl) như ở vùng 3D.
 - **Lưu tài liệu** (nút trên cùng) ghi cả phiên .mrtl gồm mọi Sheet (Ctrl+Shift+S: lưu thành file khác). Mở lại file .mrtl khôi phục đủ: tên bản vẽ, thứ tự, Sheet đang mở, thiết lập từng Sheet, trạng thái Đã lưu / Đã sửa. Phiên lưu từ bản cũ (chưa có Workspace) mở ra thành Sheet 1.
 - Trong Drawing Workspace các phím tắt của vùng 3D không tác dụng (Delete, Ctrl+Z… không đụng tới mô hình). **Ctrl+Z / Ctrl+Y** hoàn tác / làm lại thay đổi của Sheet đang mở.
 
-### Source Bodies (dùng chung cho cả bản vẽ) và body của từng Sheet
-- Cột trái **Source Bodies** luôn hiện: một danh sách body nguồn duy nhất cho mọi Sheet (tên, loại B-rep / Mesh, số Sheet đang dùng). Nút **+** thêm body của mô hình chưa có trong danh sách (tìm theo tên, chọn nhiều); nút **3D** chọn body ngay trong vùng 3D (Click / Ctrl+Click, **Enter** để thêm, **Esc** để quay lại). Chuột phải một body: Thay thế bằng body khác…, Thay thế: chọn trong 3D, Cập nhật body này, Bỏ khỏi Source Bodies (có hỏi lại; body biến mất khỏi mọi Sheet).
-- Body bị xoá trong 3D Workspace hiện **đỏ "✖ Mất"** kèm nút **Thay thế**: chọn body mới → mọi Sheet, kích thước, vị trí kéo tay chuyển sang body mới; các Sheet dùng nó báo **Cần cập nhật**, bấm cập nhật để vẽ body mới.
-- Bên phải, trong Drawing Tree, Sheet đang mở có mục **Body của Sheet**: mặc định lấy đủ Source Bodies ("đủ"); **×** bỏ body khỏi riêng Sheet đó, **◉ / ◌** ẩn tạm, nút **+ n** thêm lại body đã bỏ. Sheet mới lấy đủ Source Bodies.
-- Trong vùng 3D: chọn body → chuột phải → **Tạo Drawing Sheet**: mở Drawing Workspace, tạo Sheet chỉ gồm các body đó (tự thêm vào Source Bodies nếu chưa có).
+### Body của từng Sheet (luôn theo mô hình 3D)
+- Sheet luôn vẽ **đúng các body hiện có trong mô hình 3D, ở trạng thái mới nhất**: sửa hình, di chuyển, thêm hay xoá body trong 3D Workspace thì quay lại Drawing là thấy ngay — không cần bấm Cập nhật, không có body "mất" hay "thay thế". Body bị xoá trong 3D tự biến khỏi mọi Sheet; body mới tự có trong mọi Sheet.
+- Bên phải, Drawing Tree → Sheet đang mở → **Body của Sheet**: liệt kê mọi body của mô hình; **◉ / ◌** ẩn / hiện body trong riêng Sheet đó. Chuột phải body: Ẩn / Hiện trong Sheet này, Chỉ hiện body này, Hiện mọi body.
+- Trong vùng 3D: chọn body → chuột phải → **Tạo Drawing Sheet**: mở Drawing Workspace, tạo Sheet chỉ hiện các body đó (các body khác ẩn trong Sheet).
 - Body được nhận bằng **ID bền** (lưu trong file .mrtl), không theo tên: đổi tên body vẫn giữ liên kết.
+- Bản vẽ lưu từ bản cũ (có cột Source Bodies / danh sách body riêng): body nằm ngoài danh sách được chuyển thành body ẩn của Sheet; hình cũ và trạng thái Cập nhật không còn dùng.
 
 ### View độc lập
 - Bấm một view trên bản vẽ để chọn (viền cam), **Delete** để xoá riêng view đó; các view khác giữ nguyên vị trí đã kéo. Chuột phải view: Xoá view, Về vị trí tự động.
@@ -144,13 +145,6 @@ Phiên bản hiện tại: **v1.0.0** — hiện cạnh tên app (góc trên tr�
 ### Dimension (ghi kích thước bằng cách chọn điểm)
 - Tab 6 Views → **Dimension**: rê chuột lên view, điểm bắt (đầu cạnh nhìn thấy) hiện vòng cam; bấm điểm 1, bấm điểm 2 (cùng view), rồi bấm chỗ đặt đường kích thước: đặt phía trên/dưới → kích thước ngang, bên trái/phải → dọc, ở giữa → theo hướng 2 điểm. Tool vẫn bật để ghi tiếp; Esc để thôi.
 - Mỗi đầu kích thước gắn với **đỉnh của body** (ID body + toạ độ trong body), giá trị tự tính lại khi hình thay đổi mà đỉnh vẫn còn. Đỉnh không còn → kích thước hiện **đỏ, "? mất tham chiếu"**, không bao giờ hiện như còn đúng; chuột phải → **Chọn lại điểm** hoặc Xoá. Bấm chọn kích thước rồi kéo để dời đường kích thước; Delete để xoá.
-
-### Liên kết với mô hình 3D (Associative)
-- Khi tạo / Save Sheet, mỗi body nguồn được ghi lại phiên bản hình học (hash hình + vị trí; đổi tên, màu, ẩn/hiện không tính). Sửa hình hoặc di chuyển body trong 3D → các Sheet dùng body đó báo **Cần cập nhật** (Sheet khác vẫn **Đồng bộ**); bản vẽ vẫn giữ hình cũ cho tới khi cập nhật.
-- Trạng thái hiện trong Drawing Tree, tab Sheet và thanh dưới: **Đồng bộ** / **Cần cập nhật** / **Thiếu body** (body nguồn bị xoá — vẫn vẽ bằng hình cũ, không tự xoá khỏi bản vẽ) / **Lỗi cập nhật**.
-- **Cập nhật** (không còn trên ribbon): chuột phải Sheet → Cập nhật Sheet; chuột phải gốc Drawing Tree → Cập nhật tất cả Sheet; chuột phải body → Cập nhật body này. Trước khi cập nhật luôn có bảng xem trước: body đã đổi, Sheet bị ảnh hưởng, view sẽ tạo lại, body bị mất, kích thước cần kiểm tra (còn tham chiếu / mất tham chiếu) → **Áp dụng cập nhật** hoặc **Huỷ**.
-- Cập nhật chỉ dựng lại hình; giữ nguyên vị trí view, tỉ lệ, góc xoay, cỡ, màu, ánh sáng, nét, tên view, ghi chú, khổ giấy, thiết lập Exploded và vị trí linh kiện. Không thay đổi gì trong mô hình 3D.
-- File .mrtl lưu cả hình cũ mà các Sheet chưa cập nhật còn dùng, nên mở lại vẫn đúng trạng thái.
 
 ### Xuất PDF
 - Nhóm **Xuất**: **PDF** (Sheet đang mở) và **PDF tất cả** (mọi Sheet, mỗi Sheet một trang, theo thứ tự Drawing Tree); cũng có trong menu chuột phải của Sheet / gốc bản vẽ. Trang PDF đúng khổ giấy.

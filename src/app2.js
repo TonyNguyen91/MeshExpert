@@ -1239,7 +1239,7 @@
   // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
   // version of the app: shown next to the name, in the Drawing Workspace header and the window title; raised with every
   // published fix (patch number) or feature set (minor number)
-  const APP_VER = '1.0.0';
+  const APP_VER = '1.1.0';
   (function () { const v = 'v' + APP_VER; $('appVer').textContent = v; document.title = 'MeshExpert ' + v; })();
   const BL_DEF = { cn: 200, ct: 58, cm: 58 };
   let blCols = Object.assign({}, BL_DEF);
@@ -2664,16 +2664,6 @@
       meta.bodies.push({ name: b.name, color: b.color, opacity: b.opacity, visible: vis && vis.has(b) ? vis.get(b) : b.visible, matrix: b.matrix, matrix0: b.matrix0,
         material: b.material, density: b.density, solid: b.solid || null, sel: S.sel.has(b), uid: b.uid, pos: g.pos, nv: g.nv, idx: g.idx, nt: g.nt });
     }
-    // geometry that drawing sheets still show but the model no longer has (not updated yet / deleted bodies)
-    meta.drawSnaps = [];
-    for (const sn of dwSnapsForSave()) {
-      let g = geos.get(sn.geo);
-      if (!g) {
-        g = { pos: off, nv: sn.geo.positions.length / 3, idx: off + sn.geo.positions.byteLength, nt: sn.geo.indices.length / 3 };
-        blobs.push(sn.geo.positions, sn.geo.indices); off += sn.geo.positions.byteLength + sn.geo.indices.byteLength; geos.set(sn.geo, g);
-      }
-      meta.drawSnaps.push({ rev: sn.rev, uid: sn.uid, name: sn.name, material: sn.material, density: sn.density, color: sn.color, matrix: sn.matrix, pos: g.pos, nv: g.nv, idx: g.idx, nt: g.nt });
-    }
     let json = JSON.stringify(meta);
     let bytes = new TextEncoder().encode(json);
     if (bytes.length % 4) { json += '   '.slice(0, 4 - bytes.length % 4); bytes = new TextEncoder().encode(json); }
@@ -2707,13 +2697,7 @@
     if (meta.view) { mainCam.R = meta.view.R; mainCam.target = meta.view.target; mainCam.zoom = meta.view.zoom; }
     hist.undo.length = 0; hist.redo.length = 0; updateHistBtns();
     updateMeasList(); refresh();
-    const snaps = (meta.drawSnaps || []).map(function (o) {
-      const gk = o.pos + ':' + o.nv + ':' + o.nt;
-      let g = geos.get(gk);
-      if (!g) { g = makeGeo(new Float32Array(buf.slice(base + o.pos, base + o.pos + o.nv * 12)), new Uint32Array(buf.slice(base + o.idx, base + o.idx + o.nt * 12))); geos.set(gk, g); }
-      return { rev: o.rev, uid: o.uid, name: o.name, material: o.material, density: o.density, color: o.color, matrix: o.matrix, geo: g };
-    });
-    if (meta.drawDoc) dwLoad(meta.drawDoc, snaps); else { v6Load(meta.drawing || null); dwLoad(null, snaps); }
+    if (meta.drawDoc) dwLoad(meta.drawDoc); else { v6Load(meta.drawing || null); dwLoad(null); }
   }
   function clearAll() {
     for (const b of S.bodies.slice()) removeBody(b);
@@ -2825,5 +2809,5 @@
 /*MODEL*/
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwRev: function (b) { return dwRev(b); }, dwCheck: function () { return DW.doc ? DW.doc.sheets.map(function (s) { const c = dwCheck(s); return { name: s.name, status: c.status, changed: c.changed, missing: c.missing, dims: c.dims.map(function (d) { return [d.dm.id, d.ok]; }) }; }) : []; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, dwType: function (m) { dwTabSet(m); }, v6Paint: function () { v6Paint(); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, dwType: function (m) { dwTabSet(m); }, dwLoad: function (d) { dwLoad(d); }, v6Paint: function () { v6Paint(); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();

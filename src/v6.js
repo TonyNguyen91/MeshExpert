@@ -265,7 +265,7 @@
     const draw = function (mode) {
       g.clearColor(1, 1, 1, mode === 0 ? 1 : 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT); g.uniform1i(U.uMode, mode); g.uniform1i(U.uLight, light);
       for (const p of preps) {
-        g.uniform3fv(U.uC, o.hl && p.b.uid === o.hl ? [1, 0.55, 0.12] : o.col === 'white' ? [1, 1, 1] : o.col === 'one' ? o.one : p.color);
+        g.uniform3fv(U.uC, o.col === 'white' ? [1, 1, 1] : o.col === 'one' ? o.one : p.color);
         g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n);
       }
     };
@@ -276,10 +276,20 @@
     const fill = new ImageData(vw, vh);
     draw(1); g.readPixels(0, 0, vw, vh, g.RGBA, g.UNSIGNED_BYTE, px);
     for (let y = 0; y < vh; y++) { const ro = (vh - 1 - y) * vw * 4; fill.data.set(px.subarray(ro, ro + 4 * vw), y * vw * 4); }
+    // preview: which body each pixel shows (flat colour = body number), so a body picked in a list lights up without a
+    // new render (v6HlMask)
+    let ids = null;
+    if (o.idm) {
+      g.clearColor(0, 0, 0, 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT); g.uniform1i(U.uMode, 1); g.uniform1i(U.uLight, 2);
+      preps.forEach(function (p, i) { const k = i + 1; g.uniform3fv(U.uC, [(k & 255) / 255, ((k >> 8) & 255) / 255, 0]); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n); });
+      g.readPixels(0, 0, vw, vh, g.RGBA, g.UNSIGNED_BYTE, px);
+      ids = new Uint16Array(vw * vh);
+      for (let y = 0; y < vh; y++) { const ro = (vh - 1 - y) * vw * 4, wo = y * vw; for (let x = 0; x < vw; x++) { const k = ro + 4 * x; ids[wo + x] = px[k] | (px[k + 1] << 8); } }
+    }
     g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(fb); g.deleteRenderbuffer(cb); g.deleteRenderbuffer(db);
     const cv = document.createElement('canvas'); cv.width = vw; cv.height = vh;
     const c2 = cv.getContext('2d'); c2.putImageData(fill, 0, 0);
-    const map = { R0: R0, U0: U0, S2: S2, vh: vh, ctr: sc6.ctr, D: D };
+    const map = { R0: R0, U0: U0, S2: S2, vh: vh, ctr: sc6.ctr, D: D, ids: ids, uids: ids ? preps.map(function (p) { return p.b.uid; }) : null };
     let vec = null, snaps = null;
     if (o.edge || o.col === 'white' || o.snap) {
       // farthest depth of the 3x3 neighbourhood: an edge is hidden only when everything around it is in front
@@ -394,20 +404,36 @@
     if (o.fine && k >= 1 && !quick) { sc6 = await v6Scene(o, sc); if (o.exp) plan = v6ExpPlan(o, sc6); }
     const M = v6Metrics(o), G = v6GL(); v6Upload(G, sc6);
     const out = { sc6: sc6, sc: sc, views: {}, parts: [], plan: plan, isoK: o.isoK };
+    const oi = Object.assign({}, o, { idm: !!quick });      // preview: body-number pixels for the highlight
     try {
       if (o.exp) {
-        for (const it of plan.items) out.parts.push(Object.assign(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, o), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
+        for (const it of plan.items) out.parts.push(Object.assign(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, oi), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
       } else {
         const ap = v6Auto(o, sc6.ext, sc).pos; out.pos = V6S.pos ? Object.assign({}, ap, V6S.pos) : ap;
-        const os = Object.assign({}, o, { snap: true });
+        const os = Object.assign({}, oi, { snap: true });
         for (const n of v6Names(o)) out.views[n] = v6View(G, sc6, sc6.preps, v6Dirs(V6_VIEWS[n]), sc * k, ss, M.lw * k, os);
-        if (o.iso) out.iso = v6View(G, sc6, sc6.preps, v6Dirs(v6IsoSpec(o.az, o.el)), sc * k * o.isoK, ss, M.lw * k * Math.min(1, o.isoK), o);
+        if (o.iso) out.iso = v6View(G, sc6, sc6.preps, v6Dirs(v6IsoSpec(o.az, o.el)), sc * k * o.isoK, ss, M.lw * k * Math.min(1, o.isoK), oi);
       }
     } finally { v6Release(G, sc6); }
     return out;
   }
 
   // ---------- the sheet: pictures, dimensions, names, notes, drawn at k x full size; returns hit boxes
+  // orange mask of one body over a preview picture, made from its body-number pixels and kept until the next render
+  function v6HlMask(v, uid) {
+    const M = v.map; if (!M || !M.ids) return null;
+    const k = M.uids.indexOf(uid) + 1; if (!k) return null;
+    if (v.hlU === uid) return v.hlC;
+    const w = v.cv.width, h = v.cv.height, ids = M.ids;
+    let cv = null;
+    if (ids.length === w * h) {
+      const im = new ImageData(w, h), d = im.data; let any = false;
+      for (let i = 0; i < ids.length; i++) if (ids[i] === k) { const j = 4 * i; d[j] = 255; d[j + 1] = 130; d[j + 2] = 20; d[j + 3] = 150; any = true; }
+      if (any) { cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.getContext('2d').putImageData(im, 0, 0); }
+    }
+    v.hlU = uid; v.hlC = cv;
+    return cv;
+  }
   function v6Font(px, bold) { return (bold ? 'bold ' : '') + Math.round(px) + 'px "Segoe UI", Arial, sans-serif'; }
   const V6_FALL = { 'Times New Roman': 'Times, serif', Georgia: '"Times New Roman", serif', Cambria: '"Times New Roman", serif', 'Courier New': 'Courier, monospace', Consolas: '"Courier New", monospace' };
   function v6NoteFont(n, px) {
@@ -421,6 +447,7 @@
       f = f || 1;
       const w = v.w * f, h = v.h * f, x = cx - w / 2, y = cy - h / 2, pad = v.pad / v.ss * f;
       c2.drawImage(v.cv, x - pad, y - pad, v.cv.width / v.ss * f, v.cv.height / v.ss * f);
+      if (V6S.hl && R === V6S.prev) { const m = v6HlMask(v, V6S.hl); if (m) c2.drawImage(m, x - pad, y - pad, v.cv.width / v.ss * f, v.cv.height / v.ss * f); }
       const tr = { x0: x - pad, y0: y - pad, s: f / v.ss };
       if (c2.__rec && v.vec) dwRecEdges(c2, v.vec, tr);
       return { x: x, y: y, w: w, h: h, tr: tr };
@@ -972,11 +999,10 @@
     if (v6Busy) { v6Again = true; return; }
     v6Busy = true;
     const o = v6Sync(), pc = $('v6Prev');
-    o.hl = V6S.hl;
     try {
       const L = v6Layout(o), k = v6WantK(o, L, V6S.vz > 1.05 ? V6S.kx || 1 : 1), big = o.W * o.H * k * k;
       V6S.prev = Object.assign(await v6Render(o, k, big > 3e6 ? 1 : Math.min(2, o.ss), true), { o: o, k: k });
-      v6Paint(); dwRenderOk();
+      v6Paint();
       $('v6Zoom').textContent = o.W + ' × ' + o.H + ' px';
       // expected size: a small copy of the sheet encoded the same way, scaled up by area (larger pictures compress better)
       if (big <= 2.5e6 || !V6S.est) {
@@ -988,7 +1014,7 @@
       v6Info(o, V6S.prev, V6S.est);
     } catch (e) {
       const g = pc.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#fff'; g.fillRect(0, 0, pc.width, pc.height); g.fillStyle = '#a33'; g.font = '13px sans-serif'; g.fillText(e.message, 10, 22);
-      V6S.prev = null; v6Info(o, null, 0); dwRenderFail(e.message);
+      V6S.prev = null; v6Info(o, null, 0);
     } finally { v6Busy = false; if (v6Again) { v6Again = false; v6Preview(); } }
   }
   // Smooth preview: zoom, pan and hover only scale a cached bitmap of the composed sheet (drawn once at the render size)
@@ -1444,7 +1470,7 @@
     if (h && (h.kind === 'part' || h.kind === 'label')) { const pt = V6S.prev.parts.find(function (x) { return x.id === h.id; }); u = pt && pt.b.uid; }
     else if (h) u = null; else return;
     if (u === DW.bsel && u === V6S.hl) return;
-    DW.bsel = u; DW.bfrom = 'tree'; V6S.hl = u; dwRefresh(true); v6Preview();
+    DW.bsel = u; V6S.hl = u; dwTreeSel();
   }
   // part row in the panel: rename / material of the selected part, straight onto the body
   v6MatOpts($('v6PMat'));
@@ -1565,10 +1591,10 @@
   // ---------- drawing state: one plain object (copy) per sheet; v6Grab reads it from the panel + V6S, v6Put writes it back
   function v6Grab() {
     V6S.cfg[V6S.mode] = v6Snap(); V6S.st[V6S.mode] = v6StGet();
-    return JSON.parse(JSON.stringify({ mode: V6S.mode, cfg: V6S.cfg, st: V6S.st, notes: V6S.notes, rects: V6S.rects, seq: V6S.seq, dims: V6S.dims, src: V6S.src, hide: V6S.hide }));
+    return JSON.parse(JSON.stringify({ mode: V6S.mode, cfg: V6S.cfg, st: V6S.st, notes: V6S.notes, rects: V6S.rects, seq: V6S.seq, dims: V6S.dims, hide: V6S.hide }));
   }
   function v6Blank() {
-    return { mode: '6v', cfg: { '6v': Object.assign({}, V6S.def), exp: Object.assign({}, V6S.def) }, st: { '6v': {}, exp: {} }, notes: { '6v': [], exp: [] }, rects: { '6v': [], exp: [] }, seq: 1, dims: { '6v': [], exp: [] }, src: null, hide: [] };
+    return { mode: '6v', cfg: { '6v': Object.assign({}, V6S.def), exp: Object.assign({}, V6S.def) }, st: { '6v': {}, exp: {} }, notes: { '6v': [], exp: [] }, rects: { '6v': [], exp: [] }, seq: 1, dims: { '6v': [], exp: [] }, hide: [] };
   }
   function v6Put(d) {
     if (V6S.edit) v6EditDone(false);
@@ -1580,7 +1606,7 @@
     V6S.notes = { '6v': nt['6v'] || [], exp: nt.exp || [] };
     const rc = d.rects || {}; V6S.rects = { '6v': rc['6v'] || [], exp: rc.exp || [] };
     const dd = d.dims || {}; V6S.dims = { '6v': dd['6v'] || [], exp: dd.exp || [] };
-    V6S.src = Array.isArray(d.src) ? d.src.slice() : null; V6S.hide = Array.isArray(d.hide) ? d.hide.slice() : [];
+    V6S.hide = Array.isArray(d.hide) ? d.hide.slice() : [];
     V6S.seq = Math.max(d.seq || 1, 1 + Math.max.apply(null, [0].concat(V6S.notes['6v'], V6S.notes.exp, V6S.rects['6v'], V6S.rects.exp, V6S.dims['6v']).map(function (n) { return n.id || 0; })));
     V6S.mode = d.mode === 'exp' ? 'exp' : '6v'; v6Apply(V6S.cfg[V6S.mode]); v6StSet(V6S.st[V6S.mode]);
     V6S.nsel = null; V6S.nsels = []; V6S.psel = null; V6S.rsel = null; V6S.rt = null; V6S.prev = null; V6S.comb = null; V6S.dt = null; V6S.dsel = null; V6S.vsel = null; v6Sync(); v6Preview();

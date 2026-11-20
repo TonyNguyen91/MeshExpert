@@ -42,8 +42,8 @@ with sync_playwright() as p:
     y1=pg.evaluate("__mrt.v6().prev.hits.find(h=>h.kind=='odim'&&h.key=='W').r.y")
     odo=pg.evaluate("__mrt.v6().odo")
     ok('Dragging the length dimension line moves it (kept as paper mm)',y1>y0+20 and odo.get('W',0)>5,[y0,y1,odo])
-    pg.keyboard.press('Control+s'); pg.wait_for_timeout(600)
-    ok('Saved sheet holds the dimension offset',pg.evaluate("(()=>{const d=__mrt.dw().doc,s=d.sheets.find(s=>s.id==d.active);return s.saved.st['6v'].odo.W})()")==odo['W'])
+    pg.wait_for_timeout(700)
+    ok('Sheet holds the dimension offset',pg.evaluate("(()=>{const d=__mrt.dw().doc,s=d.sheets.find(s=>s.id==d.active);return s.work.st['6v'].odo.W})()")==odo['W'])
     # old drawing with one Dimensions switch off
     st=pg.evaluate("(()=>{const d=JSON.parse(JSON.stringify(__mrt.v6Dump()));d.cfg['6v'].v6Dim=false;delete d.cfg['6v'].v6DimW;delete d.cfg['6v'].v6DimD;delete d.cfg['6v'].v6DimH;__mrt.v6Load(d);return ['v6DimW','v6DimD','v6DimH'].map(i=>document.getElementById(i).checked)})()")
     settle()
