@@ -206,7 +206,7 @@ with sync_playwright() as p:
     sn=pg.evaluate("__mrt.S.sec.nPick")
     ok('Section Snap takes the origin XZ plane',sh=='oP1' and sn and abs(abs(sn[1])-1)<1e-9 and pg.evaluate("__mrt.S.sec.on"),[sh,sn])
     pg.evaluate("(()=>{const e=document.getElementById('secOn');e.checked=false;e.dispatchEvent(new Event('change'));})()")
-    ok('app is called MeshExpert',pg.title()=='MeshExpert' and 'MeshExpert' in pg.inner_text('h1').replace(' ',''))
+    ok('app is called MeshExpert',pg.title().startswith('MeshExpert v') and 'MeshExpert' in pg.inner_text('h1').replace(' ',''))
     # undercut: pull direction picked from the top face; hide the bodies not analysed
     pg.evaluate("(()=>{const s=__mrt.S;s.sel.clear();s.sel.add(s.bodies[0]);})()")
     pg.evaluate("document.querySelector('.popb[data-pop=undercut]')?document.querySelector('.popb[data-pop=undercut]').click():document.getElementById('pop_undercut').classList.add('on')"); pg.wait_for_timeout(100)

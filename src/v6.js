@@ -1444,7 +1444,7 @@
     if (h && (h.kind === 'part' || h.kind === 'label')) { const pt = V6S.prev.parts.find(function (x) { return x.id === h.id; }); u = pt && pt.b.uid; }
     else if (h) u = null; else return;
     if (u === DW.bsel && u === V6S.hl) return;
-    DW.bsel = u; V6S.hl = u; dwRefresh(true); v6Preview();
+    DW.bsel = u; DW.bfrom = 'tree'; V6S.hl = u; dwRefresh(true); v6Preview();
   }
   // part row in the panel: rename / material of the selected part, straight onto the body
   v6MatOpts($('v6PMat'));

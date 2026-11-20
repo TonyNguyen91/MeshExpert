@@ -4,6 +4,12 @@ Công cụ chỉnh sửa mesh STL/OBJ chạy offline trong trình duyệt. Mở 
 
 App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội bộ: mọi thư viện đều nằm sẵn trong `index.html`, và chính sách bảo mật (Content-Security-Policy) trong file chặn mọi kết nối mạng.
 
+## Phiên bản
+Phiên bản hiện tại: **v1.0.0** — hiện cạnh tên app (góc trên trái), trên tiêu đề cửa sổ và ở đầu Drawing Workspace. Mỗi bản vá tăng số cuối (v1.0.1, v1.0.2…), mỗi đợt tính năng mới tăng số giữa; số phiên bản nằm ở `APP_VER` trong `src/app2.js`, commit và tag Git cùng tên.
+
+### Nhật ký thay đổi
+- **v1.0.0** (20/11/2026) — Bắt đầu đánh số phiên bản. Sửa lỗi không bỏ được body đã bị xoá khỏi mô hình 3D ("✖ Mất") khỏi Source Bodies: câu hỏi xác nhận nay là hộp thoại của app (hộp xác nhận của trình duyệt có thể bị tắt cho trang và tự trả lời "Huỷ"); phím Delete bỏ body đang chọn (chọn ở cột Source Bodies → bỏ khỏi Source Bodies; chọn ở "Body của Sheet" → bỏ khỏi Sheet); Sheet chỉ còn một body đã mất vẫn bỏ được body đó; menu chuột phải của body đã mất trong cây có "Bỏ khỏi Source Bodies"; menu cột trái có "Bỏ mọi body đang mất (n)"; hộp Kiểm tra / Cập nhật có nút "Bỏ body bị mất khỏi Source Bodies".
+
 ## Cấu trúc
 - `index.html` — file ứng dụng hoàn chỉnh (bản phát hành).
 - `src/head.html` — giao diện (HTML/CSS).

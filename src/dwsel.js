@@ -70,14 +70,38 @@
     dwDoc().modified = Date.now(); V6S.prev = null; v6Preview(); DW.sig = ''; dwRefresh(true);
     if (n) flash(L('Đã thêm ', 'Added ') + n + L(' body vào Source Bodies', ' bodies to the Source Bodies'));
   }
-  function dwSrcRemoveDoc(uid) {
-    const users = dwUsers(uid);
-    if (users.length && !confirm(L('Bỏ "' + dwSnapAny(uid) + '" khỏi Source Bodies? Body sẽ biến mất khỏi ' + users.length + ' Sheet.', 'Remove "' + dwSnapAny(uid) + '" from the Source Bodies? It leaves ' + users.length + ' sheet(s).'))) return;
+  // in-app question (the browser's own confirm() can be switched off for a page, then it answers No without asking)
+  function dwConfirm(title, msg, okText, cb) {
+    const d = $('dwsDlg'), box = d.querySelector('.dwsDlgB');
+    box.innerHTML = '<h3>' + dwEsc(title) + '</h3><p>' + dwEsc(msg) + '</p>';
+    $('dwsDlgOk').style.display = ''; $('dwsDlgOk').textContent = okText; $('dwsDlgNo').textContent = L('Huỷ', 'Cancel');
+    const x = $('dwsDlgX'); if (x) x.style.display = 'none';
+    DW.dlg = function (ok) { d.classList.remove('on'); DW.dlg = null; if (ok) cb(); };
+    d.classList.add('on');
+  }
+  // source bodies missing from the 3D model
+  function dwSrcMissing() { return dwDocSrc().filter(function (u) { return !dwBodyByUid(u); }); }
+  // remove source bodies (one uid or a list) from the document: the left list and every sheet; asks first when a sheet
+  // still uses them
+  function dwSrcRemoveDoc(uids) {
+    uids = (Array.isArray(uids) ? uids : [uids]).filter(function (u) { return dwDocSrc().indexOf(u) >= 0; });
+    if (!uids.length) return;
+    const users = dwDoc().sheets.filter(function (s) { return uids.some(function (u) { return dwSrcOf(s).indexOf(u) >= 0; }); });
+    const nm = uids.length === 1 ? '"' + (dwBodyByUid(uids[0]) ? dwBodyByUid(uids[0]).name : dwSnapAny(uids[0])) + '"' : uids.length + L(' body', ' bodies');
+    if (!users.length) { dwSrcRemoveNow(uids); return; }
+    dwConfirm(L('Bỏ khỏi Source Bodies', 'Remove from the Source Bodies'),
+      L('Bỏ ' + nm + ' khỏi Source Bodies? Body sẽ biến mất khỏi ' + users.length + ' Sheet.', 'Remove ' + nm + ' from the Source Bodies? It leaves ' + users.length + ' sheet(s).'),
+      L('Bỏ khỏi Source Bodies', 'Remove'), function () { dwSrcRemoveNow(uids); });
+  }
+  function dwSrcRemoveNow(uids) {
     dwCapture();
-    const d = dwDoc(); d.src = d.src.filter(function (u) { return u !== uid; });
-    const drop = function (st) { if (Array.isArray(st.src)) st.src = st.src.filter(function (u) { return u !== uid; }); st.hide = (st.hide || []).filter(function (u) { return u !== uid; }); };
-    for (const s of d.sheets) { drop(s.work); drop(s.saved); if (s.rev) delete s.rev[uid]; }
+    const d = dwDoc(), out = function (u) { return uids.indexOf(u) < 0; };
+    d.src = d.src.filter(out);
+    const drop = function (st) { if (!st) return; if (Array.isArray(st.src)) st.src = st.src.filter(out); st.hide = (st.hide || []).filter(out); };
+    for (const s of d.sheets) { drop(s.work); drop(s.saved); if (s.rev) uids.forEach(function (u) { delete s.rev[u]; }); }
+    if (uids.indexOf(DW.bsel) >= 0) { DW.bsel = null; V6S.hl = null; }
     v6Put(dwCur().work); dwHistReset(dwCur()); d.modified = Date.now(); DW.sig = ''; dwRefresh(true);
+    flash(L('Đã bỏ ', 'Removed ') + uids.length + L(' body khỏi Source Bodies', ' body(ies) from the Source Bodies'));
   }
   // a missing (or any) source body replaced by another body of the model, everywhere in the document
   function dwSrcReplace(oldU, newU) {
@@ -136,7 +160,8 @@
   }
   function dwSrcDrop(uid) {
     const l = dwSheetList();
-    if (l.length <= 1) { flash(L('Sheet cần ít nhất một body', 'A sheet needs at least one body')); return; }
+    // the last body may go only when it is missing from the model (nothing left to draw anyway)
+    if (l.length <= 1 && dwBodyByUid(uid)) { flash(L('Sheet cần ít nhất một body', 'A sheet needs at least one body')); return; }
     V6S.src = l.filter(function (u) { return u !== uid; }); V6S.hide = V6S.hide.filter(function (u) { return u !== uid; });
     V6S.prev = null; v6Preview(); dwCapture(); dwRefresh(true);
   }

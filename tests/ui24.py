@@ -43,7 +43,7 @@ with sync_playwright() as p:
     ok('Sheet 1 takes every source body',pg.evaluate("__mrt.v6().src")==None and npreps()==3 and 'Body của Sheet (3)' in pg.inner_text('#dwsTree'))
     ok('Old Sheet Properties panel is gone',not pg.is_visible('#pop_v6') and pg.locator('#dwsSide .dwsPh').count()==1)
     # remove from the document list / add back with +
-    pg.click('#dwsSrcList .dwsSrcI[data-uid="%s"]'%U['m_box'],button='right'); pg.click('#ctx div:has-text("Bỏ khỏi Source Bodies")'); settle()
+    pg.click('#dwsSrcList .dwsSrcI[data-uid="%s"]'%U['m_box'],button='right'); pg.click('#ctx div:has-text("Bỏ khỏi Source Bodies")'); pg.wait_for_timeout(200); pg.click('#dwsDlgOk'); settle()
     ok('Removing a source body takes it out of every sheet',dsrc()==[U['block'],U['cyl']] and npreps()==2)
     pg.click('#dwsSrcAdd'); pg.wait_for_timeout(300)
     rows=pg.evaluate("[...document.querySelectorAll('#dwsSrcL .dwsSrcR')].map(r=>r.querySelector('.nm').textContent)")

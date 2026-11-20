@@ -31,6 +31,7 @@
   #top label { display: flex; gap: 4px; align-items: center; cursor: pointer; white-space: nowrap; }
   #top .grow { flex: 1; }
   #wrap { flex: 1; display: flex; min-height: 0; }
+  .appVer { font-size: 10px; font-weight: 600; color: #8fa3b8; margin-left: 6px; letter-spacing: .02em; vertical-align: middle; }
   #leftSplit { position: absolute; top: 0; right: 0; width: 6px; height: 100%; cursor: col-resize; z-index: 5; } #leftSplit:hover, #leftSplit.on { background: rgba(240,160,48,.35); }
   #left { position: relative; width: var(--leftW, 364px); min-width: var(--leftW, 364px); display: flex; flex-direction: column; overflow: hidden; background: var(--panel); border-right: 1px solid var(--line); padding: 0; }
   #leftTop { flex: none; padding: 8px 8px 6px; border-bottom: 1px solid var(--line); }
@@ -308,7 +309,7 @@
 <body>
 <div id="top">
  <div class="trow">
-  <h1><span>Mesh</span>Expert</h1>
+  <h1><span>Mesh</span>Expert<small class="appVer" id="appVer"></small></h1>
   <div id="rtabs"><button class="rtab on" data-tab="home">Home</button></div>
   <span class="grow"></span>
   <button id="bNew" class="tbi" title="Phiên mới (bỏ phiên hiện tại)" data-en-title="New session (drops the current one)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z" stroke="#9cc4ee"/><path d="M14 3v4h4" stroke="#9cc4ee"/><path d="M12 11v6M9 14h6" stroke="#52d06a"/></svg><span data-en="New session">Phiên mới</span></button>
@@ -5505,6 +5506,10 @@ var wasm_bindgen = (function(exports) {
   }
 
   // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
+  // version of the app: shown next to the name, in the Drawing Workspace header and the window title; raised with every
+  // published fix (patch number) or feature set (minor number)
+  const APP_VER = '1.0.0';
+  (function () { const v = 'v' + APP_VER; $('appVer').textContent = v; document.title = 'MeshExpert ' + v; })();
   const BL_DEF = { cn: 200, ct: 58, cm: 58 };
   let blCols = Object.assign({}, BL_DEF);
   try { Object.assign(blCols, JSON.parse(localStorage.getItem('mx.blCols') || '{}')); if (blCols.cn === 120) blCols.cn = BL_DEF.cn; } catch (e) { }
@@ -6989,7 +6994,7 @@ var wasm_bindgen = (function(exports) {
   function sesShow() {
     const n = S.sesName || L('(phiên mới)', '(new session)');
     $('sesName').textContent = n; $('sesName').title = n;
-    document.title = (S.sesName ? S.sesName + ' · ' : '') + 'MeshExpert';
+    document.title = (S.sesName ? S.sesName + ' · ' : '') + 'MeshExpert v' + APP_VER;
   }
   const MRTL_TYPES = [{ description: 'MeshExpert session', accept: { 'application/octet-stream': ['.mrtl'] } }];
   async function sesWrite(handle) {
@@ -12195,7 +12200,7 @@ var wasm_bindgen = (function(exports) {
     if (h && (h.kind === 'part' || h.kind === 'label')) { const pt = V6S.prev.parts.find(function (x) { return x.id === h.id; }); u = pt && pt.b.uid; }
     else if (h) u = null; else return;
     if (u === DW.bsel && u === V6S.hl) return;
-    DW.bsel = u; V6S.hl = u; dwRefresh(true); v6Preview();
+    DW.bsel = u; DW.bfrom = 'tree'; V6S.hl = u; dwRefresh(true); v6Preview();
   }
   // part row in the panel: rename / material of the selected part, straight onto the body
   v6MatOpts($('v6PMat'));
@@ -12704,7 +12709,7 @@ var wasm_bindgen = (function(exports) {
   (function () {
     const w = document.createElement('div'); w.id = 'dws';
     w.innerHTML =
-      '<div id="dwsHd"><span class="dwsLogo">' + dwIco('drawing', 20) + 'Drawing Workspace</span><span class="dwsDoc" id="dwsDocName"></span><span class="grow"></span>' +
+      '<div id="dwsHd"><span class="dwsLogo">' + dwIco('drawing', 20) + 'Drawing Workspace<small class="appVer">v' + APP_VER + '</small></span><span class="dwsDoc" id="dwsDocName"></span><span class="grow"></span>' +
       '<button id="dwsSaveDoc"' + dwTip('Lưu tài liệu: ghi cả phiên (.mrtl) gồm mọi Sheet — Ctrl+Shift+S để lưu thành file khác', 'Save document: writes the session (.mrtl) with every sheet — Ctrl+Shift+S saves as another file') + '>' + dwIco('save') + dwT('Lưu tài liệu', 'Save Document') + '</button>' +
       '<button id="dwsBack" class="primary"' + dwTip('Quay lại 3D Workspace (bản vẽ vẫn giữ nguyên)', 'Back to the 3D workspace (the drawing stays as it is)') + '>' + dwIco('back') + dwT('3D Workspace', '3D Workspace') + '</button></div>' +
       '<div id="dwsTop"><div id="dwsTabs"><button class="rtab" data-k="draw">Drawing</button><button class="rtab" data-k="set">Export</button></div>' +
@@ -12721,7 +12726,7 @@ var wasm_bindgen = (function(exports) {
       '<button id="dwsSave" class="primary"' + dwTip('Lưu Sheet hiện tại (Ctrl+S): giữ toàn bộ view, vị trí, tỉ lệ, hiển thị, ghi chú', 'Save the current sheet (Ctrl+S): keeps every view, position, scale, display setting and note') + '>' + dwIco('save') + dwT('Save', 'Save') + '</button>' +
       '<button id="dwsDiscard"' + dwTip('Bỏ các thay đổi chưa lưu của Sheet hiện tại (về lần Save trước)', 'Drop the unsaved changes of the current sheet (back to its last Save)') + '>' + dwIco('discard') + dwT('Discard', 'Discard') + '</button>' +
       '<button id="dwsDup"' + dwTip('Nhân bản Sheet hiện tại (Ctrl+D)', 'Duplicate the current sheet (Ctrl+D)') + '>' + dwIco('dup') + dwT('Duplicate', 'Duplicate') + '</button></div></div>' +
-      '<div id="dwsDlg" class="dwsModal"><div class="dwsBox"><div class="dwsDlgB"></div><div class="dwsBtnRow"><button id="dwsDlgOk" class="primary"></button><button id="dwsDlgNo"></button></div></div></div>' +
+      '<div id="dwsDlg" class="dwsModal"><div class="dwsBox"><div class="dwsDlgB"></div><div class="dwsBtnRow"><button id="dwsDlgX" style="display:none"></button><button id="dwsDlgOk" class="primary"></button><button id="dwsDlgNo"></button></div></div></div>' +
       '<div id="dwsSrc" class="dwsModal"><div class="dwsBox"><h3 id="dwsSrcT"></h3>' +
       '<div class="dwsBtnRow"><input type="search" id="dwsSrcQ"' + dwTip('Tìm body theo tên', 'Find a body by name') + '><button id="dwsSrcAll">' + dwT('Chọn hết', 'Select All') + '</button><button id="dwsSrcNone">' + dwT('Bỏ chọn', 'Clear') + '</button>' +
       '<button id="dwsSrcPick"' + dwTip('Chọn body trực tiếp trong vùng 3D (Click / Ctrl+Click), Enter để dùng, Esc để quay lại', 'Pick bodies right in the 3D view (click / Ctrl+click), Enter to use them, Esc to come back') + '>' + dwT('Chọn trong 3D', 'Pick in 3D') + '</button></div>' +
@@ -12931,7 +12936,7 @@ var wasm_bindgen = (function(exports) {
       }
       if (n.dataset.add) dwNewSheet(); else if (n.dataset.id) dwOpenSheet(n.dataset.id);
       else if (n.dataset.view) { V6S.vsel = n.dataset.view === 'Exploded view' ? null : n.dataset.view; v6Paint(); dwRefresh(true); }
-      else if (n.dataset.uid) dwBodyPick(DW.bsel === n.dataset.uid ? null : n.dataset.uid);
+      else if (n.dataset.uid) { dwBodyPick(DW.bsel === n.dataset.uid ? null : n.dataset.uid); DW.bfrom = 'tree'; }
     });
     c.addEventListener('dblclick', function (e) { const n = dwNodeOf(e); if (!n || n.dataset.add || !(n.dataset.id || n.dataset.root)) return; dwStartRename(n, n.dataset.id || null); });
     c.addEventListener('contextmenu', function (e) {
@@ -12948,9 +12953,10 @@ var wasm_bindgen = (function(exports) {
         return;
       }
       if (n.dataset.uid) {
-        const u = n.dataset.uid, hid = dwHideOf(dwCur()).indexOf(u) >= 0; dwBodyPick(u);
+        const u = n.dataset.uid, hid = dwHideOf(dwCur()).indexOf(u) >= 0; dwBodyPick(u); DW.bfrom = 'tree';
         showMenu([[hid ? L('Hiện trong Sheet', 'Show in the sheet') : L('Ẩn trong Sheet', 'Hide in the sheet'), function () { dwSrcHide(u, !hid); }, hid ? 'show' : 'hide'],
-          [L('Bỏ khỏi Sheet này', 'Remove from this sheet'), function () { dwSrcDrop(u); }, 'del'], [L('Cập nhật body này', 'Update this body'), function () { dwUpdDialog('all', [u]); }, 'undo']], e.clientX, e.clientY);
+          [L('Bỏ khỏi Sheet này', 'Remove from this sheet'), function () { dwSrcDrop(u); }, 'del']].concat(dwBodyByUid(u) ? [[L('Cập nhật body này', 'Update this body'), function () { dwUpdDialog('all', [u]); }, 'undo']]
+          : [[L('Bỏ khỏi Source Bodies', 'Remove from the Source Bodies'), function () { dwSrcRemoveDoc(u); }, 'del']]), e.clientX, e.clientY);
         return;
       }
       if (!n.dataset.id) return;
@@ -12984,14 +12990,16 @@ var wasm_bindgen = (function(exports) {
   $('dwsSrcList').addEventListener('click', function (e) {
     const r = e.target.closest('.dwsSrcI'); if (!r) return; const u = r.dataset.uid;
     if (e.target.closest('.rep')) { dwSrcOpen('replace', u); return; }
-    dwBodyPick(DW.bsel === u ? null : u);
+    dwBodyPick(DW.bsel === u ? null : u); DW.bfrom = 'src';
   });
   $('dwsSrcList').addEventListener('contextmenu', function (e) {
     e.preventDefault(); const r = e.target.closest('.dwsSrcI'); if (!r) return; const u = r.dataset.uid, b = dwBodyByUid(u);
-    dwBodyPick(u);
+    dwBodyPick(u); DW.bfrom = 'src';
+    const miss = dwSrcMissing();
     showMenu([[L('Thay thế bằng body khác…', 'Replace with another body…'), function () { dwSrcOpen('replace', u); }, 'edit'], [L('Thay thế: chọn trong 3D', 'Replace: pick in 3D'), function () { dwPickStart('replace', u); }, 'edit'],
       [L('Cập nhật body này', 'Update this body'), function () { dwUpdDialog('all', [u]); }, 'undo'], null,
-      [L('Bỏ khỏi Source Bodies', 'Remove from the Source Bodies'), function () { dwSrcRemoveDoc(u); }, 'del']].filter(function (x, i) { return b || i !== 2; }), e.clientX, e.clientY);
+      [L('Bỏ khỏi Source Bodies', 'Remove from the Source Bodies') + '  Delete', function () { dwSrcRemoveDoc(u); }, 'del'],
+      [L('Bỏ mọi body đang mất', 'Remove every missing body') + ' (' + miss.length + ')', function () { dwSrcRemoveDoc(miss); }, 'del']].filter(function (x, i) { return (b || i !== 2) && (i !== 5 || miss.length > (b ? 0 : 1)); }), e.clientX, e.clientY);
   });
   $('dwsDlgOk').addEventListener('click', function () { if (DW.dlg) DW.dlg(true); });
   $('dwsDlgNo').addEventListener('click', function () { if (DW.dlg) DW.dlg(false); });
@@ -13051,6 +13059,12 @@ var wasm_bindgen = (function(exports) {
       if ((k === 'z' || k === 'y') && !typing) { e.preventDefault(); e.stopPropagation(); dwUndo(k === 'y' || (k === 'z' && e.shiftKey)); return; }
     }
     if (typing) return;
+    // Delete on a body picked in the left list: out of the Source Bodies; picked in the sheet's body list: out of the sheet
+    if ((e.key === 'Delete' || e.key === 'Backspace') && DW.bsel && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault(); e.stopPropagation();
+      if (DW.bfrom === 'tree') dwSrcDrop(DW.bsel); else dwSrcRemoveDoc(DW.bsel);
+      return;
+    }
     e.stopPropagation();
   }, true);
   // follow the canvas: working copy, Modified / Saved, ribbon states
@@ -13219,6 +13233,11 @@ var wasm_bindgen = (function(exports) {
     $('dwsDlgOk').textContent = L('Áp dụng cập nhật', 'Apply Update');
     $('dwsDlgNo').textContent = checkOnly || !canApply ? L('Đóng', 'Close') : L('Huỷ', 'Cancel');
     DW.dlg = function (ok) { d.classList.remove('on'); DW.dlg = null; if (ok && canApply) { dwApplyUpd(items); flash(L('Đã cập nhật bản vẽ', 'Drawing updated')); } };
+    // missing bodies can be dropped from the Source Bodies right here
+    const mu = Array.from(new Set([].concat.apply([], items.map(function (c) { return c.missing; })))).filter(function (u) { return !dwBodyByUid(u); }), bx = $('dwsDlgX');
+    bx.style.display = mu.length ? '' : 'none';
+    bx.textContent = L('Bỏ body bị mất khỏi Source Bodies', 'Remove the missing bodies from the Source Bodies') + ' (' + mu.length + ')';
+    bx.onclick = function () { d.classList.remove('on'); DW.dlg = null; dwSrcRemoveNow(mu); };
     d.classList.add('on');
     return items;
   }
@@ -13312,14 +13331,38 @@ var wasm_bindgen = (function(exports) {
     dwDoc().modified = Date.now(); V6S.prev = null; v6Preview(); DW.sig = ''; dwRefresh(true);
     if (n) flash(L('Đã thêm ', 'Added ') + n + L(' body vào Source Bodies', ' bodies to the Source Bodies'));
   }
-  function dwSrcRemoveDoc(uid) {
-    const users = dwUsers(uid);
-    if (users.length && !confirm(L('Bỏ "' + dwSnapAny(uid) + '" khỏi Source Bodies? Body sẽ biến mất khỏi ' + users.length + ' Sheet.', 'Remove "' + dwSnapAny(uid) + '" from the Source Bodies? It leaves ' + users.length + ' sheet(s).'))) return;
+  // in-app question (the browser's own confirm() can be switched off for a page, then it answers No without asking)
+  function dwConfirm(title, msg, okText, cb) {
+    const d = $('dwsDlg'), box = d.querySelector('.dwsDlgB');
+    box.innerHTML = '<h3>' + dwEsc(title) + '</h3><p>' + dwEsc(msg) + '</p>';
+    $('dwsDlgOk').style.display = ''; $('dwsDlgOk').textContent = okText; $('dwsDlgNo').textContent = L('Huỷ', 'Cancel');
+    const x = $('dwsDlgX'); if (x) x.style.display = 'none';
+    DW.dlg = function (ok) { d.classList.remove('on'); DW.dlg = null; if (ok) cb(); };
+    d.classList.add('on');
+  }
+  // source bodies missing from the 3D model
+  function dwSrcMissing() { return dwDocSrc().filter(function (u) { return !dwBodyByUid(u); }); }
+  // remove source bodies (one uid or a list) from the document: the left list and every sheet; asks first when a sheet
+  // still uses them
+  function dwSrcRemoveDoc(uids) {
+    uids = (Array.isArray(uids) ? uids : [uids]).filter(function (u) { return dwDocSrc().indexOf(u) >= 0; });
+    if (!uids.length) return;
+    const users = dwDoc().sheets.filter(function (s) { return uids.some(function (u) { return dwSrcOf(s).indexOf(u) >= 0; }); });
+    const nm = uids.length === 1 ? '"' + (dwBodyByUid(uids[0]) ? dwBodyByUid(uids[0]).name : dwSnapAny(uids[0])) + '"' : uids.length + L(' body', ' bodies');
+    if (!users.length) { dwSrcRemoveNow(uids); return; }
+    dwConfirm(L('Bỏ khỏi Source Bodies', 'Remove from the Source Bodies'),
+      L('Bỏ ' + nm + ' khỏi Source Bodies? Body sẽ biến mất khỏi ' + users.length + ' Sheet.', 'Remove ' + nm + ' from the Source Bodies? It leaves ' + users.length + ' sheet(s).'),
+      L('Bỏ khỏi Source Bodies', 'Remove'), function () { dwSrcRemoveNow(uids); });
+  }
+  function dwSrcRemoveNow(uids) {
     dwCapture();
-    const d = dwDoc(); d.src = d.src.filter(function (u) { return u !== uid; });
-    const drop = function (st) { if (Array.isArray(st.src)) st.src = st.src.filter(function (u) { return u !== uid; }); st.hide = (st.hide || []).filter(function (u) { return u !== uid; }); };
-    for (const s of d.sheets) { drop(s.work); drop(s.saved); if (s.rev) delete s.rev[uid]; }
+    const d = dwDoc(), out = function (u) { return uids.indexOf(u) < 0; };
+    d.src = d.src.filter(out);
+    const drop = function (st) { if (!st) return; if (Array.isArray(st.src)) st.src = st.src.filter(out); st.hide = (st.hide || []).filter(out); };
+    for (const s of d.sheets) { drop(s.work); drop(s.saved); if (s.rev) uids.forEach(function (u) { delete s.rev[u]; }); }
+    if (uids.indexOf(DW.bsel) >= 0) { DW.bsel = null; V6S.hl = null; }
     v6Put(dwCur().work); dwHistReset(dwCur()); d.modified = Date.now(); DW.sig = ''; dwRefresh(true);
+    flash(L('Đã bỏ ', 'Removed ') + uids.length + L(' body khỏi Source Bodies', ' body(ies) from the Source Bodies'));
   }
   // a missing (or any) source body replaced by another body of the model, everywhere in the document
   function dwSrcReplace(oldU, newU) {
@@ -13378,7 +13421,8 @@ var wasm_bindgen = (function(exports) {
   }
   function dwSrcDrop(uid) {
     const l = dwSheetList();
-    if (l.length <= 1) { flash(L('Sheet cần ít nhất một body', 'A sheet needs at least one body')); return; }
+    // the last body may go only when it is missing from the model (nothing left to draw anyway)
+    if (l.length <= 1 && dwBodyByUid(uid)) { flash(L('Sheet cần ít nhất một body', 'A sheet needs at least one body')); return; }
     V6S.src = l.filter(function (u) { return u !== uid; }); V6S.hide = V6S.hide.filter(function (u) { return u !== uid; });
     V6S.prev = null; v6Preview(); dwCapture(); dwRefresh(true);
   }

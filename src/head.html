@@ -31,6 +31,7 @@
   #top label { display: flex; gap: 4px; align-items: center; cursor: pointer; white-space: nowrap; }
   #top .grow { flex: 1; }
   #wrap { flex: 1; display: flex; min-height: 0; }
+  .appVer { font-size: 10px; font-weight: 600; color: #8fa3b8; margin-left: 6px; letter-spacing: .02em; vertical-align: middle; }
   #leftSplit { position: absolute; top: 0; right: 0; width: 6px; height: 100%; cursor: col-resize; z-index: 5; } #leftSplit:hover, #leftSplit.on { background: rgba(240,160,48,.35); }
   #left { position: relative; width: var(--leftW, 364px); min-width: var(--leftW, 364px); display: flex; flex-direction: column; overflow: hidden; background: var(--panel); border-right: 1px solid var(--line); padding: 0; }
   #leftTop { flex: none; padding: 8px 8px 6px; border-bottom: 1px solid var(--line); }
@@ -308,7 +309,7 @@
 <body>
 <div id="top">
  <div class="trow">
-  <h1><span>Mesh</span>Expert</h1>
+  <h1><span>Mesh</span>Expert<small class="appVer" id="appVer"></small></h1>
   <div id="rtabs"><button class="rtab on" data-tab="home">Home</button></div>
   <span class="grow"></span>
   <button id="bNew" class="tbi" title="Phiên mới (bỏ phiên hiện tại)" data-en-title="New session (drops the current one)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z" stroke="#9cc4ee"/><path d="M14 3v4h4" stroke="#9cc4ee"/><path d="M12 11v6M9 14h6" stroke="#52d06a"/></svg><span data-en="New session">Phiên mới</span></button>

@@ -161,6 +161,11 @@
     $('dwsDlgOk').textContent = L('Áp dụng cập nhật', 'Apply Update');
     $('dwsDlgNo').textContent = checkOnly || !canApply ? L('Đóng', 'Close') : L('Huỷ', 'Cancel');
     DW.dlg = function (ok) { d.classList.remove('on'); DW.dlg = null; if (ok && canApply) { dwApplyUpd(items); flash(L('Đã cập nhật bản vẽ', 'Drawing updated')); } };
+    // missing bodies can be dropped from the Source Bodies right here
+    const mu = Array.from(new Set([].concat.apply([], items.map(function (c) { return c.missing; })))).filter(function (u) { return !dwBodyByUid(u); }), bx = $('dwsDlgX');
+    bx.style.display = mu.length ? '' : 'none';
+    bx.textContent = L('Bỏ body bị mất khỏi Source Bodies', 'Remove the missing bodies from the Source Bodies') + ' (' + mu.length + ')';
+    bx.onclick = function () { d.classList.remove('on'); DW.dlg = null; dwSrcRemoveNow(mu); };
     d.classList.add('on');
     return items;
   }

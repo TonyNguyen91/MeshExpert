@@ -1237,6 +1237,10 @@
   }
 
   // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
+  // version of the app: shown next to the name, in the Drawing Workspace header and the window title; raised with every
+  // published fix (patch number) or feature set (minor number)
+  const APP_VER = '1.0.0';
+  (function () { const v = 'v' + APP_VER; $('appVer').textContent = v; document.title = 'MeshExpert ' + v; })();
   const BL_DEF = { cn: 200, ct: 58, cm: 58 };
   let blCols = Object.assign({}, BL_DEF);
   try { Object.assign(blCols, JSON.parse(localStorage.getItem('mx.blCols') || '{}')); if (blCols.cn === 120) blCols.cn = BL_DEF.cn; } catch (e) { }
@@ -2721,7 +2725,7 @@
   function sesShow() {
     const n = S.sesName || L('(phiên mới)', '(new session)');
     $('sesName').textContent = n; $('sesName').title = n;
-    document.title = (S.sesName ? S.sesName + ' · ' : '') + 'MeshExpert';
+    document.title = (S.sesName ? S.sesName + ' · ' : '') + 'MeshExpert v' + APP_VER;
   }
   const MRTL_TYPES = [{ description: 'MeshExpert session', accept: { 'application/octet-stream': ['.mrtl'] } }];
   async function sesWrite(handle) {
