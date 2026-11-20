@@ -239,6 +239,21 @@
       dwCol(dwSB('data-act="pdfAll"', 'pdf', 'PDF gộp', 'All in 1 PDF', 'Xuất mọi Sheet vào một file PDF theo thứ tự Drawing Tree', 'All sheets into one PDF, in Drawing Tree order') +
         dwSB('data-click="#v6Copy"', 'copy', 'Chép ảnh', 'Copy', 'Chép ảnh Sheet vào clipboard (cỡ vừa để gửi mail, không theo thiết lập xuất)', 'Copy the sheet picture to the clipboard (e-mail size, not the export settings)'))).replace('class="rgrp"', 'class="rgrp keep"');
   }
+  // Effects tab: what makes faces at different heights readable on the picture (depth step lines, step band, part outline)
+  function dwFxHtml() {
+    return dwGrp('Nét bậc', 'Step Lines', dwCol(dwSliderS('Ngưỡng', 'Threshold', 'v6FxTR', 'v6FxT', 'Độ cao bậc nhỏ nhất được vẽ nét (mm trên vật). Nét nằm về phía mặt thấp hơn và dày hơn khi bậc cao hơn', 'Smallest step height that gets a line (mm on the object). The line lies on the lower face and gets thicker for a higher step') +
+        dwSliderS('Nét', 'Line', 'v6FxWR', 'v6FxW', 'Bề dày nét bậc trên giấy (mm, 0 = tắt)', 'Step line width on paper (mm, 0 = off)'))) +
+      dwGrp('Chân bậc', 'Step Band', dwCol(dwSliderS('Rộng', 'Width', 'v6FxBR', 'v6FxB', 'Bề rộng dải tối trên mặt thấp, sát chân bậc (mm trên giấy)', 'Width of the dark band on the lower face along the foot of a step (mm on paper)') +
+        dwSliderS('Đậm', 'Strength', 'v6FxBsR', 'v6FxBs', 'Độ đậm dải tối chân bậc (%, 0 = tắt)', 'Strength of the step band (%, 0 = off)'))) +
+      dwGrp('AO', 'AO', dwCol(dwSliderS('Bán kính', 'Radius', 'v6FxAR', 'v6FxA', 'Ambient Occlusion: chân bậc, khe, lỗ tối dần. Bán kính tính bằng mm trên vật', 'Ambient occlusion: the foot of steps, slots and holes darken. Radius in mm on the object') +
+        dwSliderS('Đậm', 'Strength', 'v6FxAsR', 'v6FxAs', 'Độ đậm AO (%, 0 = tắt)', 'AO strength (%, 0 = off)'))) +
+      dwGrp('Bóng đổ', 'Shadow', dwCol(dwSliderS('Đậm', 'Strength', 'v6FxSR', 'v6FxS', 'Độ đậm bóng đổ (%, 0 = tắt). Đèn gắn với màn hình nên mọi view sáng cùng một kiểu', 'Shadow strength (%, 0 = off). The light is fixed to the screen, so every view is lit alike') +
+        dwSliderS('Xoay', 'Turn', 'v6FxSaR', 'v6FxSa', 'Hướng đèn trên màn hình (°): 0 = từ phải, 90 = từ trên, 180 = từ trái', 'Light direction on the screen (°): 0 = from the right, 90 = from the top, 180 = from the left') +
+        dwSliderS('Nghiêng', 'Tilt', 'v6FxSeR', 'v6FxSe', 'Độ cao đèn so với mặt giấy (°): thấp thì bóng dài', 'Light height above the paper (°): low gives long shadows'))) +
+      dwGrp('Độ cong', 'Curvature', dwCol(dwSliderS('Đậm', 'Strength', 'v6FxCR', 'v6FxC', 'Gờ sáng, rãnh tối theo độ cong bề mặt (%, 0 = tắt)', 'Ridges lighter, grooves darker by the surface curvature (%, 0 = off)'))) +
+      dwGrp('Viền part', 'Part Outline', dwCol(dwChk('#v6FxId', 'Viền part', 'Part Outline', 'Nét ở chỗ body này gặp body khác (dày theo Nét bậc)', 'A line where one body meets another (as wide as the step line)'))) +
+      dwOutGrp();
+  }
   // Ribbon layout: each drawing tab holds only what belongs to that drawing type, left to right in working order
   // (make the views -> place them -> annotate); the Export tab holds what both share, in the same order
   // (sheet -> view -> look -> lines & text -> notes -> output).
@@ -297,7 +312,7 @@
       dwOutGrp();
     const typ = dwGrp('Loại bản vẽ', 'Drawing Type', '<button class="bb dwsType" data-act="type2d"' + dwTip('Chọn loại bản vẽ của Sheet: 6 Views hoặc Exploded View (hỏi trước khi đổi)', 'Pick the drawing type of the sheet: 6 Views or Exploded View (asks before switching)') + '>' +
       dwIco('drawing', 30) + '<span>2D Type</span><small class="dwsTypeL"></small></button>').replace('class="rgrp"', 'class="rgrp keep dwsTypeG"');
-    return '<div class="rpage" data-k="6v">' + six + typ + '</div><div class="rpage" data-k="exp">' + exp + typ + '</div><div class="rpage" data-k="set">' + set + '</div>';
+    return '<div class="rpage" data-k="6v">' + six + typ + '</div><div class="rpage" data-k="exp">' + exp + typ + '</div><div class="rpage" data-k="set">' + set + '</div><div class="rpage" data-k="fx">' + dwFxHtml() + '</div>';
   }
   // ---------- building the workspace
   (function () {
@@ -306,7 +321,7 @@
       '<div id="dwsHd"><span class="dwsLogo">' + dwIco('drawing', 20) + 'Drawing Workspace<small class="appVer">v' + APP_VER + '</small></span><span class="dwsDoc" id="dwsDocName"></span><span class="grow"></span>' +
       '<button id="dwsSaveDoc"' + dwTip('Lưu tài liệu: ghi cả phiên (.mrtl) gồm mọi Sheet — Ctrl+Shift+S để lưu thành file khác', 'Save document: writes the session (.mrtl) with every sheet — Ctrl+Shift+S saves as another file') + '>' + dwIco('save') + dwT('Lưu tài liệu', 'Save Document') + '</button>' +
       '<button id="dwsBack" class="primary"' + dwTip('Quay lại 3D Workspace (bản vẽ vẫn giữ nguyên)', 'Back to the 3D workspace (the drawing stays as it is)') + '>' + dwIco('back') + dwT('3D Workspace', '3D Workspace') + '</button></div>' +
-      '<div id="dwsTop"><div id="dwsTabs"><button class="rtab" data-k="draw">Drawing</button><button class="rtab" data-k="set">Export</button></div>' +
+      '<div id="dwsTop"><div id="dwsTabs"><button class="rtab" data-k="draw">Drawing</button><button class="rtab" data-k="set">Export</button><button class="rtab" data-k="fx" data-en="Effects">Hiệu ứng</button></div>' +
       '<div id="dwsRibbon" class="ribfit">' + dwRibbonHtml() + '</div></div>' +
       '<div id="dwsMid">' +
       '<div id="dwsCanvas"></div><div id="dwsSplit"' + dwTip('Kéo để đổi bề rộng cột bên phải', 'Drag to resize the right column') + '></div><div id="dwsSide">' +
@@ -394,10 +409,11 @@
   // tabs: Drawing (its groups follow the drawing type: page 6v or exp) and Export. k = 'draw' | '6v' | 'exp' | 'set'
   function dwTabSet(k) {
     if (k === 'draw') k = V6S.mode === 'exp' ? 'exp' : '6v';
-    k = k === 'exp' || k === 'set' ? k : '6v';
-    document.querySelectorAll('#dwsTabs .rtab').forEach(function (b) { b.classList.toggle('on', b.dataset.k === (k === 'set' ? 'set' : 'draw')); });
+    k = k === 'exp' || k === 'set' || k === 'fx' ? k : '6v';
+    const side = k === 'set' || k === 'fx';
+    document.querySelectorAll('#dwsTabs .rtab').forEach(function (b) { b.classList.toggle('on', b.dataset.k === (side ? k : 'draw')); });
     document.querySelectorAll('#dwsRibbon .rpage').forEach(function (p) { p.classList.toggle('on', p.dataset.k === k); });
-    if (k !== 'set' && V6S.mode !== k) v6SetMode(k);
+    if (!side && V6S.mode !== k) v6SetMode(k);
     if (DW.open) setTimeout(function () { ribFit($('dwsRibbon')); }, 0);
     dwSyncRibbon();
   }
@@ -416,7 +432,7 @@
     showMenu([[ck('6v', '6 Views'), function () { dwTabAsk('6v'); }, 'dot'], [ck('exp', 'Exploded View'), function () { dwTabAsk('exp'); }, 'dot']], r.left, r.bottom + 2);
   }
   // another sheet opened: the Export tab stays open, otherwise the tab of the sheet's drawing type
-  function dwTabKeep(mode) { const t = document.querySelector('#dwsTabs .rtab.on'); dwTabSet(t && t.dataset.k === 'set' ? 'set' : mode); }
+  function dwTabKeep(mode) { const t = document.querySelector('#dwsTabs .rtab.on'); dwTabSet(t && (t.dataset.k === 'set' || t.dataset.k === 'fx') ? t.dataset.k : mode); }
   // ---------- tree + sheet bar
   function dwRefresh(force) {
     if (!DW.open && !force) return;

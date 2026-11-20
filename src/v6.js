@@ -23,7 +23,9 @@
   const V6_REST = 3000;     // ms of rest after zoom / pan before the sheet is drawn sharp again   // the preview never renders the sheet above this many pixels (zooming further only scales)
   let v6Act = false;   // the Drawing Workspace is open and shows the sheet
   const V6_PAIRS = [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
-    ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK'], ['v6RsR', 'v6Rs'], ['v6RwR', 'v6Rw']];
+    ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK'], ['v6RsR', 'v6Rs'], ['v6RwR', 'v6Rw'],
+    ['v6FxTR', 'v6FxT'], ['v6FxWR', 'v6FxW'], ['v6FxBR', 'v6FxB'], ['v6FxBsR', 'v6FxBs'],
+    ['v6FxAR', 'v6FxA'], ['v6FxAsR', 'v6FxAs'], ['v6FxSR', 'v6FxS'], ['v6FxSaR', 'v6FxSa'], ['v6FxSeR', 'v6FxSe'], ['v6FxCR', 'v6FxC']];
   let v6gl = null;
 
   function v6Num(id, def) { const v = parseFloat($(id).value); return isFinite(v) ? v : def; }
@@ -46,6 +48,7 @@
       edge: $('v6Edge').checked, hidden: $('v6Hid').checked, ang: v6Num('v6Ang', 30), dim: !exp && ($('v6DimW').checked || $('v6DimD').checked || $('v6DimH').checked), dimW: $('v6DimW').checked, dimD: $('v6DimD').checked, dimH: $('v6DimH').checked, unit: $('v6Unit').value,
       lbl: !exp && $('v6Lbl').checked, scn: $('v6ScN').checked, scale: scale, zoom: v6Num('v6Zm', 100) / 100,
       fs: v6Num('v6Fs', 2.6), fb: $('v6Fb').checked, W: W, H: H, cut: cut, dpi: dpi,
+      fx: { t: v6Num('v6FxT', 0.2), w: v6Num('v6FxW', 0.2), bw: v6Num('v6FxB', 1), bs: v6Num('v6FxBs', 45) / 100, id: $('v6FxId').checked, ar: v6Num('v6FxA', 2), as: v6Num('v6FxAs', 0) / 100, ss: v6Num('v6FxS', 0) / 100, sa: v6Num('v6FxSa', 125), se: v6Num('v6FxSe', 40), cs: v6Num('v6FxC', 0) / 100 },
       lw: v6Num('v6Lw', 0.25), ss: +$('v6SS').value || 1, fmt: fmt, q: v6Num('v6Q', 92) / 100, bg: fmt === 'jpg' ? 'w' : $('v6Bg').value };
   }
   // bodies of the drawing: the sheet's source bodies (Drawing Workspace), drawn from the geometry the sheet was last
@@ -173,6 +176,7 @@
       'gl_Position=vec4((x-uBox.x)/uBox.z*2.0-1.0,(y-uBox.y)/uBox.w*2.0-1.0,(z-uZ.x)/uZ.y*2.0-1.0,1.0);}';
     const fs = '#version 300 es\nprecision highp float;in vec3 vN;uniform int uMode,uLight;uniform vec3 uC;out vec4 o;\n' +
       'void main(){if(uMode==0){float v=floor(gl_FragCoord.z*16777215.0);float r=floor(v/65536.0);float gg=floor((v-r*65536.0)/256.0);float b=v-r*65536.0-gg*256.0;o=vec4(r,gg,b,255.0)/255.0;return;}' +
+      'if(uMode==2){vec3 m=normalize(vN);if(m.z<0.0)m=-m;o=vec4(m*0.5+0.5,1.0);return;}' +
       'if(uLight==2){o=vec4(uC,1.0);return;}vec3 n=normalize(vN);if(n.z<0.0)n=-n;vec3 c;' +
       'if(uLight==0)c=uC*(n.z*0.72+0.28);' +
       'else{vec3 l1=normalize(vec3(-0.45,0.6,0.66)),l2=normalize(vec3(0.7,-0.3,0.62));float d1=max(dot(n,l1),0.0),d2=max(dot(n,l2),0.0);' +
@@ -181,7 +185,7 @@
     const p = g.createProgram(); g.attachShader(p, sh(g.VERTEX_SHADER, vs)); g.attachShader(p, sh(g.FRAGMENT_SHADER, fs)); g.linkProgram(p);
     if (!g.getProgramParameter(p, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(p));
     const U = {}; ['uR', 'uU', 'uD', 'uBox', 'uZ', 'uMode', 'uLight', 'uC'].forEach(function (n) { U[n] = g.getUniformLocation(p, n); });
-    v6gl = { g: g, p: p, U: U, max: Math.min(g.getParameter(g.MAX_RENDERBUFFER_SIZE), g.getParameter(g.MAX_VIEWPORT_DIMS)[0]) };
+    v6gl = { g: g, p: p, U: U, max: Math.min(g.getParameter(g.MAX_RENDERBUFFER_SIZE), g.getParameter(g.MAX_VIEWPORT_DIMS)[0], g.getParameter(g.MAX_TEXTURE_SIZE)) };
     return v6gl;
   }
 
@@ -287,6 +291,21 @@
       for (let y = 0; y < vh; y++) { const ro = (vh - 1 - y) * vw * 4, wo = y * vw; for (let x = 0; x < vw; x++) { const k = ro + 4 * x; ids[wo + x] = px[k] | (px[k + 1] << 8); } }
     }
     g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(fb); g.deleteRenderbuffer(cb); g.deleteRenderbuffer(db);
+    // effects (Effects tab): the bodies drawn again into GPU pictures (body numbers, normals) for the effect passes
+    if (o.fx && v6FxOn(o.fx)) {
+      const rtDraw = function (mode, lt, colOf) {
+        const t = v6FxTex(g, vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null), f = g.createFramebuffer(), d2 = g.createRenderbuffer();
+        g.bindRenderbuffer(g.RENDERBUFFER, d2); g.renderbufferStorage(g.RENDERBUFFER, g.DEPTH_COMPONENT24, vw, vh);
+        g.bindFramebuffer(g.FRAMEBUFFER, f); g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, t, 0); g.framebufferRenderbuffer(g.FRAMEBUFFER, g.DEPTH_ATTACHMENT, g.RENDERBUFFER, d2);
+        g.viewport(0, 0, vw, vh); g.useProgram(G.p); g.enable(g.DEPTH_TEST); g.clearColor(0, 0, 0, 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT);
+        g.uniform1i(U.uMode, mode); g.uniform1i(U.uLight, lt);
+        preps.forEach(function (p, i) { if (colOf) g.uniform3fv(U.uC, colOf(i)); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n); });
+        g.bindVertexArray(null); g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(f); g.deleteRenderbuffer(d2);
+        return t;
+      };
+      const fo = v6Fx(G, { vw: vw, vh: vh, raw: raw, rgba: new Uint8Array(fill.data.buffer), dr: d1 - d0, S2: S2, ppx: (o.ppk || 1) * s2, draw: rtDraw, nb: preps.length }, o.fx);
+      if (fo) fill.data.set(fo);
+    }
     const cv = document.createElement('canvas'); cv.width = vw; cv.height = vh;
     const c2 = cv.getContext('2d'); c2.putImageData(fill, 0, 0);
     const map = { R0: R0, U0: U0, S2: S2, vh: vh, ctr: sc6.ctr, D: D, ids: ids, uids: ids ? preps.map(function (p) { return p.b.uid; }) : null };
@@ -404,7 +423,7 @@
     if (o.fine && k >= 1 && !quick) { sc6 = await v6Scene(o, sc); if (o.exp) plan = v6ExpPlan(o, sc6); }
     const M = v6Metrics(o), G = v6GL(); v6Upload(G, sc6);
     const out = { sc6: sc6, sc: sc, views: {}, parts: [], plan: plan, isoK: o.isoK };
-    const oi = Object.assign({}, o, { idm: !!quick });      // preview: body-number pixels for the highlight
+    const oi = Object.assign({}, o, { idm: !!quick, ppk: M.ppmm * k });      // preview: body-number pixels for the highlight
     try {
       if (o.exp) {
         for (const it of plan.items) out.parts.push(Object.assign(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, oi), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));

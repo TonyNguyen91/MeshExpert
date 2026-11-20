@@ -53,7 +53,7 @@ with sync_playwright() as p:
     ok('Iso Turn / Tilt / Size in 6 Views, greyed while Isometric is off',dis()==[True,True,True])
     pg.click('#dwsRibbon .rpage.on button[data-chk="#v6Iso"]'); pg.wait_for_timeout(700)
     ok('…active once Isometric is on',dis()==[False,False,False])
-    ok('One Drawing tab (+ Export), 2D Type at the right end',pg.evaluate("[...document.querySelectorAll('#dwsTabs .rtab')].map(b=>b.textContent)")==['Drawing','Export'] and pg.evaluate("(()=>{const g=[...document.querySelectorAll('#dwsRibbon .rpage.on .rgrp')];return g[g.length-1].querySelector('[data-act=type2d]')!==null})()"))
+    ok('One Drawing tab (+ Export, Effects), 2D Type at the right end',pg.evaluate("[...document.querySelectorAll('#dwsTabs .rtab')].map(b=>b.textContent)")==['Drawing','Export','Hiệu ứng'] and pg.evaluate("(()=>{const g=[...document.querySelectorAll('#dwsRibbon .rpage.on .rgrp')];return g[g.length-1].querySelector('[data-act=type2d]')!==null})()"))
     def pick2d(t):
         pg.click('#dwsRibbon .rpage.on button[data-act=type2d]'); pg.wait_for_timeout(200); pg.click('#ctx div:has-text("%s")'%t)
     ans['v']=False; pick2d('Exploded View'); pg.wait_for_timeout(500)

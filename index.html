@@ -624,6 +624,17 @@
     <div class="row"><button id="v6AddT" class="v6b" data-en="Add text" title="Thêm một dòng chữ vào bản vẽ (kéo để dời, bấm đúp để sửa, Delete để xoá)" data-en-title="Add a text to the sheet (drag to move, double-click to edit, Delete to remove)">+ Thêm chữ</button><span class="lbl" data-en="Note">Ghi chú</span><input type="range" id="v6NsR" min="1" max="20" step="0.5" value="4" style="width:56px"><input type="number" id="v6Ns" class="s" value="4" min="1" max="20" step="0.5"><span class="unit">mm</span><label><input type="checkbox" id="v6Nb" checked> <span data-en="Bold">Đậm</span></label><button id="v6DelT" class="v6b" title="Xoá ghi chú đang chọn" data-en-title="Delete the selected note">✕</button></div>
     <div class="row"><span class="lbl" data-en="Font">Font</span><select id="v6Nf"><option value="Arial">Arial</option><option value="Segoe UI">Segoe UI</option><option value="Calibri">Calibri</option><option value="Tahoma">Tahoma</option><option value="Verdana">Verdana</option><option value="Times New Roman">Times New Roman</option><option value="Georgia">Georgia</option><option value="Cambria">Cambria</option><option value="Courier New">Courier New</option><option value="Consolas">Consolas</option></select><select id="v6Na"><option value="left" data-en="Left">Trái</option><option value="center" data-en="Centre">Giữa</option><option value="right" data-en="Right">Phải</option></select><label><input type="checkbox" id="v6Ni"> <span data-en="Italic">Nghiêng</span></label><label><input type="checkbox" id="v6Nu"> <span data-en="Underline">Gạch chân</span></label><input type="color" id="v6Nc" value="#111111"></div>
     <div class="row"><button id="v6AddR" class="v6b" data-en="Frame">+ Khung</button><input type="color" id="v6Rc" value="#e53935"><span class="lbl" data-en="Title">Tên khung</span><input type="range" id="v6RsR" min="1" max="20" step="0.5" value="5" style="width:56px"><input type="number" id="v6Rs" class="s" value="5" min="1" max="20" step="0.5"><span class="unit">mm</span><span class="lbl" data-en="Line">Nét</span><input type="range" id="v6RwR" min="0.1" max="3" step="0.05" value="0.5" style="width:56px"><input type="number" id="v6Rw" class="s" value="0.5" min="0.1" max="3" step="0.05"><span class="unit">mm</span><button id="v6DelR" class="v6b">✕</button></div>
+    <div class="row v6fx"><span class="lbl" data-en="Step threshold" title="Độ cao bậc nhỏ nhất được vẽ nét (mm trên vật)" data-en-title="Smallest step height that gets a line (mm on the object)">Ngưỡng bậc</span><input type="range" id="v6FxTR" min="0.02" max="5" step="0.01" value="0.2" style="width:70px"><input type="number" id="v6FxT" class="s" value="0.2" min="0.02" max="5" step="0.01"><span class="unit">mm</span></div>
+    <div class="row v6fx"><span class="lbl" data-en="Step line" title="Bề dày nét bậc trên giấy (0 = tắt)" data-en-title="Step line width on paper (0 = off)">Nét bậc</span><input type="range" id="v6FxWR" min="0" max="1" step="0.01" value="0.2" style="width:70px"><input type="number" id="v6FxW" class="s" value="0.2" min="0" max="1" step="0.01"><span class="unit">mm</span></div>
+    <div class="row v6fx"><span class="lbl" data-en="Band width" title="Bề rộng dải tối chân bậc trên giấy" data-en-title="Width of the dark band at the foot of a step on paper">Rộng dải tối</span><input type="range" id="v6FxBR" min="0" max="5" step="0.1" value="1" style="width:70px"><input type="number" id="v6FxB" class="s" value="1" min="0" max="5" step="0.1"><span class="unit">mm</span></div>
+    <div class="row v6fx"><span class="lbl" data-en="Band strength" title="Độ đậm dải tối chân bậc (0 = tắt)" data-en-title="Strength of the step band (0 = off)">Đậm dải tối</span><input type="range" id="v6FxBsR" min="0" max="100" step="1" value="45" style="width:70px"><input type="number" id="v6FxBs" class="s" value="45" min="0" max="100" step="1"><span class="unit">%</span></div>
+    <div class="row v6fx"><span class="lbl" data-en="AO radius" title="Bán kính tối dần quanh chân bậc, khe, lỗ (mm trên vật)" data-en-title="Radius of the darkening at the foot of steps, in slots and holes (mm on the object)">Bán kính AO</span><input type="range" id="v6FxAR" min="0.2" max="30" step="0.1" value="2" style="width:70px"><input type="number" id="v6FxA" class="s" value="2" min="0.2" max="30" step="0.1"><span class="unit">mm</span></div>
+    <div class="row v6fx"><span class="lbl" data-en="AO strength" title="Độ đậm AO (0 = tắt)" data-en-title="AO strength (0 = off)">Đậm AO</span><input type="range" id="v6FxAsR" min="0" max="100" step="1" value="0" style="width:70px"><input type="number" id="v6FxAs" class="s" value="0" min="0" max="100" step="1"><span class="unit">%</span></div>
+    <div class="row v6fx"><span class="lbl" data-en="Shadow" title="Độ đậm bóng đổ (0 = tắt)" data-en-title="Shadow strength (0 = off)">Đậm bóng</span><input type="range" id="v6FxSR" min="0" max="100" step="1" value="0" style="width:70px"><input type="number" id="v6FxS" class="s" value="0" min="0" max="100" step="1"><span class="unit">%</span></div>
+    <div class="row v6fx"><span class="lbl" data-en="Light turn" title="Hướng đèn trên màn hình (0 = từ phải, 90 = từ trên)" data-en-title="Light direction on the screen (0 = from the right, 90 = from the top)">Hướng đèn</span><input type="range" id="v6FxSaR" min="0" max="360" step="1" value="125" style="width:70px"><input type="number" id="v6FxSa" class="s" value="125" min="0" max="360" step="1"><span class="unit">°</span></div>
+    <div class="row v6fx"><span class="lbl" data-en="Light height" title="Độ cao đèn so với mặt giấy (thấp = bóng dài)" data-en-title="Light height above the paper (low = long shadows)">Độ cao đèn</span><input type="range" id="v6FxSeR" min="5" max="85" step="1" value="40" style="width:70px"><input type="number" id="v6FxSe" class="s" value="40" min="5" max="85" step="1"><span class="unit">°</span></div>
+    <div class="row v6fx"><span class="lbl" data-en="Curvature" title="Gờ sáng, rãnh tối theo độ cong (0 = tắt)" data-en-title="Ridges lighter, grooves darker (0 = off)">Độ cong</span><input type="range" id="v6FxCR" min="0" max="100" step="1" value="0" style="width:70px"><input type="number" id="v6FxC" class="s" value="0" min="0" max="100" step="1"><span class="unit">%</span></div>
+    <div class="row v6fx"><label title="Nét ở chỗ body này gặp body khác" data-en-title="A line where one body meets another"><input type="checkbox" id="v6FxId" checked> <span data-en="Part outline">Viền part</span></label></div>
     <div class="row"><span class="lbl">DPI</span><input type="range" id="v6DpiR" min="72" max="1200" step="1" value="300" style="width:86px"><input type="number" id="v6Dpi" class="s" value="300" min="72" max="1200" step="1"><span class="unit"></span></div>
     <div class="row"><span class="lbl" data-en="Line">Nét</span><input type="range" id="v6LwR" min="0.01" max="1" step="0.01" value="0.01" style="width:86px"><input type="number" id="v6Lw" class="s" value="0.01" min="0.01" max="1" step="0.01"><span class="unit">mm</span><span class="unit" id="v6LwIn"></span></div>
     <div class="row"><span class="lbl" data-en="Smoothing" title="Khử răng cưa: dựng ảnh lớn hơn rồi thu nhỏ" data-en-title="Anti-aliasing: draw larger, then scale down">Khử răng</span><select id="v6SS"><option value="1">1×</option><option value="2">2×</option><option value="3" selected>3×</option><option value="4">4×</option></select><span class="lbl" data-en="Format">Định dạng</span><select id="v6Fmt"><option value="png">PNG</option><option value="jpg">JPG</option></select><select id="v6Bg"><option value="w" data-en="White">Nền trắng</option><option value="t" data-en="Transparent">Trong suốt</option></select></div>
@@ -5508,7 +5519,7 @@ var wasm_bindgen = (function(exports) {
   // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
   // version of the app: shown next to the name, in the Drawing Workspace header and the window title; raised with every
   // published fix (patch number) or feature set (minor number)
-  const APP_VER = '1.1.0';
+  const APP_VER = '1.2.0';
   (function () { const v = 'v' + APP_VER; $('appVer').textContent = v; document.title = 'MeshExpert ' + v; })();
   const BL_DEF = { cn: 200, ct: 58, cm: 58 };
   let blCols = Object.assign({}, BL_DEF);
@@ -10763,7 +10774,9 @@ var wasm_bindgen = (function(exports) {
   const V6_REST = 3000;     // ms of rest after zoom / pan before the sheet is drawn sharp again   // the preview never renders the sheet above this many pixels (zooming further only scales)
   let v6Act = false;   // the Drawing Workspace is open and shows the sheet
   const V6_PAIRS = [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
-    ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK'], ['v6RsR', 'v6Rs'], ['v6RwR', 'v6Rw']];
+    ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK'], ['v6RsR', 'v6Rs'], ['v6RwR', 'v6Rw'],
+    ['v6FxTR', 'v6FxT'], ['v6FxWR', 'v6FxW'], ['v6FxBR', 'v6FxB'], ['v6FxBsR', 'v6FxBs'],
+    ['v6FxAR', 'v6FxA'], ['v6FxAsR', 'v6FxAs'], ['v6FxSR', 'v6FxS'], ['v6FxSaR', 'v6FxSa'], ['v6FxSeR', 'v6FxSe'], ['v6FxCR', 'v6FxC']];
   let v6gl = null;
 
   function v6Num(id, def) { const v = parseFloat($(id).value); return isFinite(v) ? v : def; }
@@ -10786,6 +10799,7 @@ var wasm_bindgen = (function(exports) {
       edge: $('v6Edge').checked, hidden: $('v6Hid').checked, ang: v6Num('v6Ang', 30), dim: !exp && ($('v6DimW').checked || $('v6DimD').checked || $('v6DimH').checked), dimW: $('v6DimW').checked, dimD: $('v6DimD').checked, dimH: $('v6DimH').checked, unit: $('v6Unit').value,
       lbl: !exp && $('v6Lbl').checked, scn: $('v6ScN').checked, scale: scale, zoom: v6Num('v6Zm', 100) / 100,
       fs: v6Num('v6Fs', 2.6), fb: $('v6Fb').checked, W: W, H: H, cut: cut, dpi: dpi,
+      fx: { t: v6Num('v6FxT', 0.2), w: v6Num('v6FxW', 0.2), bw: v6Num('v6FxB', 1), bs: v6Num('v6FxBs', 45) / 100, id: $('v6FxId').checked, ar: v6Num('v6FxA', 2), as: v6Num('v6FxAs', 0) / 100, ss: v6Num('v6FxS', 0) / 100, sa: v6Num('v6FxSa', 125), se: v6Num('v6FxSe', 40), cs: v6Num('v6FxC', 0) / 100 },
       lw: v6Num('v6Lw', 0.25), ss: +$('v6SS').value || 1, fmt: fmt, q: v6Num('v6Q', 92) / 100, bg: fmt === 'jpg' ? 'w' : $('v6Bg').value };
   }
   // bodies of the drawing: the sheet's source bodies (Drawing Workspace), drawn from the geometry the sheet was last
@@ -10913,6 +10927,7 @@ var wasm_bindgen = (function(exports) {
       'gl_Position=vec4((x-uBox.x)/uBox.z*2.0-1.0,(y-uBox.y)/uBox.w*2.0-1.0,(z-uZ.x)/uZ.y*2.0-1.0,1.0);}';
     const fs = '#version 300 es\nprecision highp float;in vec3 vN;uniform int uMode,uLight;uniform vec3 uC;out vec4 o;\n' +
       'void main(){if(uMode==0){float v=floor(gl_FragCoord.z*16777215.0);float r=floor(v/65536.0);float gg=floor((v-r*65536.0)/256.0);float b=v-r*65536.0-gg*256.0;o=vec4(r,gg,b,255.0)/255.0;return;}' +
+      'if(uMode==2){vec3 m=normalize(vN);if(m.z<0.0)m=-m;o=vec4(m*0.5+0.5,1.0);return;}' +
       'if(uLight==2){o=vec4(uC,1.0);return;}vec3 n=normalize(vN);if(n.z<0.0)n=-n;vec3 c;' +
       'if(uLight==0)c=uC*(n.z*0.72+0.28);' +
       'else{vec3 l1=normalize(vec3(-0.45,0.6,0.66)),l2=normalize(vec3(0.7,-0.3,0.62));float d1=max(dot(n,l1),0.0),d2=max(dot(n,l2),0.0);' +
@@ -10921,7 +10936,7 @@ var wasm_bindgen = (function(exports) {
     const p = g.createProgram(); g.attachShader(p, sh(g.VERTEX_SHADER, vs)); g.attachShader(p, sh(g.FRAGMENT_SHADER, fs)); g.linkProgram(p);
     if (!g.getProgramParameter(p, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(p));
     const U = {}; ['uR', 'uU', 'uD', 'uBox', 'uZ', 'uMode', 'uLight', 'uC'].forEach(function (n) { U[n] = g.getUniformLocation(p, n); });
-    v6gl = { g: g, p: p, U: U, max: Math.min(g.getParameter(g.MAX_RENDERBUFFER_SIZE), g.getParameter(g.MAX_VIEWPORT_DIMS)[0]) };
+    v6gl = { g: g, p: p, U: U, max: Math.min(g.getParameter(g.MAX_RENDERBUFFER_SIZE), g.getParameter(g.MAX_VIEWPORT_DIMS)[0], g.getParameter(g.MAX_TEXTURE_SIZE)) };
     return v6gl;
   }
 
@@ -11027,6 +11042,21 @@ var wasm_bindgen = (function(exports) {
       for (let y = 0; y < vh; y++) { const ro = (vh - 1 - y) * vw * 4, wo = y * vw; for (let x = 0; x < vw; x++) { const k = ro + 4 * x; ids[wo + x] = px[k] | (px[k + 1] << 8); } }
     }
     g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(fb); g.deleteRenderbuffer(cb); g.deleteRenderbuffer(db);
+    // effects (Effects tab): the bodies drawn again into GPU pictures (body numbers, normals) for the effect passes
+    if (o.fx && v6FxOn(o.fx)) {
+      const rtDraw = function (mode, lt, colOf) {
+        const t = v6FxTex(g, vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null), f = g.createFramebuffer(), d2 = g.createRenderbuffer();
+        g.bindRenderbuffer(g.RENDERBUFFER, d2); g.renderbufferStorage(g.RENDERBUFFER, g.DEPTH_COMPONENT24, vw, vh);
+        g.bindFramebuffer(g.FRAMEBUFFER, f); g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, t, 0); g.framebufferRenderbuffer(g.FRAMEBUFFER, g.DEPTH_ATTACHMENT, g.RENDERBUFFER, d2);
+        g.viewport(0, 0, vw, vh); g.useProgram(G.p); g.enable(g.DEPTH_TEST); g.clearColor(0, 0, 0, 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT);
+        g.uniform1i(U.uMode, mode); g.uniform1i(U.uLight, lt);
+        preps.forEach(function (p, i) { if (colOf) g.uniform3fv(U.uC, colOf(i)); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n); });
+        g.bindVertexArray(null); g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(f); g.deleteRenderbuffer(d2);
+        return t;
+      };
+      const fo = v6Fx(G, { vw: vw, vh: vh, raw: raw, rgba: new Uint8Array(fill.data.buffer), dr: d1 - d0, S2: S2, ppx: (o.ppk || 1) * s2, draw: rtDraw, nb: preps.length }, o.fx);
+      if (fo) fill.data.set(fo);
+    }
     const cv = document.createElement('canvas'); cv.width = vw; cv.height = vh;
     const c2 = cv.getContext('2d'); c2.putImageData(fill, 0, 0);
     const map = { R0: R0, U0: U0, S2: S2, vh: vh, ctr: sc6.ctr, D: D, ids: ids, uids: ids ? preps.map(function (p) { return p.b.uid; }) : null };
@@ -11144,7 +11174,7 @@ var wasm_bindgen = (function(exports) {
     if (o.fine && k >= 1 && !quick) { sc6 = await v6Scene(o, sc); if (o.exp) plan = v6ExpPlan(o, sc6); }
     const M = v6Metrics(o), G = v6GL(); v6Upload(G, sc6);
     const out = { sc6: sc6, sc: sc, views: {}, parts: [], plan: plan, isoK: o.isoK };
-    const oi = Object.assign({}, o, { idm: !!quick });      // preview: body-number pixels for the highlight
+    const oi = Object.assign({}, o, { idm: !!quick, ppk: M.ppmm * k });      // preview: body-number pixels for the highlight
     try {
       if (o.exp) {
         for (const it of plan.items) out.parts.push(Object.assign(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, oi), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
@@ -12392,6 +12422,152 @@ var wasm_bindgen = (function(exports) {
       return navigator.clipboard.write([new ClipboardItem({ 'image/png': r.blob })]).then(function () { flash(L('Đã chép ảnh vào clipboard (', 'Picture copied to the clipboard (') + r.w + ' × ' + r.h + ' px)'); });
     }).catch(function (e) { setBusy(false); showError(e); });
   });
+  // ---------- drawing effects (Drawing Workspace, Effects tab): run on the depth picture of each view after it is drawn
+  // Depth step lines: a line where the depth jumps, put on the lower (farther) side and thicker for a higher step, so
+  // two faces at different heights with the same normal are told apart and the reader sees which one is lower.
+  // Step band: a soft dark band on the lower face along the foot of the step. Part outline: a line where one body meets
+  // another (body number picture). Ambient occlusion, shadow (light fixed to the screen, so every view is lit alike) and
+  // curvature shading complete the picture.
+  // All passes are WebGL2 full-screen passes; the last one is drawn and read back in tiles so no single GPU job runs long.
+  const FX_VS = '#version 300 es\nvoid main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.0-1.0,0.0,1.0);}';
+  // depth picture (uDep) is uploaded top-down; pictures drawn by the GPU (uE, uB, uId, uN) are bottom-up: F() converts
+  const FX_HD = '#version 300 es\nprecision highp float;precision highp int;uniform sampler2D uDep;uniform ivec2 uSz;uniform float uDR,uThr;out vec4 o;\n' +
+    'ivec2 P(){return ivec2(int(gl_FragCoord.x),uSz.y-1-int(gl_FragCoord.y));}\n' +
+    'ivec2 C(ivec2 q){return clamp(q,ivec2(0),uSz-1);}\n' +
+    'ivec2 F(ivec2 q){q=C(q);return ivec2(q.x,uSz.y-1-q.y);}\n' +
+    'bool IN(ivec2 q){return q.x>=0&&q.y>=0&&q.x<uSz.x&&q.y<uSz.y;}\n' +
+    'float D(ivec2 q){return texelFetch(uDep,C(q),0).r;}\n' +
+    'bool BG(float d){return d>0.9999;}\n';
+  // pass 1: per pixel, is it the lower side of a depth step (r = line width / 48 px, g = step height, log scale; g = 1:
+  // background next to the object) and is it on a body boundary (b)
+  const FX_EDGE = FX_HD + 'uniform sampler2D uId;uniform float uW;uniform int uIdOn;\n' +
+    'int I(ivec2 q){vec4 c=texelFetch(uId,F(q),0);return int(c.r*255.0+0.5)+256*int(c.g*255.0+0.5);}\n' +
+    'void main(){ivec2 p=P();float dp=D(p);bool bp=BG(dp);float w=0.0,jm=0.0,idb=0.0;int ip=uIdOn==1?I(p):0;\n' +
+    'ivec2 S[4]=ivec2[4](ivec2(1,0),ivec2(-1,0),ivec2(0,1),ivec2(0,-1));\n' +
+    'for(int k=0;k<4;k++){ivec2 s=S[k],q=p+s;if(!IN(q))continue;float dq=D(q);if(BG(dq))continue;\n' +
+    ' if(uIdOn==1&&!bp){int iq=I(q);if(iq!=ip&&iq>0&&ip>0)idb=1.0;}\n' +
+    ' float j;if(bp)j=1e6;else{float da=D(p-s);if(BG(da)||!IN(p-s))da=dp;j=((2.0*dp-da)-dq)*uDR;}\n' +
+    ' if(j>uThr){jm=max(jm,j);if(uW>0.0){float f=clamp(0.6+0.2*log2(j/uThr),0.6,1.8);w=max(w,max(uW*f,0.8));}}}\n' +
+    'float g=jm>0.0?(bp?1.0:clamp(log2(jm/uThr)/12.0,0.0,0.99)):0.0;o=vec4(min(w/48.0,1.0),g,idb,jm>0.0&&!bp?1.0:0.0);}';
+  // pass 2: 8 x 8 blocks of pass 1, so the last pass looks for lines only near one
+  const FX_BLK = '#version 300 es\nprecision highp float;precision highp int;uniform sampler2D uE;out vec4 o;\n' +
+    'void main(){ivec2 b=ivec2(gl_FragCoord.xy)*8,s=textureSize(uE,0);vec4 m=vec4(0.0);\n' +
+    'for(int y=0;y<8;y++)for(int x=0;x<8;x++){ivec2 q=b+ivec2(x,y);if(q.x<s.x&&q.y<s.y)m=max(m,texelFetch(uE,q,0));}o=m;}';
+  // pass 3: the picture with the effects
+  const FX_OUT = FX_HD + 'uniform sampler2D uE,uB,uBB,uCol,uN;uniform float uRad,uIdW,uBw,uBs,uS2,uAr,uAs,uCs,uCo,uSs;uniform vec3 uLc,uL;\n' +
+    'float h1(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\n' +
+    'vec3 N(ivec2 q){vec3 n=texelFetch(uN,F(q),0).xyz*2.0-1.0;return n;}\n' +
+    // one-sided depth slope (the smaller one, so a step next to the pixel does not tilt its plane)
+    'float G1(ivec2 p,ivec2 s,float dp){float a=D(p+s),b=D(p-s);bool ia=IN(p+s)&&!BG(a),ib=IN(p-s)&&!BG(b);' +
+    'if(ia&&ib){float u=a-dp,v=dp-b;return abs(u)<abs(v)?u:v;}if(ia)return a-dp;if(ib)return dp-b;return 0.0;}\n' +
+    'bool NEAR(sampler2D t,int sz,float r,ivec2 p,bool st){ivec2 g0=F(p)/sz,bs=textureSize(t,0);int RB=int(ceil(r/float(sz)))+1;\n' +
+    ' for(int by=-RB;by<=RB;by++)for(int bx=-RB;bx<=RB;bx++){ivec2 b=g0+ivec2(bx,by);if(b.x<0||b.y<0||b.x>=bs.x||b.y>=bs.y)continue;vec4 v=texelFetch(t,b,0);if(st?v.a>0.0:(v.r>0.0||v.b>0.0))return true;}return false;}\n' +
+    'void main(){ivec2 p=P();float dp=D(p);bool bp=BG(dp);vec4 col=texelFetch(uCol,C(p),0);vec3 c=col.rgb;float cov=0.0;\n' +
+    'int R=int(ceil(uRad));\n' +
+    'if(R>0&&NEAR(uB,8,uRad,p,false)){\n' +
+    ' for(int dy=-R;dy<=R;dy++)for(int dx=-R;dx<=R;dx++){float dd=length(vec2(dx,dy));if(dd>uRad+0.5)continue;ivec2 q=p+ivec2(dx,dy);if(!IN(q))continue;vec4 e=texelFetch(uE,F(q),0);\n' +
+    '  if(e.r>0.0){float w=e.r*48.0;if(dd<=w+0.5){bool ok=e.g>=0.995?bp:(!bp&&dp>D(q)-0.5*uThr*exp2(e.g*12.0)/uDR);if(ok)cov=max(cov,clamp(w+0.5-dd,0.0,1.0));}}\n' +
+    '  if(e.b>0.0&&!bp){float hw=max(uIdW*0.5,0.5);if(dd<=hw+0.5)cov=max(cov,clamp(hw+0.5-dd,0.0,1.0));}}}\n' +
+    'if(!bp){vec2 gr=vec2(G1(p,ivec2(1,0),dp),G1(p,ivec2(0,1),dp));float jt=h1(vec2(p))*6.2831853,jr=h1(vec2(p)+17.3);\n' +
+    // step band: the nearest point higher than the pixel's own plane by more than the step threshold darkens it
+    ' if(uBs>0.0&&uBw>=1.0&&NEAR(uBB,64,uBw,p,true)){float band=0.0;for(int k=0;k<10;k++){float a=jt+float(k)*0.6283185;vec2 dv=vec2(cos(a),sin(a));\n' +
+    '  for(int i=1;i<=8;i++){float t=max(1.0,uBw*(float(i)-jr)/8.0);ivec2 q=p+ivec2(round(dv*t));if(!IN(q))break;float dq=D(q);if(BG(dq))continue;\n' +
+    '   float h=(dp+dot(gr,dv*t)-dq)*uDR;if(h>uThr){float v=1.0-t/uBw;v=v*v*(3.0-2.0*v)*mix(0.6,1.0,clamp((h-uThr)/(3.0*uThr),0.0,1.0));band=max(band,v);break;}}}\n' +
+    '  c*=1.0-uBs*band;}\n' +
+    // ambient occlusion: how much of the hemisphere above the pixel's own plane the nearby surface hides (radius in mm)
+    ' if(uAs>0.0&&uAr>=1.0){float ao=0.0;for(int k=0;k<8;k++){float a=jt+float(k)*0.7853982;vec2 dv=vec2(cos(a),sin(a));float m=0.0;\n' +
+    '  for(int i=1;i<=8;i++){float t=max(1.0,uAr*(float(i)-jr)/8.0);ivec2 q=p+ivec2(round(dv*t));if(!IN(q))break;float dq=D(q);if(BG(dq))continue;\n' +
+    '   float h=(dp+dot(gr,dv*t)-dq)*uDR,dm=t/uS2,sn=h/sqrt(h*h+dm*dm),fo=1.0-(t/uAr)*(t/uAr);m=max(m,(sn-0.1)*fo);}\n' +
+    '  ao+=max(m,0.0);}c*=1.0-uAs*clamp(ao/8.0*1.4,0.0,1.0);}\n' +
+    // curvature: normals spreading apart (ridge) lighten, closing in (groove) darken; not across a depth step
+    ' if(uCs>0.0){ivec2 X=ivec2(int(uCo),0),Y=ivec2(0,int(uCo));float a1=D(p+X),a2=D(p-X),a3=D(p+Y),a4=D(p-Y);\n' +
+    '  if(IN(p+X)&&IN(p-X)&&IN(p+Y)&&IN(p-Y)&&!BG(a1)&&!BG(a2)&&!BG(a3)&&!BG(a4)&&max(max(abs(a1-dp),abs(a2-dp)),max(abs(a3-dp),abs(a4-dp)))*uDR<uThr*2.0){\n' +
+    '   float cv=(N(p+X).x-N(p-X).x)+(N(p-Y).y-N(p+Y).y);c=clamp(c+vec3(uCs*0.45*clamp(cv*3.0,-1.0,1.0)),0.0,1.0);}}\n' +
+    // shadow: light fixed to the screen (uL: x right, y up, z towards the viewer); faces turned away are dark, the rest
+    // are dark when a surface rises above the ray walked from the pixel towards the light
+    ' if(uSs>0.0){vec3 n=N(p);float shd=1.0-smoothstep(0.0,0.2,dot(n,uL));float lxy=length(uL.xy);\n' +
+    '  if(shd<1.0&&lxy>0.01){vec2 dv=vec2(uL.x,-uL.y)/lxy;float hp=-dp*uDR,tm=min(float(max(uSz.x,uSz.y)),uDR/max(uL.z,0.05)*lxy*uS2),bias=max(uThr*0.5,1.5/uS2)+abs(dot(gr,dv))*uDR*2.0;\n' +
+    '   for(int i=1;i<=48;i++){float u=(float(i)-jr*0.9)/48.0,t=max(1.5,u*u*tm);ivec2 q=p+ivec2(round(dv*t));if(!IN(q))break;float dq=D(q);if(BG(dq))continue;\n' +
+    '    if(-dq*uDR>hp+uL.z*t/(uS2*lxy)+bias){shd=1.0;break;}}}\n' +
+    '  c*=1.0-uSs*shd;}\n' +
+    '}\n' +
+    'o=bp?vec4(uLc,cov):vec4(mix(c,uLc,cov),1.0);}';
+
+  function v6FxProg(G, fs) {
+    const g = G.g, sh = function (t, s) { const x = g.createShader(t); g.shaderSource(x, s); g.compileShader(x); if (!g.getShaderParameter(x, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(x)); return x; };
+    const p = g.createProgram(); g.attachShader(p, sh(g.VERTEX_SHADER, FX_VS)); g.attachShader(p, sh(g.FRAGMENT_SHADER, fs)); g.linkProgram(p);
+    if (!g.getProgramParameter(p, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(p));
+    return p;
+  }
+  function v6FxGL(G) {
+    if (G.fx) return G.fx;
+    G.fx = { edge: v6FxProg(G, FX_EDGE), blk: v6FxProg(G, FX_BLK), out: v6FxProg(G, FX_OUT), vao: G.g.createVertexArray() };
+    return G.fx;
+  }
+  // any effect switched on
+  function v6FxOn(fx) { return !!fx && (fx.w > 0 || (fx.bs > 0 && fx.bw > 0) || fx.id || fx.as > 0 || fx.ss > 0 || fx.cs > 0); }
+  function v6FxTex(g, w, h, ifmt, fmt, type, data) {
+    const t = g.createTexture(); g.bindTexture(g.TEXTURE_2D, t);
+    g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.NEAREST); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.NEAREST);
+    g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE);
+    g.pixelStorei(g.UNPACK_ALIGNMENT, 1);
+    g.texImage2D(g.TEXTURE_2D, 0, ifmt, w, h, 0, fmt, type, data || null);
+    return t;
+  }
+  // a = {vw, vh, raw (top-down depth 0..1), rgba (top-down colour picture), dr (depth range mm), S2 (px per model mm),
+  // ppx (px per paper mm), draw(mode, light, colourOf) -> GPU texture of the bodies drawn that way, nb (bodies)}
+  // returns the new top-down colour picture (Uint8Array), or null when nothing is switched on
+  function v6Fx(G, a, fx) {
+    if (!v6FxOn(fx)) return null;
+    const g = G.g, F = v6FxGL(G), vw = a.vw, vh = a.vh, made = [], fbs = [];
+    const tex = function (w, h, i, f, t, d) { const x = v6FxTex(g, w, h, i, f, t, d); made.push(x); return x; };
+    const target = function (t) { const f = g.createFramebuffer(); fbs.push(f); g.bindFramebuffer(g.FRAMEBUFFER, f); g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, t, 0); return f; };
+    const U = function (p, n) { return g.getUniformLocation(p, n); };
+    const bind = function (p, unit, name, t) { g.activeTexture(g.TEXTURE0 + unit); g.bindTexture(g.TEXTURE_2D, t); g.uniform1i(U(p, name), unit); };
+    try {
+      const idOn = fx.id && a.nb > 1, nOn = fx.ss > 0 || fx.cs > 0;
+      const tId = idOn ? a.draw(1, 2, function (i) { const k = i + 1; return [(k & 255) / 255, ((k >> 8) & 255) / 255, 0]; }) : null;
+      const tN = nOn ? a.draw(2, 0, null) : null;
+      if (tId) made.push(tId); if (tN) made.push(tN);
+      const tD = tex(vw, vh, g.R32F, g.RED, g.FLOAT, a.raw);
+      const tC = tex(vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, a.rgba);
+      const thr = Math.max(1e-3, fx.t), wl = Math.min(24 / 1.8, fx.w * a.ppx);
+      const common = function (p) { g.useProgram(p); bind(p, 0, 'uDep', tD); g.uniform2i(U(p, 'uSz'), vw, vh); g.uniform1f(U(p, 'uDR'), a.dr); g.uniform1f(U(p, 'uThr'), thr); };
+      g.disable(g.DEPTH_TEST); g.disable(g.SCISSOR_TEST); g.disable(g.BLEND); g.bindVertexArray(F.vao);
+      // pass 1
+      const tE = tex(vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null); target(tE); g.viewport(0, 0, vw, vh);
+      common(F.edge); g.uniform1f(U(F.edge, 'uW'), wl); g.uniform1i(U(F.edge, 'uIdOn'), tId ? 1 : 0); bind(F.edge, 1, 'uId', tId || tC);
+      g.drawArrays(g.TRIANGLES, 0, 3);
+      // pass 2
+      const bw = Math.ceil(vw / 8), bh = Math.ceil(vh / 8), tB = tex(bw, bh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null); target(tB); g.viewport(0, 0, bw, bh);
+      g.useProgram(F.blk); bind(F.blk, 0, 'uE', tE); g.drawArrays(g.TRIANGLES, 0, 3);
+      const cw = Math.ceil(bw / 8), ch = Math.ceil(bh / 8), tBB = tex(cw, ch, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null); target(tBB); g.viewport(0, 0, cw, ch);
+      bind(F.blk, 0, 'uE', tB); g.drawArrays(g.TRIANGLES, 0, 3);
+      // pass 3, in tiles read back one by one
+      const tO = tex(vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null); target(tO); g.viewport(0, 0, vw, vh);
+      const P = F.out; common(P); bind(P, 1, 'uE', tE); bind(P, 2, 'uB', tB); bind(P, 3, 'uCol', tC); bind(P, 4, 'uN', tN || tC); bind(P, 5, 'uBB', tBB);
+      const idw = tId ? Math.max(1, 0.8 * fx.w * a.ppx) : 0;
+      g.uniform1f(U(P, 'uRad'), wl > 0 || idw > 0 ? Math.min(24, Math.max(wl * 1.8, idw / 2)) : 0); g.uniform1f(U(P, 'uIdW'), idw);
+      g.uniform1f(U(P, 'uBw'), fx.bw * a.ppx); g.uniform1f(U(P, 'uBs'), fx.bw > 0 ? fx.bs : 0); g.uniform1f(U(P, 'uS2'), a.S2);
+      g.uniform3fv(U(P, 'uLc'), [0x11 / 255, 0x11 / 255, 0x11 / 255]);
+      const sa = fx.sa * Math.PI / 180, se = fx.se * Math.PI / 180;
+      g.uniform1f(U(P, 'uAr'), Math.min(256, fx.ar * a.S2)); g.uniform1f(U(P, 'uAs'), fx.as); g.uniform1f(U(P, 'uCs'), fx.cs); g.uniform1f(U(P, 'uCo'), Math.max(1, Math.round(0.12 * a.ppx)));
+      g.uniform1f(U(P, 'uSs'), fx.ss); g.uniform3fv(U(P, 'uL'), [Math.cos(se) * Math.cos(sa), Math.cos(se) * Math.sin(sa), Math.sin(se)]);
+      const out = new Uint8Array(vw * vh * 4), T = 1024;
+      g.enable(g.SCISSOR_TEST);
+      for (let ty = 0; ty < vh; ty += T) for (let tx = 0; tx < vw; tx += T) {
+        const tw = Math.min(T, vw - tx), th = Math.min(T, vh - ty), buf = new Uint8Array(tw * th * 4);
+        g.scissor(tx, ty, tw, th); g.drawArrays(g.TRIANGLES, 0, 3); g.readPixels(tx, ty, tw, th, g.RGBA, g.UNSIGNED_BYTE, buf);
+        for (let y = 0; y < th; y++) out.set(buf.subarray(y * tw * 4, (y + 1) * tw * 4), ((vh - 1 - (ty + y)) * vw + tx) * 4);
+      }
+      g.disable(g.SCISSOR_TEST);
+      return out;
+    } finally {
+      g.bindFramebuffer(g.FRAMEBUFFER, null); g.bindVertexArray(null);
+      fbs.forEach(function (f) { g.deleteFramebuffer(f); }); made.forEach(function (t) { g.deleteTexture(t); });
+      g.activeTexture(g.TEXTURE0); g.enable(g.DEPTH_TEST);
+    }
+  }
 
   // ===================== Drawing Workspace =====================
   // A full-window work area for 2D drawings (Capture > Drawing): own ribbon (tabs 6 Views / Exploded View), the sheet
@@ -12633,6 +12809,21 @@ var wasm_bindgen = (function(exports) {
       dwCol(dwSB('data-act="pdfAll"', 'pdf', 'PDF gộp', 'All in 1 PDF', 'Xuất mọi Sheet vào một file PDF theo thứ tự Drawing Tree', 'All sheets into one PDF, in Drawing Tree order') +
         dwSB('data-click="#v6Copy"', 'copy', 'Chép ảnh', 'Copy', 'Chép ảnh Sheet vào clipboard (cỡ vừa để gửi mail, không theo thiết lập xuất)', 'Copy the sheet picture to the clipboard (e-mail size, not the export settings)'))).replace('class="rgrp"', 'class="rgrp keep"');
   }
+  // Effects tab: what makes faces at different heights readable on the picture (depth step lines, step band, part outline)
+  function dwFxHtml() {
+    return dwGrp('Nét bậc', 'Step Lines', dwCol(dwSliderS('Ngưỡng', 'Threshold', 'v6FxTR', 'v6FxT', 'Độ cao bậc nhỏ nhất được vẽ nét (mm trên vật). Nét nằm về phía mặt thấp hơn và dày hơn khi bậc cao hơn', 'Smallest step height that gets a line (mm on the object). The line lies on the lower face and gets thicker for a higher step') +
+        dwSliderS('Nét', 'Line', 'v6FxWR', 'v6FxW', 'Bề dày nét bậc trên giấy (mm, 0 = tắt)', 'Step line width on paper (mm, 0 = off)'))) +
+      dwGrp('Chân bậc', 'Step Band', dwCol(dwSliderS('Rộng', 'Width', 'v6FxBR', 'v6FxB', 'Bề rộng dải tối trên mặt thấp, sát chân bậc (mm trên giấy)', 'Width of the dark band on the lower face along the foot of a step (mm on paper)') +
+        dwSliderS('Đậm', 'Strength', 'v6FxBsR', 'v6FxBs', 'Độ đậm dải tối chân bậc (%, 0 = tắt)', 'Strength of the step band (%, 0 = off)'))) +
+      dwGrp('AO', 'AO', dwCol(dwSliderS('Bán kính', 'Radius', 'v6FxAR', 'v6FxA', 'Ambient Occlusion: chân bậc, khe, lỗ tối dần. Bán kính tính bằng mm trên vật', 'Ambient occlusion: the foot of steps, slots and holes darken. Radius in mm on the object') +
+        dwSliderS('Đậm', 'Strength', 'v6FxAsR', 'v6FxAs', 'Độ đậm AO (%, 0 = tắt)', 'AO strength (%, 0 = off)'))) +
+      dwGrp('Bóng đổ', 'Shadow', dwCol(dwSliderS('Đậm', 'Strength', 'v6FxSR', 'v6FxS', 'Độ đậm bóng đổ (%, 0 = tắt). Đèn gắn với màn hình nên mọi view sáng cùng một kiểu', 'Shadow strength (%, 0 = off). The light is fixed to the screen, so every view is lit alike') +
+        dwSliderS('Xoay', 'Turn', 'v6FxSaR', 'v6FxSa', 'Hướng đèn trên màn hình (°): 0 = từ phải, 90 = từ trên, 180 = từ trái', 'Light direction on the screen (°): 0 = from the right, 90 = from the top, 180 = from the left') +
+        dwSliderS('Nghiêng', 'Tilt', 'v6FxSeR', 'v6FxSe', 'Độ cao đèn so với mặt giấy (°): thấp thì bóng dài', 'Light height above the paper (°): low gives long shadows'))) +
+      dwGrp('Độ cong', 'Curvature', dwCol(dwSliderS('Đậm', 'Strength', 'v6FxCR', 'v6FxC', 'Gờ sáng, rãnh tối theo độ cong bề mặt (%, 0 = tắt)', 'Ridges lighter, grooves darker by the surface curvature (%, 0 = off)'))) +
+      dwGrp('Viền part', 'Part Outline', dwCol(dwChk('#v6FxId', 'Viền part', 'Part Outline', 'Nét ở chỗ body này gặp body khác (dày theo Nét bậc)', 'A line where one body meets another (as wide as the step line)'))) +
+      dwOutGrp();
+  }
   // Ribbon layout: each drawing tab holds only what belongs to that drawing type, left to right in working order
   // (make the views -> place them -> annotate); the Export tab holds what both share, in the same order
   // (sheet -> view -> look -> lines & text -> notes -> output).
@@ -12691,7 +12882,7 @@ var wasm_bindgen = (function(exports) {
       dwOutGrp();
     const typ = dwGrp('Loại bản vẽ', 'Drawing Type', '<button class="bb dwsType" data-act="type2d"' + dwTip('Chọn loại bản vẽ của Sheet: 6 Views hoặc Exploded View (hỏi trước khi đổi)', 'Pick the drawing type of the sheet: 6 Views or Exploded View (asks before switching)') + '>' +
       dwIco('drawing', 30) + '<span>2D Type</span><small class="dwsTypeL"></small></button>').replace('class="rgrp"', 'class="rgrp keep dwsTypeG"');
-    return '<div class="rpage" data-k="6v">' + six + typ + '</div><div class="rpage" data-k="exp">' + exp + typ + '</div><div class="rpage" data-k="set">' + set + '</div>';
+    return '<div class="rpage" data-k="6v">' + six + typ + '</div><div class="rpage" data-k="exp">' + exp + typ + '</div><div class="rpage" data-k="set">' + set + '</div><div class="rpage" data-k="fx">' + dwFxHtml() + '</div>';
   }
   // ---------- building the workspace
   (function () {
@@ -12700,7 +12891,7 @@ var wasm_bindgen = (function(exports) {
       '<div id="dwsHd"><span class="dwsLogo">' + dwIco('drawing', 20) + 'Drawing Workspace<small class="appVer">v' + APP_VER + '</small></span><span class="dwsDoc" id="dwsDocName"></span><span class="grow"></span>' +
       '<button id="dwsSaveDoc"' + dwTip('Lưu tài liệu: ghi cả phiên (.mrtl) gồm mọi Sheet — Ctrl+Shift+S để lưu thành file khác', 'Save document: writes the session (.mrtl) with every sheet — Ctrl+Shift+S saves as another file') + '>' + dwIco('save') + dwT('Lưu tài liệu', 'Save Document') + '</button>' +
       '<button id="dwsBack" class="primary"' + dwTip('Quay lại 3D Workspace (bản vẽ vẫn giữ nguyên)', 'Back to the 3D workspace (the drawing stays as it is)') + '>' + dwIco('back') + dwT('3D Workspace', '3D Workspace') + '</button></div>' +
-      '<div id="dwsTop"><div id="dwsTabs"><button class="rtab" data-k="draw">Drawing</button><button class="rtab" data-k="set">Export</button></div>' +
+      '<div id="dwsTop"><div id="dwsTabs"><button class="rtab" data-k="draw">Drawing</button><button class="rtab" data-k="set">Export</button><button class="rtab" data-k="fx" data-en="Effects">Hiệu ứng</button></div>' +
       '<div id="dwsRibbon" class="ribfit">' + dwRibbonHtml() + '</div></div>' +
       '<div id="dwsMid">' +
       '<div id="dwsCanvas"></div><div id="dwsSplit"' + dwTip('Kéo để đổi bề rộng cột bên phải', 'Drag to resize the right column') + '></div><div id="dwsSide">' +
@@ -12788,10 +12979,11 @@ var wasm_bindgen = (function(exports) {
   // tabs: Drawing (its groups follow the drawing type: page 6v or exp) and Export. k = 'draw' | '6v' | 'exp' | 'set'
   function dwTabSet(k) {
     if (k === 'draw') k = V6S.mode === 'exp' ? 'exp' : '6v';
-    k = k === 'exp' || k === 'set' ? k : '6v';
-    document.querySelectorAll('#dwsTabs .rtab').forEach(function (b) { b.classList.toggle('on', b.dataset.k === (k === 'set' ? 'set' : 'draw')); });
+    k = k === 'exp' || k === 'set' || k === 'fx' ? k : '6v';
+    const side = k === 'set' || k === 'fx';
+    document.querySelectorAll('#dwsTabs .rtab').forEach(function (b) { b.classList.toggle('on', b.dataset.k === (side ? k : 'draw')); });
     document.querySelectorAll('#dwsRibbon .rpage').forEach(function (p) { p.classList.toggle('on', p.dataset.k === k); });
-    if (k !== 'set' && V6S.mode !== k) v6SetMode(k);
+    if (!side && V6S.mode !== k) v6SetMode(k);
     if (DW.open) setTimeout(function () { ribFit($('dwsRibbon')); }, 0);
     dwSyncRibbon();
   }
@@ -12810,7 +13002,7 @@ var wasm_bindgen = (function(exports) {
     showMenu([[ck('6v', '6 Views'), function () { dwTabAsk('6v'); }, 'dot'], [ck('exp', 'Exploded View'), function () { dwTabAsk('exp'); }, 'dot']], r.left, r.bottom + 2);
   }
   // another sheet opened: the Export tab stays open, otherwise the tab of the sheet's drawing type
-  function dwTabKeep(mode) { const t = document.querySelector('#dwsTabs .rtab.on'); dwTabSet(t && t.dataset.k === 'set' ? 'set' : mode); }
+  function dwTabKeep(mode) { const t = document.querySelector('#dwsTabs .rtab.on'); dwTabSet(t && (t.dataset.k === 'set' || t.dataset.k === 'fx') ? t.dataset.k : mode); }
   // ---------- tree + sheet bar
   function dwRefresh(force) {
     if (!DW.open && !force) return;
@@ -13213,7 +13405,7 @@ var wasm_bindgen = (function(exports) {
 
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, dwType: function (m) { dwTabSet(m); }, dwLoad: function (d) { dwLoad(d); }, v6Paint: function () { v6Paint(); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, dwType: function (m) { dwTabSet(m); }, dwLoad: function (d) { dwLoad(d); }, v6Paint: function () { v6Paint(); }, v6Png: function () { return v6Full('png').then(function (r) { return new Promise(function (ok) { const fr = new FileReader(); fr.onload = function () { ok(fr.result); }; fr.readAsDataURL(r.blob); }); }); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();
 </script>
 </body>

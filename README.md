@@ -5,9 +5,10 @@ Công cụ chỉnh sửa mesh STL/OBJ chạy offline trong trình duyệt. Mở 
 App chạy hoàn toàn trên máy, không kết nối internet hay mạng nội bộ: mọi thư viện đều nằm sẵn trong `index.html`, và chính sách bảo mật (Content-Security-Policy) trong file chặn mọi kết nối mạng.
 
 ## Phiên bản
-Phiên bản hiện tại: **v1.1.0** — hiện cạnh tên app (góc trên trái), trên tiêu đề cửa sổ và ở đầu Drawing Workspace. Mỗi bản vá tăng số cuối (v1.0.1, v1.0.2…), mỗi đợt tính năng mới tăng số giữa; số phiên bản nằm ở `APP_VER` trong `src/app2.js` và ở đầu dòng mô tả của commit tương ứng.
+Phiên bản hiện tại: **v1.2.0** — hiện cạnh tên app (góc trên trái), trên tiêu đề cửa sổ và ở đầu Drawing Workspace. Mỗi bản vá tăng số cuối (v1.0.1, v1.0.2…), mỗi đợt tính năng mới tăng số giữa; số phiên bản nằm ở `APP_VER` trong `src/app2.js` và ở đầu dòng mô tả của commit tương ứng.
 
 ### Nhật ký thay đổi
+- **v1.2.0** (20/11/2026) — Hiệu ứng ảnh Drawing (tab **Hiệu ứng** mới): nét bậc theo độ sâu (nét ở chỗ độ sâu nhảy, nằm về phía mặt thấp hơn, dày theo độ cao bậc), dải tối chân bậc, viền part (chỗ body này gặp body khác), Ambient Occlusion, bóng đổ với đèn gắn màn hình, độ cong (gờ sáng, rãnh tối). Áp dụng cho 6 Views và Exploded, xem trước và PNG / JPG / PDF; lưu theo từng Sheet.
 - **v1.1.0** (20/11/2026) — Sheet bản vẽ luôn theo mô hình 3D mới nhất: bỏ cột Source Bodies, bỏ body "mất" / Thay thế, bỏ Kiểm tra / Cập nhật và hình cũ (snapshot) trong file phiên, bỏ Save / Discard và trạng thái Đã lưu / Đã sửa / Cần cập nhật của Sheet (thay đổi được giữ ngay; Ctrl+S lưu phiên). Body của Sheet = mọi body của mô hình, ẩn / hiện riêng từng Sheet (thêm "Chỉ hiện body này", "Hiện mọi body"). Bấm body trong danh sách → sáng cam ngay, không dựng lại hình.
 - **v1.0.0** (20/11/2026) — Bắt đầu đánh số phiên bản. Sửa lỗi không bỏ được body đã bị xoá khỏi mô hình 3D ("✖ Mất") khỏi Source Bodies: câu hỏi xác nhận nay là hộp thoại của app (hộp xác nhận của trình duyệt có thể bị tắt cho trang và tự trả lời "Huỷ"); phím Delete bỏ body đang chọn (chọn ở cột Source Bodies → bỏ khỏi Source Bodies; chọn ở "Body của Sheet" → bỏ khỏi Sheet); Sheet chỉ còn một body đã mất vẫn bỏ được body đó; menu chuột phải của body đã mất trong cây có "Bỏ khỏi Source Bodies"; menu cột trái có "Bỏ mọi body đang mất (n)"; hộp Kiểm tra / Cập nhật có nút "Bỏ body bị mất khỏi Source Bodies".
 
@@ -20,7 +21,7 @@ Phiên bản hiện tại: **v1.1.0** — hiện cạnh tên app (góc trên tr�
 - `src/app2.js` — logic giao diện và thao tác.
 - `src/model.js` — môi trường sketch và danh sách sketch; `src/feat.js` — Extrude / Revolve, Boolean, các lệnh solid, phím tắt. Cả hai được chèn vào `app2.js` khi build.
 - `src/v6.js` — bộ máy vẽ bản vẽ: 6 view và Exploded view.
-- `src/dws.js`, `src/dws.css` — Drawing Workspace (Ribbon, Drawing Tree, Sheet, lưu phiên); `src/dwupd.js` — body của bản vẽ (luôn theo 3D) + hoàn tác; `src/dwsel.js` — ẩn / hiện body theo Sheet, Tạo Drawing Sheet; `src/dwexp.js` — xuất PDF.
+- `src/dws.js`, `src/dws.css` — Drawing Workspace (Ribbon, Drawing Tree, Sheet, lưu phiên); `src/dwupd.js` — body của bản vẽ (luôn theo 3D) + hoàn tác; `src/dwsel.js` — ẩn / hiện body theo Sheet, Tạo Drawing Sheet; `src/dwexp.js` — xuất PDF; `src/fx.js` — hiệu ứng ảnh Drawing (nét bậc, chân bậc, viền part, AO, bóng đổ, độ cong).
 - `src/manifold_embed.js` — thư viện Manifold 3.5.4 (Apache 2.0, xem `src/MANIFOLD_LICENSE.txt`) nhúng sẵn, dùng cho Boolean.
 - `src/build.py` — ghép các file trên thành `index.html`: `python3 src/build.py`.
 - `src/test_core.js`, `src/test_cmp.js`, `src/test_split.js`, `src/test_repair.js`, `src/test_solid.js`, `src/test_sketch.js`, `src/test_dress.js` — kiểm thử lõi bằng Node.js (chạy `build.py` trước).
@@ -115,7 +116,7 @@ Phiên bản hiện tại: **v1.1.0** — hiện cạnh tên app (góc trên tr�
 
 ## Drawing Workspace (Chụp → Drawing)
 - Nút **Drawing** chuyển sang **Drawing Workspace**: một màn hình làm việc riêng che toàn cửa sổ. Mô hình 3D, danh sách body, lựa chọn và góc nhìn vẫn giữ nguyên bên dưới; nút **3D Workspace** (góc trên phải) để quay lại.
-- Bố cục: **Ribbon** phía trên (tab **Drawing** và **Export**), **Sheet Canvas** ở giữa, **Drawing Tree** bên phải (kéo mép cột để đổi bề rộng), **thanh Sheet** phía dưới (các tab Sheet + nút Save / Discard / Duplicate + trạng thái). Bảng thuộc tính cũ đã bỏ — mọi thiết lập nằm trên ribbon.
+- Bố cục: **Ribbon** phía trên (tab **Drawing**, **Export** và **Hiệu ứng**), **Sheet Canvas** ở giữa, **Drawing Tree** bên phải (kéo mép cột để đổi bề rộng), **thanh Sheet** phía dưới (các tab Sheet + nút Duplicate). Bảng thuộc tính cũ đã bỏ — mọi thiết lập nằm trên ribbon.
 - Tab **Drawing** gộp 6 Views và Exploded View: nút **2D Type** (ngoài cùng bên phải) chọn loại bản vẽ của Sheet — 6 Views hoặc Exploded View (hỏi xác nhận trước khi đổi; thiết lập mỗi loại vẫn giữ) — và ribbon hiện các nhóm của loại đó.
 - Loại 6 Views: Tạo view (bật/tắt Trước/Trên/Dưới/Trái/Phải/Sau, Isometric — nút sáng khi view đang hiện), Isometric (góc xoay, góc nghiêng, cỡ hình iso — chỉ dùng được khi bật Isometric), Tỉ lệ & bố trí (tỉ lệ + tỉ lệ tuỳ chọn a : b, **Xếp tự động**: các hình chiếu cách đều nhau và cách đều viền, giữ nguyên cỡ; tính cả tên view, kích thước bao, dòng ghi tỉ lệ; hình iso vào ô trống cho khoảng cách lớn nhất, ưu tiên góc trên phải), Chú thích (tên view, ghi tỉ lệ, kích thước bao tách 3 loại bật / tắt riêng: **Dài**, **Rộng**, **Cao**; Dimension). Đường gióng của kích thước bao bắt đầu sát điểm ngoài cùng thật của vật thể (vd. góc vát), kéo đường kích thước để dời xa / gần (được lưu theo mm trên giấy).
 - Loại Exploded View: Explode (thanh **Explode** — mặc định 0 = cụm lắp nguyên, kéo để tách các linh kiện —, bỏ vị trí kéo tay, **Xếp tự động**, Combine, Tách ra), Góc nhìn (góc xoay / nghiêng cả cụm), Thông tin (tên linh kiện, vật liệu + khối lượng, tổng khối lượng; tên / vật liệu / khối lượng linh kiện đang chọn), **Khung** (kẻ khung chữ nhật chia khu vực các part rời của một cụm: bấm Khung rồi kéo trên bản vẽ, bấm một điểm = khung mặc định; tên cụm trên cạnh trên, bấm đúp hoặc chuột phải để sửa; kéo cạnh / tên để dời, kéo góc để đổi cỡ — cạnh tự bắt thẳng hàng (ngang và dọc) với cạnh các khung khác, có đường gióng xanh; màu mặc định đỏ, đổi được; cỡ chữ tên, bề dày nét; Delete hoặc chuột phải → Xoá; có trong PDF dạng nét vector).
@@ -131,6 +132,16 @@ Phiên bản hiện tại: **v1.1.0** — hiện cạnh tên app (góc trên tr�
 - **Không có Save / Discard theo Sheet**: mọi thay đổi trên Sheet được giữ ngay. **Duplicate** (Ctrl+D) nhân bản Sheet. **Ctrl+S** trong Drawing Workspace lưu cả phiên (.mrtl) như ở vùng 3D.
 - **Lưu tài liệu** (nút trên cùng) ghi cả phiên .mrtl gồm mọi Sheet (Ctrl+Shift+S: lưu thành file khác). Mở lại file .mrtl khôi phục đủ: tên bản vẽ, thứ tự, Sheet đang mở, thiết lập từng Sheet, trạng thái Đã lưu / Đã sửa. Phiên lưu từ bản cũ (chưa có Workspace) mở ra thành Sheet 1.
 - Trong Drawing Workspace các phím tắt của vùng 3D không tác dụng (Delete, Ctrl+Z… không đụng tới mô hình). **Ctrl+Z / Ctrl+Y** hoàn tác / làm lại thay đổi của Sheet đang mở.
+
+### Hiệu ứng (tab Hiệu ứng)
+Giúp phân biệt hai mặt phẳng cùng hướng nhưng khác độ cao (khi nhìn thẳng, vách đứng của bậc không có bề rộng trên ảnh). Mọi hiệu ứng chạy trên ảnh độ sâu của từng view (WebGL2, không thư viện ngoài), áp dụng cho cả 6 Views lẫn Exploded, cho bản xem trước và ảnh / PDF xuất ra; thiết lập lưu theo từng Sheet (và từng loại bản vẽ). Mức 0 = tắt.
+- **Nét bậc** — *Ngưỡng*: độ cao bậc nhỏ nhất được vẽ nét (mm trên vật); *Nét*: bề dày trên giấy (mm). Nét nằm về phía mặt thấp hơn và dày hơn khi bậc cao hơn (đường bao ngoài dày nhất). Vách nghiêng liên tục (chamfer, mặt cong) không bị coi là bậc.
+- **Chân bậc** — dải tối mờ dần trên mặt thấp, sát chân bậc: *Rộng* (mm trên giấy), *Đậm* (%).
+- **AO** (Ambient Occlusion) — chân bậc, khe, lỗ tối dần: *Bán kính* (mm trên vật), *Đậm* (%). Mặc định tắt.
+- **Bóng đổ** — đèn gắn với màn hình (mọi view sáng cùng một kiểu, không phải xoay đèn theo view): *Đậm* (%), *Xoay* (hướng đèn trên màn hình, 0° = từ phải, 90° = từ trên), *Nghiêng* (độ cao đèn, thấp = bóng dài). Mặt quay lưng với đèn cũng tối. Mặc định tắt.
+- **Độ cong** — gờ sáng, rãnh tối theo độ cong bề mặt (%). Không bắt được bậc phẳng nên chỉ bổ trợ. Mặc định tắt.
+- **Viền part** — nét ở chỗ body này gặp body khác (dày theo Nét bậc).
+- Xuất ảnh ở DPI cao với AO / bóng đổ cần card đồ hoạ; các bước được vẽ và đọc về theo từng ô 1024 px.
 
 ### Body của từng Sheet (luôn theo mô hình 3D)
 - Sheet luôn vẽ **đúng các body hiện có trong mô hình 3D, ở trạng thái mới nhất**: sửa hình, di chuyển, thêm hay xoá body trong 3D Workspace thì quay lại Drawing là thấy ngay — không cần bấm Cập nhật, không có body "mất" hay "thay thế". Body bị xoá trong 3D tự biến khỏi mọi Sheet; body mới tự có trong mọi Sheet.
