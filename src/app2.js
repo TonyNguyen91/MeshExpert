@@ -174,6 +174,7 @@
     gl.deleteBuffer(g.gl.pos); gl.deleteBuffer(g.gl.idx); if (g.gl.line) gl.deleteBuffer(g.gl.line);
     if (g.holes && g.holes.vao) { gl.deleteVertexArray(g.holes.vao); gl.deleteBuffer(g.holes.buf); g.holes.vao = null; g.holes.buf = null; }
     if (g.gl.vaoB) { gl.deleteVertexArray(g.gl.vaoB); gl.deleteBuffer(g.gl.bufB); }
+    zsFree(g);
     g.gl = null;
   }
   function freeAna(b) {
@@ -503,9 +504,11 @@
     gl.uniformMatrix4fv(U.uM, false, dispMatrix(b));
     gl.frontFace(M.det3(b.matrix) < 0 ? gl.CW : gl.CCW);
     gl.uniform4f(U.uColor, b.color[0] / 255, b.color[1] / 255, b.color[2] / 255, alpha);
-    gl.uniform1f(U.uSel, plain ? 0 : (dlgRole(b) || (S.sel.has(b) ? 1 : 0)));
+    const selV = plain ? 0 : (dlgRole(b) || (S.sel.has(b) ? 1 : 0));
+    gl.uniform1f(U.uSel, selV);
     gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 1);
-    if (b.ana && !plain) { gl.uniform1i(U.uMode, 2); gl.bindVertexArray(b.ana.vao); gl.drawArrays(gl.TRIANGLES, 0, b.ana.count); }
+    if (!(b.ana && !plain) && zsActive()) zsFill(b, alpha, selV);
+    else if (b.ana && !plain) { gl.uniform1i(U.uMode, 2); gl.bindVertexArray(b.ana.vao); gl.drawArrays(gl.TRIANGLES, 0, b.ana.count); }
     else { gl.uniform1i(U.uMode, 0); gl.bindVertexArray(g.vao); gl.drawElements(gl.TRIANGLES, b.geo.indices.length, gl.UNSIGNED_INT, 0); }
     gl.disable(gl.POLYGON_OFFSET_FILL);
     const brE = b.geo.brepE && b.geo.brepE.length;
@@ -567,8 +570,11 @@
         setCamUniforms();
         const opaque = [], trans = [];
         for (const b of S.bodies) if (b.visible && !S.ghostHide.has(b)) (alphaOf(b) >= 0.999 ? opaque : trans).push(b);
+        const post = zsPostOn() && zsPrepass(opaque, pw, ph);
+        if (post) { gl.clearColor(0.085, 0.105, 0.13, 1); setCamUniforms(); }
         for (const b of opaque) drawBody(b, edges, false);
         drawRdSel();
+        if (post) zsComposite(pw, ph);
         if (trans.length) {
           const w = viewer();
           trans.sort(function (a, b) { return V.dot(boxCenter(bodyBox(a, true)), w) - V.dot(boxCenter(bodyBox(b, true)), w); });
@@ -1239,7 +1245,7 @@
   // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
   // version of the app: shown next to the name, in the Drawing Workspace header and the window title; raised with every
   // published fix (patch number) or feature set (minor number)
-  const APP_VER = '1.2.0';
+  const APP_VER = '1.3.0';
   (function () { const v = 'v' + APP_VER; $('appVer').textContent = v; document.title = 'MeshExpert ' + v; })();
   const BL_DEF = { cn: 200, ct: 58, cm: 58 };
   let blCols = Object.assign({}, BL_DEF);
@@ -2809,5 +2815,5 @@
 /*MODEL*/
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, dwType: function (m) { dwTabSet(m); }, dwLoad: function (d) { dwLoad(d); }, v6Paint: function () { v6Paint(); }, v6Png: function () { return v6Full('png').then(function (r) { return new Promise(function (ok) { const fr = new FileReader(); fr.onload = function () { ok(fr.result); }; fr.readAsDataURL(r.blob); }); }); }, holesOf: holesOf, dlgRole: dlgRole, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, dwType: function (m) { dwTabSet(m); }, dwLoad: function (d) { dwLoad(d); }, v6Paint: function () { v6Paint(); }, v6Png: function () { return v6Full('png').then(function (r) { return new Promise(function (ok) { const fr = new FileReader(); fr.onload = function () { ok(fr.result); }; fr.readAsDataURL(r.blob); }); }); }, holesOf: holesOf, dlgRole: dlgRole, zs: function () { return ZS; }, zsSet: function (k, v) { zsSet(k, v); }, zsTab: function (k) { zsTab(k); }, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();

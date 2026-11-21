@@ -191,7 +191,14 @@
   .srow .num { text-align: right; color: var(--muted); font-size: 11.5px; }
   #sketchList { max-height: 160px; }
   #odlg, #setdlg { position: absolute; left: 10px; top: 40px; display: none; background: rgba(20,24,29,.96); border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; width: 300px; z-index: 6; }
-  #setdlg { left: auto; right: 10px; width: 330px; }
+  #setdlg { left: auto; right: 10px; width: 360px; max-height: calc(100% - 60px); overflow-y: auto; }
+  #setTabs { display: flex; gap: 4px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
+  #setTabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 4px 10px; }
+  #setTabs button.on { border-bottom-color: var(--accent); color: var(--accent); }
+  #zsPanel .zsr .lbl { flex: 0 0 104px; }
+  #zsPanel input.s { width: 52px; }
+  #zsPanel .unit { width: 18px; }
+  #zsPanel.off .zsr { opacity: .45; }
   #odlg .ft, #setdlg .ft { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
   #odlg .ft b, #setdlg .ft b { color: var(--accent); font-size: 14px; }
   #odlg .grow, #setdlg .grow { flex: 1; }
@@ -326,7 +333,7 @@
   <span class="sep"></span>
   <span id="msg"></span>
   <button id="bVi" class="on">Việt</button><button id="bEn">EN</button>
-  <button id="bSet" data-en-title="Settings: keyboard shortcuts" title="Cài đặt: phím tắt">⚙</button>
+  <button id="bSet" data-en-title="Settings: 3D view, keyboard shortcuts" title="Cài đặt: hiển thị 3D, phím tắt">⚙</button>
  </div>
  <div id="ribbon" class="ribfit">
   <div class="rpage on" data-page="home">
@@ -496,11 +503,15 @@
     <div id="odBody"></div>
   </div>
   <div id="setdlg">
-    <div class="ft"><b data-en="Settings · keyboard shortcuts">Cài đặt · phím tắt</b><span class="grow"></span><button id="setClose">✕</button></div>
+    <div class="ft"><b data-en="Settings">Cài đặt</b><span class="grow"></span><button id="setClose">✕</button></div>
+    <div id="setTabs"><button data-k="view" data-en="3D view">Hiển thị 3D</button><button data-k="keys" data-en="Shortcuts">Phím tắt</button></div>
+    <div class="setPg" data-k="view" id="zsPanel"></div>
+    <div class="setPg" data-k="keys">
     <div class="note" data-en="Click a box and press the key (with Shift / Ctrl / Alt if you like). Backspace clears it.">Bấm vào ô rồi nhấn phím (có thể kèm Shift / Ctrl / Alt). Backspace để xóa.</div>
     <table id="keyTbl"></table>
     <div class="note" data-en="In a sketch: L line · R rectangle · C circle · A arc · G tangent arc · P point · T trim · O offset · D dimension · Q construction · I coincident · H horizontal · V vertical · E equal · B parallel · S select">Trong sketch: L line · R rectangle · C circle · A arc · G cung tiếp tuyến · P điểm · T trim · O offset · D kích thước · Q nét dựng · I trùng · H ngang · V dọc · E bằng · B song song · S chọn</div>
     <div class="btns"><button id="setReset" data-en="Back to defaults">Về mặc định</button></div>
+    </div>
   </div>
   <div id="tpop">
     <div id="tpHd"><span class="grip">⋮⋮</span><b id="tpTitle"></b><span class="grow"></span><button id="tpX" title="Đóng (về lệnh Chọn)" data-en-title="Close (back to Select)">✕</button></div>

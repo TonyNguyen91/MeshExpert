@@ -206,7 +206,7 @@ with sync_playwright() as p:
     ok('revolve: a closed ring of volume 2π·60·60',B and B['border']==0 and abs(B['vol']-2*math.pi*60*60)<0.01*2*math.pi*3600,B and B['vol'])
     pg.keyboard.press('Space'); pg.click(row(2)); pg.keyboard.press('Delete'); pg.wait_for_timeout(80)
     # ===== settings: shortcut change =====
-    pg.click('#bSet'); pg.wait_for_timeout(80)
+    pg.click('#bSet'); pg.click('#setTabs button[data-k=keys]'); pg.wait_for_timeout(80)
     ok('settings panel lists the commands',pg.is_visible('#setdlg') and pg.locator('#keyTbl tr').count()>=13)
     pg.click('#keyTbl tr:nth-child(1) input'); pg.keyboard.press('Shift+G'); pg.wait_for_timeout(50)
     ok('Move shortcut changed to Shift+G',pg.input_value('#keyTbl tr:nth-child(1) input')=='Shift+G')
