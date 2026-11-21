@@ -45,7 +45,7 @@ with sync_playwright() as p:
     ok('Has ribbon, sheet canvas, Drawing Tree and sheet bar',all(pg.is_visible(x) for x in ['#dwsRibbon','#dwsCanvas #v6Prev','#dwsTree','#dwsBar','#dwsDup']) and pg.locator('#dwsSave,#dwsDiscard,#dwsLeft,#dwsSrcList').count()==0)
     ok('Ribbon tabs: Drawing, Export, Effects',pg.evaluate("[...document.querySelectorAll('#dwsTabs .rtab')].map(b=>b.textContent)")==['Drawing','Export','Hiệu ứng'])
     titles=pg.evaluate("[...document.querySelectorAll('#dwsRibbon .rpage.on .rtitle')].map(e=>e.textContent)")
-    ok('6 Views ribbon groups (shared ones moved to Export, no Update / Export)',titles==['Tạo view','Isometric','Tỉ lệ & bố trí','Chú thích','Loại bản vẽ'],titles)
+    ok('6 Views ribbon groups (shared ones moved to Export, no Update / Export)',titles==['Tạo view','Isometric','Tỉ lệ & bố trí','Chú thích','Bố trí & loại bản vẽ'],titles)
     ok('No All 6 Views button',pg.locator('#dwsRibbon button[data-act=all6]').count()==0)
     ok('No Update group on the ribbon',pg.locator('#dwsRibbon button[data-act^=upd], #dwsRibbon button[data-act=check]').count()==0)
     ok('Export buttons only on the Export and Effects tabs',pg.locator('#dwsRibbon .rpage:not([data-k=set]):not([data-k=fx]) button[data-act=png]').count()==0 and pg.locator('#dwsRibbon .rpage[data-k=set] button[data-act=pdf]').count()==1)
@@ -121,7 +121,7 @@ with sync_playwright() as p:
     # ---- exploded tab is a separate drawing of the sheet
     pg.evaluate("__mrt.dwType('exp')"); settle()
     titles=pg.evaluate("[...document.querySelectorAll('#dwsRibbon .rpage.on .rtitle')].map(e=>e.textContent)")
-    ok('Exploded View ribbon groups',titles==['Explode','Góc nhìn','Thông tin','Khung','Loại bản vẽ'] and pg.inner_text('#v6ShT')=='Exploded view',titles)
+    ok('Exploded View ribbon groups',titles==['Explode','Góc nhìn','Thông tin','Khung','Bố trí & loại bản vẽ'] and pg.inner_text('#v6ShT')=='Exploded view',titles)
     pg.click('#dwsRibbon .rpage.on button[data-chk="#v6PN"]'); settle()
     ok('Component Name toggle',not pg.is_checked('#v6PN'))
     pg.click('#dwsRibbon .rpage.on button[data-act=comb]'); pg.wait_for_timeout(200)

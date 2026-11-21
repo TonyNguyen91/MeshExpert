@@ -40,6 +40,7 @@ with sync_playwright() as p:
     def settle(): pg.wait_for_timeout(2000)
     pg.set_input_files('#file',[S+'/rd_chamf.stl',S+'/block.stl']); pg.wait_for_function("__mrt.S.bodies.length==2"); idle()
     pg.evaluate("(()=>{const S=__mrt.S;S.sel.clear();S.bodies[0].color=[200,60,60];S.bodies[1].color=[60,170,90];})()")
+    pg.evaluate("(()=>{const e=document.getElementById('v6Col');e.value='view';e.dispatchEvent(new Event('change',{bubbles:true}))})()")   # default is One colour since v1.3.1
     pg.click('#b_dws'); settle()
     ok('Ribbon and sheet open, old settings panel gone',pg.is_visible('#dwsRibbon') and pg.is_visible('#v6Sheet') and not pg.is_visible('#pop_v6'))
     info=pg.inner_text('#v6Info')

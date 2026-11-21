@@ -1,6 +1,6 @@
   // ================= 3D view shading in the sculpting style: MatCap + screen cavity + AO + cast shadow =================
   // ZS = settings (Settings ▸ 3D view, saved in localStorage 'mx.zs'). Off = the old flat shading.
-  function zsDefaults() { return { on: true, mat: 'clay', tint: 35, light: 100, amb: 20, yaw: 0, pitch: 0, smooth: 35, cav: 60, ridge: 25, ao: 55, aoR: 18, sh: 35, shL: 35, shSoft: 40 }; }
+  function zsDefaults() { return { on: true, mat: 'clay', tint: 100, light: 100, amb: 20, yaw: 0, pitch: 0, smooth: 35, cav: 6, ridge: 8, ao: 15, aoR: 21, sh: 12, shL: 16, shSoft: 100 }; }
   var ZS = zsDefaults(), ZG = null, zsSmoothEff = ZS.smooth, zsSmoothT = 0;
   try { const sv = JSON.parse(localStorage.getItem('mx.zs') || 'null'); if (sv) for (const k in ZS) if (typeof sv[k] === typeof ZS[k]) ZS[k] = sv[k]; } catch (e) { /* no storage */ }
   zsSmoothEff = ZS.smooth;

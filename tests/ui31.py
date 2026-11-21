@@ -33,7 +33,7 @@ with sync_playwright() as p:
     ok('Every effect level is a slider with a number box',pg.locator('#dwsRibbon .rpage[data-k=fx] input[type=range]').count()==10 and pg.locator('#dwsRibbon .rpage[data-k=fx] input[type=number]').count()==10)
     ok('Effects tab keeps the ribbon without a scroll bar',pg.evaluate("(()=>{const p=document.querySelector('#dwsRibbon .rpage.on');return p.scrollWidth<=p.clientWidth+1})()"))
     # isolate the effects: no traced edges
-    setv('v6Edge',False); setv('v6FxW','0'); setv('v6FxBs','0'); setv('v6FxId',False); fresh()
+    setv('v6Edge',False); setv('v6FxT','0.2'); setv('v6FxB','1'); setv('v6FxW','0'); setv('v6FxBs','0'); setv('v6FxId',False); fresh()
     far=px(38,16); near0=seg(11,3.95,11,3.2)
     ok('All effects off: the plate next to a pad looks like the rest of the plate',abs(near0-far)<12,[near0,far])
     setv('v6FxW','0.6'); fresh()
@@ -59,7 +59,7 @@ with sync_playwright() as p:
     # per sheet
     setv('v6FxT','1.5')
     pg.evaluate("__mrt.dwAct('newSheet')"); pg.wait_for_timeout(1500)
-    ok('A new sheet starts with the default effects',pg.input_value('#v6FxT')=='0.2' and pg.input_value('#v6FxBs')=='45' and pg.is_checked('#v6FxId'))
+    ok('A new sheet starts with the default effects',pg.input_value('#v6FxT')=='5' and pg.input_value('#v6FxBs')=='4' and pg.is_checked('#v6FxId'))
     pg.click('#dwsTree .dwsNode.sheet >> text=Sheet 1'); pg.wait_for_timeout(1500)
     ok('Sheet 1 keeps its own effects',pg.input_value('#v6FxT')=='1.5' and pg.input_value('#v6FxW')=='0')
     pg.click('#dwsTabs .rtab[data-k=fx]'); pg.wait_for_timeout(300)

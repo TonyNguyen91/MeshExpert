@@ -267,13 +267,11 @@
           dwSlider('Cỡ', 'Size', 'v6IsoKR', 'v6IsoK', 'Cỡ hình iso (%) — bật Isometric để dùng', 'Size of the iso picture (%) — switch Isometric on to use'))) +
       dwGrp('Tỉ lệ & bố trí', 'Scale & Layout', dwCol('<div class="dwsRow">' + dwT('Tỉ lệ', 'Scale') + dwSel('v6Scale', 'Tỉ lệ bản vẽ', 'Drawing scale') + '</div>' +
           dwWhen('scale=c', '<div class="dwsRow"' + dwTip('Tỉ lệ tùy chọn a : b', 'Custom scale a : b') + '><input type="range" data-bind="v6ScR"><input type="number" data-bind="v6ScA"><span>:</span><input type="number" data-bind="v6ScB"></div>') +
-          '') +
-        dwBB('data-click="#v6Auto"', 'arrange', 'Xếp tự động', 'Auto Arrange', 'Căn các hình chiếu cách đều nhau và cách đều viền bản vẽ, giữ nguyên cỡ hình', 'Space the views evenly between each other and the sheet border, keeping their size')) +
+          '')) +
       dwGrp('Chú thích', 'Annotation', dwCol(dwSB('data-chk="#v6Lbl"', 'name', 'Tên view', 'View Names') + dwSB('data-chk="#v6ScN"', 'scale', 'Ghi tỉ lệ', 'Scale Note')) + dwCol(dwSB('data-chk="#v6DimW"', 'dim', 'Dài', 'Length', 'Kích thước bao: chiều dài (kéo đường kích thước để dời)', 'Overall size: length (drag the dimension line to move it)') + dwSB('data-chk="#v6DimD"', 'dim', 'Rộng', 'Width', 'Kích thước bao: chiều rộng (kéo đường kích thước để dời)', 'Overall size: width (drag the dimension line to move it)') + dwSB('data-chk="#v6DimH"', 'dim', 'Cao', 'Height', 'Kích thước bao: chiều cao (kéo đường kích thước để dời)', 'Overall size: height (drag the dimension line to move it)')) +
         dwBB('data-act="dim"', 'dimt', 'Dimension', 'Dimension', 'Ghi kích thước: chọn 2 điểm trên một view rồi bấm chỗ đặt đường kích thước (ngang / dọc / theo hướng tuỳ chỗ đặt). Esc để thôi', 'Dimension: pick 2 points on a view, then click where the line goes (horizontal / vertical / aligned from where you place it). Esc to stop'));
     const exp = dwGrp('Explode', 'Explode', dwCol(dwSlider('Explode', 'Explode', 'v6ExR', 'v6Ex', 'Kéo để tách các linh kiện ra khỏi tâm cụm (0 = cụm lắp nguyên, %)', 'Drag to pull the parts out from the centre (0 = assembled, %)') +
-          dwSB('data-act="resetExp"', 'reset', 'Bỏ vị trí kéo tay', 'Reset Explode', 'Đưa các linh kiện về vị trí tách tự động', 'Put the parts back where the automatic explode places them') +
-          dwSB('data-click="#v6Auto"', 'arrange', 'Xếp tự động', 'Auto Arrange', 'Giãn đều các linh kiện: trong khung thì xếp trong khung, ngoài khung thì xếp ở chỗ trống không đè khung', 'Spread the parts evenly: parts in a frame inside it, the others in the free space, never over a frame')) +
+          dwSB('data-act="resetExp"', 'reset', 'Bỏ vị trí kéo tay', 'Reset Explode', 'Đưa các linh kiện về vị trí tách tự động', 'Put the parts back where the automatic explode places them')) +
         dwBB('data-act="comb"', 'comb', 'Combine', 'Combine', 'Gộp các linh kiện cùng khối lượng vào linh kiện đang chọn trên bản vẽ (hoặc chuột phải lên linh kiện)', 'Combine parts of the same mass into the part picked on the sheet (or right-click a part)') +
         dwBB('data-act="sep"', 'sep', 'Tách ra', 'Separate', 'Tách nhóm của linh kiện đang chọn', 'Split the group of the picked part')) +
       dwGrp('Góc nhìn', 'View Angle', dwCol(dwSlider('Xoay', 'Turn', 'v6AzR', 'v6Az', 'Góc nhìn cả cụm quanh trục đứng (°)', 'View angle about the vertical axis (°)') +
@@ -310,7 +308,9 @@
           dwSliderS('JPG', 'JPG', 'v6QR', 'v6Q', 'Chất lượng JPG (%)', 'JPG quality (%)'))) +
       dwGrp('Thông tin', 'Info', '<div class="rcol dwsInfo" id="dwsInfo"></div>') +
       dwOutGrp();
-    const typ = dwGrp('Loại bản vẽ', 'Drawing Type', '<button class="bb dwsType" data-act="type2d"' + dwTip('Chọn loại bản vẽ của Sheet: 6 Views hoặc Exploded View (hỏi trước khi đổi)', 'Pick the drawing type of the sheet: 6 Views or Exploded View (asks before switching)') + '>' +
+    // the same Auto Arrange button on both drawing types, right next to 2D Type (6 Views: views spaced evenly; Exploded: parts spread evenly, frames respected)
+    const typ = dwGrp('Bố trí & loại bản vẽ', 'Arrange & Type', dwBB('data-click="#v6Auto"', 'arrange', 'Xếp tự động', 'Auto Arrange', '6 Views: căn các hình chiếu cách đều nhau và cách đều viền, giữ nguyên cỡ hình. Exploded: giãn đều các linh kiện, trong khung thì xếp trong khung, ngoài khung thì xếp ở chỗ trống', '6 Views: space the views evenly between each other and the border, keeping their size. Exploded: spread the parts evenly, inside their frame or in the free space') +
+      '<button class="bb dwsType" data-act="type2d"' + dwTip('Chọn loại bản vẽ của Sheet: 6 Views hoặc Exploded View (hỏi trước khi đổi)', 'Pick the drawing type of the sheet: 6 Views or Exploded View (asks before switching)') + '>' +
       dwIco('drawing', 30) + '<span>2D Type</span><small class="dwsTypeL"></small></button>').replace('class="rgrp"', 'class="rgrp keep dwsTypeG"');
     return '<div class="rpage" data-k="6v">' + six + typ + '</div><div class="rpage" data-k="exp">' + exp + typ + '</div><div class="rpage" data-k="set">' + set + '</div><div class="rpage" data-k="fx">' + dwFxHtml() + '</div>';
   }

@@ -5,7 +5,7 @@
   S.sla = { last: null, armed: true };
   const slaNum = function (id, d) { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
   function slaOpt() {
-    return { W: Math.max(10, slaNum('slaW', 400)), D: Math.max(10, slaNum('slaD', 400)), lift: Math.max(0, slaNum('slaLift', 5)), margin: Math.max(0, slaNum('slaMargin', 5)), gap: Math.max(0, slaNum('slaGap', 2)), spread: Math.max(0, Math.min(100, slaNum('slaSpread', 0))),
+    return { W: Math.max(10, slaNum('slaW', 400)), D: Math.max(10, slaNum('slaD', 400)), lift: Math.max(0, slaNum('slaLift', 5)), margin: Math.max(0, slaNum('slaMargin', 30)), gap: Math.max(0, slaNum('slaGap', 10)), spread: Math.max(0, Math.min(100, slaNum('slaSpread', 30))),
       tilt: $('slaTiltOn').checked ? Math.max(10, Math.min(45, slaNum('slaTilt', 15))) : 0, guard: $('slaGuardOn').checked, gx: Math.max(0.5, slaNum('slaGX', 20)), gy: Math.max(0.5, slaNum('slaGY', 20)), gt: Math.max(0.2, slaNum('slaGT', 2)), gd: Math.max(0, slaNum('slaGD', 30)) };
   }
   // world vertices of a body, thinned out for very large meshes

@@ -48,7 +48,7 @@
       edge: $('v6Edge').checked, hidden: $('v6Hid').checked, ang: v6Num('v6Ang', 30), dim: !exp && ($('v6DimW').checked || $('v6DimD').checked || $('v6DimH').checked), dimW: $('v6DimW').checked, dimD: $('v6DimD').checked, dimH: $('v6DimH').checked, unit: $('v6Unit').value,
       lbl: !exp && $('v6Lbl').checked, scn: $('v6ScN').checked, scale: scale, zoom: v6Num('v6Zm', 100) / 100,
       fs: v6Num('v6Fs', 2.6), fb: $('v6Fb').checked, W: W, H: H, cut: cut, dpi: dpi,
-      fx: { t: v6Num('v6FxT', 0.2), w: v6Num('v6FxW', 0.2), bw: v6Num('v6FxB', 1), bs: v6Num('v6FxBs', 45) / 100, id: $('v6FxId').checked, ar: v6Num('v6FxA', 2), as: v6Num('v6FxAs', 0) / 100, ss: v6Num('v6FxS', 0) / 100, sa: v6Num('v6FxSa', 125), se: v6Num('v6FxSe', 40), cs: v6Num('v6FxC', 0) / 100 },
+      fx: { t: v6Num('v6FxT', 5), w: v6Num('v6FxW', 0.01), bw: v6Num('v6FxB', 5), bs: v6Num('v6FxBs', 4) / 100, id: $('v6FxId').checked, ar: v6Num('v6FxA', 0.2), as: v6Num('v6FxAs', 0) / 100, ss: v6Num('v6FxS', 0) / 100, sa: v6Num('v6FxSa', 0), se: v6Num('v6FxSe', 5), cs: v6Num('v6FxC', 0) / 100 },
       lw: v6Num('v6Lw', 0.25), ss: +$('v6SS').value || 1, fmt: fmt, q: v6Num('v6Q', 92) / 100, bg: fmt === 'jpg' ? 'w' : $('v6Bg').value };
   }
   // bodies of the drawing: the sheet's source bodies (Drawing Workspace), drawn from the geometry the sheet was last
