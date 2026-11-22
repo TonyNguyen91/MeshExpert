@@ -36,7 +36,7 @@
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
     for (const g of S.ghosts) {
       const o = ensureGL(g.geo);
-      gl.uniformMatrix4fv(U.uM, false, g.matrix || M.ident()); gl.frontFace(gl.CCW);
+      gl.uniformMatrix4fv(U.uM, false, g.matrix || M.ident()); gl.frontFace(g.matrix && M.det3(g.matrix) < 0 ? gl.CW : gl.CCW);
       gl.uniform4f(U.uColor, g.color[0], g.color[1], g.color[2], g.alpha); gl.uniform1f(U.uSel, 0); gl.uniform1i(U.uMode, 0);
       gl.bindVertexArray(o.vao); gl.drawElements(gl.TRIANGLES, g.geo.indices.length, gl.UNSIGNED_INT, 0);
     }
@@ -473,6 +473,12 @@
           cur = await facePlane(cur, fl, r, nT, dT);
         }
         return cur;
+      } },
+    // the step Mirror adds to a solid's recipe (replayed on the mesh when the B-rep engine cannot build it)
+    mirror: { title: 'Mirror', boxes: [], num: ['', '', 0, 1, 0, 1],
+      apply: async function (mesh, f) {
+        const r = mirMesh(mesh.positions, mesh.indices, f.m);
+        return f.merge ? boolRun(mesh, r, 'union') : r;
       } }
   };
   async function dressEdges(mesh, f, kind, again) {
@@ -909,7 +915,7 @@
     });
   });
   // a ribbon command whose dialog is open stays lit (orange) until the dialog closes; closing it goes back to Select
-  const DLG_BTN = ['bSketch', 'bExtrude', 'bRevolve', 'b_boolean', 'b_fillet', 'b_chamfer', 'b_shell', 'b_draft', 'b_pattern', 'b_moveface', 'b_replace'];
+  const DLG_BTN = ['bSketch', 'bExtrude', 'bRevolve', 'b_boolean', 'b_fillet', 'b_chamfer', 'b_shell', 'b_draft', 'b_pattern', 'b_mirror', 'b_moveface', 'b_replace'];
   let dlgPrev = '';
   function dlgOpenBtns() {
     const on = [];
@@ -917,6 +923,7 @@
     if (S.fd && $('fdlg').style.display === 'block') on.push(S.fd.type === 'revolve' ? 'bRevolve' : 'bExtrude');
     if (S.od && $('odlg').style.display === 'block') on.push('b_' + S.od.cmd);
     if ($('pop_pat') && $('pop_pat').classList.contains('on')) on.push('b_pattern');
+    if ($('pop_mir') && $('pop_mir').classList.contains('on')) on.push('b_mirror');
     return on;
   }
   function dlgWatch() {

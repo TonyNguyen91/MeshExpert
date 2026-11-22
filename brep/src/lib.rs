@@ -8,6 +8,8 @@ thread_local! {
     static BODIES: RefCell<HashMap<u32, k::Body>> = RefCell::new(HashMap::new());
     static NEXT: RefCell<u32> = const { RefCell::new(1) };
     static OUT: RefCell<Vec<u8>> = const { RefCell::new(Vec::new()) };
+    // a STEP file being read a few solids at a time (stepBegin / stepStep / stepFinish)
+    static READING: RefCell<Option<k::StepReading>> = const { RefCell::new(None) };
 }
 
 fn v3(v: &Value) -> Result<Vec3, String> {
@@ -69,6 +71,20 @@ fn tri_dist(p: Vec3, a: Vec3, b: Vec3, c: Vec3) -> f64 {
     if va <= 0.0 && (d4 - d3) >= 0.0 && (d5 - d6) >= 0.0 { let w = (d4 - d3) / ((d4 - d3) + (d5 - d6)); return at(1.0 - w, w); }
     let den = 1.0 / (va + vb + vc);
     at(vb * den, vc * den)
+}
+// bodies of a STEP import: one entry per solid, with name / colour / product path
+fn imported(imp: k::StepImport) -> Value {
+    let bodies: Vec<Value> = imp.bodies.iter().map(|b| json!({
+        "id": put(b.body.clone()),
+        "name": b.name,
+        "color": b.color,
+        "path": b.path,
+        "instance": b.instance,
+        "closed": b.closed,
+        "refused": b.refused,
+        "hidden": b.hidden,
+    })).collect();
+    json!({"bodies": bodies, "warnings": imp.warnings, "schema": imp.schema, "system": imp.system})
 }
 fn ok(b: k::Body) -> Value { json!({"id": put(b)}) }
 
@@ -144,7 +160,9 @@ pub fn run(cmd: &Value) -> Result<Value, String> {
         }
         "mesh" => {
             let b = get(cmd, "id")?;
-            let t = k::MeshTolerance::chord(cmd.get("chord").and_then(Value::as_f64).unwrap_or(0.05));
+            // "display": the tolerance SolidCraft draws with (1/1000 of the body's size, with a facet angle)
+            let t = if cmd.get("display").and_then(Value::as_bool).unwrap_or(false) { k::MeshTolerance::display_of(b.size()) }
+                    else { k::MeshTolerance::chord(cmd.get("chord").and_then(Value::as_f64).unwrap_or(0.05)) };
             let m = b.mesh(&t).map_err(e)?;
             let pos: Vec<f64> = m.positions.iter().flat_map(|p| [p.x, p.y, p.z]).collect();
             let tri: Vec<u32> = m.triangles.iter().flatten().copied().collect();
@@ -155,6 +173,34 @@ pub fn run(cmd: &Value) -> Result<Value, String> {
             let bs: Vec<k::Body> = ids.iter().map(|i| BODIES.with(|m| m.borrow().get(&(i.as_u64().unwrap_or(0) as u32)).cloned()).ok_or("no body")).collect::<Result<_, _>>()?;
             let r: Vec<&k::Body> = bs.iter().collect();
             Ok(json!({"step": k::step_export(&r, "MrT MeshExpert").map_err(e)?}))
+        }
+        "stepImport" => {
+            // Read a whole STEP file (text) in one call.
+            let text = cmd.get("text").and_then(Value::as_str).ok_or("missing text")?;
+            Ok(imported(k::step_import(text).map_err(e)?))
+        }
+        "stepBegin" => {
+            // Parse a STEP file and plan its solids; stepStep converts them, stepFinish gives the bodies.
+            let text = cmd.get("text").and_then(Value::as_str).ok_or("missing text")?;
+            let r = k::StepReading::new(text).map_err(e)?;
+            let total = r.progress().1;
+            READING.with(|x| *x.borrow_mut() = Some(r));
+            Ok(json!({"total": total}))
+        }
+        "stepStep" => {
+            let n = cmd.get("n").and_then(Value::as_u64).unwrap_or(1).max(1);
+            READING.with(|x| {
+                let mut x = x.borrow_mut();
+                let r = x.as_mut().ok_or("no STEP reading")?;
+                let mut more = true;
+                for _ in 0..n { more = r.step(); if !more { break; } }
+                let (done, total) = r.progress();
+                Ok(json!({"more": more, "done": done, "total": total}))
+            })
+        }
+        "stepFinish" => {
+            let r = READING.with(|x| x.borrow_mut().take()).ok_or("no STEP reading")?;
+            Ok(imported(r.finish().map_err(e)?))
         }
         "free" => { let id = cmd["id"].as_u64().unwrap_or(0) as u32; BODIES.with(|m| m.borrow_mut().remove(&id)); Ok(json!({})) }
         _ => Err(format!("unknown op {op}")),

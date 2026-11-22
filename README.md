@@ -65,6 +65,7 @@ Phiên bản hiện tại: **v1.3.1** — hiện cạnh tên app (góc trên tr�
 - Sketch xong nằm trong "Danh sách sketch" bên trái: ẩn / hiện (Y), sửa (nhấp đúp), đổi tên, xóa. Sửa sketch thì các khối tạo từ nó tự dựng lại.
 
 ## Khối solid, lệnh solid và Boolean
+- Mở file STEP (.step / .stp): bấm "Mở file / phiên" hoặc kéo thả. Lõi B-rep đọc file trong một worker riêng, từng khối một (như SolidCraft bản web): app không bị treo, thanh tiến độ báo "dựng khối x / y" rồi "chia lưới x / y", khối nào xong hiện khối đó. Mỗi khối thành một body B-rep (cạnh thật, tên và màu lấy từ file, vị trí theo lắp ráp, đơn vị mm), lưới hiển thị theo dung sai của SolidCraft (1/1000 cỡ khối, có giới hạn góc). Thông báo cuối ghi thời gian đọc và chia lưới. File có lỗi dung sai vẫn mở được, cảnh báo ghi trong Console (F12). Khối mở từ STEP hiện chưa dùng được các lệnh solid (Fillet, Shell...) và chưa xuất lại STEP (solid).
 - "Extrude" / "Revolve": chọn sketch trong hộp thoại (hoặc bấm sketch trên màn hình), bấm từng biên dạng để bỏ / lấy lại, New / Add / Remove / Intersect, xem trước bằng khối mờ.
 - Lệnh solid trên thanh trên cùng: Fillet, Chamfer (cạnh, có lấy cạnh nối tiếp tuyến), Move face (mặt phẳng / mặt trụ), Replace face, Shell, Draft. Có xem trước. Với khối ◆ các lệnh được lưu thành lịch sử và áp lại khi sửa sketch / thông số khối (cạnh / mặt được tìm lại theo vị trí; lệnh nào không tìm lại được thì bị bỏ và app báo).
 - "Boolean" trên thanh trên cùng: Union / Intersect dùng ô Tools; Subtract có 2 ô Tools và Targets riêng. Chạy bằng thư viện Manifold, chỉ trên lưới kín.
@@ -111,7 +112,7 @@ Phiên bản hiện tại: **v1.3.1** — hiện cạnh tên app (góc trên tr�
 
 ## Danh sách body và hiển thị
 - Cột body (bên trái) mặc định rộng 364 px (1,3 lần trước), cột tên body rộng hơn; kéo mép phải của cột để đổi bề rộng (được nhớ), bấm đúp mép để về mặc định.
-- Lệnh trên ribbon mở hộp thoại (Sketch, Extrude, Revolve, Boolean, Fillet, Chamfer, Shell, Draft, Pattern, Move / Replace face, các bảng nổi, công cụ đo / Geometry) sáng cam khi hộp thoại đang mở; đóng bằng X thì tắt cam và về chuột Chọn.
+- Lệnh trên ribbon mở hộp thoại (Sketch, Extrude, Revolve, Boolean, Fillet, Chamfer, Shell, Draft, Pattern, Mirror, Move / Replace face, các bảng nổi, công cụ đo / Geometry) sáng cam khi hộp thoại đang mở; đóng bằng X thì tắt cam và về chuột Chọn.
 - Danh sách body có thanh cuộn ngang; kéo mép phải của tiêu đề cột (Tên, Tam giác, K.lượng) để nới rộng / thu hẹp, bấm đúp mép để về độ rộng mặc định. Độ rộng được nhớ cho lần sau.
 - Nút Edges (cạnh lưới) trong nhóm Hiển thị mặc định tắt.
 
@@ -201,6 +202,12 @@ Giúp phân biệt hai mặt phẳng cùng hướng nhưng khác độ cao (khi 
 - Circular: chọn trục, số lượng và tổng góc (360° = chia đều cả vòng; nhỏ hơn thì bản cuối nằm đúng ở tổng góc).
 - Hướng / trục chọn tùy ý: trục X / Y / Z, một Line / Axis geometry, hoặc bấm nút mũi tên cạnh ô rồi bấm trên màn hình vào một cạnh thẳng (hướng của cạnh), một mặt phẳng (pháp tuyến của mặt) hoặc một mặt trụ (trục của mặt trụ). Esc để thôi chọn.
 - "Đảo chiều" lật hướng / chiều quay. Khối solid B-rep được nhân bản vẫn là B-rep (xuất STEP được). "Gộp thành 1 body" nối bản gốc và các bản sao bằng Boolean union (kết quả là mesh). Lùi (Ctrl+Z) được.
+
+## Mirror (nhóm Feature)
+- Nút "Mirror" (dưới Pattern) mở bảng Mirror, áp dụng cho các body đang tick; màn 3D hiện bản xem trước trong suốt màu xanh.
+- Mặt đối xứng: YZ (Right) / XZ (Front) / XY (Top) qua gốc, một Plane geometry đã tạo, hoặc bấm nút cạnh ô rồi bấm vào một mặt phẳng của body. "Dời mặt" dời mặt đối xứng theo pháp tuyến của nó.
+- "Giữ bản gốc": tạo thêm body "<tên>_mirror"; bỏ tick thì đối xứng ngay body gốc. "Gộp thành một khối": nửa đối xứng nhập vào body gốc (dựng nửa chi tiết rồi đối xứng ra cả chi tiết).
+- Khối solid B-rep giữ công thức gốc và thêm bước "mirror" (gộp thì là mirror + union bằng lõi B-rep): vẫn là B-rep, dùng tiếp Fillet / Shell..., xuất STEP được, sửa sketch gốc thì phần đối xứng dựng lại theo. Mesh và khối mở từ STEP: lưới được đối xứng và đảo chiều tam giác (mặt ngoài vẫn là mặt ngoài); gộp thì dùng Boolean union (kết quả là mesh).
 
 ## Remove face (nhóm Synchronous Modeling)
 - Mở bảng Remove face, chọn mặt giống Surface Recognition: bấm vào mặt (app tự loang theo vùng trơn, dừng ở cạnh gãy; Shift thêm, Ctrl bỏ) hoặc dùng bút bôi; mặt chọn tô đỏ. Bấm "Xoá mặt".

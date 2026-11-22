@@ -2757,7 +2757,7 @@
   async function openFiles() {
     if (!window.showOpenFilePicker) { $('file').click(); return; }
     let hs;
-    try { hs = await window.showOpenFilePicker({ multiple: true, types: [{ description: 'Mesh / MeshExpert session', accept: { 'application/octet-stream': ['.stl', '.obj', '.mrtl'] } }] }); }
+    try { hs = await window.showOpenFilePicker({ multiple: true, types: [{ description: 'Mesh / STEP / MeshExpert session', accept: { 'application/octet-stream': ['.stl', '.obj', '.step', '.stp', '.mrtl'] } }] }); }
     catch (e) { if (e && e.name === 'AbortError') return; $('file').click(); return; }
     const files = [], handles = [];
     for (const h of hs) { files.push(await h.getFile()); handles.push(h); }
@@ -2789,7 +2789,11 @@
           if (!pushed) { pushUndo(); pushed = true; }
           addBody(safe(file.name.replace(/\.[^.]+$/, '')), makeGeo(m.positions, m.indices));
           added++;
-        } else showError(L('Bỏ qua "' + file.name + '": chỉ hỗ trợ .stl, .obj, .mrtl', 'Skipped "' + file.name + '": only .stl, .obj, .mrtl are supported'));
+        } else if (ext === 'step' || ext === 'stp') {
+          // STEP: the B-rep engine reads the exact solids in a worker (see openStep in brep.js)
+          if (!pushed) { pushUndo(); pushed = true; }
+          added += await openStep(file.name, buffer);
+        } else showError(L('Bỏ qua "' + file.name + '": chỉ hỗ trợ .stl, .obj, .step, .stp, .mrtl', 'Skipped "' + file.name + '": only .stl, .obj, .step, .stp, .mrtl are supported'));
       } catch (e) { showError(file.name + ': ' + (e.message || e)); }
       setProgress((i + 1) / files.length);
     }

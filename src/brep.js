@@ -12,15 +12,24 @@
       try {
         if (typeof BREP_GZ === 'undefined' || typeof wasm_bindgen === 'undefined') { brWhy = L('file không có lõi B-rep', 'this file has no B-rep engine'); return null; }
         if (typeof DecompressionStream === 'undefined') { brWhy = L('trình duyệt quá cũ (cần Chrome / Edge 80 trở lên)', 'the browser is too old (Chrome / Edge 80 or newer needed)'); return null; }
-        const bin = Uint8Array.from(atob(BREP_GZ), function (c) { return c.charCodeAt(0); });
-        const raw = await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
-        brW = await wasm_bindgen({ module_or_path: await WebAssembly.compile(raw) });
+        brW = await wasm_bindgen({ module_or_path: await brepModule() });
       } catch (e) { console.warn('B-rep engine not available', e); brW = null; brWhy = L('không nạp được lõi B-rep: ', 'the B-rep engine could not load: ') + (e.message || e); }
       return brW;
     })();
     const w = await brP;
     if (!w) brP = null;
     return w;
+  }
+  // the engine compiled once (the window and the STEP reader's worker each start their own copy of it)
+  let brModP = null;
+  function brepModule() {
+    if (!brModP) brModP = (async function () {
+      // Uint8Array.fromBase64 (Chrome / Edge 140+) takes ~20 ms; atob + a copy loop takes about a second on 19 MB
+      const bin = Uint8Array.fromBase64 ? Uint8Array.fromBase64(BREP_GZ) : Uint8Array.from(atob(BREP_GZ), function (c) { return c.charCodeAt(0); });
+      const raw = await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+      return WebAssembly.compile(raw);
+    })().catch(function (e) { brModP = null; throw e; });
+    return brModP;
   }
   const brEnc = new TextEncoder(), brDec = new TextDecoder();
   function brCall(o) {
@@ -40,7 +49,7 @@
     if (r.err) throw new Error(r.err);
     return r.ok;
   }
-  const BR_FEATS = { fillet: true, chamfer: true, shell: true, moveface: true, draft: true, removeface: true };
+  const BR_FEATS = { fillet: true, chamfer: true, shell: true, moveface: true, draft: true, removeface: true, mirror: true };
   function brCan(r) {
     if (!r || (r.type !== 'extrude' && r.type !== 'revolve')) return false;
     return (r.feats || []).every(function (f) { return BR_FEATS[f.type]; });
@@ -89,6 +98,14 @@
   }
   function brFeat(id, f) {
     if (f.type === 'removeface') return brCall({ op: 'deleteFaces', id: id, at: f.at }).id;   // needs an engine built with deleteFaces
+    if (f.type === 'mirror') {                                // reflect (m: body coordinates); merge: union with the unmirrored solid
+      const t = brCall({ op: 'transform', id: id, m: f.m }).id;
+      if (!f.merge) return t;
+      const u = brCall({ op: 'bool', a: id, b: t, kind: 'union' }).id;
+      brCall({ op: 'free', id: t });
+      if (!u) throw new Error('mirror: empty union');
+      return u;
+    }
     if (f.type !== 'moveface' && !(f.v > 0)) throw new Error('size');
     const facePt = function (d) { return d.at || d.c; };
     if (f.type === 'shell') return brCall({ op: 'shell', id: id, t: f.v, open: (f.sel.faces || []).map(facePt) }).id;
@@ -113,7 +130,7 @@
     };
     let id = step(key, function () { return brBase(r); });
     for (const f of r.feats || []) {
-      key += '|' + JSON.stringify([f.type, f.v, f.flip, f.sel, f.at]);
+      key += '|' + JSON.stringify([f.type, f.v, f.flip, f.sel, f.at, f.m, f.merge]);
       const from = id;
       id = step(key, function () { return brFeat(from, f); });
     }
@@ -185,3 +202,131 @@
     setBusy(false);
   }
   $('bStep').addEventListener('click', exportStep);
+
+  // ================= open STEP (worker) =================
+  // The engine reads the file in a worker, a few solids at a time, like SolidCraft's web app: the window keeps
+  // drawing, the busy bar shows how far it is, and each solid is added as soon as its display mesh is made.
+  // The display mesh uses SolidCraft's display tolerance (1/1000 of the solid's size, with a facet angle).
+  function brWorkerMain() {
+    let w = null;
+    const enc = new TextEncoder(), dec = new TextDecoder();
+    function call(o) {
+      const b = enc.encode(JSON.stringify(o)), p = w.mrt_alloc(b.length);
+      new Uint8Array(w.memory.buffer, p, b.length).set(b);
+      const n = w.mrt_call(p, b.length);
+      w.mrt_free(p, b.length);
+      const r = JSON.parse(dec.decode(new Uint8Array(w.memory.buffer, w.mrt_out(), n)));
+      if (r.err) throw new Error(r.err);
+      return r.ok;
+    }
+    // faces carry their own copies of shared nodes: weld equal points; a mesh edge between two faces is a B-rep edge
+    function weld(m) {
+      const P = m.pos, map = new Map(), at = new Int32Array(P.length / 3), out = [];
+      for (let i = 0; i < at.length; i++) {
+        const k = Math.round(P[3 * i] * 1e5) + ',' + Math.round(P[3 * i + 1] * 1e5) + ',' + Math.round(P[3 * i + 2] * 1e5);
+        let j = map.get(k);
+        if (j === undefined) { j = out.length / 3; map.set(k, j); out.push(P[3 * i], P[3 * i + 1], P[3 * i + 2]); }
+        at[i] = j;
+      }
+      const T = m.tri, I = [], own = new Map(), E = [], nv = out.length / 3;
+      for (let t = 0; t < T.length; t += 3) {
+        const a = at[T[t]], b = at[T[t + 1]], c = at[T[t + 2]];
+        if (a === b || b === c || a === c) continue;
+        I.push(a, b, c);
+        const fc = m.face[t / 3];
+        for (const uv of [[a, b], [b, c], [c, a]]) {
+          const u = uv[0], v = uv[1], k = u < v ? u * nv + v : v * nv + u, o = own.get(k);
+          if (o === undefined) own.set(k, fc); else if (o !== fc && o !== -1) { E.push(u, v); own.set(k, -1); }
+        }
+      }
+      return { positions: Float32Array.from(out), indices: Uint32Array.from(I), edges: Uint32Array.from(E) };
+    }
+    onmessage = async function (e) {
+      const q = e.data;
+      try {
+        if (!w) w = await wasm_bindgen({ module_or_path: q.module });
+        const t0 = performance.now();
+        const total = call({ op: 'stepBegin', text: dec.decode(q.buf) }).total;
+        postMessage({ kind: 'progress', done: 0, total: total });
+        let more = true, last = performance.now();
+        while (more) {
+          const r = call({ op: 'stepStep', n: 1 });
+          more = r.more;
+          const now = performance.now();
+          if (now - last > 150 || !more) { last = now; postMessage({ kind: 'progress', done: r.done, total: r.total }); }
+        }
+        const f = call({ op: 'stepFinish' }), t1 = performance.now();
+        postMessage({ kind: 'head', count: f.bodies.length, warnings: f.warnings, readMs: t1 - t0 });
+        for (let i = 0; i < f.bodies.length; i++) {
+          const rb = f.bodies[i];
+          let mesh = null, err = '';
+          try { mesh = weld(call({ op: 'mesh', id: rb.id, display: true })); } catch (x) { err = String(x && x.message || x); }
+          try { call({ op: 'free', id: rb.id }); } catch (x) { /* ignore */ }
+          postMessage({ kind: 'body', i: i, name: rb.name, color: rb.color, hidden: rb.hidden, closed: rb.closed, refused: rb.refused, mesh: mesh, err: err },
+            mesh ? [mesh.positions.buffer, mesh.indices.buffer, mesh.edges.buffer] : []);
+        }
+        postMessage({ kind: 'done', readMs: t1 - t0, meshMs: performance.now() - t1 });
+      } catch (x) {
+        w = null;                                             // the engine may have stopped: a fresh one next time
+        postMessage({ kind: 'error', message: String(x && x.message || x) });
+      }
+    };
+  }
+  let brWorkerUrl = null;
+  function brepWorkerUrl() {
+    if (brWorkerUrl) return brWorkerUrl;
+    // the engine's glue code is the embedded script after the compressed engine (BREP_GZ="...";)
+    const sc = Array.from(document.scripts).find(function (x) { return x.text.length > 1e6 && x.text.indexOf('const BREP_GZ="') >= 0; });
+    if (!sc) throw new Error(L('không tìm thấy lõi B-rep trong file', 'the B-rep engine is not in this file'));
+    const t = sc.text, a = t.indexOf('const BREP_GZ="') + 15, z = t.indexOf('"', a);
+    const src = t.slice(z + 2) + '\n;(' + brWorkerMain.toString() + ')();\n';
+    brWorkerUrl = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+    return brWorkerUrl;
+  }
+  // read a STEP file in a worker; onMsg gets 'progress', 'head' and 'body' messages
+  async function stepRead(buffer, onMsg) {
+    if (typeof BREP_GZ === 'undefined' || typeof wasm_bindgen === 'undefined') throw new Error(L('file không có lõi B-rep', 'this file has no B-rep engine'));
+    if (typeof DecompressionStream === 'undefined' || typeof Worker === 'undefined') throw new Error(L('trình duyệt quá cũ (cần Chrome / Edge 80 trở lên)', 'the browser is too old (Chrome / Edge 80 or newer needed)'));
+    const mod = await brepModule(), wk = new Worker(brepWorkerUrl());
+    return new Promise(function (res, rej) {
+      wk.onmessage = function (e) {
+        const m = e.data;
+        if (m.kind === 'done') { wk.terminate(); res(m); }
+        else if (m.kind === 'error') { wk.terminate(); rej(new Error(m.message)); }
+        else { try { onMsg(m); } catch (x) { console.warn(x); } }
+      };
+      wk.onerror = function (e) { wk.terminate(); rej(new Error(L('lõi B-rep dừng: ', 'the B-rep engine stopped: ') + (e.message || ''))); };
+      wk.postMessage({ module: mod, buf: buffer }, [buffer]);
+    });
+  }
+  // open a STEP file: each solid becomes a B-rep body (true edges, name and colour from the file); returns how many
+  async function openStep(fname, buffer) {
+    const base = safe(fname.replace(/\.[^.]+$/, ''));
+    let added = 0, open = 0, failed = 0, count = 0, warns = [], lastDraw = 0;
+    const say = function (s) { $('busyText').textContent = fname + ': ' + s; };
+    say(L('đang đọc cấu trúc file...', 'reading the file structure...'));
+    const end = await stepRead(buffer, function (m) {
+      if (m.kind === 'progress') { say(L('dựng khối ', 'building solids ') + m.done + ' / ' + m.total); setProgress(m.total ? 0.85 * m.done / m.total : 0); }
+      else if (m.kind === 'head') { count = m.count; warns = m.warnings || []; say(L('chia lưới ', 'meshing ') + '0 / ' + count); }
+      else if (m.kind === 'body') {
+        say(L('chia lưới ', 'meshing ') + (m.i + 1) + ' / ' + count); setProgress(0.85 + 0.15 * (m.i + 1) / Math.max(1, count));
+        if (!m.mesh) { failed++; console.warn('STEP ' + fname + ' / ' + m.name + ':', m.err); return; }
+        const g = makeGeo(m.mesh.positions, m.mesh.indices); g.brep = true; g.brepE = m.mesh.edges;
+        const col = m.color ? m.color.map(function (c) { return Math.round(255 * Math.min(1, Math.max(0, c))); }) : undefined;
+        const nb = addBody(safe(m.name || base), g, { color: col, visible: !m.hidden });
+        nb.geoBrep = true; added++;
+        if (!m.closed) open++;
+        const now = performance.now();                         // show the solids as they come (not on every one)
+        if (added === 1 || now - lastDraw > 400) { lastDraw = now; sceneChanged(added === 1); refresh(); }
+      }
+    });
+    if (!count) throw new Error(L('file không có khối nào', 'the file has no solids'));
+    if (warns.length) console.warn('STEP ' + fname + ':', warns);
+    const sec = function (ms) { return (ms / 1000).toFixed(1) + ' s'; };
+    flash(L('Đã mở STEP: ', 'STEP opened: ') + added + L(' khối', ' solids') +
+      L(' (đọc ' + sec(end.readMs) + ', chia lưới ' + sec(end.meshMs) + ')', ' (read ' + sec(end.readMs) + ', mesh ' + sec(end.meshMs) + ')') +
+      (open ? L(' · ' + open + ' khối hở (thiếu mặt)', ' · ' + open + ' open (faces missing)') : '') +
+      (failed ? L(' · ' + failed + ' khối không chia lưới được', ' · ' + failed + ' could not be meshed') : '') +
+      (warns.length ? L(' · ' + warns.length + ' cảnh báo (xem Console F12)', ' · ' + warns.length + ' warnings (see Console F12)') : ''), true);
+    return added;
+  }
