@@ -126,18 +126,19 @@
 
   // ---------- tooling analysis: draft / undercut along a pull direction ----------
   // classes: 0 = released by the +dir half, 1 = released by the -dir half, 2 = draft below minimum, 3 = undercut
-  function undercut(mesh, dir, minDraftDeg, progress) {
+  // r = [t0, t1): only that range of triangles (one part of a job split over several workers, see undercutMerge)
+  function undercut(mesh, dir, minDraftDeg, progress, r) {
     const P = mesh.positions, I = mesh.indices, nt = I.length / 3;
-    const bvh = buildBVH(P, I);
+    const bvh = buildBVH(P, I), t0 = r ? r[0] : 0, t1 = r ? r[1] : nt;
     const dl = Math.hypot(dir[0], dir[1], dir[2]) || 1;
     const dx = dir[0] / dl, dy = dir[1] / dl, dz = dir[2] / dl;
     const nb = bvh.nb;
     const diag = Math.hypot(nb[3] - nb[0], nb[4] - nb[1], nb[5] - nb[2]) || 1;
     const eps = diag * 1e-6;
     const sinMin = Math.sin(Math.max(0, minDraftDeg) * Math.PI / 180);
-    const classes = new Uint8Array(nt);
+    const classes = new Uint8Array(r ? t1 - t0 : nt), half = r ? new Float64Array(t1 - t0) : null;
     const area = [0, 0, 0, 0];
-    for (let t = 0; t < nt; t++) {
+    for (let t = t0; t < t1; t++) {
       const a = 3 * I[3 * t], b = 3 * I[3 * t + 1], c = 3 * I[3 * t + 2];
       const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2];
       const wx = P[c] - P[a], wy = P[c + 1] - P[a + 1], wz = P[c + 2] - P[a + 2];
@@ -152,8 +153,19 @@
       if (rayCast(bvh, cx, cy, cz, s * dx, s * dy, s * dz, 0, Infinity, t, true)) cls = 3;
       else if (Math.abs(nd) < sinMin) cls = 2;
       else cls = s > 0 ? 0 : 1;
-      classes[t] = cls; area[cls] += l / 2;
-      if (progress && (t & 32767) === 0) progress(t / nt);
+      classes[t - t0] = cls; area[cls] += l / 2;
+      if (half) half[t - t0] = l / 2;
+      if (progress && (t & 32767) === 0) progress((t - t0) / (t1 - t0));
+    }
+    return r ? { classes: classes, half: half, r: r } : { classes: classes, area: area };
+  }
+  // parts (in any order) -> the same result as one undercut() over all triangles (areas added in triangle order)
+  function undercutMerge(parts, nt) {
+    const classes = new Uint8Array(nt), area = [0, 0, 0, 0];
+    parts = parts.slice().sort(function (p, q) { return p.r[0] - q.r[0]; });
+    for (const p of parts) {
+      classes.set(p.classes, p.r[0]);
+      for (let i = 0; i < p.classes.length; i++) if (p.half[i] > 0) area[p.classes[i]] += p.half[i];
     }
     return { classes: classes, area: area };
   }
@@ -177,15 +189,16 @@
     const t = (e2x * qx + e2y * qy + e2z * qz) * inv;
     return t > E && t < 1 - E;
   }
-  function collide(A, B) {
+  // r = [t0, t1): only that range of A's triangles, and no containment test (see collideMerge / collideContain)
+  function collide(A, B, r) {
     const PA = A.positions, IA = A.indices, PB = B.positions, IB = B.indices;
-    const ntA = IA.length / 3, ntB = IB.length / 3;
+    const ntA = IA.length / 3, ntB = IB.length / 3, t0 = r ? r[0] : 0, t1 = r ? r[1] : ntA;
     const bvh = buildBVH(PB, IB);
     const nb = bvh.nb, nl = bvh.nl, order = bvh.order;
     const flagsA = new Uint8Array(ntA), flagsB = new Uint8Array(ntB);
     let pairs = 0;
     const st = [];
-    for (let t = 0; t < ntA; t++) {
+    for (let t = t0; t < t1; t++) {
       const a0 = 3 * IA[3 * t], a1 = 3 * IA[3 * t + 1], a2 = 3 * IA[3 * t + 2];
       const x0 = Math.min(PA[a0], PA[a1], PA[a2]), x1 = Math.max(PA[a0], PA[a1], PA[a2]);
       const y0 = Math.min(PA[a0 + 1], PA[a1 + 1], PA[a2 + 1]), y1 = Math.max(PA[a0 + 1], PA[a1 + 1], PA[a2 + 1]);
@@ -207,13 +220,27 @@
         }
       }
     }
-    let contain = 0; // 1: A inside B, 2: B inside A
-    if (pairs === 0 && ntA && ntB) {
-      const va = 3 * IA[0], vb = 3 * IB[0];
-      if (inside(bvh, PA[va], PA[va + 1], PA[va + 2])) contain = 1;
-      else if (inside(buildBVH(PA, IA), PB[vb], PB[vb + 1], PB[vb + 2])) contain = 2;
+    if (r) return { flagsA: flagsA, flagsB: flagsB, pairs: pairs, r: r };
+    return { flagsA: flagsA, flagsB: flagsB, pairs: pairs, contain: pairs === 0 ? collideContain(A, B, bvh) : 0 };
+  }
+  // 1: A inside B, 2: B inside A (only asked when no triangles cross)
+  function collideContain(A, B, bvhB) {
+    const PA = A.positions, IA = A.indices, PB = B.positions, IB = B.indices;
+    if (!IA.length || !IB.length) return 0;
+    const va = 3 * IA[0], vb = 3 * IB[0];
+    if (inside(bvhB || buildBVH(PB, IB), PA[va], PA[va + 1], PA[va + 2])) return 1;
+    if (inside(buildBVH(PA, IA), PB[vb], PB[vb + 1], PB[vb + 2])) return 2;
+    return 0;
+  }
+  function collideMerge(parts) {
+    const fa = parts[0].flagsA, fb = parts[0].flagsB;
+    let pairs = 0;
+    for (const p of parts) {
+      pairs += p.pairs;
+      if (p.flagsA !== fa) for (let i = p.r[0]; i < p.r[1]; i++) if (p.flagsA[i]) fa[i] = 1;
+      if (p.flagsB !== fb) for (let i = 0; i < fb.length; i++) if (p.flagsB[i]) fb[i] = 1;
     }
-    return { flagsA: flagsA, flagsB: flagsB, pairs: pairs, contain: contain };
+    return { flagsA: fa, flagsB: fb, pairs: pairs, contain: 0 };
   }
 
   // ---------- mesh statistics ----------
@@ -330,12 +357,13 @@
   }
 
   // Signed distance from every vertex of B to the surface of A (+ = outside A).
-  function deviation(B, A, progress) {
+  // r = [v0, v1): only that range of B's vertices (returns {dist, r}; deviationMerge makes the full result)
+  function deviation(B, A, progress, r) {
     const PB = B.positions, nv = PB.length / 3, PA = A.positions, IA = A.indices;
-    const bvh = buildBVH(PA, IA);
-    const dist = new Float32Array(nv);
+    const bvh = buildBVH(PA, IA), v0 = r ? r[0] : 0, v1 = r ? r[1] : nv;
+    const dist = r ? new Float64Array(v1 - v0) : new Float32Array(nv);
     let mn = Infinity, mx = -Infinity, sumAbs = 0, sum2 = 0;
-    for (let i = 0; i < nv; i++) {
+    for (let i = v0; i < v1; i++) {
       const x = PB[3 * i], y = PB[3 * i + 1], z = PB[3 * i + 2];
       closest(bvh, x, y, z, Infinity);
       let d = Math.sqrt(cpD2);
@@ -343,10 +371,23 @@
       const ux = PA[b] - PA[a], uy = PA[b + 1] - PA[a + 1], uz = PA[b + 2] - PA[a + 2];
       const wx = PA[c] - PA[a], wy = PA[c + 1] - PA[a + 1], wz = PA[c + 2] - PA[a + 2];
       if ((uy * wz - uz * wy) * (x - cpX) + (uz * wx - ux * wz) * (y - cpY) + (ux * wy - uy * wx) * (z - cpZ) < 0) d = -d;
-      dist[i] = d;
+      dist[i - v0] = d;
+      if (r) { if (progress && (i & 16383) === 0) progress((i - v0) / (v1 - v0)); continue; }
       if (d < mn) mn = d; if (d > mx) mx = d;
       sumAbs += Math.abs(d); sum2 += d * d;
       if (progress && (i & 16383) === 0) progress(i / nv);
+    }
+    if (r) return { dist: dist, r: r };
+    return { dist: dist, min: mn, max: mx, meanAbs: sumAbs / (nv || 1), rms: Math.sqrt(sum2 / (nv || 1)) };
+  }
+  // parts (full precision distances) -> the same numbers as one deviation() over all vertices (sums in vertex order)
+  function deviationMerge(parts, nv) {
+    const dist = new Float32Array(nv);
+    let mn = Infinity, mx = -Infinity, sumAbs = 0, sum2 = 0;
+    parts = parts.slice().sort(function (p, q) { return p.r[0] - q.r[0]; });
+    for (const p of parts) {
+      const D = p.dist, o = p.r[0];
+      for (let i = 0; i < D.length; i++) { const d = D[i]; dist[o + i] = d; if (d < mn) mn = d; if (d > mx) mx = d; sumAbs += Math.abs(d); sum2 += d * d; }
     }
     return { dist: dist, min: mn, max: mx, meanAbs: sumAbs / (nv || 1), rms: Math.sqrt(sum2 / (nv || 1)) };
   }
@@ -1597,7 +1638,32 @@
     for (let i = 0; i < n; i++) { const q = Math.hypot(xs[i] - sx - s[0], ys[i] - sy - s[1]) - r; rms += q * q; }
     return { cx: sx + s[0], cy: sy + s[1], r: r, rms: Math.sqrt(rms / n) };
   }
+  // features() is asked again and again for the same mesh (each step of a feature, hover in the measuring tools):
+  // the last results are kept, found by the mesh content (hash of the positions and indices) and the options
+  const featC = [];
+  function meshKey(P, I) {
+    const pu = new Uint32Array(P.buffer, P.byteOffset, P.length), n = pu.length, m = I.length;
+    let h1 = 0x811c9dc5 ^ n, h2 = 0x9747b28c ^ m;
+    for (let i = 0; i < n; i++) { h1 = Math.imul(h1 ^ pu[i], 16777619); }
+    for (let i = 0; i < m; i++) { h2 = Math.imul(h2 ^ I[i], 2246822519); }
+    return n + ':' + m + ':' + (h1 >>> 0) + ':' + (h2 >>> 0);
+  }
   function features(mesh, opt) {
+    const P = mesh.positions, I = mesh.indices;
+    if (!(P instanceof Float32Array) || !I || !I.length) return featuresNow(mesh, opt);
+    const key = meshKey(P, I) + '|' + JSON.stringify(opt || {});
+    for (let i = 0; i < featC.length; i++) if (featC[i].key === key) { const e = featC.splice(i, 1)[0]; featC.unshift(e); return e.f; }
+    const f = featuresNow(mesh, opt);
+    featC.unshift({ key: key, f: f }); if (featC.length > 6) featC.pop();
+    return f;
+  }
+  // a result computed elsewhere (a worker) for this mesh
+  function featuresPut(mesh, opt, f) {
+    const key = meshKey(mesh.positions, mesh.indices) + '|' + JSON.stringify(opt || {});
+    if (featC.some(function (e) { return e.key === key; })) return;
+    featC.unshift({ key: key, f: f }); if (featC.length > 6) featC.pop();
+  }
+  function featuresNow(mesh, opt) {
     opt = opt || {};
     const P = mesh.positions, I = mesh.indices, nv = P.length / 3, nt = I.length / 3;
     const adj = edgeAdjacency(P, I, nv, null).adj;
@@ -2181,6 +2247,86 @@
     return { positions: m.positions, indices: m.indices, cut: cutA.size + cutB.size };
   }
 
+  // ---------- Drawing (6 views / exploded view): one body prepared in world space ----------
+  // m = display matrix (column-major 4x4), E = B-rep edge pairs or null, ang = edge angle (deg), smooth = studio light.
+  // Returns W (world positions), N (face normals), NN (corner normals), fixed (edge pairs always drawn), sil (va, vb, t1, t2:
+  // drawn where the view sees one triangle from the front and the other from the back), lo / hi (world box).
+  // Runs in a worker; the result is the same as the old preparation on the page.
+  function drawWeld(W, nv, q) {
+    const id = new Int32Array(nv), H = new Map(), S2 = new Map();
+    const same = function (v, ix, iy, iz) { return Math.round(W[3 * v] / q) === ix && Math.round(W[3 * v + 1] / q) === iy && Math.round(W[3 * v + 2] / q) === iz; };
+    for (let i = 0; i < nv; i++) {
+      const ix = Math.round(W[3 * i] / q), iy = Math.round(W[3 * i + 1] / q), iz = Math.round(W[3 * i + 2] / q);
+      const h = Math.imul(ix | 0, 73856093) ^ Math.imul(iy | 0, 19349663) ^ Math.imul(iz | 0, 83492791);
+      const v = H.get(h);
+      if (v === undefined) { H.set(h, i); id[i] = i; }
+      else if (same(v, ix, iy, iz)) id[i] = v;
+      else { const k = ix + ',' + iy + ',' + iz; let w = S2.get(k); if (w === undefined) { w = i; S2.set(k, i); } id[i] = w; }
+    }
+    return id;
+  }
+  function drawPrep(P, I, E, m, ang, smooth) {
+    const nv = P.length / 3, nt = I.length / 3;
+    const W = new Float64Array(P.length);
+    for (let i = 0; i < nv; i++) {
+      const x = P[3 * i], y = P[3 * i + 1], z = P[3 * i + 2];
+      W[3 * i] = m[0] * x + m[4] * y + m[8] * z + m[12]; W[3 * i + 1] = m[1] * x + m[5] * y + m[9] * z + m[13]; W[3 * i + 2] = m[2] * x + m[6] * y + m[10] * z + m[14];
+    }
+    const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+    for (let i = 0; i < nv; i++) for (let k = 0; k < 3; k++) { const v = W[3 * i + k]; if (v < lo[k]) lo[k] = v; if (v > hi[k]) hi[k] = v; }
+    // weld by position so that edges between separately stored faces still find both triangles
+    const q = 1e-5 * (1 + Math.hypot(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2])), id = drawWeld(W, nv, q);
+    const N = new Float64Array(nt * 3), A = new Float64Array(nt);
+    for (let t = 0; t < nt; t++) {
+      const a = 3 * I[3 * t], c = 3 * I[3 * t + 1], d = 3 * I[3 * t + 2];
+      const ux = W[c] - W[a], uy = W[c + 1] - W[a + 1], uz = W[c + 2] - W[a + 2], vx = W[d] - W[a], vy = W[d + 1] - W[a + 1], vz = W[d + 2] - W[a + 2];
+      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz) || 1;
+      N[3 * t] = nx / l; N[3 * t + 1] = ny / l; N[3 * t + 2] = nz / l; A[t] = l;
+    }
+    // edges in flat arrays: va, vb, t1, t2 (-1 when only one triangle), count
+    const em = new Map(), cap = 3 * nt, eA = new Int32Array(cap), eB = new Int32Array(cap), eT1 = new Int32Array(cap), eT2 = new Int32Array(cap), eN = new Int32Array(cap);
+    let ne = 0;
+    for (let t = 0; t < nt; t++) for (let c = 0; c < 3; c++) {
+      const a = id[I[3 * t + c]], bb = id[I[3 * t + (c + 1) % 3]]; if (a === bb) continue;
+      const k = a < bb ? a * nv + bb : bb * nv + a, e = em.get(k);
+      if (e === undefined) { em.set(k, ne); eA[ne] = a; eB[ne] = bb; eT1[ne] = t; eT2[ne] = -1; eN[ne] = 1; ne++; }
+      else { if (eT2[e] < 0) eT2[e] = t; eN[e]++; }
+    }
+    const brep = !!(E && E.length), cosA = Math.cos(ang * Math.PI / 180);
+    const fixed = new Int32Array((brep ? E.length : 0) + 2 * ne), sil = new Int32Array(4 * ne);
+    let nf = 0, ns = 0;
+    if (brep) for (let i = 0; i < E.length; i += 2) { fixed[nf++] = E[i]; fixed[nf++] = E[i + 1]; }
+    for (let e = 0; e < ne; e++) {
+      if (eT2[e] < 0 || eN[e] > 2) { if (!brep) { fixed[nf++] = eA[e]; fixed[nf++] = eB[e]; } continue; }
+      const t1 = eT1[e], t2 = eT2[e], c = N[3 * t1] * N[3 * t2] + N[3 * t1 + 1] * N[3 * t2 + 1] + N[3 * t1 + 2] * N[3 * t2 + 2];
+      if (!brep && c < cosA) { fixed[nf++] = eA[e]; fixed[nf++] = eB[e]; } else { sil[ns++] = eA[e]; sil[ns++] = eB[e]; sil[ns++] = t1; sil[ns++] = t2; }
+    }
+    // per-corner normals: flat (as the 3D view) or smooth inside the edge angle (studio light)
+    const NN = new Float32Array(nt * 9), cosS = Math.cos(Math.max(ang, 20) * Math.PI / 180);
+    let off = null, inc = null;
+    if (smooth) {   // triangles around each welded vertex, in flat arrays
+      off = new Int32Array(nv + 1); inc = new Int32Array(3 * nt);
+      for (let k = 0; k < 3 * nt; k++) off[id[I[k]] + 1]++;
+      for (let v = 0; v < nv; v++) off[v + 1] += off[v];
+      const at = off.slice(0, nv);
+      for (let t = 0; t < nt; t++) for (let c = 0; c < 3; c++) inc[at[id[I[3 * t + c]]]++] = t;
+    }
+    for (let t = 0; t < nt; t++) for (let c = 0; c < 3; c++) {
+      let nx = N[3 * t], ny = N[3 * t + 1], nz = N[3 * t + 2];
+      if (smooth) {
+        nx = ny = nz = 0;
+        const v0 = id[I[3 * t + c]];
+        for (let j = off[v0], je = off[v0 + 1]; j < je; j++) { const u = inc[j];
+          if (N[3 * t] * N[3 * u] + N[3 * t + 1] * N[3 * u + 1] + N[3 * t + 2] * N[3 * u + 2] < cosS) continue;
+          nx += N[3 * u] * A[u]; ny += N[3 * u + 1] * A[u]; nz += N[3 * u + 2] * A[u];
+        }
+      }
+      NN[9 * t + 3 * c] = nx; NN[9 * t + 3 * c + 1] = ny; NN[9 * t + 3 * c + 2] = nz;
+    }
+    return { W: W, N: N, NN: NN, fixed: fixed.slice(0, nf), sil: sil.slice(0, ns), lo: lo, hi: hi };
+  }
+
   return { replaceFaceVerts: replaceFaceVerts, replaceCurvedVerts: replaceCurvedVerts, edgeTool: edgeTool, facePrism: facePrism, shellMesh: shellMesh, moveCylFace: moveCylFace, skModel: skModel, skSolve: skSolve, skAnalyse: skAnalyse, skCurValue: skCurValue, skCompact: skCompact, skDeleteEnts: skDeleteEnts, skMerge: skMerge, skFlat: skFlat, skFromFlat: skFromFlat, skRes: skRes, skVarMap: skVarMap, skGetX: skGetX, skScale: skScale, SK_DIMS: SK_DIMS,
     parse: parse, weld: weld, decimate: decimate, split: split, triangulate: triangulate, offsetLoop: offsetLoop, extrudeSolid: extrudeSolid, revolveSolid: revolveSolid, boolean: boolean, borderEdges: borderEdges, borderLoops: borderLoops, stitch: stitch, fillHoles: fillHoles, features: features, boundary: boundary, fillHoles: fillHoles, featEdges: featEdges, fitFace: fitFace, splitAdv: splitAdv, edgeAdjacency: edgeAdjacency, writeSTL: writeSTL, writeOBJ: writeOBJ, zipStore: zipStore,
-    buildBVH: buildBVH, raycast: raycast, undercut: undercut, collide: collide, stats: stats, topology: topology, deviation: deviation, rigidFit: rigidFit, icp: icp };
+    buildBVH: buildBVH, raycast: raycast, undercut: undercut, collide: collide, stats: stats, topology: topology, deviation: deviation, rigidFit: rigidFit, icp: icp,
+    undercutMerge: undercutMerge, collideMerge: collideMerge, collideContain: collideContain, deviationMerge: deviationMerge, featuresPut: featuresPut, featuresFresh: featuresNow, meshKey: meshKey, drawPrep: drawPrep };

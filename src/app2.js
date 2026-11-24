@@ -8,48 +8,102 @@
   const fmtN = function (n) { return Math.round(n).toLocaleString(lang === 'en' ? 'en-US' : 'vi-VN'); };
   const f2 = function (v, d) { return (+v).toFixed(d === undefined ? 2 : d); };
 
-  // ================= background worker (falls back to main thread) =================
+  // ================= background workers (fall back to the main thread) =================
+  // A pool of workers, one per processor core (at most 8). Jobs run in parallel on free workers; the long
+  // per-vertex / per-triangle analyses (deviation, undercut, collision) are cut into parts that run on several
+  // workers at once and are put back together in order, so the result is exactly the one a single job gives.
   function runCmd(c, cmd, p, prog) {
     if (cmd === 'parse') return c.parse(p.name, p.buffer);
     if (cmd === 'decimate') return c.decimate(p.mesh, p.opt, prog);
     if (cmd === 'split') return c.splitAdv(p.mesh, p.opt);
     if (cmd === 'fill') return c.fillHoles(p.mesh, p.opt);
     if (cmd === 'bool') return c.boolean(p.a, p.b, p.op, prog);
-    if (cmd === 'undercut') return c.undercut(p.mesh, p.dir, p.minDraft, prog);
-    if (cmd === 'collide') return c.collide(p.a, p.b);
-    if (cmd === 'deviation') return c.deviation(p.b, p.a, prog);
+    if (cmd === 'undercut') return c.undercut(p.mesh, p.dir, p.minDraft, prog, p.r);
+    if (cmd === 'collide') return c.collide(p.a, p.b, p.r);
+    if (cmd === 'collideContain') return c.collideContain(p.a, p.b);
+    if (cmd === 'deviation') return c.deviation(p.b, p.a, prog, p.r);
     if (cmd === 'icp') return c.icp(p.b, p.a, 40, prog);
+    if (cmd === 'features') return c.featuresFresh(p.mesh, p.opt);
+    if (cmd === 'drawPrep') return c.drawPrep(p.P, p.I, p.E, p.m, p.ang, p.smooth);
     throw new Error('Unknown command ' + cmd);
   }
-  let worker = null, nextId = 1;
-  const pending = {};
+  const POOL_N = Math.max(1, Math.min(8, navigator.hardwareConcurrency || 2));
+  const pool = [], queue = [];
+  let poolOK = true, poolURL = null, nextId = 1;
   function runDirect(job) {
-    setTimeout(function () { try { job.res(runCmd(core, job.cmd, job.payload, null)); } catch (e) { job.rej(e); } }, 40);
+    setTimeout(function () { try { job.res(runCmd(core, job.cmd, job.payload, job.onProgress || null)); } catch (e) { job.rej(e); } }, 40);
   }
-  try {
-    const src = 'const core=(' + MeshCore.toString() + ')();' + runCmd.toString() + ';' +
-      'function tr(r){const s=new Set();(function w(o,d){if(!o||d>4)return;if(ArrayBuffer.isView(o)){s.add(o.buffer);return;}if(typeof o==="object")for(const k in o)w(o[k],d+1);})(r,0);return Array.from(s);}' +
-      'onmessage=function(e){const m=e.data;try{const r=runCmd(core,m.cmd,m.payload,function(p){postMessage({id:m.id,progress:p});});postMessage({id:m.id,result:r},tr(r));}' +
-      'catch(err){postMessage({id:m.id,error:String(err&&err.message||err)});}};';
-    worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
-    worker.onmessage = function (e) {
-      const m = e.data, job = pending[m.id];
-      if (!job) return;
-      if (m.progress !== undefined) { if (job.onProgress) job.onProgress(m.progress); return; }
-      delete pending[m.id];
-      if (m.error) job.rej(new Error(m.error)); else job.res(m.result);
-    };
-    worker.onerror = function () {
-      worker = null;
-      for (const id in pending) { const job = pending[id]; delete pending[id]; runDirect(job); }
-    };
-  } catch (e) { worker = null; }
+  function mkWorker() {
+    try {
+      if (!poolURL) {
+        const src = 'const core=(' + MeshCore.toString() + ')();' + runCmd.toString() + ';' +
+          'function tr(r){const s=new Set();(function w(o,d){if(!o||d>4)return;if(ArrayBuffer.isView(o)){s.add(o.buffer);return;}if(typeof o==="object")for(const k in o)w(o[k],d+1);})(r,0);return Array.from(s);}' +
+          'onmessage=function(e){const m=e.data;try{const r=runCmd(core,m.cmd,m.payload,function(p){postMessage({id:m.id,progress:p});});postMessage({id:m.id,result:r},tr(r));}' +
+          'catch(err){postMessage({id:m.id,error:String(err&&err.message||err)});}};';
+        poolURL = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+      }
+      const wk = { w: new Worker(poolURL), job: null };
+      wk.w.onmessage = function (e) {
+        const m = e.data, job = wk.job;
+        if (!job || job.id !== m.id) return;
+        if (m.progress !== undefined) { if (job.onProgress) job.onProgress(m.progress); return; }
+        wk.job = null;
+        if (m.error) job.rej(new Error(m.error)); else job.res(m.result);
+        pump();
+      };
+      wk.w.onerror = function () {     // the worker itself failed (not the job): run its job here, use no workers
+        const job = wk.job; wk.job = null; poolOK = false;
+        pool.splice(pool.indexOf(wk), 1); try { wk.w.terminate(); } catch (e2) { /* gone */ }
+        if (job) runDirect(job);
+        pump();
+      };
+      pool.push(wk);
+      return wk;
+    } catch (e) { poolOK = false; return null; }
+  }
+  function pump() {
+    while (queue.length) {
+      let wk = pool.find(function (x) { return !x.job; });
+      if (!wk && poolOK && pool.length < POOL_N) wk = mkWorker();
+      if (!wk) { if (!pool.length) { while (queue.length) runDirect(queue.shift()); } return; }
+      // background jobs only when nothing else waits, one at a time, and never on the last free worker
+      let qi = queue.findIndex(function (j) { return !j.low; });
+      if (qi < 0) {
+        const lowRun = pool.filter(function (x) { return x.job && x.job.low; }).length;
+        if (lowRun || (POOL_N > 1 && pool.filter(function (x) { return !x.job; }).length + (POOL_N - pool.length) < 2)) return;
+        qi = 0;
+      }
+      const job = queue.splice(qi, 1)[0]; job.id = nextId++; wk.job = job;
+      wk.w.postMessage({ id: job.id, cmd: job.cmd, payload: job.payload });
+    }
+  }
+  function runOne(cmd, payload, onProgress, low) {
+    return new Promise(function (res, rej) { queue.push({ cmd: cmd, payload: payload, onProgress: onProgress, res: res, rej: rej, low: !!low }); pump(); });
+  }
+  // parts of a job: about one per worker, none smaller than 20 000 items
+  function ranges(n) {
+    const k = poolOK ? Math.max(1, Math.min(POOL_N, Math.floor(n / 20000))) : 1, r = [];
+    for (let i = 0; i < k; i++) r.push([Math.floor(n * i / k), Math.floor(n * (i + 1) / k)]);
+    return r;
+  }
+  function runParts(cmd, payload, n, onProgress) {
+    const R = ranges(n), pr = new Float64Array(R.length);
+    return Promise.all(R.map(function (r, i) {
+      return runOne(cmd, Object.assign({}, payload, { r: r }), onProgress ? function (p) { pr[i] = p; let s = 0; for (const v of pr) s += v; onProgress(s / pr.length); } : null);
+    }));
+  }
   function run(cmd, payload, onProgress) {
-    return new Promise(function (res, rej) {
-      const job = { cmd: cmd, payload: payload, onProgress: onProgress, res: res, rej: rej };
-      if (worker) { const id = nextId++; pending[id] = job; worker.postMessage({ id: id, cmd: cmd, payload: payload }); }
-      else runDirect(job);
-    });
+    if (cmd === 'deviation' && ranges(payload.b.positions.length / 3).length > 1)
+      return runParts(cmd, payload, payload.b.positions.length / 3, onProgress).then(function (P) { return core.deviationMerge(P, payload.b.positions.length / 3); });
+    if (cmd === 'undercut' && ranges(payload.mesh.indices.length / 3).length > 1)
+      return runParts(cmd, payload, payload.mesh.indices.length / 3, onProgress).then(function (P) { return core.undercutMerge(P, payload.mesh.indices.length / 3); });
+    if (cmd === 'collide' && ranges(payload.a.indices.length / 3).length > 1)
+      return runParts(cmd, payload, payload.a.indices.length / 3, onProgress).then(function (P) {
+        const r = core.collideMerge(P);
+        if (r.pairs) return r;
+        return runOne('collideContain', payload).then(function (c) { r.contain = c; return r; });
+      });
+    return runOne(cmd, payload, onProgress);
   }
 
   // ================= math =================
@@ -315,7 +369,7 @@
 
   // ================= WebGL =================
   const canvas = $('gl'), ov = $('ov'), ctx = ov.getContext('2d');
-  const gl = canvas.getContext('webgl2', { antialias: true, alpha: false });
+  const gl = canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });   // the strong graphics card on laptops with two
   let prog = null;
   const U = {};
   if (gl) {
@@ -454,6 +508,7 @@
   }
   function setView(name) { cam.R = name === 'iso' ? isoView() : VIEWS[name].slice(); dirty = true; }
   function sceneChanged(fit) {
+    featPrefetch();
     const vis = visibleBodies();
     if (vis.length) {
       const bb = unionBox(vis, true);
@@ -969,6 +1024,27 @@
     b.feat = { key: key, geo: b.geo, f: f };
     return f;
   }
+  // big bodies: their faces and edges are recognised in the background (workers) a moment after they appear or change,
+  // so the measuring / feature tools do not stop the page the first time the mouse is over them
+  let featT = 0;
+  function featPrefetch() {
+    clearTimeout(featT);
+    featT = setTimeout(function () {
+      if (!poolOK || POOL_N < 4) return;                    // no workers, or too few cores to spare one: on demand as before
+      for (const b of S.bodies) {
+        if (!b.visible || !b.geo || b.geo.indices.length < 150000) continue;
+        const key = b.matrix.join();
+        if ((b.feat && b.feat.key === key && b.feat.geo === b.geo) || (b.featJob && b.featJob.key === key && b.featJob.geo === b.geo)) continue;
+        const job = b.featJob = { key: key, geo: b.geo }, wm = worldMesh(b);
+        runOne('features', { mesh: wm }, null, true).then(function (f) {
+          if (b.featJob === job) b.featJob = null;
+          if (b.geo !== job.geo || b.matrix.join() !== key) return;
+          if (!(b.feat && b.feat.key === key && b.feat.geo === job.geo)) b.feat = { key: key, geo: job.geo, f: f };
+          core.featuresPut(wm, undefined, b.feat.f);
+        }, function () { if (b.featJob === job) b.featJob = null; });
+      }
+    }, 1500);
+  }
   // The thing under the cursor that a measuring tool would take: a corner, an edge, a recognised face, or a free point.
   function entityAt(h, px, py, freeOnly) {
     const b = h.body, off = S.cmp ? [0, 0, 0] : b.off, mv = function (p) { return V.add(p, off); };
@@ -1245,7 +1321,7 @@
   // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
   // version of the app: shown next to the name, in the Drawing Workspace header and the window title; raised with every
   // published fix (patch number) or feature set (minor number)
-  const APP_VER = '1.3.2';
+  const APP_VER = '1.4.0';
   (function () { const v = 'v' + APP_VER; $('appVer').textContent = v; document.title = 'MeshExpert ' + v; })();
   const BL_DEF = { cn: 200, ct: 58, cm: 58 };
   let blCols = Object.assign({}, BL_DEF);
@@ -2819,5 +2895,5 @@
 /*MODEL*/
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, dwType: function (m) { dwTabSet(m); }, dwLoad: function (d) { dwLoad(d); }, v6Paint: function () { v6Paint(); }, v6Png: function () { return v6Full('png').then(function (r) { return new Promise(function (ok) { const fr = new FileReader(); fr.onload = function () { ok(fr.result); }; fr.readAsDataURL(r.blob); }); }); }, holesOf: holesOf, dlgRole: dlgRole, zs: function () { return ZS; }, zsSet: function (k, v) { zsSet(k, v); }, zsTab: function (k) { zsTab(k); }, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { run: run, pool: function () { return { size: POOL_N, live: pool.length, ok: poolOK }; }, S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib || mfUsedW ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, dwType: function (m) { dwTabSet(m); }, dwLoad: function (d) { dwLoad(d); }, v6Paint: function () { v6Paint(); }, v6Png: function () { return v6Full('png').then(function (r) { return new Promise(function (ok) { const fr = new FileReader(); fr.onload = function () { ok(fr.result); }; fr.readAsDataURL(r.blob); }); }); }, holesOf: holesOf, dlgRole: dlgRole, zs: function () { return ZS; }, zsSet: function (k, v) { zsSet(k, v); }, zsTab: function (k) { zsTab(k); }, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();

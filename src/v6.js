@@ -18,7 +18,7 @@
   // the 6-view sheet and the exploded view are two separate drawings: each keeps its own panel values (cfg) and its own
   // placements (st: model turn, view / iso / part / totals positions); both are saved with the session (.mrtl)
   const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, tot: null, notes: { '6v': [], exp: [] }, nsel: null, nsels: [], clip: null, odo: {}, psel: null, rects: { '6v': [], exp: [] }, rsel: null, rt: null, hl: null,
-    prev: null, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null, grp: {}, comb: null, dims: { '6v': [], exp: [] }, src: null, hide: [], dt: null, dsel: null, vsel: null, vz: 1, vp: [0, 0], lay: null, est: 0 };
+    prev: null, vc: new Map(), vg: new Map(), gen: 0, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null, grp: {}, comb: null, dims: { '6v': [], exp: [] }, src: null, hide: [], dt: null, dsel: null, vsel: null, vz: 1, vp: [0, 0], lay: null, est: 0 };
   const V6_PREVPX = 12e6;
   const V6_REST = 3000;     // ms of rest after zoom / pan before the sheet is drawn sharp again   // the preview never renders the sheet above this many pixels (zooming further only scales)
   let v6Act = false;   // the Drawing Workspace is open and shows the sheet
@@ -112,117 +112,59 @@
       V6S.fine.set(key, g); return g;
     } catch (e) { return base; }
   }
-  // vertices that share a position (quantised to q) get the index of the first one. Hash first; an exact
-  // check on the quantised position rejects a clash, and clashing vertices are matched by a string key.
-  function v6Weld(W, nv, q) {
-    const id = new Int32Array(nv), H = new Map(), S2 = new Map();
-    const same = function (v, ix, iy, iz) { return Math.round(W[3 * v] / q) === ix && Math.round(W[3 * v + 1] / q) === iy && Math.round(W[3 * v + 2] / q) === iz; };
-    for (let i = 0; i < nv; i++) {
-      const ix = Math.round(W[3 * i] / q), iy = Math.round(W[3 * i + 1] / q), iz = Math.round(W[3 * i + 2] / q);
-      const h = Math.imul(ix | 0, 73856093) ^ Math.imul(iy | 0, 19349663) ^ Math.imul(iz | 0, 83492791);
-      const v = H.get(h);
-      if (v === undefined) { H.set(h, i); id[i] = i; }
-      else if (same(v, ix, iy, iz)) id[i] = v;
-      else { const k = ix + ',' + iy + ',' + iz; let w = S2.get(k); if (w === undefined) { w = i; S2.set(k, i); } id[i] = w; }
-    }
-    return id;
-  }
-  // prepared bodies are kept between previews (same body, same geometry, same display transform and shading settings)
+  // prepared bodies are kept between previews (same body, same geometry, same display transform, edge angle and light).
+  // The preparation itself (welding, normals, edges) runs in a worker (core.drawPrep), several bodies at once, so the
+  // page keeps answering while a heavy mesh is prepared; small bodies are prepared right here.
   const v6PrepC = new Map();
+  let v6PrepSeq = 1;
   function v6FreeGL(p) {
+    if (!p) return;
     const g = p.gl;
     if (p.vao && g && !g.isContextLost()) { g.deleteVertexArray(p.vao); g.deleteBuffer(p.vb); g.deleteBuffer(p.nb); }
     p.vao = null; p.gl = null;
   }
   function v6PrepCached(b, geo, o) {
-    const key = b.id + (geo.P === b.geo.positions ? '|b' : '|f');
-    const mk = dispMatrix(b).join() + '|' + o.ang + '|' + o.light + '|' + b.color.join();
+    const key = b.id + (geo.P === b.geo.positions ? '|b' : '|f'), smooth = o.light === 'studio';
+    const mk = dispMatrix(b).join() + '|' + o.ang + '|' + smooth;
+    const col = function (p) { p.b = b; p.color = [b.color[0] / 255, b.color[1] / 255, b.color[2] / 255]; return p; };
     const e = v6PrepC.get(key);
-    if (e && e.P === geo.P && e.I === geo.I && e.E === geo.E && e.mk === mk) { e.p.b = b; return e.p; }
-    if (e) v6FreeGL(e.p);
-    const p = v6Prep(b, geo, o);
-    v6PrepC.set(key, { P: geo.P, I: geo.I, E: geo.E, mk: mk, p: p });
-    return p;
-  }
-  function v6Prep(b, geo, o) {
-    const m = dispMatrix(b), P = geo.P, I = geo.I, nv = P.length / 3, nt = I.length / 3;
-    const W = new Float64Array(P.length);
-    for (let i = 0; i < nv; i++) {
-      const x = P[3 * i], y = P[3 * i + 1], z = P[3 * i + 2];
-      W[3 * i] = m[0] * x + m[4] * y + m[8] * z + m[12]; W[3 * i + 1] = m[1] * x + m[5] * y + m[9] * z + m[13]; W[3 * i + 2] = m[2] * x + m[6] * y + m[10] * z + m[14];
-    }
-    let lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
-    for (let i = 0; i < nv; i++) for (let k = 0; k < 3; k++) { const v = W[3 * i + k]; if (v < lo[k]) lo[k] = v; if (v > hi[k]) hi[k] = v; }
-    // weld by position so that edges between separately stored faces still find both triangles
-    const q = 1e-5 * (1 + V.len(V.sub(hi, lo))), id = v6Weld(W, nv, q);
-    const N = new Float64Array(nt * 3), A = new Float64Array(nt);
-    for (let t = 0; t < nt; t++) {
-      const a = 3 * I[3 * t], c = 3 * I[3 * t + 1], d = 3 * I[3 * t + 2];
-      const ux = W[c] - W[a], uy = W[c + 1] - W[a + 1], uz = W[c + 2] - W[a + 2], vx = W[d] - W[a], vy = W[d + 1] - W[a + 1], vz = W[d + 2] - W[a + 2];
-      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz) || 1;
-      N[3 * t] = nx / l; N[3 * t + 1] = ny / l; N[3 * t + 2] = nz / l; A[t] = l;
-    }
-    // edges in flat arrays: va, vb, t1, t2 (-1 when only one triangle), count; fixed = pairs, sil = (va, vb, t1, t2) quadruples
-    const em = new Map(), cap = 3 * nt, eA = new Int32Array(cap), eB = new Int32Array(cap), eT1 = new Int32Array(cap), eT2 = new Int32Array(cap), eN = new Int32Array(cap);
-    let ne = 0;
-    for (let t = 0; t < nt; t++) for (let c = 0; c < 3; c++) {
-      const a = id[I[3 * t + c]], bb = id[I[3 * t + (c + 1) % 3]]; if (a === bb) continue;
-      const k = a < bb ? a * nv + bb : bb * nv + a, e = em.get(k);
-      if (e === undefined) { em.set(k, ne); eA[ne] = a; eB[ne] = bb; eT1[ne] = t; eT2[ne] = -1; eN[ne] = 1; ne++; }
-      else { if (eT2[e] < 0) eT2[e] = t; eN[e]++; }
-    }
-    const brep = !!(geo.E && geo.E.length), cosA = Math.cos(o.ang * Math.PI / 180), fixed = [], sil = [];
-    if (brep) for (let i = 0; i < geo.E.length; i += 2) fixed.push(geo.E[i], geo.E[i + 1]);
-    for (let e = 0; e < ne; e++) {
-      if (eT2[e] < 0 || eN[e] > 2) { if (!brep) fixed.push(eA[e], eB[e]); continue; }
-      const t1 = eT1[e], t2 = eT2[e], c = N[3 * t1] * N[3 * t2] + N[3 * t1 + 1] * N[3 * t2 + 1] + N[3 * t1 + 2] * N[3 * t2 + 2];
-      if (!brep && c < cosA) fixed.push(eA[e], eB[e]); else sil.push(eA[e], eB[e], t1, t2);
-    }
-    // per-corner normals: flat (as the 3D view) or smooth inside the edge angle (studio light)
-    const NN = new Float32Array(nt * 9), smooth = o.light === 'studio', cosS = Math.cos(Math.max(o.ang, 20) * Math.PI / 180);
-    let off = null, inc = null;
-    if (smooth) {   // triangles around each welded vertex, in flat arrays
-      off = new Int32Array(nv + 1); inc = new Int32Array(3 * nt);
-      for (let k = 0; k < 3 * nt; k++) off[id[I[k]] + 1]++;
-      for (let v = 0; v < nv; v++) off[v + 1] += off[v];
-      const at = off.slice(0, nv);
-      for (let t = 0; t < nt; t++) for (let c = 0; c < 3; c++) inc[at[id[I[3 * t + c]]]++] = t;
-    }
-    for (let t = 0; t < nt; t++) for (let c = 0; c < 3; c++) {
-      let nx = N[3 * t], ny = N[3 * t + 1], nz = N[3 * t + 2];
-      if (smooth) {
-        nx = ny = nz = 0;
-        const v0 = id[I[3 * t + c]];
-        for (let j = off[v0], je = off[v0 + 1]; j < je; j++) { const u = inc[j];
-          if (N[3 * t] * N[3 * u] + N[3 * t + 1] * N[3 * u + 1] + N[3 * t + 2] * N[3 * u + 2] < cosS) continue;
-          nx += N[3 * u] * A[u]; ny += N[3 * u + 1] * A[u]; nz += N[3 * u + 2] * A[u];
-        }
-      }
-      NN[9 * t + 3 * c] = nx; NN[9 * t + 3 * c + 1] = ny; NN[9 * t + 3 * c + 2] = nz;
-    }
-    return { b: b, P: P, W: W, I: I, N: N, NN: NN, fixed: fixed, sil: sil, lo: lo, hi: hi, cen: [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2], color: [b.color[0] / 255, b.color[1] / 255, b.color[2] / 255] };
+    if (e && e.P === geo.P && e.I === geo.I && e.E === geo.E && e.mk === mk) return e.pr.then(col);
+    if (e) e.pr.then(v6FreeGL, function () { });
+    const m = dispMatrix(b), nt = geo.I.length / 3;
+    const job = nt < 20000 ? Promise.resolve(core.drawPrep(geo.P, geo.I, geo.E, m, o.ang, smooth))
+      : runOne('drawPrep', { P: geo.P, I: geo.I, E: geo.E || null, m: m, ang: o.ang, smooth: smooth });
+    const pr = job.then(function (r) {
+      return { pid: v6PrepSeq++, b: b, P: geo.P, W: r.W, I: geo.I, N: r.N, NN: r.NN, fixed: r.fixed, sil: r.sil, lo: r.lo, hi: r.hi,
+        cen: [(r.lo[0] + r.hi[0]) / 2, (r.lo[1] + r.hi[1]) / 2, (r.lo[2] + r.hi[2]) / 2] };
+    });
+    const ent = { P: geo.P, I: geo.I, E: geo.E, mk: mk, pr: pr, bid: b.id };
+    v6PrepC.set(key, ent);
+    pr.catch(function () { if (v6PrepC.get(key) === ent) v6PrepC.delete(key); });
+    return pr.then(col);
   }
 
   function v6GL() {
     if (v6gl && !v6gl.g.isContextLost()) return v6gl;
     const c = document.createElement('canvas'); c.width = c.height = 4;
-    const g = c.getContext('webgl2', { antialias: false, preserveDrawingBuffer: false });
+    const g = c.getContext('webgl2', { antialias: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
     if (!g) throw new Error(L('Trình duyệt không có WebGL2', 'WebGL2 is not available'));
     const sh = function (type, src) { const s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s); if (!g.getShaderParameter(s, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(s)); return s; };
     const vs = '#version 300 es\nprecision highp float;layout(location=0) in vec3 aP;layout(location=1) in vec3 aN;uniform vec3 uR,uU,uD,uO;uniform vec4 uBox;uniform vec2 uZ;out vec3 vN;\n' +
       'void main(){vec3 q=aP+uO;float x=dot(q,uR),y=dot(q,uU),z=dot(q,uD);vN=vec3(dot(aN,uR),dot(aN,uU),-dot(aN,uD));' +
       'gl_Position=vec4((x-uBox.x)/uBox.z*2.0-1.0,(y-uBox.y)/uBox.w*2.0-1.0,(z-uZ.x)/uZ.y*2.0-1.0,1.0);}';
-    const fs = '#version 300 es\nprecision highp float;in vec3 vN;uniform int uMode,uLight;uniform vec3 uC;out vec4 o;\n' +
-      'void main(){if(uMode==0){float v=floor(gl_FragCoord.z*16777215.0);float r=floor(v/65536.0);float gg=floor((v-r*65536.0)/256.0);float b=v-r*65536.0-gg*256.0;o=vec4(r,gg,b,255.0)/255.0;return;}' +
-      'if(uMode==2){vec3 m=normalize(vN);if(m.z<0.0)m=-m;o=vec4(m*0.5+0.5,1.0);return;}' +
-      'if(uLight==2){o=vec4(uC,1.0);return;}vec3 n=normalize(vN);if(n.z<0.0)n=-n;vec3 c;' +
+    // four outputs: 0 depth packed in RGBA, 1 colour, 2 body number, 3 normal (towards the viewer)
+    const fs = '#version 300 es\nprecision highp float;in vec3 vN;uniform int uLight;uniform vec3 uC;uniform vec2 uId;\n' +
+      'layout(location=0) out vec4 oD;layout(location=1) out vec4 oC;layout(location=2) out vec4 oI;layout(location=3) out vec4 oN;\n' +
+      'void main(){float v=floor(gl_FragCoord.z*16777215.0);float r=floor(v/65536.0);float gg=floor((v-r*65536.0)/256.0);float b=v-r*65536.0-gg*256.0;oD=vec4(r,gg,b,255.0)/255.0;' +
+      'oI=vec4(uId,0.0,1.0);vec3 n=normalize(vN);if(n.z<0.0)n=-n;oN=vec4(n*0.5+0.5,1.0);' +
+      'if(uLight==2){oC=vec4(uC,1.0);return;}vec3 c;' +
       'if(uLight==0)c=uC*(n.z*0.72+0.28);' +
       'else{vec3 l1=normalize(vec3(-0.45,0.6,0.66)),l2=normalize(vec3(0.7,-0.3,0.62));float d1=max(dot(n,l1),0.0),d2=max(dot(n,l2),0.0);' +
       'float sp=pow(max(dot(n,normalize(l1+vec3(0.0,0.0,1.0))),0.0),48.0)*0.25;c=uC*(0.22+0.6*d1+0.2*d2+0.14*n.z)+vec3(sp);}' +
-      'o=vec4(min(c,vec3(1.0)),1.0);}';
+      'oC=vec4(min(c,vec3(1.0)),1.0);}';
     const p = g.createProgram(); g.attachShader(p, sh(g.VERTEX_SHADER, vs)); g.attachShader(p, sh(g.FRAGMENT_SHADER, fs)); g.linkProgram(p);
     if (!g.getProgramParameter(p, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(p));
-    const U = {}; ['uR', 'uU', 'uD', 'uO', 'uBox', 'uZ', 'uMode', 'uLight', 'uC'].forEach(function (n) { U[n] = g.getUniformLocation(p, n); });
+    const U = {}; ['uR', 'uU', 'uD', 'uO', 'uBox', 'uZ', 'uLight', 'uC', 'uId'].forEach(function (n) { U[n] = g.getUniformLocation(p, n); });
     v6gl = { g: g, p: p, U: U, max: Math.min(g.getParameter(g.MAX_RENDERBUFFER_SIZE), g.getParameter(g.MAX_VIEWPORT_DIMS)[0], g.getParameter(g.MAX_TEXTURE_SIZE)) };
     return v6gl;
   }
@@ -231,10 +173,11 @@
   async function v6Scene(o, sc) {
     const bodies = v6Bodies();
     if (!bodies.length) throw new Error(L('Không có body nào đang hiện', 'No visible body'));
-    const preps = [];
-    for (const b of bodies) preps.push(v6PrepCached(b, await v6Geo(b, o, sc), o));
+    const jobs = [];
+    for (const b of bodies) jobs.push(v6PrepCached(b, await v6Geo(b, o, sc), o));
+    const preps = await Promise.all(jobs);
     const alive = new Set(S.bodies.map(function (b) { return b.id; }));
-    for (const [k, e] of v6PrepC) if (!alive.has(e.p.b.id)) { v6FreeGL(e.p); v6PrepC.delete(k); }
+    for (const [k, e] of v6PrepC) if (!alive.has(e.bid)) { e.pr.then(v6FreeGL, function () { }); v6PrepC.delete(k); }
     const ax = [v6MV([1, 0, 0]), v6MV([0, 1, 0]), v6MV([0, 0, 1])];
     const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
     for (const p of preps) for (let i = 0; i < p.W.length; i += 3) for (let k = 0; k < 3; k++) {
@@ -269,90 +212,140 @@
     return [r0, r1, u0, u1];
   }
 
-  // ---------- one picture of some bodies along dirs {r,u,d} (model space), at `sc` px per mm times `ss`
-  // returns {cv, ss, pad, w, h, rc, uc}: w, h = picture size in px at sc, (rc, uc) = its centre in mm from the scene centre
-  function v6View(G, sc6, preps, D, sc, ss, lwPx, o) {
-    const g = G.g, U = G.U, r = D.r, u = D.u, d = D.d, rg = v6Ranges(preps, sc6.ctr, r, u);
-    const er = Math.max(rg[1] - rg[0], 1e-6), eu = Math.max(rg[3] - rg[2], 1e-6);
-    let s2 = ss, vw, vh, pad;
-    for (;;) {
-      pad = Math.ceil(lwPx * s2) + 3; vw = Math.max(2, Math.ceil(er * sc * s2) + 2 * pad); vh = Math.max(2, Math.ceil(eu * sc * s2) + 2 * pad);
-      if ((vw <= G.max && vh <= G.max && vw * vh <= V6_MAXVIEW) || s2 <= 1) break;
-      s2 = Math.max(1, s2 - 1);
-    }
-    if (vw > G.max || vh > G.max || vw * vh > V6_MAXVIEW) throw new Error(L('Hình chiếu quá lớn cho card đồ hoạ: giảm DPI, khổ giấy hoặc tỉ lệ', 'View too large for the graphics card: lower the DPI, paper or scale'));
-    const S2 = sc * s2;
-    let d0 = Infinity, d1 = -Infinity;
-    for (const p of preps) for (let i = 0; i < p.W.length; i += 3) { const z = (p.W[i] - sc6.ctr[0]) * d[0] + (p.W[i + 1] - sc6.ctr[1]) * d[1] + (p.W[i + 2] - sc6.ctr[2]) * d[2]; if (z < d0) d0 = z; if (z > d1) d1 = z; }
-    const dz = Math.max(d1 - d0, 1e-6); d0 -= 0.01 * dz; d1 += 0.01 * dz;
-    const R0 = rg[0] - pad / S2, U0 = rg[2] - pad / S2, box = [R0, U0, vw / S2, vh / S2];
-    // extreme points of the bodies in this view (image px): the overall dimensions start their extension lines there.
-    // L / R: lowest and highest image y of the points on the left / right extreme, T / B: smallest and largest x on the
-    // top / bottom extreme
-    const xp = (function () {
-      const c = sc6.ctr; let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-      for (const p of preps) for (let i = 0; i < p.W.length; i += 3) {
-        const x = p.W[i] - c[0], y = p.W[i + 1] - c[1], z = p.W[i + 2] - c[2];
-        const qx = (x * r[0] + y * r[1] + z * r[2] - R0) * S2, qy = vh - (x * u[0] + y * u[1] + z * u[2] - U0) * S2;
-        if (qx < x0) x0 = qx; if (qx > x1) x1 = qx; if (qy < y0) y0 = qy; if (qy > y1) y1 = qy;
-      }
-      const t = 0.002 * Math.max(x1 - x0, y1 - y0) + 0.3, X = { x0: x0, x1: x1, y0: y0, y1: y1, L: [Infinity, -Infinity], R: [Infinity, -Infinity], T: [Infinity, -Infinity], B: [Infinity, -Infinity] };
-      const mm = function (a, v) { if (v < a[0]) a[0] = v; if (v > a[1]) a[1] = v; };
-      for (const p of preps) for (let i = 0; i < p.W.length; i += 3) {
-        const x = p.W[i] - c[0], y = p.W[i + 1] - c[1], z = p.W[i + 2] - c[2];
-        const qx = (x * r[0] + y * r[1] + z * r[2] - R0) * S2, qy = vh - (x * u[0] + y * u[1] + z * u[2] - U0) * S2;
-        if (qx <= x0 + t) mm(X.L, qy); if (qx >= x1 - t) mm(X.R, qy); if (qy <= y0 + t) mm(X.T, qx); if (qy >= y1 - t) mm(X.B, qx);
-      }
-      return isFinite(x0) ? X : null;
-    })();
-    const fb = g.createFramebuffer(), cb = g.createRenderbuffer(), db = g.createRenderbuffer();
-    g.bindRenderbuffer(g.RENDERBUFFER, cb); g.renderbufferStorage(g.RENDERBUFFER, g.RGBA8, vw, vh);
-    g.bindRenderbuffer(g.RENDERBUFFER, db); g.renderbufferStorage(g.RENDERBUFFER, g.DEPTH_COMPONENT24, vw, vh);
+  // the GPU pictures of one view, drawn in one pass (multiple render targets): depth (packed in RGBA), colour, and when
+  // asked the body numbers and normals; returns raw depth (top-down, 0..1), base colour picture (top-down RGBA), body
+  // numbers per pixel (preview highlight) and, for the effects, the body-number / normal pictures left on the GPU
+  function v6Raster(G, preps, vw, vh, r, u, d, box, d0, d1, light, colOf, idm, keep) {
+    const g = G.g, U = G.U, made = [];
+    const tx = function () { const t = v6FxTex(g, vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null); made.push(t); return t; };
+    const fb = g.createFramebuffer(), db = g.createRenderbuffer(), tD = tx(), tC = tx(), tI = idm || (keep && keep.id) ? tx() : null, tN = keep && keep.n ? tx() : null;
     g.bindFramebuffer(g.FRAMEBUFFER, fb);
-    g.framebufferRenderbuffer(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.RENDERBUFFER, cb); g.framebufferRenderbuffer(g.FRAMEBUFFER, g.DEPTH_ATTACHMENT, g.RENDERBUFFER, db);
-    g.viewport(0, 0, vw, vh); g.useProgram(G.p); g.enable(g.DEPTH_TEST); g.disable(g.CULL_FACE);
-    g.uniform3fv(U.uR, r); g.uniform3fv(U.uU, u); g.uniform3fv(U.uD, d); g.uniform4fv(U.uBox, box); g.uniform2fv(U.uZ, [d0, d1 - d0]);
-    const light = o.col === 'white' ? 2 : o.light === 'studio' ? 1 : 0;
-    const draw = function (mode) {
-      g.clearColor(1, 1, 1, mode === 0 ? 1 : 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT); g.uniform1i(U.uMode, mode); g.uniform1i(U.uLight, light);
-      for (const p of preps) {
-        g.uniform3fv(U.uC, o.col === 'white' ? [1, 1, 1] : o.col === 'one' ? o.one : p.color);
-        g.uniform3fv(U.uO, p.off); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n);
-      }
-    };
+    g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, tD, 0); g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT1, g.TEXTURE_2D, tC, 0);
+    if (tI) g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT2, g.TEXTURE_2D, tI, 0);
+    if (tN) g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT3, g.TEXTURE_2D, tN, 0);
+    g.bindRenderbuffer(g.RENDERBUFFER, db); g.renderbufferStorage(g.RENDERBUFFER, g.DEPTH_COMPONENT24, vw, vh);
+    g.framebufferRenderbuffer(g.FRAMEBUFFER, g.DEPTH_ATTACHMENT, g.RENDERBUFFER, db);
+    g.drawBuffers([g.COLOR_ATTACHMENT0, g.COLOR_ATTACHMENT1, tI ? g.COLOR_ATTACHMENT2 : g.NONE, tN ? g.COLOR_ATTACHMENT3 : g.NONE]);
+    g.viewport(0, 0, vw, vh); g.useProgram(G.p); g.enable(g.DEPTH_TEST); g.disable(g.CULL_FACE); g.disable(g.SCISSOR_TEST); g.disable(g.BLEND);
+    g.clearBufferfv(g.COLOR, 0, [1, 1, 1, 1]); g.clearBufferfv(g.COLOR, 1, [1, 1, 1, 0]);
+    if (tI) g.clearBufferfv(g.COLOR, 2, [0, 0, 0, 0]);
+    if (tN) g.clearBufferfv(g.COLOR, 3, [0, 0, 0, 0]);
+    g.clearBufferfv(g.DEPTH, 0, [1]);
+    g.uniform3fv(U.uR, r); g.uniform3fv(U.uU, u); g.uniform3fv(U.uD, d); g.uniform4fv(U.uBox, box); g.uniform2fv(U.uZ, [d0, d1 - d0]); g.uniform1i(U.uLight, light);
+    preps.forEach(function (p, i) {
+      const k = i + 1;
+      g.uniform3fv(U.uC, colOf(p)); g.uniform2fv(U.uId, [(k & 255) / 255, ((k >> 8) & 255) / 255]);
+      g.uniform3fv(U.uO, p.off); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n);
+    });
+    g.bindVertexArray(null);
     const px = new Uint8Array(vw * vh * 4);
-    draw(0); g.readPixels(0, 0, vw, vh, g.RGBA, g.UNSIGNED_BYTE, px);
+    g.readBuffer(g.COLOR_ATTACHMENT0); g.readPixels(0, 0, vw, vh, g.RGBA, g.UNSIGNED_BYTE, px);
     const raw = new Float32Array(vw * vh);
     for (let y = 0; y < vh; y++) { const ro = (vh - 1 - y) * vw * 4, wo = y * vw; for (let x = 0; x < vw; x++) { const k = ro + 4 * x; raw[wo + x] = (px[k] * 65536 + px[k + 1] * 256 + px[k + 2]) / 16777215; } }
-    const fill = new ImageData(vw, vh);
-    draw(1); g.readPixels(0, 0, vw, vh, g.RGBA, g.UNSIGNED_BYTE, px);
-    for (let y = 0; y < vh; y++) { const ro = (vh - 1 - y) * vw * 4; fill.data.set(px.subarray(ro, ro + 4 * vw), y * vw * 4); }
-    // preview: which body each pixel shows (flat colour = body number), so a body picked in a list lights up without a
-    // new render (v6HlMask)
+    const base = new Uint8ClampedArray(vw * vh * 4);
+    g.readBuffer(g.COLOR_ATTACHMENT1); g.readPixels(0, 0, vw, vh, g.RGBA, g.UNSIGNED_BYTE, px);
+    for (let y = 0; y < vh; y++) { const ro = (vh - 1 - y) * vw * 4; base.set(px.subarray(ro, ro + 4 * vw), y * vw * 4); }
+    // preview: which body each pixel shows, so a body picked in a list lights up without a new render (v6HlMask)
     let ids = null;
-    if (o.idm) {
-      g.clearColor(0, 0, 0, 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT); g.uniform1i(U.uMode, 1); g.uniform1i(U.uLight, 2);
-      preps.forEach(function (p, i) { const k = i + 1; g.uniform3fv(U.uC, [(k & 255) / 255, ((k >> 8) & 255) / 255, 0]); g.uniform3fv(U.uO, p.off); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n); });
-      g.readPixels(0, 0, vw, vh, g.RGBA, g.UNSIGNED_BYTE, px);
+    if (idm) {
+      g.readBuffer(g.COLOR_ATTACHMENT2); g.readPixels(0, 0, vw, vh, g.RGBA, g.UNSIGNED_BYTE, px);
       ids = new Uint16Array(vw * vh);
       for (let y = 0; y < vh; y++) { const ro = (vh - 1 - y) * vw * 4, wo = y * vw; for (let x = 0; x < vw; x++) { const k = ro + 4 * x; ids[wo + x] = px[k] | (px[k + 1] << 8); } }
     }
-    g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(fb); g.deleteRenderbuffer(cb); g.deleteRenderbuffer(db);
-    // effects (Effects tab): the bodies drawn again into GPU pictures (body numbers, normals) for the effect passes
-    if (o.fx && v6FxOn(o.fx)) {
-      const rtDraw = function (mode, lt, colOf) {
-        const t = v6FxTex(g, vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null), f = g.createFramebuffer(), d2 = g.createRenderbuffer();
-        g.bindRenderbuffer(g.RENDERBUFFER, d2); g.renderbufferStorage(g.RENDERBUFFER, g.DEPTH_COMPONENT24, vw, vh);
-        g.bindFramebuffer(g.FRAMEBUFFER, f); g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, t, 0); g.framebufferRenderbuffer(g.FRAMEBUFFER, g.DEPTH_ATTACHMENT, g.RENDERBUFFER, d2);
-        g.viewport(0, 0, vw, vh); g.useProgram(G.p); g.enable(g.DEPTH_TEST); g.clearColor(0, 0, 0, 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT);
-        g.uniform1i(U.uMode, mode); g.uniform1i(U.uLight, lt);
-        preps.forEach(function (p, i) { if (colOf) g.uniform3fv(U.uC, colOf(i)); g.uniform3fv(U.uO, p.off); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n); });
-        g.bindVertexArray(null); g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(f); g.deleteRenderbuffer(d2);
-        return t;
-      };
-      const fo = v6Fx(G, { vw: vw, vh: vh, raw: raw, rgba: new Uint8Array(fill.data.buffer), dr: d1 - d0, S2: S2, ppx: (o.ppk || 1) * s2, draw: rtDraw, nb: preps.length }, o.fx);
-      if (fo) fill.data.set(fo);
+    g.readBuffer(g.COLOR_ATTACHMENT0);
+    g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(fb); g.deleteRenderbuffer(db);
+    g.deleteTexture(tD); g.deleteTexture(tC);
+    const E = { raw: raw, base: base, ids: ids, tId: keep && keep.id ? tI : null, tN: tN, tex: [] };
+    if (tI && !E.tId) g.deleteTexture(tI); else if (tI) E.tex.push(tI);
+    if (tN) E.tex.push(tN);
+    return E;
+  }
+  function v6VcFree(E) {
+    if (!E) return;
+    if (E.g && !E.g.isContextLost()) for (const t of E.tex) E.g.deleteTexture(t);
+    E.tex = []; E.tId = E.tN = null;
+  }
+  // a view no longer on the sheet (or all, when the drawing or its bodies changed)
+  function v6VcDrop(keepSlots) {
+    for (const [k, E] of V6S.vc) if (!keepSlots || !keepSlots.has(k)) { v6VcFree(E); V6S.vc.delete(k); }
+    for (const k of Array.from(V6S.vg.keys())) if (!keepSlots || !keepSlots.has(k)) V6S.vg.delete(k);
+  }
+
+  // ---------- one picture of some bodies along dirs {r,u,d} (model space), at `sc` px per mm times `ss`
+  // returns {cv, ss, pad, w, h, rc, uc}: w, h = picture size in px at sc, (rc, uc) = its centre in mm from the scene centre
+  function v6View(G, sc6, preps, D, sc, ss, lwPx, o) {
+    const g = G.g, U = G.U, r = D.r, u = D.u, d = D.d;
+    // size, depth range and extreme points of the view: kept with the view's slot while bodies, direction and size stay
+    const gk = o.slot ? [preps.map(function (p) { return p.pid + ':' + p.off.join(','); }).join(';'), r.join(), u.join(), d.join(), sc, ss, lwPx, G.max, sc6.ctr.join()].join('|') : null;
+    const gc = gk && V6S.vg.get(o.slot);
+    const GV = gc && gc.gk === gk ? gc : (function () {
+      const rg = v6Ranges(preps, sc6.ctr, r, u);
+      const er = Math.max(rg[1] - rg[0], 1e-6), eu = Math.max(rg[3] - rg[2], 1e-6);
+      let s2 = ss, vw, vh, pad;
+      for (;;) {
+        pad = Math.ceil(lwPx * s2) + 3; if (o.slot) pad = 8 * Math.ceil(pad / 8);   // preview: a thicker line keeps the pictures
+        vw = Math.max(2, Math.ceil(er * sc * s2) + 2 * pad); vh = Math.max(2, Math.ceil(eu * sc * s2) + 2 * pad);
+        if ((vw <= G.max && vh <= G.max && vw * vh <= V6_MAXVIEW) || s2 <= 1) break;
+        s2 = Math.max(1, s2 - 1);
+      }
+      if (vw > G.max || vh > G.max || vw * vh > V6_MAXVIEW) throw new Error(L('Hình chiếu quá lớn cho card đồ hoạ: giảm DPI, khổ giấy hoặc tỉ lệ', 'View too large for the graphics card: lower the DPI, paper or scale'));
+      const S2 = sc * s2;
+      let d0 = Infinity, d1 = -Infinity;
+      for (const p of preps) for (let i = 0; i < p.W.length; i += 3) { const z = (p.W[i] - sc6.ctr[0]) * d[0] + (p.W[i + 1] - sc6.ctr[1]) * d[1] + (p.W[i + 2] - sc6.ctr[2]) * d[2]; if (z < d0) d0 = z; if (z > d1) d1 = z; }
+      const dz = Math.max(d1 - d0, 1e-6); d0 -= 0.01 * dz; d1 += 0.01 * dz;
+      const R0 = rg[0] - pad / S2, U0 = rg[2] - pad / S2, box = [R0, U0, vw / S2, vh / S2];
+      // extreme points of the bodies in this view (image px): the overall dimensions start their extension lines there.
+      // L / R: lowest and highest image y of the points on the left / right extreme, T / B: smallest and largest x on the
+      // top / bottom extreme
+      const xp = (function () {
+        const c = sc6.ctr; let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+        for (const p of preps) for (let i = 0; i < p.W.length; i += 3) {
+          const x = p.W[i] - c[0], y = p.W[i + 1] - c[1], z = p.W[i + 2] - c[2];
+          const qx = (x * r[0] + y * r[1] + z * r[2] - R0) * S2, qy = vh - (x * u[0] + y * u[1] + z * u[2] - U0) * S2;
+          if (qx < x0) x0 = qx; if (qx > x1) x1 = qx; if (qy < y0) y0 = qy; if (qy > y1) y1 = qy;
+        }
+        const t = 0.002 * Math.max(x1 - x0, y1 - y0) + 0.3, X = { x0: x0, x1: x1, y0: y0, y1: y1, L: [Infinity, -Infinity], R: [Infinity, -Infinity], T: [Infinity, -Infinity], B: [Infinity, -Infinity] };
+        const mm = function (a, v) { if (v < a[0]) a[0] = v; if (v > a[1]) a[1] = v; };
+        for (const p of preps) for (let i = 0; i < p.W.length; i += 3) {
+          const x = p.W[i] - c[0], y = p.W[i + 1] - c[1], z = p.W[i + 2] - c[2];
+          const qx = (x * r[0] + y * r[1] + z * r[2] - R0) * S2, qy = vh - (x * u[0] + y * u[1] + z * u[2] - U0) * S2;
+          if (qx <= x0 + t) mm(X.L, qy); if (qx >= x1 - t) mm(X.R, qy); if (qy <= y0 + t) mm(X.T, qx); if (qy >= y1 - t) mm(X.B, qx);
+        }
+        return isFinite(x0) ? X : null;
+      })();
+      return { gk: gk, rg: rg, er: er, eu: eu, s2: s2, vw: vw, vh: vh, pad: pad, S2: S2, d0: d0, d1: d1, R0: R0, U0: U0, box: box, xp: xp };
+    })();
+    if (gk) V6S.vg.set(o.slot, GV);
+    const rg = GV.rg, er = GV.er, eu = GV.eu, s2 = GV.s2, vw = GV.vw, vh = GV.vh, pad = GV.pad, S2 = GV.S2, d0 = GV.d0, d1 = GV.d1, R0 = GV.R0, U0 = GV.U0, box = GV.box, xp = GV.xp;
+    // one pass over the geometry draws four pictures at once (depth, colour, body number, normal); the preview keeps
+    // the pictures of each view (V6S.vc, by slot) and only redraws what a changed setting needs: the GPU pictures when
+    // the bodies, direction or size changed, the effects when an effect setting changed, the lines when a line setting did
+    const light = o.col === 'white' ? 2 : o.light === 'studio' ? 1 : 0, fxOn = !!(o.fx && v6FxOn(o.fx));
+    const needN = fxOn && (o.fx.ss > 0 || o.fx.cs > 0), needT = fxOn && !!o.fx.id && preps.length > 1, needId = !!o.idm || needT;
+    const colOf = function (p) { return o.col === 'white' ? [1, 1, 1] : o.col === 'one' ? o.one : p.color; };
+    const rk = [preps.map(function (p) { return p.pid + ':' + p.off.join(',') + ':' + colOf(p).join(','); }).join(';'), r.join(), u.join(), d.join(), S2, vw, vh, R0, U0, d0, d1, light, !!o.idm, needT, needN].join('|');
+    let E = o.slot ? V6S.vc.get(o.slot) : null;
+    if (E && (E.rk !== rk || E.g !== g)) { v6VcFree(E); E = null; }
+    if (!E) {
+      E = v6Raster(G, preps, vw, vh, r, u, d, box, d0, d1, light, colOf, o.idm, needT || needN ? { id: needT, n: needN } : null);
+      E.rk = rk; E.g = g;
+      if (o.slot) V6S.vc.set(o.slot, E);
     }
+    const raw = E.raw, ids = E.ids;
+    // effects (Effects tab) on the depth / colour / body-number / normal pictures
+    const fk = fxOn ? JSON.stringify(o.fx) + '|' + (o.ppk || 1) * s2 + '|' + S2 : '';
+    if (E.fk !== fk || !E.fxd) {
+      let fd = E.base;
+      if (fxOn) {
+        const fo = v6Fx(G, { vw: vw, vh: vh, raw: raw, rgba: new Uint8Array(E.base.buffer), dr: d1 - d0, S2: S2, ppx: (o.ppk || 1) * s2, tId: E.tId, tN: E.tN, nb: preps.length }, o.fx);
+        if (fo) fd = new Uint8ClampedArray(fo.buffer);
+      }
+      E.fk = fk; E.fxd = fd; E.ek = null; E.out = null;
+    }
+    if (!o.slot) v6VcFree(E);
+    const ek = [o.edge, o.col === 'white', !!o.snap, !!o.vec, !!o.hidden, lwPx * s2, o.slot ? preps.map(function (p) { return p.b.uid; }).join() : ''].join('|');
+    if (E.out && E.ek === ek) return E.out;
+    const fill = new ImageData(E.fxd, vw, vh);
     const cv = document.createElement('canvas'); cv.width = vw; cv.height = vh;
     const c2 = cv.getContext('2d'); c2.putImageData(fill, 0, 0);
     const map = { R0: R0, U0: U0, S2: S2, vh: vh, ctr: sc6.ctr, D: D, ids: ids, uids: ids ? preps.map(function (p) { return p.b.uid; }) : null };
@@ -407,7 +400,9 @@
         c2.strokeStyle = '#111111'; c2.lineWidth = lw; c2.stroke(vis);
       }
     }
-    return { cv: cv, ss: s2, pad: pad, w: er * sc, h: eu * sc, rc: (rg[0] + rg[1]) / 2, uc: (rg[2] + rg[3]) / 2, map: map, vec: vec, snaps: snaps, xp: xp };
+    const out = { cv: cv, ss: s2, pad: pad, w: er * sc, h: eu * sc, rc: (rg[0] + rg[1]) / 2, uc: (rg[2] + rg[3]) / 2, map: map, vec: vec, snaps: snaps, xp: xp };
+    if (o.slot) { E.ek = ek; E.out = out; }
+    return out;
   }
 
   // ---------- layout (full-size sheet px; positions are fractions of the sheet, item centres)
@@ -466,23 +461,71 @@
   async function v6Render(o, k, ss, quick) {
     if (!o.exp && !v6Names(o).length && !o.iso) throw new Error(L('Chưa chọn view nào', 'No view chosen'));
     let sc6 = await v6Scene(o, 0);
+    if (quick) await quick.tick();
     let plan = o.exp ? v6ExpPlan(o, sc6) : null;
     const sc = v6ScaleOf(o, sc6, plan);
     if (o.fine && k >= 1 && !quick) { sc6 = await v6Scene(o, sc); if (o.exp) plan = v6ExpPlan(o, sc6); }
     const M = v6Metrics(o), G = v6GL(); v6Upload(G, sc6);
     const out = { sc6: sc6, sc: sc, views: {}, parts: [], plan: plan, isoK: o.isoK };
     const oi = Object.assign({}, o, { idm: !!quick, ppk: M.ppmm * k });      // preview: body-number pixels for the highlight
+    // the preview keeps each view's pictures under a slot name and gives the page a moment between views (a newer
+    // setting stops this render there: quick.tick throws)
+    const at = function (op, slot) { return quick ? Object.assign({}, op, { slot: slot }) : op; }, used = new Set();
+    const mark = function (v, slot, ik) { v.sc = sc; v.k = k; v.ik = ik || 0; used.add(slot); return v; };
     try {
       if (o.exp) {
-        for (const it of plan.items) out.parts.push(Object.assign(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, oi), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
+        for (const it of plan.items) {
+          const sl = 'p:' + it.id;
+          out.parts.push(Object.assign(mark(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, at(oi, sl)), sl), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
+          if (quick) await quick.tick(out);
+        }
       } else {
         const ap = v6Auto(o, sc6.ext, sc).pos; out.pos = V6S.pos ? Object.assign({}, ap, V6S.pos) : ap;
         const os = Object.assign({}, oi, { snap: true });
-        for (const n of v6Names(o)) out.views[n] = v6View(G, sc6, sc6.preps, v6Dirs(V6_VIEWS[n]), sc * k, ss, M.lw * k, os);
-        if (o.iso) out.iso = v6View(G, sc6, sc6.preps, v6Dirs(v6IsoSpec(o.az, o.el)), sc * k * o.isoK, ss, M.lw * k * Math.min(1, o.isoK), oi);
+        // the view the eye goes to first (front), then the others; the iso view last
+        const names = v6Names(o).slice().sort(function (a, b) { return (a === 'front' ? 0 : 1) - (b === 'front' ? 0 : 1); });
+        for (const n of names) { out.views[n] = mark(v6View(G, sc6, sc6.preps, v6Dirs(V6_VIEWS[n]), sc * k, ss, M.lw * k, at(os, 'v:' + n)), 'v:' + n); if (quick) await quick.tick(out); }
+        if (o.iso) out.iso = mark(v6View(G, sc6, sc6.preps, v6Dirs(v6IsoSpec(o.az, o.el)), sc * k * o.isoK, ss, M.lw * k * Math.min(1, o.isoK), at(oi, 'iso')), 'iso', o.isoK);
+        const v2 = {}; for (const n of v6Names(o)) v2[n] = out.views[n]; out.views = v2;       // keep the usual order
       }
     } finally { v6Release(G, sc6); }
+    if (quick) v6VcDrop(used);
     return out;
+  }
+  const V6_STALE = { stale: true };
+  const v6Yield = function () { return new Promise(function (r) { setTimeout(r, 0); }); };
+  // a sheet made of the newest pictures where there are some and the last preview's pictures elsewhere (scaled by put()
+  // in v6Compose when the scale changed): shown at once while a setting is changed and while the new pictures come in
+  function v6Mix(R, old, o, k) {
+    if (!old || !old.o || old.o.exp !== o.exp || !old.sc6 || !R.sc6) return null;
+    const ids = function (sc6) { return sc6.preps.map(function (p) { return p.b.id; }).join(); };
+    if (ids(old.sc6) !== ids(R.sc6)) return null;
+    const M = Object.assign({}, R, { o: o, k: k, mix: true });
+    if (!o.exp) {
+      M.views = {};
+      for (const n of v6Names(o)) { const v = R.views[n] || old.views[n]; if (v) M.views[n] = v; }
+      M.iso = R.iso || (o.iso ? old.iso : null);
+      if (!M.iso) delete M.iso;
+    } else {
+      const have = new Map(R.parts.map(function (p) { return [p.id, p]; })), was = new Map((old.parts || []).map(function (p) { return [p.id, p]; }));
+      M.parts = [];
+      for (const it of (R.plan ? R.plan.items : [])) {
+        const p = have.get(it.id) || (was.get(it.id) && Object.assign({}, was.get(it.id), { n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
+        if (p) M.parts.push(p);
+      }
+    }
+    return M;
+  }
+  // the sheet for new settings from the last preview's pictures, without any rendering (layout, scale, part places)
+  function v6Interim(o) {
+    const old = V6S.prev;
+    if (!old || !old.sc6 || old.mix === 'err') return null;
+    try {
+      const sc6 = old.sc6, plan = o.exp ? v6ExpPlan(o, sc6) : null, sc = v6ScaleOf(o, sc6, plan);
+      const R = { sc6: sc6, sc: sc, views: {}, parts: [], plan: plan, isoK: o.isoK };
+      if (!o.exp) { const ap = v6Auto(o, sc6.ext, sc).pos; R.pos = V6S.pos ? Object.assign({}, ap, V6S.pos) : ap; }
+      return v6Mix(R, old, o, old.k);
+    } catch (e) { return null; }
   }
 
   // ---------- the sheet: pictures, dimensions, names, notes, drawn at k x full size; returns hit boxes
@@ -512,6 +555,7 @@
     c2.imageSmoothingEnabled = true; c2.imageSmoothingQuality = 'high';
     const put = function (v, cx, cy, f) {
       f = f || 1;
+      if (v.sc && v.k) f *= (R.sc * k) / (v.sc * v.k) * (v.ik ? (R.isoK || 1) / v.ik : 1);   // a picture made for another scale
       const w = v.w * f, h = v.h * f, x = cx - w / 2, y = cy - h / 2, pad = v.pad / v.ss * f;
       c2.drawImage(v.cv, x - pad, y - pad, v.cv.width / v.ss * f, v.cv.height / v.ss * f);
       if (V6S.hl && R === V6S.prev) { const m = v6HlMask(v, V6S.hl); if (m) c2.drawImage(m, x - pad, y - pad, v.cv.width / v.ss * f, v.cv.height / v.ss * f); }
@@ -1046,8 +1090,25 @@
   }
 
   // ---------- preview
-  let v6Timer = 0, v6Busy = false, v6Again = false;
-  function v6Preview() { clearTimeout(v6Timer); v6Timer = setTimeout(v6PreviewNow, 180); }
+  // Every change shows at once: the sheet is laid out again from the pictures already made (v6Interim, next frame).
+  // The new pictures follow a moment later (v6PreviewNow): only the parts a setting changed are redrawn (see v6View), the
+  // page gets a turn between views, a render overtaken by a newer setting stops at the next view, and the views that
+  // are ready are shown while the others are still coming (v6Mix).
+  let v6Timer = 0, v6Busy = false, v6Again = false, v6IRaf = 0, v6EstT = 0, v6Wait0 = 0;
+  function v6Preview() {
+    V6S.gen++;
+    // a short pause starts the render; a slider dragged on and on still gets one every quarter second
+    const now = performance.now(); if (!v6Wait0) v6Wait0 = now;
+    clearTimeout(v6Timer); v6Timer = setTimeout(function () { v6Wait0 = 0; v6PreviewNow(); }, now - v6Wait0 > 250 ? 0 : 90);
+    clearTimeout(v6EstT);
+    if (v6Act && !v6IRaf && V6S.prev) v6IRaf = requestAnimationFrame(function () {
+      v6IRaf = 0;
+      const o = v6Sync(), P = V6S.prev;
+      if (!P || !P.o || JSON.stringify(P.o) === JSON.stringify(o)) return;      // nothing on the sheet changed (zoom, reopen)
+      const M = v6Interim(o);
+      if (M) { V6S.prev = M; v6Paint(); }
+    });
+  }
   // the sheet window is a viewport: the sheet sits at V6S.vz x the fitting size, shifted by V6S.vp (css px); zoom and pan only
   // repaint the pictures already rendered (scaled), a new render is made later and only when the zoom changed a lot
   function v6Layout(o) {
@@ -1065,21 +1126,45 @@
     if (!v6Act) return;
     if (v6Busy) { v6Again = true; return; }
     v6Busy = true;
-    const o = v6Sync(), pc = $('v6Prev');
+    const o = v6Sync(), pc = $('v6Prev'), gen = V6S.gen;
     try {
-      const L = v6Layout(o), k = v6WantK(o, L, V6S.vz > 1.05 ? V6S.kx || 1 : 1), big = o.W * o.H * k * k;
-      V6S.prev = Object.assign(await v6Render(o, k, big > 3e6 ? 1 : Math.min(2, o.ss), true), { o: o, k: k });
-      v6Paint();
-      $('v6Zoom').textContent = o.W + ' × ' + o.H + ' px';
-      // expected size: a small copy of the sheet encoded the same way, scaled up by area (larger pictures compress better)
-      if (big <= 2.5e6 || !V6S.est) {
-        v6Info(o, V6S.prev, V6S.est);
-        const b = await new Promise(function (r) { v6Sheet(o, V6S.prev, k).toBlob(r, o.fmt === 'jpg' ? 'image/jpeg' : 'image/png', o.q); });
-        V6S.est = b.size * Math.pow(1 / (k * k), 0.76) + 2048;
+      const L = v6Layout(o), k = v6WantK(o, L, V6S.vz > 1.05 ? V6S.kx || 1 : 1), big = o.W * o.H * k * k, old = V6S.prev;
+      let shown = performance.now(), views = 0;
+      const quick = { tick: async function (part) {
+        await v6Yield();
+        if (!v6Act) throw V6_STALE;
+        // settings changed before any view was drawn: start again with them. Once views come in, this render is finished
+        // (shown as it goes) and the next one follows at once: the sheet keeps changing while a slider is dragged
+        if (V6S.gen !== gen && !views) throw V6_STALE;
+        if (part) views++;
+        if (part && V6S.gen === gen && performance.now() - shown > 120) {          // show the views that are ready
+          const M = v6Mix(part, old && old.mix === 'err' ? null : old, o, k);
+          if (M) { V6S.prev = M; v6Paint(); shown = performance.now(); }
+        }
+      } };
+      V6S.prev = Object.assign(await v6Render(o, k, big > 3e6 ? 1 : Math.min(2, o.ss), quick), { o: o, k: k });
+      if (V6S.gen !== gen) {          // settings moved on meanwhile: show the new pictures laid out for the newest settings
+        const M = v6Interim(v6Sync()); if (M) V6S.prev = M;
       }
+      v6Paint(); V6S.nprev = (V6S.nprev || 0) + 1;      // finished previews (tests)
+      $('v6Zoom').textContent = o.W + ' × ' + o.H + ' px';
       V6S.prev.k = k;
       v6Info(o, V6S.prev, V6S.est);
+      // expected size: a small copy of the sheet encoded the same way, scaled up by area (larger pictures compress better);
+      // encoded once the settings rest (encoding takes a while and changes nothing on screen)
+      if (big <= 2.5e6 || !V6S.est) {
+        const P0 = V6S.prev;
+        clearTimeout(v6EstT);
+        v6EstT = setTimeout(async function () {
+          if (V6S.prev !== P0 || V6S.gen !== gen || !v6Act) return;
+          const b = await new Promise(function (r) { v6Sheet(o, P0, k).toBlob(r, o.fmt === 'jpg' ? 'image/jpeg' : 'image/png', o.q); });
+          if (V6S.prev !== P0 || !b) return;
+          V6S.est = b.size * Math.pow(1 / (k * k), 0.76) + 2048;
+          v6Info(o, P0, V6S.est);
+        }, V6S.est ? 700 : 0);
+      }
     } catch (e) {
+      if (e === V6_STALE) return;     // a newer setting came in: the next render starts below
       const g = pc.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#fff'; g.fillRect(0, 0, pc.width, pc.height); g.fillStyle = '#a33'; g.font = '13px sans-serif'; g.fillText(e.message, 10, 22);
       V6S.prev = null; v6Info(o, null, 0);
     } finally { v6Busy = false; if (v6Again) { v6Again = false; v6Preview(); } }
@@ -1595,7 +1680,7 @@
     v6Act = !!on;
     $('pop_v6').classList.toggle('on', v6Act); $('v6Sheet').classList.toggle('on', v6Act);
     if (!v6Act && V6S.edit) v6EditDone(false);
-    if (!v6Act) V6S.comb = null;
+    if (!v6Act) { V6S.comb = null; v6VcDrop(); }        // the kept view pictures go with the closed sheet
     if (v6Act) v6Preview();
   }
 

@@ -35,14 +35,16 @@ with sync_playwright() as p:
     # ---- defaults
     ok('Defaults: line 0.01 mm, text 5 mm, 300 dpi',pg.evaluate("['v6Lw','v6Fs','v6Dpi'].map(i=>document.getElementById(i).value)")==['0.01','5','300'])
     # ---- smooth preview
-    pg.evaluate("""(()=>{window.__rn=0;const V=__mrt.v6();let p=V.prev;Object.defineProperty(V,'prev',{configurable:true,get(){return p},set(v){if(v&&v!==p)window.__rn++;p=v}});})()""")
+    # renders finished while zooming (v1.4.0: the sheet object is also replaced while a render shows its first views, so
+    # finished renders are counted, not changes of the preview object)
+    pg.evaluate("window.__rn0=__mrt.v6().nprev||0")
     box=pg.locator('#v6Prev').bounding_box(); cx=box['x']+box['width']*0.45; cy=box['y']+box['height']*0.5
     pg.mouse.move(cx,cy)
     for i in range(6):
         for j in range(4): pg.mouse.wheel(0,-120); pg.wait_for_timeout(30)
         pg.wait_for_timeout(600)
     settle()
-    rn=pg.evaluate("window.__rn"); vz=pg.evaluate("__mrt.v6().vz")
+    rn=pg.evaluate("(__mrt.v6().nprev||0)-window.__rn0"); vz=pg.evaluate("__mrt.v6().vz")
     ok('Zooming in ~8x needs only a few new renders',vz>5 and rn<=4,[vz,rn])
     t=pg.evaluate("""()=>{const pc=document.getElementById('v6Prev'),R=pc.getBoundingClientRect();const t0=performance.now();for(let i=0;i<30;i++)pc.dispatchEvent(new WheelEvent('wheel',{deltaY:i%2?40:-40,clientX:R.left+R.width/2,clientY:R.top+R.height/2,bubbles:true,cancelable:true}));return performance.now()-t0}""")
     ok('Wheel events return at once (painting waits for the next frame)',t<60,t)
