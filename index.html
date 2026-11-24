@@ -545,6 +545,35 @@ button.primary:hover:not(:disabled), button.on:hover:not(:disabled) {
   #dwsRibbon .dwsRow.sel2 select { max-width: 62px; }
   #dwsRibbon .rgrp.dwsTypeG { margin-left: auto; }
   #dwsRibbon .dwsType small { display: block; font-size: 9.5px; color: var(--accent); white-space: nowrap; }
+
+  /* Effects tab: ZBrush-style sub-palettes, sliders and light ball */
+  #dwsRibbon .rpage.zbp { background: #2b2b2b; }
+  #dwsRibbon .zrow { display: flex; gap: 4px; padding: 4px; align-items: stretch; }
+  #dwsRibbon .zpal { display: flex; flex-direction: column; width: 172px; background: #383838; border: 1px solid #1d1d1d; border-radius: 3px; box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
+  #dwsRibbon .zpal.zwide { width: 262px; }
+  #dwsRibbon .zph { display: flex; align-items: center; gap: 6px; height: 17px; padding: 0 6px; background: linear-gradient(#4c4c4c, #3d3d3d); border-bottom: 1px solid #1d1d1d; border-radius: 3px 3px 0 0;
+    font: 600 11px "Segoe UI", Arial, sans-serif; color: #d9d9d9; letter-spacing: .3px; white-space: nowrap; }
+  #dwsRibbon .zpal.off .zph { color: #8e8e8e; }
+  #dwsRibbon .zpal.off .zbs .zf { background: linear-gradient(#4b4b4b, #424242); }
+  #dwsRibbon .zpb { display: flex; flex-direction: column; gap: 2px; padding: 3px 5px 4px; }
+  #dwsRibbon .zon { width: 24px; height: 12px; min-width: 0; padding: 0; margin: 0; border-radius: 6px; background: #1c1c1c; border: 1px solid #0e0e0e; position: relative; cursor: pointer; box-shadow: inset 0 1px 2px rgba(0,0,0,.6); }
+  #dwsRibbon .zon::after { content: ""; position: absolute; top: 1px; left: 1px; width: 8px; height: 8px; border-radius: 50%; background: #7a7a7a; }
+  #dwsRibbon .zon.on { background: #d9761e; border-color: #7a3c06; }
+  #dwsRibbon .zon.on::after { left: 13px; background: #fff3e2; }
+  #dwsRibbon .zbs { position: relative; height: 17px; background: #1e1e1e; border: 1px solid #111; border-radius: 3px; overflow: hidden; cursor: ew-resize; user-select: none; outline: none;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.7); }
+  #dwsRibbon .zbs .zf { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(#6e6e6e, #585858); }
+  #dwsRibbon .zbs i { position: absolute; top: 0; bottom: 0; width: 2px; background: #f08a24; }
+  #dwsRibbon .zbs:hover .zf, #dwsRibbon .zbs:focus .zf { background: linear-gradient(#7c7c7c, #646464); }
+  #dwsRibbon .zbs.drag .zf { background: linear-gradient(#8a6a4a, #6e533a); }
+  #dwsRibbon .zbs .zl, #dwsRibbon .zbs .zv { position: absolute; top: 0; line-height: 15px; font: 11px "Segoe UI", Arial, sans-serif; color: #ececec; text-shadow: 0 1px 1px #000; pointer-events: none; }
+  #dwsRibbon .zbs .zl { left: 7px; } #dwsRibbon .zbs .zv { right: 7px; font-weight: 600; }
+  #dwsRibbon .zbs .zin { position: absolute; right: 0; top: 0; bottom: 0; width: 64px; height: 15px; padding: 0 4px; font-size: 11px; background: #111; color: #fff; border: 1px solid #f08a24; border-radius: 0 3px 3px 0; }
+  #dwsRibbon .zlr { display: flex; gap: 6px; align-items: center; }
+  #dwsRibbon .zball { width: 53px; height: 53px; flex: none; cursor: crosshair; border-radius: 50%; background: radial-gradient(circle, #262626 60%, #1b1b1b); }
+  #dwsRibbon .zcol { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  #dwsRibbon .zsw { display: flex; align-items: center; gap: 6px; height: 17px; font: 11px "Segoe UI", Arial, sans-serif; color: #cfcfcf; padding-left: 2px; }
+  #dwsRibbon .zsw input[type=color] { width: 30px; height: 17px; }
 </style>
 
 </head>
@@ -864,6 +893,7 @@ button.primary:hover:not(:disabled), button.on:hover:not(:disabled) {
     <div class="row v6isok"><span class="lbl" data-en="Iso size" title="Cỡ hình iso so với các view (kéo góc hình iso trên bản vẽ cũng được)" data-en-title="Size of the iso picture against the views (or drag its corner on the sheet)">Cỡ iso</span><input type="range" id="v6IsoKR" min="10" max="500" step="1" value="100" style="width:70px"><input type="number" id="v6IsoK" class="s" value="100" min="10" max="500" step="1"><span class="unit">%</span></div>
     <div class="row v6mE"><span class="lbl" data-en="Spread" title="Mức tách các linh kiện ra khỏi tâm cụm" data-en-title="How far the parts move out from the centre of the assembly">Độ tách</span><input type="range" id="v6ExR" min="0" max="300" step="5" value="0" style="width:70px"><input type="number" id="v6Ex" class="s" value="0" min="0" max="300" step="5"><span class="unit">%</span></div>
     <div class="row v6mE"><label><input type="checkbox" id="v6PN" checked> <span data-en="Part names">Tên linh kiện</span></label><label><input type="checkbox" id="v6PM" checked> <span data-en="Material + mass">Vật liệu + khối lượng</span></label><label title="Tổng khối lượng theo từng vật liệu, mặc định ở góc dưới phải (kéo để dời)" data-en-title="Total mass per material, bottom right by default (drag to move)"><input type="checkbox" id="v6Tot" checked> <span data-en="Totals">Tổng khối lượng</span></label></div>
+    <div class="row v6mE"><span class="lbl" data-en="Part turn">Xoay linh kiện</span><input type="range" id="v6PtR" min="-180" max="180" step="1" value="0" style="width:56px"><input type="number" id="v6Pt" class="s" value="0" min="-180" max="180" step="1"><input type="range" id="v6PiR" min="-180" max="180" step="1" value="0" style="width:56px"><input type="number" id="v6Pi" class="s" value="0" min="-180" max="180" step="1"><input type="range" id="v6PlR" min="-180" max="180" step="1" value="0" style="width:56px"><input type="number" id="v6Pl" class="s" value="0" min="-180" max="180" step="1"><span class="unit">°</span></div>
     <div class="row v6mE v6part"><span class="lbl" data-en="Part">Linh kiện</span><input type="text" id="v6PName" style="width:110px" title="Đổi tên body (cập nhật cây body)" data-en-title="Rename the body (updates the body list)"><select id="v6PMat" title="Vật liệu của body" data-en-title="Material of the body"></select><span class="unit" id="v6PMass"></span></div>
     <div class="row"><span class="lbl" data-en="Colour">Màu</span><select id="v6Col"><option value="view" data-en="As the 3D view">Như 3D view</option><option value="one" data-en="One colour" selected>Một màu</option><option value="white" data-en="White (drawing)">Trắng (nét vẽ)</option></select><input type="color" id="v6One" value="#999ea3" title="Màu cho toàn bộ mô hình" data-en-title="Colour for the whole model"><span class="lbl" data-en="Light">Sáng</span><select id="v6Light"><option value="studio" data-en="Studio (smooth)">Studio (mượt)</option><option value="view" data-en="As the 3D view">Như 3D view</option></select><label title="Chia lưới lại khối B-rep theo độ phân giải ảnh" data-en-title="Re-tessellate B-rep solids to the picture resolution"><input type="checkbox" id="v6Fine" checked> <span data-en="Fine B-rep">B-rep mịn</span></label></div>
     <div class="row"><label><input type="checkbox" id="v6Edge" checked> <span data-en="Edges">Nét cạnh</span></label><label><input type="checkbox" id="v6Hid"> <span data-en="Hidden lines">Nét khuất</span></label><span class="lbl" data-en="Angle" title="Cạnh mesh gãy hơn góc này thì vẽ nét" data-en-title="Mesh edges sharper than this are drawn">Góc</span><input type="range" id="v6AngR" min="5" max="80" step="1" value="30" style="width:60px"><input type="number" id="v6Ang" class="s" value="30" min="5" max="80" step="1"><span class="unit">°</span></div>
@@ -876,7 +906,7 @@ button.primary:hover:not(:disabled), button.on:hover:not(:disabled) {
     <div class="row"><span class="lbl" data-en="Text" title="Cỡ chữ của kích thước, tên view, tên linh kiện" data-en-title="Size of dimension, view and part texts">Cỡ chữ</span><input type="range" id="v6FsR" min="1" max="10" step="0.1" value="5" style="width:70px"><input type="number" id="v6Fs" class="s" value="5" min="1" max="10" step="0.1"><span class="unit">mm</span><label><input type="checkbox" id="v6Fb" checked> <span data-en="Bold">Đậm</span></label></div>
     <div class="row"><button id="v6AddT" class="v6b" data-en="Add text" title="Thêm một dòng chữ vào bản vẽ (kéo để dời, bấm đúp để sửa, Delete để xoá)" data-en-title="Add a text to the sheet (drag to move, double-click to edit, Delete to remove)">+ Thêm chữ</button><span class="lbl" data-en="Note">Ghi chú</span><input type="range" id="v6NsR" min="1" max="20" step="0.5" value="4" style="width:56px"><input type="number" id="v6Ns" class="s" value="4" min="1" max="20" step="0.5"><span class="unit">mm</span><label><input type="checkbox" id="v6Nb" checked> <span data-en="Bold">Đậm</span></label><button id="v6DelT" class="v6b" title="Xoá ghi chú đang chọn" data-en-title="Delete the selected note">✕</button></div>
     <div class="row"><span class="lbl" data-en="Font">Font</span><select id="v6Nf"><option value="Arial">Arial</option><option value="Segoe UI">Segoe UI</option><option value="Calibri">Calibri</option><option value="Tahoma">Tahoma</option><option value="Verdana">Verdana</option><option value="Times New Roman">Times New Roman</option><option value="Georgia">Georgia</option><option value="Cambria">Cambria</option><option value="Courier New">Courier New</option><option value="Consolas">Consolas</option></select><select id="v6Na"><option value="left" data-en="Left">Trái</option><option value="center" data-en="Centre">Giữa</option><option value="right" data-en="Right">Phải</option></select><label><input type="checkbox" id="v6Ni"> <span data-en="Italic">Nghiêng</span></label><label><input type="checkbox" id="v6Nu"> <span data-en="Underline">Gạch chân</span></label><input type="color" id="v6Nc" value="#111111"></div>
-    <div class="row"><button id="v6AddR" class="v6b" data-en="Frame">+ Khung</button><input type="color" id="v6Rc" value="#e53935"><span class="lbl" data-en="Title">Tên khung</span><input type="range" id="v6RsR" min="1" max="20" step="0.5" value="5" style="width:56px"><input type="number" id="v6Rs" class="s" value="5" min="1" max="20" step="0.5"><span class="unit">mm</span><span class="lbl" data-en="Line">Nét</span><input type="range" id="v6RwR" min="0.1" max="3" step="0.05" value="0.5" style="width:56px"><input type="number" id="v6Rw" class="s" value="0.5" min="0.1" max="3" step="0.05"><span class="unit">mm</span><button id="v6DelR" class="v6b">✕</button></div>
+    <div class="row"><button id="v6AddR" class="v6b" data-en="Frame">+ Khung</button><select id="v6Rp" title="Vị trí tên khung" data-en-title="Where the frame name sits"><option value="otl" data-en="Outside, top left">Ngoài, trên trái</option><option value="otr" data-en="Outside, top right">Ngoài, trên phải</option><option value="obl" data-en="Outside, bottom left">Ngoài, dưới trái</option><option value="obr" data-en="Outside, bottom right">Ngoài, dưới phải</option><option value="itl" data-en="Inside, top left">Trong, trên trái</option><option value="itr" data-en="Inside, top right">Trong, trên phải</option><option value="ibl" data-en="Inside, bottom left">Trong, dưới trái</option><option value="ibr" data-en="Inside, bottom right">Trong, dưới phải</option></select><input type="color" id="v6Rc" value="#e53935"><span class="lbl" data-en="Title">Tên khung</span><input type="range" id="v6RsR" min="1" max="20" step="0.5" value="5" style="width:56px"><input type="number" id="v6Rs" class="s" value="5" min="1" max="20" step="0.5"><span class="unit">mm</span><span class="lbl" data-en="Line">Nét</span><input type="range" id="v6RwR" min="0.1" max="3" step="0.05" value="0.5" style="width:56px"><input type="number" id="v6Rw" class="s" value="0.5" min="0.1" max="3" step="0.05"><span class="unit">mm</span><button id="v6DelR" class="v6b">✕</button></div>
     <div class="row v6fx"><span class="lbl" data-en="Step threshold" title="Độ cao bậc nhỏ nhất được vẽ nét (mm trên vật)" data-en-title="Smallest step height that gets a line (mm on the object)">Ngưỡng bậc</span><input type="range" id="v6FxTR" min="0.02" max="5" step="0.01" value="5" style="width:70px"><input type="number" id="v6FxT" class="s" value="5" min="0.02" max="5" step="0.01"><span class="unit">mm</span></div>
     <div class="row v6fx"><span class="lbl" data-en="Step line" title="Bề dày nét bậc trên giấy (0 = tắt)" data-en-title="Step line width on paper (0 = off)">Nét bậc</span><input type="range" id="v6FxWR" min="0" max="1" step="0.01" value="0.01" style="width:70px"><input type="number" id="v6FxW" class="s" value="0.01" min="0" max="1" step="0.01"><span class="unit">mm</span></div>
     <div class="row v6fx"><span class="lbl" data-en="Band width" title="Bề rộng dải tối chân bậc trên giấy" data-en-title="Width of the dark band at the foot of a step on paper">Rộng dải tối</span><input type="range" id="v6FxBR" min="0" max="5" step="0.1" value="5" style="width:70px"><input type="number" id="v6FxB" class="s" value="5" min="0" max="5" step="0.1"><span class="unit">mm</span></div>
@@ -887,7 +917,7 @@ button.primary:hover:not(:disabled), button.on:hover:not(:disabled) {
     <div class="row v6fx"><span class="lbl" data-en="Light turn" title="Hướng đèn trên màn hình (0 = từ phải, 90 = từ trên)" data-en-title="Light direction on the screen (0 = from the right, 90 = from the top)">Hướng đèn</span><input type="range" id="v6FxSaR" min="0" max="360" step="1" value="0" style="width:70px"><input type="number" id="v6FxSa" class="s" value="0" min="0" max="360" step="1"><span class="unit">°</span></div>
     <div class="row v6fx"><span class="lbl" data-en="Light height" title="Độ cao đèn so với mặt giấy (thấp = bóng dài)" data-en-title="Light height above the paper (low = long shadows)">Độ cao đèn</span><input type="range" id="v6FxSeR" min="5" max="85" step="1" value="5" style="width:70px"><input type="number" id="v6FxSe" class="s" value="5" min="5" max="85" step="1"><span class="unit">°</span></div>
     <div class="row v6fx"><span class="lbl" data-en="Curvature" title="Gờ sáng, rãnh tối theo độ cong (0 = tắt)" data-en-title="Ridges lighter, grooves darker (0 = off)">Độ cong</span><input type="range" id="v6FxCR" min="0" max="100" step="1" value="0" style="width:70px"><input type="number" id="v6FxC" class="s" value="0" min="0" max="100" step="1"><span class="unit">%</span></div>
-    <div class="row v6fx"><label title="Nét ở chỗ body này gặp body khác" data-en-title="A line where one body meets another"><input type="checkbox" id="v6FxId" checked> <span data-en="Part outline">Viền part</span></label></div>
+    <div class="row v6fx"><label title="Viền quanh từng part (đường bao và chỗ hai body gặp nhau)" data-en-title="A line round every part (its silhouette and where two bodies meet)"><input type="checkbox" id="v6FxId" checked> <span data-en="Part outline">Viền part</span></label><input type="range" id="v6FxOwR" min="0.05" max="2" step="0.05" value="0.2" style="width:56px"><input type="number" id="v6FxOw" class="s" value="0.2" min="0.05" max="2" step="0.05"><span class="unit">mm</span><input type="color" id="v6FxOc" value="#111111"></div>
     <div class="row"><span class="lbl">DPI</span><input type="range" id="v6DpiR" min="72" max="1200" step="1" value="300" style="width:86px"><input type="number" id="v6Dpi" class="s" value="300" min="72" max="1200" step="1"><span class="unit"></span></div>
     <div class="row"><span class="lbl" data-en="Line">Nét</span><input type="range" id="v6LwR" min="0.01" max="1" step="0.01" value="0.01" style="width:86px"><input type="number" id="v6Lw" class="s" value="0.01" min="0.01" max="1" step="0.01"><span class="unit">mm</span><span class="unit" id="v6LwIn"></span></div>
     <div class="row"><span class="lbl" data-en="Smoothing" title="Khử răng cưa: dựng ảnh lớn hơn rồi thu nhỏ" data-en-title="Anti-aliasing: draw larger, then scale down">Khử răng</span><select id="v6SS"><option value="1">1×</option><option value="2">2×</option><option value="3" selected>3×</option><option value="4">4×</option></select><span class="lbl" data-en="Format">Định dạng</span><select id="v6Fmt"><option value="png">PNG</option><option value="jpg">JPG</option></select><select id="v6Bg"><option value="w" data-en="White">Nền trắng</option><option value="t" data-en="Transparent">Trong suốt</option></select></div>
@@ -895,7 +925,7 @@ button.primary:hover:not(:disabled), button.on:hover:not(:disabled) {
     <div class="v6info" id="v6Info"></div>
     <div class="btns"><button class="primary" id="v6Save" data-en="Save">Lưu ảnh</button><button id="v6Copy" data-en="Copy">Chép ảnh</button><button class="popx" data-pop="v6" data-en="Close">Đóng</button></div>
   </div></div>
-   <div id="v6Sheet"><div class="v6hd"><b id="v6ShT">6 view</b><span class="grow"></span><span class="v6hint" id="v6Zoom"></span><input type="range" id="v6VzR" min="25" max="1200" step="5" value="100" title="Phóng to / thu nhỏ bản xem trước (lăn chuột trên bản vẽ; kéo chỗ trống để dời; bấm đúp chỗ trống để vừa khung)" data-en-title="Zoom the preview (mouse wheel on the sheet; drag an empty spot to pan; double-click an empty spot to fit)"><input type="number" id="v6Vz" value="100" min="25" max="1200" step="5"><span class="v6hint">%</span><button id="v6VzFit" class="v6zb" title="Vừa khung" data-en-title="Fit">⤢</button></div><div class="v6body"><canvas id="v6Prev"></canvas><div id="v6Ed"><textarea id="v6EdT" rows="2"></textarea><select id="v6EdM"></select><div class="v6edb"><button id="v6EdOk" class="primary">OK</button><button id="v6EdNo" data-en="Cancel">Huỷ</button></div></div></div></div>
+   <div id="v6Sheet"><div class="v6hd"><b id="v6ShT">6 view</b><span class="grow"></span><span class="v6hint" id="v6Zoom"></span><input type="range" id="v6VzR" min="25" max="1200" step="5" value="100" title="Phóng to / thu nhỏ bản xem trước (lăn chuột trên bản vẽ; giữ chuột giữa hoặc Space + kéo để dời; kéo chỗ trống để quét chọn; bấm đúp chỗ trống để vừa khung)" data-en-title="Zoom the preview (mouse wheel on the sheet; middle button or Space + drag to pan; drag an empty spot to box-pick; double-click an empty spot to fit)"><input type="number" id="v6Vz" value="100" min="25" max="1200" step="5"><span class="v6hint">%</span><button id="v6VzFit" class="v6zb" title="Vừa khung" data-en-title="Fit">⤢</button></div><div class="v6body"><canvas id="v6Prev"></canvas><div id="v6Ed"><div id="v6EdN" style="display:none"></div><textarea id="v6EdT" rows="2"></textarea><select id="v6EdM"></select><div class="v6edb"><button id="v6EdOk" class="primary">OK</button><button id="v6EdNo" data-en="Cancel">Huỷ</button></div></div></div></div>
    <div class="pop" id="pop_sla"><div class="pophd"><b data-en="SLA print plate">Bàn in SLA</b><span class="grow"></span><button class="popx" data-pop="sla">✕</button></div><div class="c">
     <div class="row"><span class="lbl" data-en="Plate X × Y">Bàn X × Y</span><input type="number" id="slaW" class="s" value="400" min="10" step="1"> × <input type="number" id="slaD" class="s" value="400" min="10" step="1"><span class="unit">mm</span></div>
     <div class="row"><span class="lbl" data-en="Spread">Độ dàn đều</span><input type="range" id="slaSpreadR" min="0" max="100" step="1" value="30" style="width:120px"><input type="number" id="slaSpread" class="s" value="30" min="0" step="1"><span class="unit">%</span></div>
@@ -5886,7 +5916,7 @@ var wasm_bindgen = (function(exports) {
   // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
   // version of the app: shown next to the name, in the Drawing Workspace header and the window title; raised with every
   // published fix (patch number) or feature set (minor number)
-  const APP_VER = '1.4.0';
+  const APP_VER = '1.5.0';
   (function () { const v = 'v' + APP_VER; $('appVer').textContent = v; document.title = 'MeshExpert ' + v; })();
   const BL_DEF = { cn: 200, ct: 58, cm: 58 };
   let blCols = Object.assign({}, BL_DEF);
@@ -11450,12 +11480,12 @@ var wasm_bindgen = (function(exports) {
   const V6_MAXPX = 150e6, V6_MAXVIEW = 64e6;
   // the 6-view sheet and the exploded view are two separate drawings: each keeps its own panel values (cfg) and its own
   // placements (st: model turn, view / iso / part / totals positions); both are saved with the session (.mrtl)
-  const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, tot: null, notes: { '6v': [], exp: [] }, nsel: null, nsels: [], clip: null, odo: {}, psel: null, rects: { '6v': [], exp: [] }, rsel: null, rt: null, hl: null,
+  const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, prot: {}, psels: [], box: null, tot: null, notes: { '6v': [], exp: [] }, nsel: null, nsels: [], clip: null, odo: {}, psel: null, rects: { '6v': [], exp: [] }, rsel: null, rt: null, hl: null,
     prev: null, vc: new Map(), vg: new Map(), gen: 0, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null, grp: {}, comb: null, dims: { '6v': [], exp: [] }, src: null, hide: [], dt: null, dsel: null, vsel: null, vz: 1, vp: [0, 0], lay: null, est: 0 };
   const V6_PREVPX = 12e6;
   const V6_REST = 3000;     // ms of rest after zoom / pan before the sheet is drawn sharp again   // the preview never renders the sheet above this many pixels (zooming further only scales)
   let v6Act = false;   // the Drawing Workspace is open and shows the sheet
-  const V6_PAIRS = [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
+  const V6_PAIRS = [['v6PtR', 'v6Pt'], ['v6PiR', 'v6Pi'], ['v6PlR', 'v6Pl'], ['v6FxOwR', 'v6FxOw'], ['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
     ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK'], ['v6RsR', 'v6Rs'], ['v6RwR', 'v6Rw'],
     ['v6FxTR', 'v6FxT'], ['v6FxWR', 'v6FxW'], ['v6FxBR', 'v6FxB'], ['v6FxBsR', 'v6FxBs'],
     ['v6FxAR', 'v6FxA'], ['v6FxAsR', 'v6FxAs'], ['v6FxSR', 'v6FxS'], ['v6FxSaR', 'v6FxSa'], ['v6FxSeR', 'v6FxSe'], ['v6FxCR', 'v6FxC']];
@@ -11481,7 +11511,7 @@ var wasm_bindgen = (function(exports) {
       edge: $('v6Edge').checked, hidden: $('v6Hid').checked, ang: v6Num('v6Ang', 30), dim: !exp && ($('v6DimW').checked || $('v6DimD').checked || $('v6DimH').checked), dimW: $('v6DimW').checked, dimD: $('v6DimD').checked, dimH: $('v6DimH').checked, unit: $('v6Unit').value,
       lbl: !exp && $('v6Lbl').checked, scn: $('v6ScN').checked, scale: scale, zoom: v6Num('v6Zm', 100) / 100,
       fs: v6Num('v6Fs', 2.6), fb: $('v6Fb').checked, W: W, H: H, cut: cut, dpi: dpi,
-      fx: { t: v6Num('v6FxT', 5), w: v6Num('v6FxW', 0.01), bw: v6Num('v6FxB', 5), bs: v6Num('v6FxBs', 4) / 100, id: $('v6FxId').checked, ar: v6Num('v6FxA', 0.2), as: v6Num('v6FxAs', 0) / 100, ss: v6Num('v6FxS', 0) / 100, sa: v6Num('v6FxSa', 0), se: v6Num('v6FxSe', 5), cs: v6Num('v6FxC', 0) / 100 },
+      fx: { t: v6Num('v6FxT', 5), w: v6Num('v6FxW', 0.01), bw: v6Num('v6FxB', 5), bs: v6Num('v6FxBs', 4) / 100, id: $('v6FxId').checked, ow: v6Num('v6FxOw', 0.2), oc: v6Hex($('v6FxOc').value), ar: v6Num('v6FxA', 0.2), as: v6Num('v6FxAs', 0) / 100, ss: v6Num('v6FxS', 0) / 100, sa: v6Num('v6FxSa', 0), se: v6Num('v6FxSe', 5), cs: v6Num('v6FxC', 0) / 100 },
       lw: v6Num('v6Lw', 0.25), ss: +$('v6SS').value || 1, fmt: fmt, q: v6Num('v6Q', 92) / 100, bg: fmt === 'jpg' ? 'w' : $('v6Bg').value };
   }
   // bodies of the drawing: the sheet's source bodies (Drawing Workspace), drawn from the geometry the sheet was last
@@ -11872,12 +11902,29 @@ var wasm_bindgen = (function(exports) {
     return r >= 1 ? t(r) + ':1' : '1:' + t(1 / r);
   }
   // exploded: each part's centre in the iso picture (mm from the assembly centre) after pulling it out from the centre
+  // a part turned on its own (V6S.prot[id] = [turn, tilt, roll] in degrees, about the screen's vertical axis, the
+  // screen's horizontal axis and the viewing direction, through the part's centre): drawn as if the view turned the
+  // other way round it, so the part's own picture is made with these directions
+  function v6PartDirs(D, a) {
+    if (!a || (!a[0] && !a[1] && !a[2])) return D;
+    const rad = Math.PI / 180, rot = function (v, ax, t) {      // v turned by t about the unit axis ax (Rodrigues)
+      const c = Math.cos(t), s2 = Math.sin(t), k = V.dot(ax, v), x = V.cross(ax, v);
+      return [v[0] * c + x[0] * s2 + ax[0] * k * (1 - c), v[1] * c + x[1] * s2 + ax[1] * k * (1 - c), v[2] * c + x[2] * s2 + ax[2] * k * (1 - c)];
+    };
+    // the part turns by Q = roll(d) . tilt(r) . turn(u) (screen axes); the view directions turn by Q^-1
+    let r = D.r, u = D.u, d = D.d;
+    const inv = [[D.d, -a[2]], [D.r, -a[1]], [D.u, -a[0]]];
+    for (const q of inv) { const t = q[1] * rad; if (!t) continue; r = rot(r, q[0], t); u = rot(u, q[0], t); d = rot(d, q[0], t); }
+    return { r: r, u: u, d: d };
+  }
   function v6ExpPlan(o, sc6) {
     const D = v6Dirs(v6IsoSpec(o.az, o.el)), C = sc6.ctr, items = [], G = v6GrpOf(sc6.preps.map(function (p) { return p.b.id; }));
     for (const p of sc6.preps) {
       if (G.hide.has(p.b.id)) continue;
-      const rg = v6Ranges([p], C, D.r, D.u), mid = V.mul(V.add(p.lo, p.hi), 0.5), sh = V.mul(V.sub(mid, C), o.spread);
-      items.push({ p: p, id: p.b.id, n: G.n[p.b.id] || 1, w: rg[1] - rg[0], h: rg[3] - rg[2], cx: (rg[0] + rg[1]) / 2 + V.dot(sh, D.r), cy: (rg[2] + rg[3]) / 2 + V.dot(sh, D.u) });
+      const Dp = v6PartDirs(D, V6S.prot[p.b.id]), rg = v6Ranges([p], C, Dp.r, Dp.u), mid = V.mul(V.add(p.lo, p.hi), 0.5), sh = V.mul(V.sub(mid, C), o.spread);
+      // the part's centre stays where the unturned part has it; its picture is centred on it by the turned extents
+      const m0 = V.sub(mid, C), fx = V.dot(m0, D.r) - V.dot(m0, Dp.r), fy = V.dot(m0, D.u) - V.dot(m0, Dp.u);
+      items.push({ p: p, id: p.b.id, n: G.n[p.b.id] || 1, D: Dp, w: rg[1] - rg[0], h: rg[3] - rg[2], cx: (rg[0] + rg[1]) / 2 + fx + V.dot(sh, D.r), cy: (rg[2] + rg[3]) / 2 + fy + V.dot(sh, D.u) });
     }
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     for (const it of items) { x0 = Math.min(x0, it.cx - it.w / 2); x1 = Math.max(x1, it.cx + it.w / 2); y0 = Math.min(y0, it.cy - it.h / 2); y1 = Math.max(y1, it.cy + it.h / 2); }
@@ -11909,7 +11956,7 @@ var wasm_bindgen = (function(exports) {
       if (o.exp) {
         for (const it of plan.items) {
           const sl = 'p:' + it.id;
-          out.parts.push(Object.assign(mark(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, at(oi, sl)), sl), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
+          out.parts.push(Object.assign(mark(v6View(G, sc6, [it.p], it.D || plan.D, sc * k, ss, M.lw * k, at(oi, sl)), sl), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
           if (quick) await quick.tick(out);
         }
       } else {
@@ -12125,13 +12172,17 @@ var wasm_bindgen = (function(exports) {
       const x = f.x * W, y = f.y * H, w = f.w * W, h = f.h * H, col = f.color || '#e53935', lw = Math.max(1, (f.lw || 0.5) * M.ppmm * k), fp = (f.ts || 5) * M.ppmm * k;
       c2.save(); c2.strokeStyle = col; c2.lineWidth = lw; c2.setLineDash([]); c2.lineJoin = 'miter';
       c2.beginPath(); c2.moveTo(x, y); c2.lineTo(x + w, y); c2.lineTo(x + w, y + h); c2.lineTo(x, y + h); c2.closePath(); c2.stroke();
-      let tw = 0;
-      if (f.title) { c2.font = v6Font(fp, true); c2.fillStyle = col; c2.textAlign = 'left'; c2.textBaseline = 'bottom'; c2.fillText(f.title, x + 0.2 * fp, y - lw / 2 - 0.25 * fp); tw = c2.measureText(f.title).width; }
+      let tb = null;
+      if (f.title) {
+        c2.font = v6Font(fp, true); c2.fillStyle = col; c2.textAlign = 'left';
+        const T = v6RectTitle(f, x, y, w, h, lw, fp, c2.measureText(f.title).width);
+        c2.textBaseline = T.base; c2.fillText(f.title, T.x, T.y); tb = T.box;
+      }
       c2.restore();
       const m = Math.max(lw, 3), hs = V6S.hs || 7;
       hits.push({ kind: 'rect', id: f.id, r: { x: x - m, y: y - m, w: w + 2 * m, h: 2 * m } }, { kind: 'rect', id: f.id, r: { x: x - m, y: y + h - m, w: w + 2 * m, h: 2 * m } },
         { kind: 'rect', id: f.id, r: { x: x - m, y: y - m, w: 2 * m, h: h + 2 * m } }, { kind: 'rect', id: f.id, r: { x: x + w - m, y: y - m, w: 2 * m, h: h + 2 * m } });
-      if (f.title) hits.push({ kind: 'rect', id: f.id, title: true, r: { x: x, y: y - lw / 2 - 1.3 * fp, w: tw + 0.4 * fp, h: 1.3 * fp } });
+      if (tb) hits.push({ kind: 'rect', id: f.id, title: true, r: tb });
       hits.push({ kind: 'rectR', id: f.id, r: { x: x + w - hs, y: y + h - hs, w: 2 * hs, h: 2 * hs } });
     }
     return hits;
@@ -12378,10 +12429,10 @@ var wasm_bindgen = (function(exports) {
     items.forEach(function (it) { it.w = it.x1 - it.x0; it.h = it.y1 - it.y0; it.cx = (it.x0 + it.x1) / 2; it.cy = (it.y0 + it.y1) / 2; });
     // frames (full-size px) and what has to stay free
     const frames = (V6S.rects.exp || []).map(function (fr) {
-      const lw = Math.max(1, (fr.lw || 0.5) * M.ppmm), tp = fr.title ? 1.4 * (fr.ts || 5) * M.ppmm : 0;
-      return { id: fr.id, x0: fr.x * W, y0: fr.y * H, x1: (fr.x + fr.w) * W, y1: (fr.y + fr.h) * H, lw: lw, tp: tp, list: [] };
+      const lw = Math.max(1, (fr.lw || 0.5) * M.ppmm), tp = fr.title ? 1.4 * (fr.ts || 5) * M.ppmm : 0, at = fr.tp || 'otl';
+      return { id: fr.id, x0: fr.x * W, y0: fr.y * H, x1: (fr.x + fr.w) * W, y1: (fr.y + fr.h) * H, lw: lw, tp: tp, out: at[0] === 'o', top: at[1] === 't', list: [] };
     });
-    const out = [];
+    const out = [], placed = [];
     for (const it of items) {
       let bf = null, ba = 0;
       for (const fr of frames) {
@@ -12391,13 +12442,13 @@ var wasm_bindgen = (function(exports) {
       if (bf) bf.list.push(it); else out.push(it);
     }
     for (const fr of frames) if (fr.list.length) {
-      const r = v6Rows(fr.list, { x0: fr.x0 + fr.lw, y0: fr.y0 + fr.lw, x1: fr.x1 - fr.lw, y1: fr.y1 - fr.lw });
+      const ti = fr.out ? 0 : fr.tp;                    // a name inside the frame keeps its strip free
+      const r = v6Rows(fr.list, { x0: fr.x0 + fr.lw, y0: fr.y0 + fr.lw + (fr.top ? ti : 0), x1: fr.x1 - fr.lw, y1: fr.y1 - fr.lw - (fr.top ? 0 : ti) });
       r.out.forEach(v6ExpPut);
     }
     if (out.length) {
-      const c = 0.6 * f, obs = frames.map(function (fr) { return { x0: fr.x0 - c, y0: fr.y0 - fr.tp - c, x1: fr.x1 + c, y1: fr.y1 + c }; });
-      const th = R.hits.find(function (h) { return h.kind === 'tot'; });
-      if (th) { const tw = th.r.w / k, thh = th.r.h / k, bx = W - 1.5 * f, by = H - 1.2 * f - (o.scn ? 1.7 * f : 0); obs.push({ x0: bx - tw - c, y0: by - thh - c, x1: W, y1: H }); }
+      const c = 0.6 * f, obs = frames.map(function (fr) { const to = fr.out ? fr.tp : 0; return { x0: fr.x0 - c, y0: fr.y0 - (fr.top ? to : 0) - c, x1: fr.x1 + c, y1: fr.y1 + (fr.top ? 0 : to) + c }; });
+      // the total-mass box takes no room here: it goes into a free corner afterwards (below)
       if (o.scn) obs.push({ x0: W * 0.55, y0: H - 2.6 * f, x1: W, y1: H });
       const xs = [0, W], ys = [0, H];
       for (const b of obs) { xs.push(b.x0, b.x1); ys.push(b.y0, b.y1); }
@@ -12416,18 +12467,40 @@ var wasm_bindgen = (function(exports) {
         }
       }
       // nothing free is big enough: the whole sheet, above the totals strip
-      if (!best) best = v6Rows(out, { x0: 0, y0: 0, x1: W, y1: H - (o.scn ? 2.6 * f : 0) - (th ? th.r.h / k + 1.2 * f : 0) });
+      if (!best) best = v6Rows(out, { x0: 0, y0: 0, x1: W, y1: H - (o.scn ? 2.6 * f : 0) });
       best.out.forEach(v6ExpPut);
     }
+    v6TotPlace(R, o, placed, frames, W, H, f, k);
     function v6ExpPut(q) {
       const it = q.it, pt = R.parts.find(function (x) { return x.id === it.id; }), P = R.plan;
+      placed.push({ x0: q.cx - it.w / 2, y0: q.cy - it.h / 2, x1: q.cx + it.w / 2, y1: q.cy + it.h / 2 });
       if (!pt || !it.pc) return;
       const px = q.cx + (it.pc[0] - it.cx), py = q.cy + (it.pc[1] - it.cy);
       const ax = W / 2 + (pt.cx - P.bx) * R.sc, ay = H / 2 - (pt.cy - P.by) * R.sc;
       V6S.off[it.id] = [(px - ax) / W, (py - ay) / H];
     }
-    V6S.tot = null;
     return true;
+  }
+  // the total-mass box (lower right corner at V6S.tot, sheet fractions): the first corner of the sheet where it covers
+  // no part, frame or scale note (bottom right, bottom left, top right, top left, then the middles of the long sides);
+  // when every place is taken, the one it covers least
+  function v6TotPlace(R, o, placed, frames, W, H, f, k) {
+    const th = R.hits.find(function (h) { return h.kind === 'tot'; });
+    V6S.tot = null;
+    if (!th) return;
+    const tw = th.r.w / k, thh = th.r.h / k, mx = 1.5 * f, myB = 1.2 * f + (o.scn ? 1.7 * f : 0), myT = 1.2 * f, g = 0.4 * f;
+    const obs = placed.concat(frames.map(function (fr) { return { x0: fr.x0, y0: fr.y0 - (fr.out && fr.top ? fr.tp : 0), x1: fr.x1, y1: fr.y1 + (fr.out && !fr.top ? fr.tp : 0) }; }));
+    if (o.scn) obs.push({ x0: W * 0.55, y0: H - 2.6 * f, x1: W, y1: H });
+    const cand = [[W - mx, H - myB], [mx + tw, H - myB], [W - mx, myT + thh], [mx + tw, myT + thh], [(W + tw) / 2, H - myB], [(W + tw) / 2, myT + thh]];
+    let best = null;
+    for (let i = 0; i < cand.length; i++) {
+      const c = cand[i], A = { x0: c[0] - tw - g, y0: c[1] - thh - g, x1: c[0] + g, y1: c[1] + g };
+      let cov = 0;
+      for (const b of obs) cov += Math.max(0, Math.min(A.x1, b.x1) - Math.max(A.x0, b.x0)) * Math.max(0, Math.min(A.y1, b.y1) - Math.max(A.y0, b.y0));
+      if (!best || cov < best.cov - 1e-6) best = { cov: cov, i: i, c: c };
+      if (cov <= 0) break;
+    }
+    if (best.i) V6S.tot = [best.c[0] / W, best.c[1] / H];
   }
   // default place of the iso picture: the free corner right of the Top view (or top right)
   function v6IsoDefault(o, R, pos) {
@@ -12667,7 +12740,7 @@ var wasm_bindgen = (function(exports) {
         else if (cand.has(h.id)) box(h, hover && hover.id === h.id ? '#ff8a00' : '#f0a030', hover && hover.id === h.id ? 'rgba(255,150,0,.32)' : 'rgba(240,160,48,.18)');
       }
     } else for (const h of q.hits) {
-      if ((h.kind === 'note' && (h.id === V6S.nsel || V6S.nsels.indexOf(h.id) >= 0)) || ((h.kind === 'part' || h.kind === 'label') && h.id === V6S.psel)) box(h, '#f0a030');
+      if ((h.kind === 'note' && (h.id === V6S.nsel || V6S.nsels.indexOf(h.id) >= 0)) || ((h.kind === 'part' || h.kind === 'label') && (h.id === V6S.psel || V6S.psels.indexOf(h.id) >= 0))) box(h, '#f0a030');
       else if (hover && h === hover) box(h, '#2f8cff');
     }
     if (V6S.comb === null) for (const h of q.hits) {
@@ -12686,6 +12759,12 @@ var wasm_bindgen = (function(exports) {
       for (const x of V6S.snapG.x) { c2.moveTo(x * W2, 0); c2.lineTo(x * W2, H2); }
       for (const y of V6S.snapG.y) { c2.moveTo(0, y * H2); c2.lineTo(W2, y * H2); }
       c2.stroke(); c2.restore();
+    }
+    if (V6S.box && V6S.box.moved) {           // the pick box: blue left to right (wholly inside), green dashed right to left (touched)
+      const B = V6S.box, cross = B.x1 < B.x0;
+      c2.save(); c2.setLineDash(cross ? [6 * u, 4 * u] : []); c2.lineWidth = 1.5 * u;
+      c2.strokeStyle = cross ? '#52d06a' : '#4f9bff'; c2.fillStyle = cross ? 'rgba(82,208,106,0.12)' : 'rgba(79,155,255,0.12)';
+      c2.fillRect(B.x0, B.y0, B.x1 - B.x0, B.y1 - B.y0); c2.strokeRect(B.x0, B.y0, B.x1 - B.x0, B.y1 - B.y0); c2.restore();
     }
     if (V6S.rt && V6S.rt.a) {
       const a = V6S.rt.a, b = V6S.rt.b || a;
@@ -12716,11 +12795,45 @@ var wasm_bindgen = (function(exports) {
     const x = ((e.clientX - r.left) * Ly.dpr - Ly.ox) / Ly.s, y = ((e.clientY - r.top) * Ly.dpr - Ly.oy) / Ly.s, m = 6 * Ly.dpr / Ly.s;
     let best = null;
     for (const h of q.hits) if (x >= h.r.x - m && x <= h.r.x + h.r.w + m && y >= h.r.y - m && y <= h.r.y + h.r.h + m) {
+      // a part only where its picture shows the body (the empty corners of its box are empty sheet)
+      if (h.kind === 'part' && !v6OnPart(q, h, x, y, m)) continue;
       // notes and labels over pictures
       const rank = { isoR: 4, rectR: 4, note: 3, tot: 3, dim: 3, odim: 3, rect: 2.5, label: 2, part: 1, iso: 1, view: 0 };
       if (!best || rank[h.kind] >= rank[best.kind]) best = h;
     }
     return { h: best, x: x, y: y };
+  }
+  // is the sheet point (x, y) on the body of a part picture (body-number pixels, m sheet px of slack)?
+  function v6OnPart(q, h, x, y, m) {
+    const pt = (q.parts || []).find(function (p) { return p.id === h.id; }), tr = h.r.tr, M = pt && pt.map;
+    if (!M || !M.ids || !tr) return true;
+    const w = pt.cv.width, hh = pt.cv.height, ids = M.ids;
+    if (ids.length !== w * hh) return true;
+    const px = (x - tr.x0) / tr.s, py = (y - tr.y0) / tr.s, rr = Math.max(1, Math.ceil(m / tr.s)), st = Math.max(1, rr >> 2);
+    for (let j = -rr; j <= rr; j += st) for (let i = -rr; i <= rr; i += st) {
+      const X = Math.round(px + i), Y = Math.round(py + j);
+      if (X >= 0 && Y >= 0 && X < w && Y < hh && ids[Y * w + X]) return true;
+    }
+    return false;
+  }
+  // picked parts (exploded view): V6S.psels, the last one picked is V6S.psel (the panel shows it)
+  function v6PSel() {
+    const ids = V6S.psels.slice(); if (V6S.psel !== null && V6S.psel !== undefined && V6S.psel >= 0 && ids.indexOf(V6S.psel) < 0) ids.push(V6S.psel);
+    return ids;
+  }
+  function v6PClear() { V6S.psel = null; V6S.psels = []; }
+  // the box dragged over empty sheet (sheet px): left to right takes what lies wholly inside, right to left what it touches
+  function v6BoxPick(B) {
+    const q = V6S.prev; if (!q || !q.hits) return;
+    const cross = B.x1 < B.x0, l = Math.min(B.x0, B.x1), r = Math.max(B.x0, B.x1), t = Math.min(B.y0, B.y1), b = Math.max(B.y0, B.y1);
+    const inBox = function (R) { return cross ? !(R.x + R.w < l || R.x > r || R.y + R.h < t || R.y > b) : R.x >= l && R.x + R.w <= r && R.y >= t && R.y + R.h <= b; };
+    for (const h of q.hits) {
+      if (!inBox(h.r)) continue;
+      if (h.kind === 'part' && V6S.psels.indexOf(h.id) < 0) V6S.psels.push(h.id);
+      if (h.kind === 'note' && V6S.nsels.indexOf(h.id) < 0) V6S.nsels.push(h.id);
+    }
+    if (V6S.psels.length) V6S.psel = V6S.psels[V6S.psels.length - 1];
+    if (V6S.nsels.length) { V6S.nsel = V6S.nsels[V6S.nsels.length - 1]; v6NoteCtl(v6Note(V6S.nsel)); }
   }
   // ---------- zoom / pan of the preview
   function v6ZoomUI() { $('v6Vz').value = $('v6VzR').value = Math.round(V6S.vz * 100); }
@@ -12770,21 +12883,35 @@ var wasm_bindgen = (function(exports) {
     if (h.kind === 'note') { n = v6Note(h.id); t.value = n.text; t.rows = Math.max(2, n.text.split('\n').length); ms.style.display = 'none'; }
     else if (h.kind === 'rect') { fr = v6Rect(h.id); if (!fr) return; t.value = fr.title || ''; t.rows = 1; ms.style.display = 'none'; }
     else { b = S.bodies.find(function (x) { return x.id === h.id; }); if (!b) return; t.value = b.name; t.rows = 1; v6MatOpts(ms); ms.value = MATS.some(function (m) { return m[0] === b.material; }) ? b.material : ''; ms.style.display = ''; }
+    // several parts picked (and this one among them): one material for all of them, no name
+    let bs = null;
+    if (b && V6S.mode === 'exp') {
+      const ids = v6PSel();
+      if (ids.length > 1 && ids.indexOf(b.id) >= 0) bs = ids.map(function (id) { return S.bodies.find(function (x) { return x.id === id; }); }).filter(Boolean);
+    }
+    t.style.display = bs ? 'none' : '';
+    $('v6EdN').style.display = bs ? '' : 'none';
+    if (bs) $('v6EdN').textContent = L('Vật liệu cho ' + bs.length + ' linh kiện', 'Material for ' + bs.length + ' parts');
     ed.style.display = 'block';
     ed.style.left = Math.max(0, Math.min(br.width - 220, sr.x - br.left)) + 'px';
     ed.style.top = Math.max(0, Math.min(br.height - 110, sr.y + sr.h - br.top + 4)) + 'px';
-    t.focus(); t.select();
-    V6S.edit = { n: n, b: b, f: fr };
+    if (bs) ms.focus(); else { t.focus(); t.select(); }
+    V6S.edit = { n: n, b: b, f: fr, bs: bs };
   }
   function v6EditDone(ok) {
     const E = V6S.edit; $('v6Ed').style.display = 'none'; V6S.edit = null;
     if (!E || !ok) return;
     if (E.f) { E.f.title = $('v6EdT').value.replace(/\n/g, ' ').trim(); v6Paint(); return; }
     if (E.n) { const v = $('v6EdT').value; if (v.trim()) E.n.text = v; else { const L2 = V6S.notes[V6S.mode]; L2.splice(L2.indexOf(E.n), 1); V6S.nsel = null; V6S.nsels = []; } v6Paint(); }
+    else if (E.bs) { for (const b of E.bs) v6SetMat(b, $('v6EdM').value); v6PartRow(); v6Paint(); v6Preview(); }
     else if (E.b) { v6SetName(E.b, $('v6EdT').value.replace(/\n/g, ' ')); v6SetMat(E.b, $('v6EdM').value); v6PartRow(); v6Paint(); v6Preview(); }
   }
   $('v6EdOk').addEventListener('click', function () { v6EditDone(true); });
   $('v6EdNo').addEventListener('click', function () { v6EditDone(false); });
+  $('v6EdM').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); v6EditDone(true); } else if (e.key === 'Escape') { e.preventDefault(); v6EditDone(false); }
+    e.stopPropagation();
+  });
   $('v6EdT').addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && (!V6S.edit || !V6S.edit.n || !e.shiftKey)) { e.preventDefault(); v6EditDone(true); }
     else if (e.key === 'Escape') { e.preventDefault(); v6EditDone(false); }
@@ -12810,12 +12937,24 @@ var wasm_bindgen = (function(exports) {
       V6S.dsel = h && h.kind === 'dim' ? h.id : null;
       if (h && h.kind === 'dim') { V6S.drag = { h: h, x: t.x, y: t.y, dim: h.id }; v6Paint(h); e.preventDefault(); return; }
       if (h && h.kind === 'odim') { V6S.nsel = null; V6S.nsels = []; V6S.drag = { h: h, x: t.x, y: t.y }; v6Paint(h); e.preventDefault(); return; }
-      if (!h) V6S.pan = { x: e.clientX, y: e.clientY, vp: V6S.vp.slice() };
       if (V6S.edit) v6EditDone(true);
-      // notes: each click on a note adds it to the picked set, a click on anything else (or empty space) clears it
+      // empty sheet: everything picked is dropped (Shift / Ctrl keep it), and a drag draws a box that picks
+      // parts and notes (the middle mouse button, or Space + drag, moves the sheet)
+      if (!h) {
+        if (!e.shiftKey && !e.ctrlKey && !e.metaKey) { v6PClear(); V6S.nsel = null; V6S.nsels = []; }
+        V6S.box = { x0: t.x, y0: t.y, x1: t.x, y1: t.y };
+        v6RotUI();
+      }
+      // notes: each click on a note adds it to the picked set, a click on anything else clears it
       if (h && h.kind === 'note') { V6S.nsel = h.id; if (V6S.nsels.indexOf(h.id) < 0) V6S.nsels.push(h.id); }
-      else { V6S.nsel = null; V6S.nsels = []; }
-      if (h && (h.kind === 'part' || h.kind === 'label')) V6S.psel = h.id; else if (h) V6S.psel = null;
+      else if (h) { V6S.nsel = null; V6S.nsels = []; }
+      // parts: each click adds the part to the picked set (Ctrl+click takes it out again); anything else clears the set
+      if (h && (h.kind === 'part' || h.kind === 'label')) {
+        const i = V6S.psels.indexOf(h.id);
+        if ((e.ctrlKey || e.metaKey) && (i >= 0 || V6S.psel === h.id)) { if (i >= 0) V6S.psels.splice(i, 1); V6S.psel = V6S.psels.length ? V6S.psels[V6S.psels.length - 1] : null; }
+        else { if (i < 0) V6S.psels.push(h.id); V6S.psel = h.id; }
+        v6RotUI();
+      } else if (h) { v6PClear(); v6RotUI(); }
       if (h && h.kind === 'note') v6NoteCtl(v6Note(h.id));
       v6PartRow(); v6Paint(h);
       v6PickToList(h);
@@ -12834,10 +12973,16 @@ var wasm_bindgen = (function(exports) {
         e.preventDefault(); return;
       }
       V6S.drag = { tot: tot0.slice(), h: h, x: t.x, y: t.y, pos: JSON.parse(JSON.stringify(pos0)), iso: iso0 && iso0.slice(), off: (V6S.off[h.id] || [0, 0]).slice(), note: h.kind === 'note' ? [v6Note(h.id).x, v6Note(h.id).y] : null,
-        notes: h.kind === 'note' ? v6NSel().map(function (n) { return [n, n.x, n.y]; }) : null };
+        notes: h.kind === 'note' ? v6NSel().map(function (n) { return [n, n.x, n.y]; }) : null,
+        parts: h.kind === 'part' || h.kind === 'label' ? v6PSel().map(function (id) { return [id, (V6S.off[id] || [0, 0]).slice()]; }) : null };
       e.preventDefault();
     });
     pc.addEventListener('dblclick', function (e) { const t = v6Hit(e); if (t && t.h && (t.h.kind === 'note' || t.h.kind === 'label' || t.h.kind === 'part' || t.h.kind === 'rect')) v6Edit(t.h); else if (t && !t.h) v6Fit(); });
+    // middle button or Space + left button: move the sheet
+    let v6Space = false;
+    window.addEventListener('keydown', function (e) { if (e.code === 'Space' && v6Act && !/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target && e.target.tagName) || '')) { v6Space = true; if (!V6S.pan) pc.style.cursor = 'grab'; e.preventDefault(); } });
+    window.addEventListener('keyup', function (e) { if (e.code === 'Space') { v6Space = false; if (!V6S.pan) pc.style.cursor = 'default'; } });
+    pc.addEventListener('mousedown', function (e) { if (e.button === 0 && v6Space) { V6S.pan = { x: e.clientX, y: e.clientY, vp: V6S.vp.slice() }; e.preventDefault(); e.stopImmediatePropagation(); } }, true);
     pc.addEventListener('wheel', function (e) {
       if (!V6S.prev) return;
       e.preventDefault();
@@ -12888,6 +13033,7 @@ var wasm_bindgen = (function(exports) {
       if (!V6S.prev) return;
       if (V6S.pan) { V6S.vp = [V6S.pan.vp[0] + e.clientX - V6S.pan.x, V6S.pan.vp[1] + e.clientY - V6S.pan.y]; pc.style.cursor = 'grabbing'; v6PaintFast(); return; }
       const t = v6Hit(e); if (!t) return;
+      if (V6S.box) { V6S.box.x1 = t.x; V6S.box.y1 = t.y; V6S.box.moved = V6S.box.moved || Math.abs(t.x - V6S.box.x0) + Math.abs(t.y - V6S.box.y0) > 3 * V6S.lay.dpr / V6S.lay.s; pc.style.cursor = 'crosshair'; v6PaintFast(); return; }
       if (V6S.rt) { if (V6S.rt.a) { V6S.rt.b = [t.x, t.y]; v6PaintFast(); } if (e.target === pc) pc.style.cursor = 'crosshair'; return; }
       if (V6S.dt && !V6S.drag) {
         if (e.target !== pc) return;
@@ -12906,7 +13052,7 @@ var wasm_bindgen = (function(exports) {
       if (!V6S.drag) {
         if (e.target !== pc) return;
         const h = t.h;
-        pc.style.cursor = V6S.comb !== null ? (h && v6CombCands().has(h.id) ? 'copy' : 'default') : !h ? 'grab' : h.kind === 'isoR' || h.kind === 'rectR' ? 'nwse-resize' : h.kind === 'odim' ? (h.t === 'h' ? 'ns-resize' : 'ew-resize') : h.kind === 'view' ? (h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize') : 'move';
+        pc.style.cursor = V6S.comb !== null ? (h && v6CombCands().has(h.id) ? 'copy' : 'default') : !h ? 'default' : h.kind === 'isoR' || h.kind === 'rectR' ? 'nwse-resize' : h.kind === 'odim' ? (h.t === 'h' ? 'ns-resize' : 'ew-resize') : h.kind === 'view' ? (h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize') : 'move';
         if (h !== V6S.hov) { V6S.hov = h; v6PaintFast(); }
         return;
       }
@@ -12920,7 +13066,7 @@ var wasm_bindgen = (function(exports) {
         else P[h.n] += dx;
         V6S.pos = P;
       } else if (h.kind === 'iso') V6S.iso = [D.iso[0] + dx, D.iso[1] + dy];
-      else if (h.kind === 'part' || h.kind === 'label') V6S.off[h.id] = [D.off[0] + dx, D.off[1] + dy];
+      else if (h.kind === 'part' || h.kind === 'label') { for (const q of (D.parts || [[h.id, D.off]])) V6S.off[q[0]] = [q[1][0] + dx, q[1][1] + dy]; }   // the picked parts move together
       else if (h.kind === 'note') { for (const q of D.notes) { q[0].x = q[1] + dx; q[0].y = q[2] + dy; } }
       else if (h.kind === 'odim') { if (!V6S.odo) V6S.odo = {}; const px = h.t === 'h' ? t.y - h.base : h.base - t.x; V6S.odo[h.key] = Math.round(Math.max(h.min, px) / h.pk * 100) / 100; }
       else if (h.kind === 'tot') V6S.tot = [D.tot[0] + dx, D.tot[1] + dy];
@@ -12930,7 +13076,12 @@ var wasm_bindgen = (function(exports) {
       v6PaintSoon(h);
     });
     window.addEventListener('mouseup', function () {
-      if (V6S.pan) { V6S.pan = null; pc.style.cursor = 'grab'; }
+      if (V6S.pan) { V6S.pan = null; pc.style.cursor = 'default'; }
+      if (V6S.box) {
+        const B = V6S.box; V6S.box = null; pc.style.cursor = 'default';
+        if (B.moved) { v6BoxPick(B); v6RotUI(); v6PartRow(); if (typeof dwRefresh === 'function') dwRefresh(false); }
+        v6Paint(V6S.hov); return;
+      }
       if (V6S.rt && V6S.rt.a) { v6RectMake(V6S.rt.a, V6S.rt.b); return; }
       const D = V6S.drag; if (!D) return;
       V6S.drag = null; V6S.snapG = null;
@@ -12947,6 +13098,7 @@ var wasm_bindgen = (function(exports) {
         e.preventDefault(); e.stopPropagation(); return;
       }
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (e.key === 'Escape' && (v6PSel().length || V6S.nsels.length)) { v6PClear(); V6S.nsel = null; V6S.nsels = []; v6RotUI(); v6PartRow(); v6Paint(); e.preventDefault(); return; }
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'c' || e.key === 'C') && v6NSel().length) { v6NoteCopy(); e.preventDefault(); e.stopPropagation(); return; }
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'v' || e.key === 'V') && V6S.clip && V6S.clip.length) { v6NotePaste(); e.preventDefault(); e.stopPropagation(); return; }
       if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -13023,7 +13175,14 @@ var wasm_bindgen = (function(exports) {
     if (by) { if (size) f.h = Math.max(0.01, f.h + by.d); else f.y += by.d; G.y.push(by.at); }
     if (G.x.length || G.y.length) V6S.snapG = G;
   }
-  function v6RectCtl() { const f = v6Rect(V6S.rsel); if (!f) return; $('v6Rc').value = f.color || '#e53935'; $('v6Rs').value = $('v6RsR').value = f.ts || 5; $('v6Rw').value = $('v6RwR').value = f.lw || 0.5; }
+  function v6RectCtl() { const f = v6Rect(V6S.rsel); if (!f) return; $('v6Rc').value = f.color || '#e53935'; $('v6Rs').value = $('v6RsR').value = f.ts || 5; $('v6Rw').value = $('v6RwR').value = f.lw || 0.5; $('v6Rp').value = f.tp || 'otl'; if (typeof dwSyncRibbon === 'function' && typeof DW !== 'undefined') dwSyncRibbon(); }
+  // where a frame's name sits: o / i = outside / inside the frame, t / b = top / bottom, l / r = left / right
+  function v6RectTitle(f, x, y, w, h, lw, fp, tw) {
+    const tp = f.tp || 'otl', out = tp[0] === 'o', top = tp[1] === 't', left = tp[2] === 'l', pad = 0.2 * fp;
+    const tx = left ? x + pad : x + w - pad - tw, up = out === top;           // up: the text stands on the line (baseline at the bottom)
+    const ty = top ? (out ? y - lw / 2 - 0.25 * fp : y + lw / 2 + 0.25 * fp) : (out ? y + h + lw / 2 + 0.25 * fp : y + h - lw / 2 - 0.25 * fp);
+    return { x: tx, y: ty, base: up ? 'bottom' : 'top', box: { x: tx - pad, y: up ? ty - 1.3 * fp + 0.25 * fp : ty - 0.25 * fp, w: tw + 2 * pad, h: 1.3 * fp } };
+  }
   function v6RectTool(on) {
     V6S.rt = on ? { a: null, b: null } : null;
     if (on) { V6S.dt = null; v6CombEnd(); }
@@ -13036,7 +13195,7 @@ var wasm_bindgen = (function(exports) {
     let x = Math.min(a[0], b[0]) / Ly.W, y = Math.min(a[1], b[1]) / Ly.H, w = Math.abs(b[0] - a[0]) / Ly.W, h = Math.abs(b[1] - a[1]) / Ly.H;
     if (Math.abs(b[0] - a[0]) * Ly.s / Ly.dpr < 8 || Math.abs(b[1] - a[1]) * Ly.s / Ly.dpr < 8) { w = 0.3; h = 0.25; x = Math.min(x, 0.98 - w); y = Math.min(y, 0.98 - h); }
     const L2 = V6S.rects[V6S.mode] || (V6S.rects[V6S.mode] = []);
-    const f = { id: V6S.seq++, x: x, y: y, w: w, h: h, color: $('v6Rc').value, title: L('Cụm ', 'Group ') + (L2.length + 1), ts: v6Num('v6Rs', 5), lw: v6Num('v6Rw', 0.5) };
+    const f = { id: V6S.seq++, x: x, y: y, w: w, h: h, color: $('v6Rc').value, title: L('Cụm ', 'Group ') + (L2.length + 1), ts: v6Num('v6Rs', 5), lw: v6Num('v6Rw', 0.5), tp: $('v6Rp').value || 'otl' };
     L2.push(f); V6S.rsel = f.id; V6S.nsel = null; V6S.psel = null; v6Paint();
     const ht = (V6S.prev.hits || []).find(function (q) { return q.kind === 'rect' && q.id === f.id && q.title; });
     if (ht) v6Edit(ht);
@@ -13044,8 +13203,8 @@ var wasm_bindgen = (function(exports) {
   function v6DelRect() { const L2 = V6S.rects[V6S.mode] || [], f = v6Rect(V6S.rsel); if (f) L2.splice(L2.indexOf(f), 1); V6S.rsel = null; v6Paint(); }
   $('v6AddR').addEventListener('click', function () { v6RectTool(!V6S.rt); });
   $('v6DelR').addEventListener('click', v6DelRect);
-  ['v6Rc', 'v6Rs', 'v6RsR', 'v6Rw', 'v6RwR'].forEach(function (id) {
-    const f = function () { const r = v6Rect(V6S.rsel); if (!r) return; r.color = $('v6Rc').value; r.ts = v6Num('v6Rs', 5); r.lw = v6Num('v6Rw', 0.5); v6Paint(); };
+  ['v6Rc', 'v6Rs', 'v6RsR', 'v6Rw', 'v6RwR', 'v6Rp'].forEach(function (id) {
+    const f = function () { const r = v6Rect(V6S.rsel); if (!r) return; r.color = $('v6Rc').value; r.ts = v6Num('v6Rs', 5); r.lw = v6Num('v6Rw', 0.5); r.tp = $('v6Rp').value || 'otl'; v6Paint(); };
     $(id).addEventListener('input', f); $(id).addEventListener('change', f);
   });
   // a part picked on the exploded sheet lights up in the body lists (and the other way round, see dwBodyPick)
@@ -13057,11 +13216,36 @@ var wasm_bindgen = (function(exports) {
     if (u === DW.bsel && u === V6S.hl) return;
     DW.bsel = u; V6S.hl = u; dwTreeSel();
   }
+  // ---------- turning the picked parts on their own (exploded view): Turn / Tilt / Roll sliders (degrees) and 90° steps
+  const V6_ROT = ['v6Pt', 'v6Pi', 'v6Pl'];
+  function v6RotUI() {
+    const ids = V6S.mode === 'exp' ? v6PSel() : [], a = ids.length ? V6S.prot[V6S.psel !== null && V6S.psel >= 0 ? V6S.psel : ids[0]] || [0, 0, 0] : [0, 0, 0];
+    V6_ROT.forEach(function (id, i) { if (document.activeElement !== $(id)) { $(id).value = Math.round(a[i] * 10) / 10; } $(id + 'R').value = a[i]; $(id).disabled = $(id + 'R').disabled = !ids.length; });
+    if (typeof dwSyncRibbon === 'function' && typeof DW !== 'undefined') dwSyncRibbon();
+  }
+  // wrap an angle into -180..180
+  const v6Wrap = function (v) { v = ((v + 180) % 360 + 360) % 360 - 180; return Math.abs(v) < 1e-9 ? 0 : v; };
+  function v6RotSet(axis, v, add) {
+    const ids = v6PSel(); if (!ids.length || V6S.mode !== 'exp') return;
+    for (const id of ids) {
+      const a = (V6S.prot[id] || [0, 0, 0]).slice();
+      a[axis] = v6Wrap(add ? a[axis] + v : v);
+      if (!a[0] && !a[1] && !a[2]) delete V6S.prot[id]; else V6S.prot[id] = a;
+    }
+    v6RotUI(); v6Preview();
+  }
+  function v6RotReset() { for (const id of v6PSel()) delete V6S.prot[id]; v6RotUI(); v6Preview(); }
+  V6_ROT.forEach(function (id, i) {
+    $(id).addEventListener('input', function () { const v = parseFloat(this.value); if (isFinite(v)) v6RotSet(i, v, false); });
+  });
   // part row in the panel: rename / material of the selected part, straight onto the body
   v6MatOpts($('v6PMat'));
   $('v6PName').addEventListener('change', function () { const b = S.bodies.find(function (x) { return x.id === V6S.psel; }); if (b) { v6SetName(b, this.value); v6PartRow(); v6Paint(); } });
   $('v6PName').addEventListener('keydown', function (e) { if (e.key === 'Enter') this.blur(); e.stopPropagation(); });
-  $('v6PMat').addEventListener('change', function () { const b = S.bodies.find(function (x) { return x.id === V6S.psel; }); if (b) { v6SetMat(b, this.value); v6PartRow(); v6Paint(); } });
+  $('v6PMat').addEventListener('change', function () {           // every picked part takes the material
+    const v = this.value, bs = v6PSel().map(function (id) { return S.bodies.find(function (x) { return x.id === id; }); }).filter(Boolean);
+    if (bs.length) { bs.forEach(function (b) { v6SetMat(b, v); }); v6PartRow(); v6Paint(); }
+  });
   // the body list / Properties changed a name, material or what is shown: follow
   let v6Sig = '';
   setInterval(function () {
@@ -13118,7 +13302,7 @@ var wasm_bindgen = (function(exports) {
   }
 
   document.querySelectorAll('#pop_v6 input, #pop_v6 select').forEach(function (el) {
-    if (/^v6(Ns|NsR|Nb|PName|PMat)$/.test(el.id)) return;
+    if (/^v6(Ns|NsR|Nb|PName|PMat|Pt|PtR|Pi|PiR|Pl|PlR|Rp)$/.test(el.id)) return;
     el.addEventListener('input', v6Preview); el.addEventListener('change', v6Preview);
   });
   V6_PAIRS.forEach(function (p) {
@@ -13152,7 +13336,7 @@ var wasm_bindgen = (function(exports) {
   });
   ['v6ScA', 'v6ScB'].forEach(function (id) { $(id).addEventListener('input', v6ScSync); });
   // ---------- the two drawings (6 view / Exploded view): own settings, switched in the panel, saved with the session
-  function v6Ctls() { return Array.from(document.querySelectorAll('#pop_v6 input, #pop_v6 select')).filter(function (el) { return el.type !== 'range' && !/^v6(Ns|Nb|Nf|Na|Ni|Nu|Nc|Rc|Rs|Rw|PName|PMat)$/.test(el.id); }); }
+  function v6Ctls() { return Array.from(document.querySelectorAll('#pop_v6 input, #pop_v6 select')).filter(function (el) { return el.type !== 'range' && !/^v6(Ns|Nb|Nf|Na|Ni|Nu|Nc|Rc|Rs|Rw|Rp|PName|PMat|Pt|Pi|Pl)$/.test(el.id); }); }
   function v6Key(el) { return el.id || (el.dataset.v ? 'v:' + el.dataset.v : ''); }
   function v6Snap() { const c = {}; v6Ctls().forEach(function (el) { const k = v6Key(el); if (k) c[k] = el.type === 'checkbox' ? el.checked : el.value; }); return c; }
   // settings saved before the overall size had three switches: the one Dimensions switch sets all three
@@ -13162,14 +13346,14 @@ var wasm_bindgen = (function(exports) {
     v6Ctls().forEach(function (el) { const k = v6Key(el); if (!k || !(k in c)) return; if (el.type === 'checkbox') el.checked = !!c[k]; else el.value = c[k]; });
     V6_PAIRS.forEach(function (p) { $(p[0]).value = $(p[1]).value; }); v6ScSync();
   }
-  function v6StGet() { return { R: V6S.R, pos: V6S.pos, iso: V6S.iso, off: V6S.off, tot: V6S.tot, grp: V6S.grp, odo: V6S.odo }; }
-  function v6StSet(t) { t = t || {}; V6S.R = t.R || [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; V6S.pos = t.pos || null; V6S.iso = t.iso || null; V6S.off = t.off || {}; V6S.tot = t.tot || null; V6S.grp = t.grp || {}; V6S.odo = t.odo || {}; }
+  function v6StGet() { return { R: V6S.R, pos: V6S.pos, iso: V6S.iso, off: V6S.off, prot: V6S.prot, tot: V6S.tot, grp: V6S.grp, odo: V6S.odo }; }
+  function v6StSet(t) { t = t || {}; V6S.R = t.R || [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; V6S.pos = t.pos || null; V6S.iso = t.iso || null; V6S.off = t.off || {}; V6S.prot = t.prot || {}; V6S.tot = t.tot || null; V6S.grp = t.grp || {}; V6S.odo = t.odo || {}; }
   function v6SetMode(m) {
     if (V6S.edit) v6EditDone(false);
     V6S.dt = null; V6S.dsel = null; V6S.vsel = null;
     V6S.comb = null;
     if (m !== V6S.mode) { V6S.cfg[V6S.mode] = v6Snap(); V6S.st[V6S.mode] = v6StGet(); V6S.mode = m; v6Apply(V6S.cfg[m]); v6StSet(V6S.st[m]); }
-    V6S.nsel = null; V6S.nsels = []; V6S.psel = null; V6S.rsel = null; V6S.rt = null; v6Sync(); v6Preview();
+    V6S.nsel = null; V6S.nsels = []; V6S.psel = null; V6S.psels = []; V6S.rsel = null; V6S.rt = null; v6Sync(); v6Preview();
   }
   document.querySelectorAll('#v6Seg button').forEach(function (b) { b.addEventListener('click', function () { v6SetMode(b.dataset.k); }); });
   V6S.def = v6Snap(); V6S.cfg = { '6v': v6Snap(), exp: v6Snap() };
@@ -13186,7 +13370,7 @@ var wasm_bindgen = (function(exports) {
     d = JSON.parse(JSON.stringify(d || v6Blank()));
     const cf = d.cfg || {}, sd = d.st || {};
     V6S.cfg = { '6v': Object.assign({}, V6S.def, v6CfgMig(cf['6v'])), exp: Object.assign({}, V6S.def, v6CfgMig(cf.exp)) };
-    for (const m of ['6v', 'exp']) { const t = sd[m] || {}; V6S.st[m] = { R: t.R, pos: t.pos, iso: t.iso, tot: t.tot, off: t.off || {}, grp: t.grp || {}, odo: t.odo || {} }; }
+    for (const m of ['6v', 'exp']) { const t = sd[m] || {}; V6S.st[m] = { R: t.R, pos: t.pos, iso: t.iso, tot: t.tot, off: t.off || {}, prot: t.prot || {}, grp: t.grp || {}, odo: t.odo || {} }; }
     const nt = d.notes || {};
     V6S.notes = { '6v': nt['6v'] || [], exp: nt.exp || [] };
     const rc = d.rects || {}; V6S.rects = { '6v': rc['6v'] || [], exp: rc.exp || [] };
@@ -13194,17 +13378,18 @@ var wasm_bindgen = (function(exports) {
     V6S.hide = Array.isArray(d.hide) ? d.hide.slice() : [];
     V6S.seq = Math.max(d.seq || 1, 1 + Math.max.apply(null, [0].concat(V6S.notes['6v'], V6S.notes.exp, V6S.rects['6v'], V6S.rects.exp, V6S.dims['6v']).map(function (n) { return n.id || 0; })));
     V6S.mode = d.mode === 'exp' ? 'exp' : '6v'; v6Apply(V6S.cfg[V6S.mode]); v6StSet(V6S.st[V6S.mode]);
-    V6S.nsel = null; V6S.nsels = []; V6S.psel = null; V6S.rsel = null; V6S.rt = null; V6S.prev = null; V6S.comb = null; V6S.dt = null; V6S.dsel = null; V6S.vsel = null; v6Sync(); v6Preview();
+    V6S.nsel = null; V6S.nsels = []; V6S.psel = null; V6S.psels = []; V6S.rsel = null; V6S.rt = null; V6S.prev = null; V6S.comb = null; V6S.dt = null; V6S.dsel = null; V6S.vsel = null; v6Sync(); v6Preview();
   }
   // body references (hand placements, combined groups) through f: id -> other key (undefined = drop)
   function v6MapIds(d, f) {
     d = JSON.parse(JSON.stringify(d));
     for (const m of ['6v', 'exp']) {
       const t = (d.st || {})[m]; if (!t) continue;
-      const off = {}, grp = {};
+      const off = {}, grp = {}, prot = {};
       for (const k in (t.off || {})) { const n = f(k); if (n !== undefined) off[n] = t.off[k]; }
+      for (const k in (t.prot || {})) { const n = f(k); if (n !== undefined) prot[n] = t.prot[k]; }
       for (const k in (t.grp || {})) { const n = f(k); if (n !== undefined) grp[n] = t.grp[k].map(function (x) { return f(String(x)); }).filter(function (x) { return x !== undefined; }); }
-      t.off = off; t.grp = grp;
+      t.off = off; t.grp = grp; t.prot = prot;
     }
     return d;
   }
@@ -13255,12 +13440,13 @@ var wasm_bindgen = (function(exports) {
     'bool BG(float d){return d>0.9999;}\n';
   // pass 1: per pixel, is it the lower side of a depth step (r = line width / 48 px, g = step height, log scale; g = 1:
   // background next to the object) and is it on a body boundary (b)
-  const FX_EDGE = FX_HD + 'uniform sampler2D uId;uniform float uW;uniform int uIdOn;\n' +
+  // b = part outline: 1 on a body pixel next to empty sheet (its silhouette), 0.5 next to another body
+  const FX_EDGE = FX_HD + 'uniform sampler2D uId;uniform float uW;uniform int uIdOn,uOut;\n' +
     'int I(ivec2 q){vec4 c=texelFetch(uId,F(q),0);return int(c.r*255.0+0.5)+256*int(c.g*255.0+0.5);}\n' +
     'void main(){ivec2 p=P();float dp=D(p);bool bp=BG(dp);float w=0.0,jm=0.0,idb=0.0;int ip=uIdOn==1?I(p):0;\n' +
     'ivec2 S[4]=ivec2[4](ivec2(1,0),ivec2(-1,0),ivec2(0,1),ivec2(0,-1));\n' +
-    'for(int k=0;k<4;k++){ivec2 s=S[k],q=p+s;if(!IN(q))continue;float dq=D(q);if(BG(dq))continue;\n' +
-    ' if(uIdOn==1&&!bp){int iq=I(q);if(iq!=ip&&iq>0&&ip>0)idb=1.0;}\n' +
+    'for(int k=0;k<4;k++){ivec2 s=S[k],q=p+s;if(!IN(q)){if(uOut==1&&!bp)idb=1.0;continue;}float dq=D(q);if(BG(dq)){if(uOut==1&&!bp)idb=1.0;continue;}\n' +
+    ' if(uIdOn==1&&!bp){int iq=I(q);if(iq!=ip&&iq>0&&ip>0)idb=max(idb,0.5);}\n' +
     ' float j;if(bp)j=1e6;else{float da=D(p-s);if(BG(da)||!IN(p-s))da=dp;j=((2.0*dp-da)-dq)*uDR;}\n' +
     ' if(j>uThr){jm=max(jm,j);if(uW>0.0){float f=clamp(0.6+0.2*log2(j/uThr),0.6,1.8);w=max(w,max(uW*f,0.8));}}}\n' +
     'float g=jm>0.0?(bp?1.0:clamp(log2(jm/uThr)/12.0,0.0,0.99)):0.0;o=vec4(min(w/48.0,1.0),g,idb,jm>0.0&&!bp?1.0:0.0);}';
@@ -13269,7 +13455,7 @@ var wasm_bindgen = (function(exports) {
     'void main(){ivec2 b=ivec2(gl_FragCoord.xy)*8,s=textureSize(uE,0);vec4 m=vec4(0.0);\n' +
     'for(int y=0;y<8;y++)for(int x=0;x<8;x++){ivec2 q=b+ivec2(x,y);if(q.x<s.x&&q.y<s.y)m=max(m,texelFetch(uE,q,0));}o=m;}';
   // pass 3: the picture with the effects
-  const FX_OUT = FX_HD + 'uniform sampler2D uE,uB,uBB,uCol,uN;uniform float uRad,uIdW,uBw,uBs,uS2,uAr,uAs,uCs,uCo,uSs;uniform vec3 uLc,uL;\n' +
+  const FX_OUT = FX_HD + 'uniform sampler2D uE,uB,uBB,uCol,uN;uniform float uRad,uIdW,uBw,uBs,uS2,uAr,uAs,uCs,uCo,uSs;uniform vec3 uLc,uL,uOc;\n' +
     'float h1(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\n' +
     'vec3 N(ivec2 q){vec3 n=texelFetch(uN,F(q),0).xyz*2.0-1.0;return n;}\n' +
     // one-sided depth slope (the smaller one, so a step next to the pixel does not tilt its plane)
@@ -13277,12 +13463,13 @@ var wasm_bindgen = (function(exports) {
     'if(ia&&ib){float u=a-dp,v=dp-b;return abs(u)<abs(v)?u:v;}if(ia)return a-dp;if(ib)return dp-b;return 0.0;}\n' +
     'bool NEAR(sampler2D t,int sz,float r,ivec2 p,bool st){ivec2 g0=F(p)/sz,bs=textureSize(t,0);int RB=int(ceil(r/float(sz)))+1;\n' +
     ' for(int by=-RB;by<=RB;by++)for(int bx=-RB;bx<=RB;bx++){ivec2 b=g0+ivec2(bx,by);if(b.x<0||b.y<0||b.x>=bs.x||b.y>=bs.y)continue;vec4 v=texelFetch(t,b,0);if(st?v.a>0.0:(v.r>0.0||v.b>0.0))return true;}return false;}\n' +
-    'void main(){ivec2 p=P();float dp=D(p);bool bp=BG(dp);vec4 col=texelFetch(uCol,C(p),0);vec3 c=col.rgb;float cov=0.0;\n' +
+    'void main(){ivec2 p=P();float dp=D(p);bool bp=BG(dp);vec4 col=texelFetch(uCol,C(p),0);vec3 c=col.rgb;float cov=0.0,ocv=0.0;\n' +
     'int R=int(ceil(uRad));\n' +
     'if(R>0&&NEAR(uB,8,uRad,p,false)){\n' +
     ' for(int dy=-R;dy<=R;dy++)for(int dx=-R;dx<=R;dx++){float dd=length(vec2(dx,dy));if(dd>uRad+0.5)continue;ivec2 q=p+ivec2(dx,dy);if(!IN(q))continue;vec4 e=texelFetch(uE,F(q),0);\n' +
     '  if(e.r>0.0){float w=e.r*48.0;if(dd<=w+0.5){bool ok=e.g>=0.995?bp:(!bp&&dp>D(q)-0.5*uThr*exp2(e.g*12.0)/uDR);if(ok)cov=max(cov,clamp(w+0.5-dd,0.0,1.0));}}\n' +
-    '  if(e.b>0.0&&!bp){float hw=max(uIdW*0.5,0.5);if(dd<=hw+0.5)cov=max(cov,clamp(hw+0.5-dd,0.0,1.0));}}}\n' +
+    // part outline: inside the silhouette uIdW wide; between two bodies half of it on each side
+    '  if(e.b>0.0&&!bp){float hw=max(e.b>0.75?uIdW:uIdW*0.5,0.5);if(dd<=hw-0.5)ocv=1.0;else if(dd<=hw+0.5)ocv=max(ocv,hw+0.5-dd);}}}\n' +
     'if(!bp){vec2 gr=vec2(G1(p,ivec2(1,0),dp),G1(p,ivec2(0,1),dp));float jt=h1(vec2(p))*6.2831853,jr=h1(vec2(p)+17.3);\n' +
     // step band: the nearest point higher than the pixel's own plane by more than the step threshold darkens it
     ' if(uBs>0.0&&uBw>=1.0&&NEAR(uBB,64,uBw,p,true)){float band=0.0;for(int k=0;k<10;k++){float a=jt+float(k)*0.6283185;vec2 dv=vec2(cos(a),sin(a));\n' +
@@ -13306,7 +13493,7 @@ var wasm_bindgen = (function(exports) {
     '    if(-dq*uDR>hp+uL.z*t/(uS2*lxy)+bias){shd=1.0;break;}}}\n' +
     '  c*=1.0-uSs*shd;}\n' +
     '}\n' +
-    'o=bp?vec4(uLc,cov):vec4(mix(c,uLc,cov),1.0);}';
+    'o=bp?vec4(uLc,cov):vec4(mix(mix(c,uLc,cov),uOc,ocv),1.0);}';
 
   function v6FxProg(G, fs) {
     const g = G.g, sh = function (t, s) { const x = g.createShader(t); g.shaderSource(x, s); g.compileShader(x); if (!g.getShaderParameter(x, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(x)); return x; };
@@ -13320,7 +13507,7 @@ var wasm_bindgen = (function(exports) {
     return G.fx;
   }
   // any effect switched on
-  function v6FxOn(fx) { return !!fx && (fx.w > 0 || (fx.bs > 0 && fx.bw > 0) || fx.id || fx.as > 0 || fx.ss > 0 || fx.cs > 0); }
+  function v6FxOn(fx) { return !!fx && (fx.w > 0 || (fx.bs > 0 && fx.bw > 0) || (fx.id && fx.ow > 0) || fx.as > 0 || fx.ss > 0 || fx.cs > 0); }
   function v6FxTex(g, w, h, ifmt, fmt, type, data) {
     const t = g.createTexture(); g.bindTexture(g.TEXTURE_2D, t);
     g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.NEAREST); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.NEAREST);
@@ -13340,7 +13527,8 @@ var wasm_bindgen = (function(exports) {
     const U = function (p, n) { return g.getUniformLocation(p, n); };
     const bind = function (p, unit, name, t) { g.activeTexture(g.TEXTURE0 + unit); g.bindTexture(g.TEXTURE_2D, t); g.uniform1i(U(p, name), unit); };
     try {
-      const idOn = fx.id && a.nb > 1, nOn = fx.ss > 0 || fx.cs > 0;
+      // part outline: the silhouette of every part (from depth alone), and between two bodies (body numbers, 2+ bodies)
+      const outOn = !!fx.id && fx.ow > 0, idOn = outOn && a.nb > 1, nOn = fx.ss > 0 || fx.cs > 0;
       // body-number and normal pictures: drawn by the caller in its geometry pass and owned by it
       const tId = idOn ? a.tId : null, tN = nOn ? a.tN : null;
       const tD = tex(vw, vh, g.R32F, g.RED, g.FLOAT, a.raw);
@@ -13350,7 +13538,7 @@ var wasm_bindgen = (function(exports) {
       g.disable(g.DEPTH_TEST); g.disable(g.SCISSOR_TEST); g.disable(g.BLEND); g.bindVertexArray(F.vao);
       // pass 1
       const tE = tex(vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null); target(tE); g.viewport(0, 0, vw, vh);
-      common(F.edge); g.uniform1f(U(F.edge, 'uW'), wl); g.uniform1i(U(F.edge, 'uIdOn'), tId ? 1 : 0); bind(F.edge, 1, 'uId', tId || tC);
+      common(F.edge); g.uniform1f(U(F.edge, 'uW'), wl); g.uniform1i(U(F.edge, 'uIdOn'), tId ? 1 : 0); g.uniform1i(U(F.edge, 'uOut'), outOn ? 1 : 0); bind(F.edge, 1, 'uId', tId || tC);
       g.drawArrays(g.TRIANGLES, 0, 3);
       // pass 2
       const bw = Math.ceil(vw / 8), bh = Math.ceil(vh / 8), tB = tex(bw, bh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null); target(tB); g.viewport(0, 0, bw, bh);
@@ -13360,8 +13548,9 @@ var wasm_bindgen = (function(exports) {
       // pass 3, in tiles read back one by one
       const tO = tex(vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null); target(tO); g.viewport(0, 0, vw, vh);
       const P = F.out; common(P); bind(P, 1, 'uE', tE); bind(P, 2, 'uB', tB); bind(P, 3, 'uCol', tC); bind(P, 4, 'uN', tN || tC); bind(P, 5, 'uBB', tBB);
-      const idw = tId ? Math.max(1, 0.8 * fx.w * a.ppx) : 0;
-      g.uniform1f(U(P, 'uRad'), wl > 0 || idw > 0 ? Math.min(24, Math.max(wl * 1.8, idw / 2)) : 0); g.uniform1f(U(P, 'uIdW'), idw);
+      const idw = outOn ? Math.min(24, Math.max(1, fx.ow * a.ppx)) : 0;
+      g.uniform1f(U(P, 'uRad'), wl > 0 || idw > 0 ? Math.min(24, Math.max(wl * 1.8, idw + 1)) : 0); g.uniform1f(U(P, 'uIdW'), idw);
+      g.uniform3fv(U(P, 'uOc'), fx.oc || [0x11 / 255, 0x11 / 255, 0x11 / 255]);
       g.uniform1f(U(P, 'uBw'), fx.bw * a.ppx); g.uniform1f(U(P, 'uBs'), fx.bw > 0 ? fx.bs : 0); g.uniform1f(U(P, 'uS2'), a.S2);
       g.uniform3fv(U(P, 'uLc'), [0x11 / 255, 0x11 / 255, 0x11 / 255]);
       const sa = fx.sa * Math.PI / 180, se = fx.se * Math.PI / 180;
@@ -14040,20 +14229,31 @@ var wasm_bindgen = (function(exports) {
       dwCol(dwSB('data-act="pdfAll"', 'pdf', 'PDF gộp', 'All in 1 PDF', 'Xuất mọi Sheet vào một file PDF theo thứ tự Drawing Tree', 'All sheets into one PDF, in Drawing Tree order') +
         dwSB('data-click="#v6Copy"', 'copy', 'Chép ảnh', 'Copy', 'Chép ảnh Sheet vào clipboard (cỡ vừa để gửi mail, không theo thiết lập xuất)', 'Copy the sheet picture to the clipboard (e-mail size, not the export settings)'))).replace('class="rgrp"', 'class="rgrp keep"');
   }
-  // Effects tab: what makes faces at different heights readable on the picture (depth step lines, step band, part outline)
+  // Effects tab, in the style of ZBrush sub-palettes: each effect is a small palette with a title bar and an on / off
+  // switch; its levels are ZBrush sliders (name on the left, value on the right inside the bar; drag anywhere on it,
+  // double-click to type a value). The shadow palette has a light ball like ZBrush's Light palette: drag the light spot.
+  function dwZs(num, rng, vi, en, tv, te) {
+    return '<div class="zbs" tabindex="0" data-zb="' + num + '" data-zr="' + rng + '"' + dwTip(tv, te) + '><div class="zf"></div><i></i>' + '<span class="zl">' + dwT(vi, en) + '</span><span class="zv"></span></div>';
+  }
+  function dwZp(vi, en, on, body, cls) {
+    return '<div class="zpal' + (cls ? ' ' + cls : '') + '"><div class="zph">' + (on ? '<button class="zon" data-zon="' + on + '"' + dwTip('Bật / tắt hiệu ứng', 'Effect on / off') + '></button>' : '') + dwT(vi, en) + '</div><div class="zpb">' + body + '</div></div>';
+  }
   function dwFxHtml() {
-    return dwGrp('Nét bậc', 'Step Lines', dwCol(dwSliderS('Ngưỡng', 'Threshold', 'v6FxTR', 'v6FxT', 'Độ cao bậc nhỏ nhất được vẽ nét (mm trên vật). Nét nằm về phía mặt thấp hơn và dày hơn khi bậc cao hơn', 'Smallest step height that gets a line (mm on the object). The line lies on the lower face and gets thicker for a higher step') +
-        dwSliderS('Nét', 'Line', 'v6FxWR', 'v6FxW', 'Bề dày nét bậc trên giấy (mm, 0 = tắt)', 'Step line width on paper (mm, 0 = off)'))) +
-      dwGrp('Chân bậc', 'Step Band', dwCol(dwSliderS('Rộng', 'Width', 'v6FxBR', 'v6FxB', 'Bề rộng dải tối trên mặt thấp, sát chân bậc (mm trên giấy)', 'Width of the dark band on the lower face along the foot of a step (mm on paper)') +
-        dwSliderS('Đậm', 'Strength', 'v6FxBsR', 'v6FxBs', 'Độ đậm dải tối chân bậc (%, 0 = tắt)', 'Strength of the step band (%, 0 = off)'))) +
-      dwGrp('AO', 'AO', dwCol(dwSliderS('Bán kính', 'Radius', 'v6FxAR', 'v6FxA', 'Ambient Occlusion: chân bậc, khe, lỗ tối dần. Bán kính tính bằng mm trên vật', 'Ambient occlusion: the foot of steps, slots and holes darken. Radius in mm on the object') +
-        dwSliderS('Đậm', 'Strength', 'v6FxAsR', 'v6FxAs', 'Độ đậm AO (%, 0 = tắt)', 'AO strength (%, 0 = off)'))) +
-      dwGrp('Bóng đổ', 'Shadow', dwCol(dwSliderS('Đậm', 'Strength', 'v6FxSR', 'v6FxS', 'Độ đậm bóng đổ (%, 0 = tắt). Đèn gắn với màn hình nên mọi view sáng cùng một kiểu', 'Shadow strength (%, 0 = off). The light is fixed to the screen, so every view is lit alike') +
-        dwSliderS('Xoay', 'Turn', 'v6FxSaR', 'v6FxSa', 'Hướng đèn trên màn hình (°): 0 = từ phải, 90 = từ trên, 180 = từ trái', 'Light direction on the screen (°): 0 = from the right, 90 = from the top, 180 = from the left') +
-        dwSliderS('Nghiêng', 'Tilt', 'v6FxSeR', 'v6FxSe', 'Độ cao đèn so với mặt giấy (°): thấp thì bóng dài', 'Light height above the paper (°): low gives long shadows'))) +
-      dwGrp('Độ cong', 'Curvature', dwCol(dwSliderS('Đậm', 'Strength', 'v6FxCR', 'v6FxC', 'Gờ sáng, rãnh tối theo độ cong bề mặt (%, 0 = tắt)', 'Ridges lighter, grooves darker by the surface curvature (%, 0 = off)'))) +
-      dwGrp('Viền part', 'Part Outline', dwCol(dwChk('#v6FxId', 'Viền part', 'Part Outline', 'Nét ở chỗ body này gặp body khác (dày theo Nét bậc)', 'A line where one body meets another (as wide as the step line)'))) +
-      dwOutGrp();
+    return '<div class="zrow">' +
+      dwZp('Nét bậc', 'Step Lines', 'v6FxW', dwZs('v6FxT', 'v6FxTR', 'Ngưỡng', 'Threshold', 'Độ cao bậc nhỏ nhất được vẽ nét (mm trên vật). Nét nằm về phía mặt thấp hơn và dày hơn khi bậc cao hơn', 'Smallest step height that gets a line (mm on the object). The line lies on the lower face and gets thicker for a higher step') +
+        dwZs('v6FxW', 'v6FxWR', 'Nét', 'Width', 'Bề dày nét bậc trên giấy (mm, 0 = tắt)', 'Step line width on paper (mm, 0 = off)')) +
+      dwZp('Chân bậc', 'Step Band', 'v6FxBs', dwZs('v6FxB', 'v6FxBR', 'Rộng', 'Width', 'Bề rộng dải tối trên mặt thấp, sát chân bậc (mm trên giấy)', 'Width of the dark band on the lower face along the foot of a step (mm on paper)') +
+        dwZs('v6FxBs', 'v6FxBsR', 'Đậm', 'Intensity', 'Độ đậm dải tối chân bậc (%, 0 = tắt)', 'Strength of the step band (%, 0 = off)')) +
+      dwZp('AO', 'Ambient Occlusion', 'v6FxAs', dwZs('v6FxAs', 'v6FxAsR', 'Đậm', 'Intensity', 'Độ đậm AO (%, 0 = tắt): chân bậc, khe, lỗ tối dần', 'AO strength (%, 0 = off): the foot of steps, slots and holes darken') +
+        dwZs('v6FxA', 'v6FxAR', 'Bán kính', 'Radius', 'Bán kính AO (mm trên vật)', 'AO radius (mm on the object)')) +
+      dwZp('Bóng đổ', 'Shadow', 'v6FxS', '<div class="zlr"><canvas class="zball" width="112" height="112"' + dwTip('Quả cầu đèn: kéo đốm sáng để đổi hướng đèn (giữa = đèn chiếu thẳng, mép = đèn thấp, bóng dài)', 'Light ball: drag the light spot to move the light (middle = straight above, edge = low light, long shadows)') + '></canvas><div class="zcol">' +
+        dwZs('v6FxS', 'v6FxSR', 'Đậm', 'Intensity', 'Độ đậm bóng đổ (%, 0 = tắt). Đèn gắn với màn hình nên mọi view sáng cùng một kiểu', 'Shadow strength (%, 0 = off). The light is fixed to the screen, so every view is lit alike') +
+        dwZs('v6FxSa', 'v6FxSaR', 'Hướng', 'Angle', 'Hướng đèn trên màn hình (°): 0 = từ phải, 90 = từ trên, 180 = từ trái', 'Light direction on the screen (°): 0 = from the right, 90 = from the top, 180 = from the left') +
+        dwZs('v6FxSe', 'v6FxSeR', 'Độ cao', 'Elevation', 'Độ cao đèn so với mặt giấy (°): thấp thì bóng dài', 'Light height above the paper (°): low gives long shadows') + '</div></div>', 'zwide') +
+      dwZp('Độ cong', 'Curvature', 'v6FxC', dwZs('v6FxC', 'v6FxCR', 'Đậm', 'Intensity', 'Gờ sáng, rãnh tối theo độ cong bề mặt (%, 0 = tắt)', 'Ridges lighter, grooves darker by the surface curvature (%, 0 = off)')) +
+      dwZp('Viền part', 'Part Outline', '#v6FxId', dwZs('v6FxOw', 'v6FxOwR', 'Nét', 'Width', 'Bề dày viền quanh từng part (mm trên giấy): đường bao của part và chỗ hai body gặp nhau', 'Width of the line round every part (mm on paper): its silhouette and where two bodies meet') +
+        '<div class="zsw">' + dwT('Màu viền', 'Colour') + '<input type="color" data-bind="v6FxOc"' + dwTip('Màu viền part', 'Part outline colour') + '></div>') +
+      '</div>' + dwOutGrp();
   }
   // Ribbon layout: each drawing tab holds only what belongs to that drawing type, left to right in working order
   // (make the views -> place them -> annotate); the Export tab holds what both share, in the same order
@@ -14077,6 +14277,14 @@ var wasm_bindgen = (function(exports) {
         dwBB('data-act="sep"', 'sep', 'Tách ra', 'Separate', 'Tách nhóm của linh kiện đang chọn', 'Split the group of the picked part')) +
       dwGrp('Góc nhìn', 'View Angle', dwCol(dwSlider('Xoay', 'Turn', 'v6AzR', 'v6Az', 'Góc nhìn cả cụm quanh trục đứng (°)', 'View angle about the vertical axis (°)') +
           dwSlider('Nghiêng', 'Tilt', 'v6ElR', 'v6El', 'Góc nhìn cả cụm từ trên xuống (°)', 'Angle looking down (°)'))) +
+      // turning single parts: right after the view angle of the whole assembly (one turns everything, the other only
+      // the parts picked on the sheet); acts on every picked part
+      dwGrp('Xoay linh kiện', 'Part Rotation', dwCol(dwSliderS('Xoay', 'Turn', 'v6PtR', 'v6Pt', 'Xoay các linh kiện đang chọn quanh trục đứng của màn hình (°). Bấm linh kiện trên bản vẽ để chọn, bấm thêm để chọn nhiều', 'Turn the picked parts about the screen\'s vertical axis (°). Click parts on the sheet to pick them, click more to pick several') +
+          dwSliderS('Nghiêng', 'Tilt', 'v6PiR', 'v6Pi', 'Nghiêng các linh kiện đang chọn quanh trục ngang của màn hình (°)', 'Tilt the picked parts about the screen\'s horizontal axis (°)') +
+          dwSliderS('Lăn', 'Roll', 'v6PlR', 'v6Pl', 'Xoay các linh kiện đang chọn trong mặt giấy (°)', 'Roll the picked parts in the plane of the paper (°)')) +
+        dwCol(dwSB('data-act="rotTurn"', 'rotR', 'Xoay 90°', 'Turn 90°', 'Xoay các linh kiện đang chọn thêm 90° quanh trục đứng', 'Turn the picked parts 90° more about the vertical axis') +
+          dwSB('data-act="rotTip"', 'tip', 'Lật 90°', 'Tilt 90°', 'Lật các linh kiện đang chọn thêm 90° quanh trục ngang', 'Tilt the picked parts 90° more about the horizontal axis') +
+          dwSB('data-act="rotReset"', 'reset', 'Về hướng gốc', 'Reset', 'Đưa các linh kiện đang chọn về hướng như cả cụm', 'Put the picked parts back to the assembly\'s orientation'))) +
       dwGrp('Thông tin', 'Information', dwCol(dwSB('data-chk="#v6PN"', 'name', 'Tên linh kiện', 'Component Name') + dwSB('data-chk="#v6PM"', 'mass', 'Vật liệu + khối lượng', 'Material + Mass') +
         dwSB('data-chk="#v6Tot"', 'mass', 'Tổng khối lượng', 'Total Mass', 'Tổng khối lượng theo vật liệu (góc dưới phải, kéo để dời)', 'Total mass per material (bottom right, drag to move)')) +
         dwCol('<div class="dwsRow"' + dwTip('Tên body của linh kiện đang chọn trên bản vẽ (đổi cả trong 3D)', 'Name of the body of the part picked on the sheet (renames it in 3D too)') + '>' + dwT('Tên', 'Name') + '<input type="text" data-bind="v6PName" class="dwsTxt"></div>' +
@@ -14084,7 +14292,8 @@ var wasm_bindgen = (function(exports) {
           '<div class="dwsRow"><span data-text="v6PMass"></span></div>')) +
       dwGrp('Khung', 'Frames', dwBB('data-act="rect"', 'frame', 'Khung', 'Frame', 'Kẻ khung chữ nhật chia khu vực một cụm: kéo trên bản vẽ (bấm một điểm = khung mặc định). Kéo cạnh / tên để dời, kéo góc để đổi cỡ (tự thẳng hàng với khung khác), bấm đúp tên để sửa, chuột phải để sửa / xoá. Esc để thôi', 'Draw a rectangle around the parts of one group: drag on the sheet (a click gives a default frame). Drag an edge / the name to move, the corner to resize (snaps to the other frames), double-click the name to edit, right-click to rename / delete. Esc to stop') +
         dwCol('<div class="dwsRow">' + dwT('Màu', 'Colour') + '<input type="color" data-bind="v6Rc"' + dwTip('Màu khung đang chọn (và khung mới)', 'Colour of the picked frame (and new frames)') + '></div>' +
-          dwSliderS('Tên', 'Name', 'v6RsR', 'v6Rs', 'Cỡ chữ tên khung (mm)', 'Size of the frame name (mm)') +
+          '<div class="dwsRow">' + dwT('Tên ở', 'Name at') + dwSel('v6Rp', 'Vị trí tên khung đang chọn (và khung mới): trong / ngoài khung, góc trên / dưới, trái / phải', 'Where the name of the picked frame (and of new frames) sits: inside / outside, top / bottom, left / right') + '</div>') +
+        dwCol(dwSliderS('Tên', 'Name', 'v6RsR', 'v6Rs', 'Cỡ chữ tên khung (mm)', 'Size of the frame name (mm)') +
           dwSliderS('Nét', 'Line', 'v6RwR', 'v6Rw', 'Bề dày nét khung (mm)', 'Frame line width (mm)')));
     const set = dwGrp('Sheet', 'Sheet', dwBB('data-act="newSheet"', 'sheet', 'Sheet mới', 'New Sheet', 'Tạo Sheet mới (lấy đủ Source Bodies)', 'Add a new sheet (with every source body)') +
         dwCol('<div class="dwsRow">' + dwSel('v6Paper', 'Khổ giấy', 'Paper size') + '</div><div class="dwsRow">' + dwSel('v6Ori', 'Hướng giấy', 'Orientation') + '</div>' +
@@ -14113,7 +14322,7 @@ var wasm_bindgen = (function(exports) {
     const typ = dwGrp('Bố trí & loại bản vẽ', 'Arrange & Type', dwBB('data-click="#v6Auto"', 'arrange', 'Xếp tự động', 'Auto Arrange', '6 Views: căn các hình chiếu cách đều nhau và cách đều viền, giữ nguyên cỡ hình. Exploded: giãn đều các linh kiện, trong khung thì xếp trong khung, ngoài khung thì xếp ở chỗ trống', '6 Views: space the views evenly between each other and the border, keeping their size. Exploded: spread the parts evenly, inside their frame or in the free space') +
       '<button class="bb dwsType" data-act="type2d"' + dwTip('Chọn loại bản vẽ của Sheet: 6 Views hoặc Exploded View (hỏi trước khi đổi)', 'Pick the drawing type of the sheet: 6 Views or Exploded View (asks before switching)') + '>' +
       dwIco('drawing', 30) + '<span>2D Type</span><small class="dwsTypeL"></small></button>').replace('class="rgrp"', 'class="rgrp keep dwsTypeG"');
-    return '<div class="rpage" data-k="6v">' + six + typ + '</div><div class="rpage" data-k="exp">' + exp + typ + '</div><div class="rpage" data-k="set">' + set + '</div><div class="rpage" data-k="fx">' + dwFxHtml() + '</div>';
+    return '<div class="rpage" data-k="6v">' + six + typ + '</div><div class="rpage" data-k="exp">' + exp + typ + '</div><div class="rpage" data-k="set">' + set + '</div><div class="rpage zbp" data-k="fx">' + dwFxHtml() + '</div>';
   }
   // ---------- building the workspace
   (function () {
@@ -14164,6 +14373,9 @@ var wasm_bindgen = (function(exports) {
     rect: function () { v6RectTool(!V6S.rt); },
     jpg: function () { dwExport(null, 'jpg').catch(showError); },
     resetExp: function () { V6S.off = {}; v6Preview(); },
+    rotTurn: function () { v6RotSet(0, 90, true); },
+    rotTip: function () { v6RotSet(1, 90, true); },
+    rotReset: function () { v6RotReset(); },
     comb: function () {
       if (V6S.psel === null || V6S.psel === undefined) { flash(L('Bấm chọn một linh kiện trên bản vẽ trước', 'Pick a part on the sheet first')); return; }
       v6CombStart(V6S.psel);
@@ -14189,8 +14401,111 @@ var wasm_bindgen = (function(exports) {
     const t = $(el.dataset.bind); t.value = el.value; dwFire(t); dwSyncRibbon();
   });
   $('dwsRibbon').addEventListener('keydown', function (e) { if (e.target.tagName === 'INPUT') e.stopPropagation(); });
+  // ---------- ZBrush-style controls of the Effects tab
+  const DW_ZDEF = { v6FxW: 0.05, v6FxBs: 4, v6FxAs: 30, v6FxS: 30, v6FxC: 30 };      // what a switch turns an effect back on to
+  function dwZbsDraw(z) {
+    const src = $(z.dataset.zb), rg = $(z.dataset.zr); if (!src || !rg) return;
+    const lo = +rg.min, hi = +rg.max, v = +src.value, f = hi > lo ? Math.max(0, Math.min(1, (v - lo) / (hi - lo))) : 0;
+    z.querySelector('.zf').style.width = (f * 100) + '%'; z.querySelector('i').style.left = 'calc(' + (f * 100) + '% - 1px)';
+    const st = rg.step && rg.step !== 'any' ? +rg.step : 0, dec = st && st < 1 ? Math.min(3, String(st).split('.')[1].length) : 0;
+    z.querySelector('.zv').textContent = (+v).toFixed(dec);
+  }
+  function dwZbsSet(z, v) {
+    const src = $(z.dataset.zb), rg = $(z.dataset.zr), lo = +rg.min, hi = +rg.max, st = rg.step && rg.step !== 'any' ? +rg.step : 0;
+    v = Math.max(lo, Math.min(hi, v)); if (st) v = Math.round((v - lo) / st) * st + lo;
+    const s = String(+v.toFixed(6));
+    if (src.value === s) return;
+    src.value = s; dwFire(src); dwSyncRibbon();
+  }
+  function dwZball(cv) {
+    const g = cv.getContext('2d'), W = cv.width, R = W / 2 - 6, c = W / 2;
+    const sa = (+$('v6FxSa').value) * Math.PI / 180, se = (+$('v6FxSe').value) * Math.PI / 180, L = [Math.cos(se) * Math.cos(sa), Math.cos(se) * Math.sin(sa), Math.sin(se)];
+    const on = +$('v6FxS').value > 0, im = g.createImageData(W, W), d = im.data;
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+      const nx = (x - c) / R, ny = (c - y) / R, r2 = nx * nx + ny * ny, k = 4 * (y * W + x);
+      if (r2 > 1) { d[k + 3] = 0; continue; }
+      const nz = Math.sqrt(1 - r2), lam = Math.max(0, nx * L[0] + ny * L[1] + nz * L[2]), hx = L[0], hy = L[1], hz = L[2] + 1, hl = Math.hypot(hx, hy, hz);
+      const sp = Math.pow(Math.max(0, (nx * hx + ny * hy + nz * hz) / hl), 40), v = Math.min(255, 38 + 170 * lam + 120 * sp), a = Math.min(1, (1 - Math.sqrt(r2)) * R);
+      d[k] = v; d[k + 1] = v * (on ? 0.97 : 1); d[k + 2] = v * (on ? 0.92 : 1); d[k + 3] = 255 * a;
+    }
+    g.clearRect(0, 0, W, W); g.putImageData(im, 0, 0);
+    const px = c + L[0] * R, py = c - L[1] * R;
+    g.beginPath(); g.arc(px, py, 7, 0, Math.PI * 2); g.fillStyle = on ? '#ff9a2e' : '#9a9a9a'; g.fill(); g.lineWidth = 2; g.strokeStyle = '#111'; g.stroke();
+  }
+  (function () {
+    const rb = $('dwsRibbon');
+    let drag = null;
+    rb.addEventListener('pointerdown', function (e) {
+      const z = e.target.closest('.zbs'), b = e.target.closest('.zball');
+      if (z && e.button === 0 && !e.target.closest('input')) {
+        const r = z.getBoundingClientRect(), rg = $(z.dataset.zr), fine = e.shiftKey;
+        drag = { z: z, r: r, lo: +rg.min, hi: +rg.max, x0: e.clientX, v0: +$(z.dataset.zb).value, fine: fine };
+        if (!z.zt || performance.now() - z.zt > 450) z.zv0 = $(z.dataset.zb).value;     // the value before a click (a double-click goes back to it)
+        z.zt = performance.now();
+        if (!fine) dwZbsSet(z, drag.lo + (e.clientX - r.left) / r.width * (drag.hi - drag.lo));   // ZBrush: the value jumps to the click
+        z.classList.add('drag'); z.setPointerCapture(e.pointerId); e.preventDefault(); return;
+      }
+      if (b && e.button === 0) { drag = { ball: b }; b.setPointerCapture(e.pointerId); dwZballAt(b, e); e.preventDefault(); }
+    });
+    rb.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      if (drag.ball) { dwZballAt(drag.ball, e); return; }
+      const k = (drag.hi - drag.lo) / drag.r.width;
+      dwZbsSet(drag.z, drag.fine ? drag.v0 + (e.clientX - drag.x0) * k * 0.1 : drag.lo + (e.clientX - drag.r.left) * k);    // Shift: ten times finer
+    });
+    const up = function () { if (drag && drag.z) drag.z.classList.remove('drag'); drag = null; };
+    rb.addEventListener('pointerup', up); rb.addEventListener('pointercancel', up);
+    function dwZballAt(b, e) {
+      const r = b.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 2 - 1, y = 1 - (e.clientY - r.top) / r.height * 2, R = (b.width / 2 - 6) / (b.width / 2);
+      let nx = x / R, ny = y / R; const l = Math.hypot(nx, ny); if (l > 1) { nx /= l; ny /= l; }
+      const sa = (Math.atan2(ny, nx) * 180 / Math.PI + 360) % 360, se = Math.acos(Math.min(1, Math.hypot(nx, ny))) * 180 / Math.PI;
+      const a = $('v6FxSa'), el = $('v6FxSe');
+      a.value = Math.round(sa) % 360; el.value = Math.max(5, Math.min(85, Math.round(se)));
+      dwFire(a); dwFire(el);
+      if (+$('v6FxS').value <= 0) { $('v6FxS').value = DW_ZDEF.v6FxS; dwFire($('v6FxS')); }     // moving the light switches the shadow on
+      dwSyncRibbon();
+    }
+    // double-click the slider: type the value
+    rb.addEventListener('dblclick', function (e) {
+      const z = e.target.closest('.zbs'); if (!z) return;
+      const src = $(z.dataset.zb), inp = document.createElement('input');
+      if (z.zv0 !== undefined && src.value !== z.zv0) { src.value = z.zv0; dwFire(src); dwSyncRibbon(); }      // the click before did not mean to move it
+      inp.type = 'number'; inp.className = 'zin'; inp.value = src.value; inp.step = src.step || 'any';
+      z.appendChild(inp); inp.focus(); inp.select();
+      let fin = false;
+      const done = function (ok) { if (fin) return; fin = true; const v = parseFloat(inp.value); if (inp.parentNode) inp.parentNode.removeChild(inp); if (ok && isFinite(v)) dwZbsSet(z, v); };
+      inp.addEventListener('keydown', function (k) { if (k.key === 'Enter') done(true); else if (k.key === 'Escape') done(false); k.stopPropagation(); });
+      inp.addEventListener('blur', function () { done(true); });
+    });
+    // arrow keys on a focused slider: one step (Shift: ten)
+    rb.addEventListener('keydown', function (e) {
+      const z = e.target.closest && e.target.closest('.zbs'); if (!z || e.target.tagName === 'INPUT') return;
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const rg = $(z.dataset.zr), st = +rg.step || (rg.max - rg.min) / 100;
+      dwZbsSet(z, +$(z.dataset.zb).value + (e.key === 'ArrowRight' ? 1 : -1) * st * (e.shiftKey ? 10 : 1)); e.preventDefault(); e.stopPropagation();
+    });
+    // on / off switches: off puts the effect's strength to 0 (kept to come back to), on brings it back
+    rb.addEventListener('click', function (e) {
+      const b = e.target.closest('.zon'); if (!b) return;
+      const k = b.dataset.zon;
+      if (k[0] === '#') { const c = document.querySelector(k); c.checked = !c.checked; dwFire(c); }
+      else {
+        const src = $(k);
+        if (+src.value > 0) { b.dataset.prev = src.value; src.value = 0; }
+        else src.value = b.dataset.prev && +b.dataset.prev > 0 ? b.dataset.prev : DW_ZDEF[k];
+        dwFire(src);
+      }
+      dwSyncRibbon(); e.stopPropagation();
+    }, true);
+  })();
   function dwSyncRibbon() {
     const r = $('dwsRibbon');
+    r.querySelectorAll('.zbs').forEach(dwZbsDraw);
+    r.querySelectorAll('.zon').forEach(function (b) {
+      const k = b.dataset.zon, on = k[0] === '#' ? !!(document.querySelector(k) || {}).checked : +$(k).value > 0;
+      b.classList.toggle('on', on); b.closest('.zpal').classList.toggle('off', !on);
+    });
+    r.querySelectorAll('.zball').forEach(dwZball);
     r.querySelectorAll('[data-bind]').forEach(function (el) { const t = $(el.dataset.bind); if (t && document.activeElement !== el && el.value !== t.value) el.value = t.value; });
     r.querySelectorAll('button[data-chk]').forEach(function (b) { const c = document.querySelector(b.dataset.chk); b.classList.toggle('on', !!(c && c.checked)); });
     r.querySelectorAll('[data-text]').forEach(function (el) { const t = $(el.dataset.text); el.textContent = t ? t.textContent : ''; });
@@ -14201,6 +14516,8 @@ var wasm_bindgen = (function(exports) {
     const inf = $('dwsInfo'); if (inf) inf.title = $('v6Info').innerText;
     const part = V6S.psel !== null && V6S.psel !== undefined && V6S.psel >= 0;
     r.querySelectorAll('[data-bind=v6PName], [data-bind=v6PMat]').forEach(function (el) { el.disabled = !part; });
+    const picked = V6S.mode === 'exp' && v6PSel().length > 0;
+    r.querySelectorAll('[data-bind^=v6Pt], [data-bind^=v6Pi], [data-bind^=v6Pl], button[data-act^=rot]').forEach(function (el) { el.disabled = !picked; });
     const sel = V6S.psel !== null && V6S.psel !== undefined;
     r.querySelectorAll('button[data-act=comb]').forEach(function (b) { b.classList.toggle('hl', V6S.comb !== null); });
     r.querySelectorAll('button[data-act=dim]').forEach(function (b) { b.classList.toggle('hl', !!V6S.dt); });

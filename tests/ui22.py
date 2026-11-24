@@ -92,9 +92,12 @@ with sync_playwright() as p:
             if pg.evaluate("a=>{const h=__mrt.v6().prev.hits,L=__mrt.v6().lay,c=document.getElementById('v6Prev').getBoundingClientRect();const X=((a[0]-c.left)*L.dpr-L.ox)/L.s,Y=((a[1]-c.top)*L.dpr-L.oy)/L.s;return !h.some(q=>X>=q.r.x-20&&X<=q.r.x+q.r.w+20&&Y>=q.r.y-20&&Y<=q.r.y+q.r.h+20)}",[x,y]): ex,ey=x,y; break
         if ex: break
     vp0=pg.evaluate("__mrt.v6().vp.slice()")
+    # v1.5.0: the left button on an empty spot draws a pick box; the middle button (or Space + drag) pans
     pg.mouse.move(ex,ey); pg.mouse.down(); pg.mouse.move(ex+70,ey+40,steps=5); pg.mouse.up(); pg.wait_for_timeout(200)
+    ok('Dragging an empty spot with the left button does not pan (it is a pick box)',pg.evaluate("__mrt.v6().vp.slice()")==vp0)
+    pg.mouse.move(ex,ey); pg.mouse.down(button='middle'); pg.mouse.move(ex+70,ey+40,steps=5); pg.mouse.up(button='middle'); pg.wait_for_timeout(200)
     vp1=pg.evaluate("__mrt.v6().vp.slice()")
-    ok('Dragging an empty spot pans the sheet',abs(vp1[0]-vp0[0]-70)<2 and abs(vp1[1]-vp0[1]-40)<2,[vp0,vp1])
+    ok('Dragging with the middle button pans the sheet',abs(vp1[0]-vp0[0]-70)<2 and abs(vp1[1]-vp0[1]-40)<2,[vp0,vp1])
     pg.mouse.dblclick(ex+70,ey+40); pg.wait_for_timeout(300)
     ok('Double-click on an empty spot fits the sheet',pg.evaluate("__mrt.v6().vz")==1 and pg.evaluate("__mrt.v6().vp")==[0,0])
     pg.fill('#v6Vz','300'); pg.dispatch_event('#v6Vz','input'); pg.wait_for_timeout(200)

@@ -239,20 +239,31 @@
       dwCol(dwSB('data-act="pdfAll"', 'pdf', 'PDF gộp', 'All in 1 PDF', 'Xuất mọi Sheet vào một file PDF theo thứ tự Drawing Tree', 'All sheets into one PDF, in Drawing Tree order') +
         dwSB('data-click="#v6Copy"', 'copy', 'Chép ảnh', 'Copy', 'Chép ảnh Sheet vào clipboard (cỡ vừa để gửi mail, không theo thiết lập xuất)', 'Copy the sheet picture to the clipboard (e-mail size, not the export settings)'))).replace('class="rgrp"', 'class="rgrp keep"');
   }
-  // Effects tab: what makes faces at different heights readable on the picture (depth step lines, step band, part outline)
+  // Effects tab, in the style of ZBrush sub-palettes: each effect is a small palette with a title bar and an on / off
+  // switch; its levels are ZBrush sliders (name on the left, value on the right inside the bar; drag anywhere on it,
+  // double-click to type a value). The shadow palette has a light ball like ZBrush's Light palette: drag the light spot.
+  function dwZs(num, rng, vi, en, tv, te) {
+    return '<div class="zbs" tabindex="0" data-zb="' + num + '" data-zr="' + rng + '"' + dwTip(tv, te) + '><div class="zf"></div><i></i>' + '<span class="zl">' + dwT(vi, en) + '</span><span class="zv"></span></div>';
+  }
+  function dwZp(vi, en, on, body, cls) {
+    return '<div class="zpal' + (cls ? ' ' + cls : '') + '"><div class="zph">' + (on ? '<button class="zon" data-zon="' + on + '"' + dwTip('Bật / tắt hiệu ứng', 'Effect on / off') + '></button>' : '') + dwT(vi, en) + '</div><div class="zpb">' + body + '</div></div>';
+  }
   function dwFxHtml() {
-    return dwGrp('Nét bậc', 'Step Lines', dwCol(dwSliderS('Ngưỡng', 'Threshold', 'v6FxTR', 'v6FxT', 'Độ cao bậc nhỏ nhất được vẽ nét (mm trên vật). Nét nằm về phía mặt thấp hơn và dày hơn khi bậc cao hơn', 'Smallest step height that gets a line (mm on the object). The line lies on the lower face and gets thicker for a higher step') +
-        dwSliderS('Nét', 'Line', 'v6FxWR', 'v6FxW', 'Bề dày nét bậc trên giấy (mm, 0 = tắt)', 'Step line width on paper (mm, 0 = off)'))) +
-      dwGrp('Chân bậc', 'Step Band', dwCol(dwSliderS('Rộng', 'Width', 'v6FxBR', 'v6FxB', 'Bề rộng dải tối trên mặt thấp, sát chân bậc (mm trên giấy)', 'Width of the dark band on the lower face along the foot of a step (mm on paper)') +
-        dwSliderS('Đậm', 'Strength', 'v6FxBsR', 'v6FxBs', 'Độ đậm dải tối chân bậc (%, 0 = tắt)', 'Strength of the step band (%, 0 = off)'))) +
-      dwGrp('AO', 'AO', dwCol(dwSliderS('Bán kính', 'Radius', 'v6FxAR', 'v6FxA', 'Ambient Occlusion: chân bậc, khe, lỗ tối dần. Bán kính tính bằng mm trên vật', 'Ambient occlusion: the foot of steps, slots and holes darken. Radius in mm on the object') +
-        dwSliderS('Đậm', 'Strength', 'v6FxAsR', 'v6FxAs', 'Độ đậm AO (%, 0 = tắt)', 'AO strength (%, 0 = off)'))) +
-      dwGrp('Bóng đổ', 'Shadow', dwCol(dwSliderS('Đậm', 'Strength', 'v6FxSR', 'v6FxS', 'Độ đậm bóng đổ (%, 0 = tắt). Đèn gắn với màn hình nên mọi view sáng cùng một kiểu', 'Shadow strength (%, 0 = off). The light is fixed to the screen, so every view is lit alike') +
-        dwSliderS('Xoay', 'Turn', 'v6FxSaR', 'v6FxSa', 'Hướng đèn trên màn hình (°): 0 = từ phải, 90 = từ trên, 180 = từ trái', 'Light direction on the screen (°): 0 = from the right, 90 = from the top, 180 = from the left') +
-        dwSliderS('Nghiêng', 'Tilt', 'v6FxSeR', 'v6FxSe', 'Độ cao đèn so với mặt giấy (°): thấp thì bóng dài', 'Light height above the paper (°): low gives long shadows'))) +
-      dwGrp('Độ cong', 'Curvature', dwCol(dwSliderS('Đậm', 'Strength', 'v6FxCR', 'v6FxC', 'Gờ sáng, rãnh tối theo độ cong bề mặt (%, 0 = tắt)', 'Ridges lighter, grooves darker by the surface curvature (%, 0 = off)'))) +
-      dwGrp('Viền part', 'Part Outline', dwCol(dwChk('#v6FxId', 'Viền part', 'Part Outline', 'Nét ở chỗ body này gặp body khác (dày theo Nét bậc)', 'A line where one body meets another (as wide as the step line)'))) +
-      dwOutGrp();
+    return '<div class="zrow">' +
+      dwZp('Nét bậc', 'Step Lines', 'v6FxW', dwZs('v6FxT', 'v6FxTR', 'Ngưỡng', 'Threshold', 'Độ cao bậc nhỏ nhất được vẽ nét (mm trên vật). Nét nằm về phía mặt thấp hơn và dày hơn khi bậc cao hơn', 'Smallest step height that gets a line (mm on the object). The line lies on the lower face and gets thicker for a higher step') +
+        dwZs('v6FxW', 'v6FxWR', 'Nét', 'Width', 'Bề dày nét bậc trên giấy (mm, 0 = tắt)', 'Step line width on paper (mm, 0 = off)')) +
+      dwZp('Chân bậc', 'Step Band', 'v6FxBs', dwZs('v6FxB', 'v6FxBR', 'Rộng', 'Width', 'Bề rộng dải tối trên mặt thấp, sát chân bậc (mm trên giấy)', 'Width of the dark band on the lower face along the foot of a step (mm on paper)') +
+        dwZs('v6FxBs', 'v6FxBsR', 'Đậm', 'Intensity', 'Độ đậm dải tối chân bậc (%, 0 = tắt)', 'Strength of the step band (%, 0 = off)')) +
+      dwZp('AO', 'Ambient Occlusion', 'v6FxAs', dwZs('v6FxAs', 'v6FxAsR', 'Đậm', 'Intensity', 'Độ đậm AO (%, 0 = tắt): chân bậc, khe, lỗ tối dần', 'AO strength (%, 0 = off): the foot of steps, slots and holes darken') +
+        dwZs('v6FxA', 'v6FxAR', 'Bán kính', 'Radius', 'Bán kính AO (mm trên vật)', 'AO radius (mm on the object)')) +
+      dwZp('Bóng đổ', 'Shadow', 'v6FxS', '<div class="zlr"><canvas class="zball" width="112" height="112"' + dwTip('Quả cầu đèn: kéo đốm sáng để đổi hướng đèn (giữa = đèn chiếu thẳng, mép = đèn thấp, bóng dài)', 'Light ball: drag the light spot to move the light (middle = straight above, edge = low light, long shadows)') + '></canvas><div class="zcol">' +
+        dwZs('v6FxS', 'v6FxSR', 'Đậm', 'Intensity', 'Độ đậm bóng đổ (%, 0 = tắt). Đèn gắn với màn hình nên mọi view sáng cùng một kiểu', 'Shadow strength (%, 0 = off). The light is fixed to the screen, so every view is lit alike') +
+        dwZs('v6FxSa', 'v6FxSaR', 'Hướng', 'Angle', 'Hướng đèn trên màn hình (°): 0 = từ phải, 90 = từ trên, 180 = từ trái', 'Light direction on the screen (°): 0 = from the right, 90 = from the top, 180 = from the left') +
+        dwZs('v6FxSe', 'v6FxSeR', 'Độ cao', 'Elevation', 'Độ cao đèn so với mặt giấy (°): thấp thì bóng dài', 'Light height above the paper (°): low gives long shadows') + '</div></div>', 'zwide') +
+      dwZp('Độ cong', 'Curvature', 'v6FxC', dwZs('v6FxC', 'v6FxCR', 'Đậm', 'Intensity', 'Gờ sáng, rãnh tối theo độ cong bề mặt (%, 0 = tắt)', 'Ridges lighter, grooves darker by the surface curvature (%, 0 = off)')) +
+      dwZp('Viền part', 'Part Outline', '#v6FxId', dwZs('v6FxOw', 'v6FxOwR', 'Nét', 'Width', 'Bề dày viền quanh từng part (mm trên giấy): đường bao của part và chỗ hai body gặp nhau', 'Width of the line round every part (mm on paper): its silhouette and where two bodies meet') +
+        '<div class="zsw">' + dwT('Màu viền', 'Colour') + '<input type="color" data-bind="v6FxOc"' + dwTip('Màu viền part', 'Part outline colour') + '></div>') +
+      '</div>' + dwOutGrp();
   }
   // Ribbon layout: each drawing tab holds only what belongs to that drawing type, left to right in working order
   // (make the views -> place them -> annotate); the Export tab holds what both share, in the same order
@@ -276,6 +287,14 @@
         dwBB('data-act="sep"', 'sep', 'Tách ra', 'Separate', 'Tách nhóm của linh kiện đang chọn', 'Split the group of the picked part')) +
       dwGrp('Góc nhìn', 'View Angle', dwCol(dwSlider('Xoay', 'Turn', 'v6AzR', 'v6Az', 'Góc nhìn cả cụm quanh trục đứng (°)', 'View angle about the vertical axis (°)') +
           dwSlider('Nghiêng', 'Tilt', 'v6ElR', 'v6El', 'Góc nhìn cả cụm từ trên xuống (°)', 'Angle looking down (°)'))) +
+      // turning single parts: right after the view angle of the whole assembly (one turns everything, the other only
+      // the parts picked on the sheet); acts on every picked part
+      dwGrp('Xoay linh kiện', 'Part Rotation', dwCol(dwSliderS('Xoay', 'Turn', 'v6PtR', 'v6Pt', 'Xoay các linh kiện đang chọn quanh trục đứng của màn hình (°). Bấm linh kiện trên bản vẽ để chọn, bấm thêm để chọn nhiều', 'Turn the picked parts about the screen\'s vertical axis (°). Click parts on the sheet to pick them, click more to pick several') +
+          dwSliderS('Nghiêng', 'Tilt', 'v6PiR', 'v6Pi', 'Nghiêng các linh kiện đang chọn quanh trục ngang của màn hình (°)', 'Tilt the picked parts about the screen\'s horizontal axis (°)') +
+          dwSliderS('Lăn', 'Roll', 'v6PlR', 'v6Pl', 'Xoay các linh kiện đang chọn trong mặt giấy (°)', 'Roll the picked parts in the plane of the paper (°)')) +
+        dwCol(dwSB('data-act="rotTurn"', 'rotR', 'Xoay 90°', 'Turn 90°', 'Xoay các linh kiện đang chọn thêm 90° quanh trục đứng', 'Turn the picked parts 90° more about the vertical axis') +
+          dwSB('data-act="rotTip"', 'tip', 'Lật 90°', 'Tilt 90°', 'Lật các linh kiện đang chọn thêm 90° quanh trục ngang', 'Tilt the picked parts 90° more about the horizontal axis') +
+          dwSB('data-act="rotReset"', 'reset', 'Về hướng gốc', 'Reset', 'Đưa các linh kiện đang chọn về hướng như cả cụm', 'Put the picked parts back to the assembly\'s orientation'))) +
       dwGrp('Thông tin', 'Information', dwCol(dwSB('data-chk="#v6PN"', 'name', 'Tên linh kiện', 'Component Name') + dwSB('data-chk="#v6PM"', 'mass', 'Vật liệu + khối lượng', 'Material + Mass') +
         dwSB('data-chk="#v6Tot"', 'mass', 'Tổng khối lượng', 'Total Mass', 'Tổng khối lượng theo vật liệu (góc dưới phải, kéo để dời)', 'Total mass per material (bottom right, drag to move)')) +
         dwCol('<div class="dwsRow"' + dwTip('Tên body của linh kiện đang chọn trên bản vẽ (đổi cả trong 3D)', 'Name of the body of the part picked on the sheet (renames it in 3D too)') + '>' + dwT('Tên', 'Name') + '<input type="text" data-bind="v6PName" class="dwsTxt"></div>' +
@@ -283,7 +302,8 @@
           '<div class="dwsRow"><span data-text="v6PMass"></span></div>')) +
       dwGrp('Khung', 'Frames', dwBB('data-act="rect"', 'frame', 'Khung', 'Frame', 'Kẻ khung chữ nhật chia khu vực một cụm: kéo trên bản vẽ (bấm một điểm = khung mặc định). Kéo cạnh / tên để dời, kéo góc để đổi cỡ (tự thẳng hàng với khung khác), bấm đúp tên để sửa, chuột phải để sửa / xoá. Esc để thôi', 'Draw a rectangle around the parts of one group: drag on the sheet (a click gives a default frame). Drag an edge / the name to move, the corner to resize (snaps to the other frames), double-click the name to edit, right-click to rename / delete. Esc to stop') +
         dwCol('<div class="dwsRow">' + dwT('Màu', 'Colour') + '<input type="color" data-bind="v6Rc"' + dwTip('Màu khung đang chọn (và khung mới)', 'Colour of the picked frame (and new frames)') + '></div>' +
-          dwSliderS('Tên', 'Name', 'v6RsR', 'v6Rs', 'Cỡ chữ tên khung (mm)', 'Size of the frame name (mm)') +
+          '<div class="dwsRow">' + dwT('Tên ở', 'Name at') + dwSel('v6Rp', 'Vị trí tên khung đang chọn (và khung mới): trong / ngoài khung, góc trên / dưới, trái / phải', 'Where the name of the picked frame (and of new frames) sits: inside / outside, top / bottom, left / right') + '</div>') +
+        dwCol(dwSliderS('Tên', 'Name', 'v6RsR', 'v6Rs', 'Cỡ chữ tên khung (mm)', 'Size of the frame name (mm)') +
           dwSliderS('Nét', 'Line', 'v6RwR', 'v6Rw', 'Bề dày nét khung (mm)', 'Frame line width (mm)')));
     const set = dwGrp('Sheet', 'Sheet', dwBB('data-act="newSheet"', 'sheet', 'Sheet mới', 'New Sheet', 'Tạo Sheet mới (lấy đủ Source Bodies)', 'Add a new sheet (with every source body)') +
         dwCol('<div class="dwsRow">' + dwSel('v6Paper', 'Khổ giấy', 'Paper size') + '</div><div class="dwsRow">' + dwSel('v6Ori', 'Hướng giấy', 'Orientation') + '</div>' +
@@ -312,7 +332,7 @@
     const typ = dwGrp('Bố trí & loại bản vẽ', 'Arrange & Type', dwBB('data-click="#v6Auto"', 'arrange', 'Xếp tự động', 'Auto Arrange', '6 Views: căn các hình chiếu cách đều nhau và cách đều viền, giữ nguyên cỡ hình. Exploded: giãn đều các linh kiện, trong khung thì xếp trong khung, ngoài khung thì xếp ở chỗ trống', '6 Views: space the views evenly between each other and the border, keeping their size. Exploded: spread the parts evenly, inside their frame or in the free space') +
       '<button class="bb dwsType" data-act="type2d"' + dwTip('Chọn loại bản vẽ của Sheet: 6 Views hoặc Exploded View (hỏi trước khi đổi)', 'Pick the drawing type of the sheet: 6 Views or Exploded View (asks before switching)') + '>' +
       dwIco('drawing', 30) + '<span>2D Type</span><small class="dwsTypeL"></small></button>').replace('class="rgrp"', 'class="rgrp keep dwsTypeG"');
-    return '<div class="rpage" data-k="6v">' + six + typ + '</div><div class="rpage" data-k="exp">' + exp + typ + '</div><div class="rpage" data-k="set">' + set + '</div><div class="rpage" data-k="fx">' + dwFxHtml() + '</div>';
+    return '<div class="rpage" data-k="6v">' + six + typ + '</div><div class="rpage" data-k="exp">' + exp + typ + '</div><div class="rpage" data-k="set">' + set + '</div><div class="rpage zbp" data-k="fx">' + dwFxHtml() + '</div>';
   }
   // ---------- building the workspace
   (function () {
@@ -363,6 +383,9 @@
     rect: function () { v6RectTool(!V6S.rt); },
     jpg: function () { dwExport(null, 'jpg').catch(showError); },
     resetExp: function () { V6S.off = {}; v6Preview(); },
+    rotTurn: function () { v6RotSet(0, 90, true); },
+    rotTip: function () { v6RotSet(1, 90, true); },
+    rotReset: function () { v6RotReset(); },
     comb: function () {
       if (V6S.psel === null || V6S.psel === undefined) { flash(L('Bấm chọn một linh kiện trên bản vẽ trước', 'Pick a part on the sheet first')); return; }
       v6CombStart(V6S.psel);
@@ -388,8 +411,111 @@
     const t = $(el.dataset.bind); t.value = el.value; dwFire(t); dwSyncRibbon();
   });
   $('dwsRibbon').addEventListener('keydown', function (e) { if (e.target.tagName === 'INPUT') e.stopPropagation(); });
+  // ---------- ZBrush-style controls of the Effects tab
+  const DW_ZDEF = { v6FxW: 0.05, v6FxBs: 4, v6FxAs: 30, v6FxS: 30, v6FxC: 30 };      // what a switch turns an effect back on to
+  function dwZbsDraw(z) {
+    const src = $(z.dataset.zb), rg = $(z.dataset.zr); if (!src || !rg) return;
+    const lo = +rg.min, hi = +rg.max, v = +src.value, f = hi > lo ? Math.max(0, Math.min(1, (v - lo) / (hi - lo))) : 0;
+    z.querySelector('.zf').style.width = (f * 100) + '%'; z.querySelector('i').style.left = 'calc(' + (f * 100) + '% - 1px)';
+    const st = rg.step && rg.step !== 'any' ? +rg.step : 0, dec = st && st < 1 ? Math.min(3, String(st).split('.')[1].length) : 0;
+    z.querySelector('.zv').textContent = (+v).toFixed(dec);
+  }
+  function dwZbsSet(z, v) {
+    const src = $(z.dataset.zb), rg = $(z.dataset.zr), lo = +rg.min, hi = +rg.max, st = rg.step && rg.step !== 'any' ? +rg.step : 0;
+    v = Math.max(lo, Math.min(hi, v)); if (st) v = Math.round((v - lo) / st) * st + lo;
+    const s = String(+v.toFixed(6));
+    if (src.value === s) return;
+    src.value = s; dwFire(src); dwSyncRibbon();
+  }
+  function dwZball(cv) {
+    const g = cv.getContext('2d'), W = cv.width, R = W / 2 - 6, c = W / 2;
+    const sa = (+$('v6FxSa').value) * Math.PI / 180, se = (+$('v6FxSe').value) * Math.PI / 180, L = [Math.cos(se) * Math.cos(sa), Math.cos(se) * Math.sin(sa), Math.sin(se)];
+    const on = +$('v6FxS').value > 0, im = g.createImageData(W, W), d = im.data;
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+      const nx = (x - c) / R, ny = (c - y) / R, r2 = nx * nx + ny * ny, k = 4 * (y * W + x);
+      if (r2 > 1) { d[k + 3] = 0; continue; }
+      const nz = Math.sqrt(1 - r2), lam = Math.max(0, nx * L[0] + ny * L[1] + nz * L[2]), hx = L[0], hy = L[1], hz = L[2] + 1, hl = Math.hypot(hx, hy, hz);
+      const sp = Math.pow(Math.max(0, (nx * hx + ny * hy + nz * hz) / hl), 40), v = Math.min(255, 38 + 170 * lam + 120 * sp), a = Math.min(1, (1 - Math.sqrt(r2)) * R);
+      d[k] = v; d[k + 1] = v * (on ? 0.97 : 1); d[k + 2] = v * (on ? 0.92 : 1); d[k + 3] = 255 * a;
+    }
+    g.clearRect(0, 0, W, W); g.putImageData(im, 0, 0);
+    const px = c + L[0] * R, py = c - L[1] * R;
+    g.beginPath(); g.arc(px, py, 7, 0, Math.PI * 2); g.fillStyle = on ? '#ff9a2e' : '#9a9a9a'; g.fill(); g.lineWidth = 2; g.strokeStyle = '#111'; g.stroke();
+  }
+  (function () {
+    const rb = $('dwsRibbon');
+    let drag = null;
+    rb.addEventListener('pointerdown', function (e) {
+      const z = e.target.closest('.zbs'), b = e.target.closest('.zball');
+      if (z && e.button === 0 && !e.target.closest('input')) {
+        const r = z.getBoundingClientRect(), rg = $(z.dataset.zr), fine = e.shiftKey;
+        drag = { z: z, r: r, lo: +rg.min, hi: +rg.max, x0: e.clientX, v0: +$(z.dataset.zb).value, fine: fine };
+        if (!z.zt || performance.now() - z.zt > 450) z.zv0 = $(z.dataset.zb).value;     // the value before a click (a double-click goes back to it)
+        z.zt = performance.now();
+        if (!fine) dwZbsSet(z, drag.lo + (e.clientX - r.left) / r.width * (drag.hi - drag.lo));   // ZBrush: the value jumps to the click
+        z.classList.add('drag'); z.setPointerCapture(e.pointerId); e.preventDefault(); return;
+      }
+      if (b && e.button === 0) { drag = { ball: b }; b.setPointerCapture(e.pointerId); dwZballAt(b, e); e.preventDefault(); }
+    });
+    rb.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      if (drag.ball) { dwZballAt(drag.ball, e); return; }
+      const k = (drag.hi - drag.lo) / drag.r.width;
+      dwZbsSet(drag.z, drag.fine ? drag.v0 + (e.clientX - drag.x0) * k * 0.1 : drag.lo + (e.clientX - drag.r.left) * k);    // Shift: ten times finer
+    });
+    const up = function () { if (drag && drag.z) drag.z.classList.remove('drag'); drag = null; };
+    rb.addEventListener('pointerup', up); rb.addEventListener('pointercancel', up);
+    function dwZballAt(b, e) {
+      const r = b.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 2 - 1, y = 1 - (e.clientY - r.top) / r.height * 2, R = (b.width / 2 - 6) / (b.width / 2);
+      let nx = x / R, ny = y / R; const l = Math.hypot(nx, ny); if (l > 1) { nx /= l; ny /= l; }
+      const sa = (Math.atan2(ny, nx) * 180 / Math.PI + 360) % 360, se = Math.acos(Math.min(1, Math.hypot(nx, ny))) * 180 / Math.PI;
+      const a = $('v6FxSa'), el = $('v6FxSe');
+      a.value = Math.round(sa) % 360; el.value = Math.max(5, Math.min(85, Math.round(se)));
+      dwFire(a); dwFire(el);
+      if (+$('v6FxS').value <= 0) { $('v6FxS').value = DW_ZDEF.v6FxS; dwFire($('v6FxS')); }     // moving the light switches the shadow on
+      dwSyncRibbon();
+    }
+    // double-click the slider: type the value
+    rb.addEventListener('dblclick', function (e) {
+      const z = e.target.closest('.zbs'); if (!z) return;
+      const src = $(z.dataset.zb), inp = document.createElement('input');
+      if (z.zv0 !== undefined && src.value !== z.zv0) { src.value = z.zv0; dwFire(src); dwSyncRibbon(); }      // the click before did not mean to move it
+      inp.type = 'number'; inp.className = 'zin'; inp.value = src.value; inp.step = src.step || 'any';
+      z.appendChild(inp); inp.focus(); inp.select();
+      let fin = false;
+      const done = function (ok) { if (fin) return; fin = true; const v = parseFloat(inp.value); if (inp.parentNode) inp.parentNode.removeChild(inp); if (ok && isFinite(v)) dwZbsSet(z, v); };
+      inp.addEventListener('keydown', function (k) { if (k.key === 'Enter') done(true); else if (k.key === 'Escape') done(false); k.stopPropagation(); });
+      inp.addEventListener('blur', function () { done(true); });
+    });
+    // arrow keys on a focused slider: one step (Shift: ten)
+    rb.addEventListener('keydown', function (e) {
+      const z = e.target.closest && e.target.closest('.zbs'); if (!z || e.target.tagName === 'INPUT') return;
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const rg = $(z.dataset.zr), st = +rg.step || (rg.max - rg.min) / 100;
+      dwZbsSet(z, +$(z.dataset.zb).value + (e.key === 'ArrowRight' ? 1 : -1) * st * (e.shiftKey ? 10 : 1)); e.preventDefault(); e.stopPropagation();
+    });
+    // on / off switches: off puts the effect's strength to 0 (kept to come back to), on brings it back
+    rb.addEventListener('click', function (e) {
+      const b = e.target.closest('.zon'); if (!b) return;
+      const k = b.dataset.zon;
+      if (k[0] === '#') { const c = document.querySelector(k); c.checked = !c.checked; dwFire(c); }
+      else {
+        const src = $(k);
+        if (+src.value > 0) { b.dataset.prev = src.value; src.value = 0; }
+        else src.value = b.dataset.prev && +b.dataset.prev > 0 ? b.dataset.prev : DW_ZDEF[k];
+        dwFire(src);
+      }
+      dwSyncRibbon(); e.stopPropagation();
+    }, true);
+  })();
   function dwSyncRibbon() {
     const r = $('dwsRibbon');
+    r.querySelectorAll('.zbs').forEach(dwZbsDraw);
+    r.querySelectorAll('.zon').forEach(function (b) {
+      const k = b.dataset.zon, on = k[0] === '#' ? !!(document.querySelector(k) || {}).checked : +$(k).value > 0;
+      b.classList.toggle('on', on); b.closest('.zpal').classList.toggle('off', !on);
+    });
+    r.querySelectorAll('.zball').forEach(dwZball);
     r.querySelectorAll('[data-bind]').forEach(function (el) { const t = $(el.dataset.bind); if (t && document.activeElement !== el && el.value !== t.value) el.value = t.value; });
     r.querySelectorAll('button[data-chk]').forEach(function (b) { const c = document.querySelector(b.dataset.chk); b.classList.toggle('on', !!(c && c.checked)); });
     r.querySelectorAll('[data-text]').forEach(function (el) { const t = $(el.dataset.text); el.textContent = t ? t.textContent : ''; });
@@ -400,6 +526,8 @@
     const inf = $('dwsInfo'); if (inf) inf.title = $('v6Info').innerText;
     const part = V6S.psel !== null && V6S.psel !== undefined && V6S.psel >= 0;
     r.querySelectorAll('[data-bind=v6PName], [data-bind=v6PMat]').forEach(function (el) { el.disabled = !part; });
+    const picked = V6S.mode === 'exp' && v6PSel().length > 0;
+    r.querySelectorAll('[data-bind^=v6Pt], [data-bind^=v6Pi], [data-bind^=v6Pl], button[data-act^=rot]').forEach(function (el) { el.disabled = !picked; });
     const sel = V6S.psel !== null && V6S.psel !== undefined;
     r.querySelectorAll('button[data-act=comb]').forEach(function (b) { b.classList.toggle('hl', V6S.comb !== null); });
     r.querySelectorAll('button[data-act=dim]').forEach(function (b) { b.classList.toggle('hl', !!V6S.dt); });

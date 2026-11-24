@@ -109,3 +109,32 @@
   #dwsRibbon .dwsRow.sel2 select { max-width: 62px; }
   #dwsRibbon .rgrp.dwsTypeG { margin-left: auto; }
   #dwsRibbon .dwsType small { display: block; font-size: 9.5px; color: var(--accent); white-space: nowrap; }
+
+  /* Effects tab: ZBrush-style sub-palettes, sliders and light ball */
+  #dwsRibbon .rpage.zbp { background: #2b2b2b; }
+  #dwsRibbon .zrow { display: flex; gap: 4px; padding: 4px; align-items: stretch; }
+  #dwsRibbon .zpal { display: flex; flex-direction: column; width: 172px; background: #383838; border: 1px solid #1d1d1d; border-radius: 3px; box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
+  #dwsRibbon .zpal.zwide { width: 262px; }
+  #dwsRibbon .zph { display: flex; align-items: center; gap: 6px; height: 17px; padding: 0 6px; background: linear-gradient(#4c4c4c, #3d3d3d); border-bottom: 1px solid #1d1d1d; border-radius: 3px 3px 0 0;
+    font: 600 11px "Segoe UI", Arial, sans-serif; color: #d9d9d9; letter-spacing: .3px; white-space: nowrap; }
+  #dwsRibbon .zpal.off .zph { color: #8e8e8e; }
+  #dwsRibbon .zpal.off .zbs .zf { background: linear-gradient(#4b4b4b, #424242); }
+  #dwsRibbon .zpb { display: flex; flex-direction: column; gap: 2px; padding: 3px 5px 4px; }
+  #dwsRibbon .zon { width: 24px; height: 12px; min-width: 0; padding: 0; margin: 0; border-radius: 6px; background: #1c1c1c; border: 1px solid #0e0e0e; position: relative; cursor: pointer; box-shadow: inset 0 1px 2px rgba(0,0,0,.6); }
+  #dwsRibbon .zon::after { content: ""; position: absolute; top: 1px; left: 1px; width: 8px; height: 8px; border-radius: 50%; background: #7a7a7a; }
+  #dwsRibbon .zon.on { background: #d9761e; border-color: #7a3c06; }
+  #dwsRibbon .zon.on::after { left: 13px; background: #fff3e2; }
+  #dwsRibbon .zbs { position: relative; height: 17px; background: #1e1e1e; border: 1px solid #111; border-radius: 3px; overflow: hidden; cursor: ew-resize; user-select: none; outline: none;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.7); }
+  #dwsRibbon .zbs .zf { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(#6e6e6e, #585858); }
+  #dwsRibbon .zbs i { position: absolute; top: 0; bottom: 0; width: 2px; background: #f08a24; }
+  #dwsRibbon .zbs:hover .zf, #dwsRibbon .zbs:focus .zf { background: linear-gradient(#7c7c7c, #646464); }
+  #dwsRibbon .zbs.drag .zf { background: linear-gradient(#8a6a4a, #6e533a); }
+  #dwsRibbon .zbs .zl, #dwsRibbon .zbs .zv { position: absolute; top: 0; line-height: 15px; font: 11px "Segoe UI", Arial, sans-serif; color: #ececec; text-shadow: 0 1px 1px #000; pointer-events: none; }
+  #dwsRibbon .zbs .zl { left: 7px; } #dwsRibbon .zbs .zv { right: 7px; font-weight: 600; }
+  #dwsRibbon .zbs .zin { position: absolute; right: 0; top: 0; bottom: 0; width: 64px; height: 15px; padding: 0 4px; font-size: 11px; background: #111; color: #fff; border: 1px solid #f08a24; border-radius: 0 3px 3px 0; }
+  #dwsRibbon .zlr { display: flex; gap: 6px; align-items: center; }
+  #dwsRibbon .zball { width: 53px; height: 53px; flex: none; cursor: crosshair; border-radius: 50%; background: radial-gradient(circle, #262626 60%, #1b1b1b); }
+  #dwsRibbon .zcol { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  #dwsRibbon .zsw { display: flex; align-items: center; gap: 6px; height: 17px; font: 11px "Segoe UI", Arial, sans-serif; color: #cfcfcf; padding-left: 2px; }
+  #dwsRibbon .zsw input[type=color] { width: 30px; height: 17px; }

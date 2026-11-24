@@ -16,12 +16,13 @@
     'bool BG(float d){return d>0.9999;}\n';
   // pass 1: per pixel, is it the lower side of a depth step (r = line width / 48 px, g = step height, log scale; g = 1:
   // background next to the object) and is it on a body boundary (b)
-  const FX_EDGE = FX_HD + 'uniform sampler2D uId;uniform float uW;uniform int uIdOn;\n' +
+  // b = part outline: 1 on a body pixel next to empty sheet (its silhouette), 0.5 next to another body
+  const FX_EDGE = FX_HD + 'uniform sampler2D uId;uniform float uW;uniform int uIdOn,uOut;\n' +
     'int I(ivec2 q){vec4 c=texelFetch(uId,F(q),0);return int(c.r*255.0+0.5)+256*int(c.g*255.0+0.5);}\n' +
     'void main(){ivec2 p=P();float dp=D(p);bool bp=BG(dp);float w=0.0,jm=0.0,idb=0.0;int ip=uIdOn==1?I(p):0;\n' +
     'ivec2 S[4]=ivec2[4](ivec2(1,0),ivec2(-1,0),ivec2(0,1),ivec2(0,-1));\n' +
-    'for(int k=0;k<4;k++){ivec2 s=S[k],q=p+s;if(!IN(q))continue;float dq=D(q);if(BG(dq))continue;\n' +
-    ' if(uIdOn==1&&!bp){int iq=I(q);if(iq!=ip&&iq>0&&ip>0)idb=1.0;}\n' +
+    'for(int k=0;k<4;k++){ivec2 s=S[k],q=p+s;if(!IN(q)){if(uOut==1&&!bp)idb=1.0;continue;}float dq=D(q);if(BG(dq)){if(uOut==1&&!bp)idb=1.0;continue;}\n' +
+    ' if(uIdOn==1&&!bp){int iq=I(q);if(iq!=ip&&iq>0&&ip>0)idb=max(idb,0.5);}\n' +
     ' float j;if(bp)j=1e6;else{float da=D(p-s);if(BG(da)||!IN(p-s))da=dp;j=((2.0*dp-da)-dq)*uDR;}\n' +
     ' if(j>uThr){jm=max(jm,j);if(uW>0.0){float f=clamp(0.6+0.2*log2(j/uThr),0.6,1.8);w=max(w,max(uW*f,0.8));}}}\n' +
     'float g=jm>0.0?(bp?1.0:clamp(log2(jm/uThr)/12.0,0.0,0.99)):0.0;o=vec4(min(w/48.0,1.0),g,idb,jm>0.0&&!bp?1.0:0.0);}';
@@ -30,7 +31,7 @@
     'void main(){ivec2 b=ivec2(gl_FragCoord.xy)*8,s=textureSize(uE,0);vec4 m=vec4(0.0);\n' +
     'for(int y=0;y<8;y++)for(int x=0;x<8;x++){ivec2 q=b+ivec2(x,y);if(q.x<s.x&&q.y<s.y)m=max(m,texelFetch(uE,q,0));}o=m;}';
   // pass 3: the picture with the effects
-  const FX_OUT = FX_HD + 'uniform sampler2D uE,uB,uBB,uCol,uN;uniform float uRad,uIdW,uBw,uBs,uS2,uAr,uAs,uCs,uCo,uSs;uniform vec3 uLc,uL;\n' +
+  const FX_OUT = FX_HD + 'uniform sampler2D uE,uB,uBB,uCol,uN;uniform float uRad,uIdW,uBw,uBs,uS2,uAr,uAs,uCs,uCo,uSs;uniform vec3 uLc,uL,uOc;\n' +
     'float h1(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\n' +
     'vec3 N(ivec2 q){vec3 n=texelFetch(uN,F(q),0).xyz*2.0-1.0;return n;}\n' +
     // one-sided depth slope (the smaller one, so a step next to the pixel does not tilt its plane)
@@ -38,12 +39,13 @@
     'if(ia&&ib){float u=a-dp,v=dp-b;return abs(u)<abs(v)?u:v;}if(ia)return a-dp;if(ib)return dp-b;return 0.0;}\n' +
     'bool NEAR(sampler2D t,int sz,float r,ivec2 p,bool st){ivec2 g0=F(p)/sz,bs=textureSize(t,0);int RB=int(ceil(r/float(sz)))+1;\n' +
     ' for(int by=-RB;by<=RB;by++)for(int bx=-RB;bx<=RB;bx++){ivec2 b=g0+ivec2(bx,by);if(b.x<0||b.y<0||b.x>=bs.x||b.y>=bs.y)continue;vec4 v=texelFetch(t,b,0);if(st?v.a>0.0:(v.r>0.0||v.b>0.0))return true;}return false;}\n' +
-    'void main(){ivec2 p=P();float dp=D(p);bool bp=BG(dp);vec4 col=texelFetch(uCol,C(p),0);vec3 c=col.rgb;float cov=0.0;\n' +
+    'void main(){ivec2 p=P();float dp=D(p);bool bp=BG(dp);vec4 col=texelFetch(uCol,C(p),0);vec3 c=col.rgb;float cov=0.0,ocv=0.0;\n' +
     'int R=int(ceil(uRad));\n' +
     'if(R>0&&NEAR(uB,8,uRad,p,false)){\n' +
     ' for(int dy=-R;dy<=R;dy++)for(int dx=-R;dx<=R;dx++){float dd=length(vec2(dx,dy));if(dd>uRad+0.5)continue;ivec2 q=p+ivec2(dx,dy);if(!IN(q))continue;vec4 e=texelFetch(uE,F(q),0);\n' +
     '  if(e.r>0.0){float w=e.r*48.0;if(dd<=w+0.5){bool ok=e.g>=0.995?bp:(!bp&&dp>D(q)-0.5*uThr*exp2(e.g*12.0)/uDR);if(ok)cov=max(cov,clamp(w+0.5-dd,0.0,1.0));}}\n' +
-    '  if(e.b>0.0&&!bp){float hw=max(uIdW*0.5,0.5);if(dd<=hw+0.5)cov=max(cov,clamp(hw+0.5-dd,0.0,1.0));}}}\n' +
+    // part outline: inside the silhouette uIdW wide; between two bodies half of it on each side
+    '  if(e.b>0.0&&!bp){float hw=max(e.b>0.75?uIdW:uIdW*0.5,0.5);if(dd<=hw-0.5)ocv=1.0;else if(dd<=hw+0.5)ocv=max(ocv,hw+0.5-dd);}}}\n' +
     'if(!bp){vec2 gr=vec2(G1(p,ivec2(1,0),dp),G1(p,ivec2(0,1),dp));float jt=h1(vec2(p))*6.2831853,jr=h1(vec2(p)+17.3);\n' +
     // step band: the nearest point higher than the pixel's own plane by more than the step threshold darkens it
     ' if(uBs>0.0&&uBw>=1.0&&NEAR(uBB,64,uBw,p,true)){float band=0.0;for(int k=0;k<10;k++){float a=jt+float(k)*0.6283185;vec2 dv=vec2(cos(a),sin(a));\n' +
@@ -67,7 +69,7 @@
     '    if(-dq*uDR>hp+uL.z*t/(uS2*lxy)+bias){shd=1.0;break;}}}\n' +
     '  c*=1.0-uSs*shd;}\n' +
     '}\n' +
-    'o=bp?vec4(uLc,cov):vec4(mix(c,uLc,cov),1.0);}';
+    'o=bp?vec4(uLc,cov):vec4(mix(mix(c,uLc,cov),uOc,ocv),1.0);}';
 
   function v6FxProg(G, fs) {
     const g = G.g, sh = function (t, s) { const x = g.createShader(t); g.shaderSource(x, s); g.compileShader(x); if (!g.getShaderParameter(x, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(x)); return x; };
@@ -81,7 +83,7 @@
     return G.fx;
   }
   // any effect switched on
-  function v6FxOn(fx) { return !!fx && (fx.w > 0 || (fx.bs > 0 && fx.bw > 0) || fx.id || fx.as > 0 || fx.ss > 0 || fx.cs > 0); }
+  function v6FxOn(fx) { return !!fx && (fx.w > 0 || (fx.bs > 0 && fx.bw > 0) || (fx.id && fx.ow > 0) || fx.as > 0 || fx.ss > 0 || fx.cs > 0); }
   function v6FxTex(g, w, h, ifmt, fmt, type, data) {
     const t = g.createTexture(); g.bindTexture(g.TEXTURE_2D, t);
     g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.NEAREST); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.NEAREST);
@@ -101,7 +103,8 @@
     const U = function (p, n) { return g.getUniformLocation(p, n); };
     const bind = function (p, unit, name, t) { g.activeTexture(g.TEXTURE0 + unit); g.bindTexture(g.TEXTURE_2D, t); g.uniform1i(U(p, name), unit); };
     try {
-      const idOn = fx.id && a.nb > 1, nOn = fx.ss > 0 || fx.cs > 0;
+      // part outline: the silhouette of every part (from depth alone), and between two bodies (body numbers, 2+ bodies)
+      const outOn = !!fx.id && fx.ow > 0, idOn = outOn && a.nb > 1, nOn = fx.ss > 0 || fx.cs > 0;
       // body-number and normal pictures: drawn by the caller in its geometry pass and owned by it
       const tId = idOn ? a.tId : null, tN = nOn ? a.tN : null;
       const tD = tex(vw, vh, g.R32F, g.RED, g.FLOAT, a.raw);
@@ -111,7 +114,7 @@
       g.disable(g.DEPTH_TEST); g.disable(g.SCISSOR_TEST); g.disable(g.BLEND); g.bindVertexArray(F.vao);
       // pass 1
       const tE = tex(vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null); target(tE); g.viewport(0, 0, vw, vh);
-      common(F.edge); g.uniform1f(U(F.edge, 'uW'), wl); g.uniform1i(U(F.edge, 'uIdOn'), tId ? 1 : 0); bind(F.edge, 1, 'uId', tId || tC);
+      common(F.edge); g.uniform1f(U(F.edge, 'uW'), wl); g.uniform1i(U(F.edge, 'uIdOn'), tId ? 1 : 0); g.uniform1i(U(F.edge, 'uOut'), outOn ? 1 : 0); bind(F.edge, 1, 'uId', tId || tC);
       g.drawArrays(g.TRIANGLES, 0, 3);
       // pass 2
       const bw = Math.ceil(vw / 8), bh = Math.ceil(vh / 8), tB = tex(bw, bh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null); target(tB); g.viewport(0, 0, bw, bh);
@@ -121,8 +124,9 @@
       // pass 3, in tiles read back one by one
       const tO = tex(vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, null); target(tO); g.viewport(0, 0, vw, vh);
       const P = F.out; common(P); bind(P, 1, 'uE', tE); bind(P, 2, 'uB', tB); bind(P, 3, 'uCol', tC); bind(P, 4, 'uN', tN || tC); bind(P, 5, 'uBB', tBB);
-      const idw = tId ? Math.max(1, 0.8 * fx.w * a.ppx) : 0;
-      g.uniform1f(U(P, 'uRad'), wl > 0 || idw > 0 ? Math.min(24, Math.max(wl * 1.8, idw / 2)) : 0); g.uniform1f(U(P, 'uIdW'), idw);
+      const idw = outOn ? Math.min(24, Math.max(1, fx.ow * a.ppx)) : 0;
+      g.uniform1f(U(P, 'uRad'), wl > 0 || idw > 0 ? Math.min(24, Math.max(wl * 1.8, idw + 1)) : 0); g.uniform1f(U(P, 'uIdW'), idw);
+      g.uniform3fv(U(P, 'uOc'), fx.oc || [0x11 / 255, 0x11 / 255, 0x11 / 255]);
       g.uniform1f(U(P, 'uBw'), fx.bw * a.ppx); g.uniform1f(U(P, 'uBs'), fx.bw > 0 ? fx.bs : 0); g.uniform1f(U(P, 'uS2'), a.S2);
       g.uniform3fv(U(P, 'uLc'), [0x11 / 255, 0x11 / 255, 0x11 / 255]);
       const sa = fx.sa * Math.PI / 180, se = fx.se * Math.PI / 180;

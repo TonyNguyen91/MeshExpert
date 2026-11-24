@@ -54,7 +54,7 @@ with sync_playwright() as p:
     acts=lambda k: pg.evaluate("k=>[...document.querySelectorAll('#dwsRibbon .rpage[data-k=\"'+k+'\"] [data-act],#dwsRibbon .rpage[data-k=\"'+k+'\"] [data-click],#dwsRibbon .rpage[data-k=\"'+k+'\"] [data-chk],#dwsRibbon .rpage[data-k=\"'+k+'\"] [data-bind]')].map(e=>e.dataset.act||e.dataset.click||e.dataset.chk||e.dataset.bind)",k)
     a6=set(acts('6v')); ae=set(acts('exp'))
     ok('6 Views and Exploded share only Auto Arrange and the view angle (iso / assembly)',a6&ae=={'#v6Auto','v6Az','v6AzR','v6El','v6ElR','type2d'},a6&ae)
-    ok('Every ribbon button has an icon and a name / tooltip',pg.evaluate("[...document.querySelectorAll('#dwsRibbon button')].every(b=>b.querySelector('svg')&&(b.textContent.trim()||b.title))"))
+    ok('Every ribbon button has an icon and a name / tooltip',pg.evaluate("[...document.querySelectorAll('#dwsRibbon button:not(.zon)')].every(b=>b.querySelector('svg')&&(b.textContent.trim()||b.title))"))
     root=pg.inner_text('#dwsTree .dwsNode.root')
     ok('Drawing Tree root named after the model',root=='Drawing of "block"',root)
     ok('Starts with Sheet 1, highlighted, no Saved / Modified marks',tree()==['Sheet 1'] and pg.evaluate("document.querySelector('#dwsTree .dwsNode.sheet').classList.contains('on')") and pg.locator('#dwsTree .dwsNode.sheet .st').count()==0)
@@ -121,7 +121,7 @@ with sync_playwright() as p:
     # ---- exploded tab is a separate drawing of the sheet
     pg.evaluate("__mrt.dwType('exp')"); settle()
     titles=pg.evaluate("[...document.querySelectorAll('#dwsRibbon .rpage.on .rtitle')].map(e=>e.textContent)")
-    ok('Exploded View ribbon groups',titles==['Explode','Góc nhìn','Thông tin','Khung','Bố trí & loại bản vẽ'] and pg.inner_text('#v6ShT')=='Exploded view',titles)
+    ok('Exploded View ribbon groups',titles==['Explode','Góc nhìn','Xoay linh kiện','Thông tin','Khung','Bố trí & loại bản vẽ'] and pg.inner_text('#v6ShT')=='Exploded view',titles)
     pg.click('#dwsRibbon .rpage.on button[data-chk="#v6PN"]'); settle()
     ok('Component Name toggle',not pg.is_checked('#v6PN'))
     pg.click('#dwsRibbon .rpage.on button[data-act=comb]'); pg.wait_for_timeout(200)

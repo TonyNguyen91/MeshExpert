@@ -29,8 +29,9 @@ with sync_playwright() as p:
     def seg(x0,y0,x1,y1,n=12):
         return min(px(x0+(x1-x0)*i/n,y0+(y1-y0)*i/n) for i in range(n+1))
     pg.click('#dwsTabs .rtab[data-k=fx]'); pg.wait_for_timeout(300)
-    ok('Effects tab: step lines, step band, AO, shadow, curvature, part outline, export',pg.evaluate("[...document.querySelectorAll('#dwsRibbon .rpage[data-k=fx] .rtitle')].map(t=>t.textContent)")==['Nét bậc','Chân bậc','AO','Bóng đổ','Độ cong','Viền part','Xuất'])
-    ok('Every effect level is a slider with a number box',pg.locator('#dwsRibbon .rpage[data-k=fx] input[type=range]').count()==10 and pg.locator('#dwsRibbon .rpage[data-k=fx] input[type=number]').count()==10)
+    # v1.5.0: ZBrush-style palettes (title bar + switch) and sliders (name and value inside the bar)
+    ok('Effects tab: step lines, step band, AO, shadow, curvature, part outline, export',pg.evaluate("[...document.querySelectorAll('#dwsRibbon .rpage[data-k=fx] .zph')].map(t=>t.textContent)")==['Nét bậc','Chân bậc','AO','Bóng đổ','Độ cong','Viền part'] and pg.evaluate("[...document.querySelectorAll('#dwsRibbon .rpage[data-k=fx] .rtitle')].map(t=>t.textContent)")==['Xuất'])
+    ok('Every effect level is a ZBrush slider with its value',pg.locator('#dwsRibbon .rpage[data-k=fx] .zbs').count()==11 and pg.evaluate("[...document.querySelectorAll('#dwsRibbon .rpage[data-k=fx] .zbs .zv')].every(v=>v.textContent.length>0)"))
     ok('Effects tab keeps the ribbon without a scroll bar',pg.evaluate("(()=>{const p=document.querySelector('#dwsRibbon .rpage.on');return p.scrollWidth<=p.clientWidth+1})()"))
     # isolate the effects: no traced edges
     setv('v6Edge',False); setv('v6FxT','0.2'); setv('v6FxB','1'); setv('v6FxW','0'); setv('v6FxBs','0'); setv('v6FxId',False); fresh()
@@ -63,7 +64,8 @@ with sync_playwright() as p:
     pg.click('#dwsTree .dwsNode.sheet >> text=Sheet 1'); pg.wait_for_timeout(1500)
     ok('Sheet 1 keeps its own effects',pg.input_value('#v6FxT')=='1.5' and pg.input_value('#v6FxW')=='0')
     pg.click('#dwsTabs .rtab[data-k=fx]'); pg.wait_for_timeout(300)
-    pg.fill('#dwsRibbon .rpage[data-k=fx] input[type=number][data-bind=v6FxS]','30'); pg.dispatch_event('#dwsRibbon .rpage[data-k=fx] input[type=number][data-bind=v6FxS]','input'); pg.wait_for_timeout(300)
+    # v1.5.0: double-click the ZBrush slider and type the value
+    pg.locator('#dwsRibbon .rpage[data-k=fx] .zbs[data-zb=v6FxS]').dblclick(); pg.keyboard.press('Control+A'); pg.keyboard.type('30'); pg.keyboard.press('Enter'); pg.wait_for_timeout(300)
     ok('Ribbon slider drives the panel value',pg.input_value('#v6FxS')=='30' and pg.input_value('#v6FxSR')=='30')
     d=pg.evaluate("__mrt.v6Png().then(u=>u.length)")
     ok('Export with effects works',d>10000,d)
