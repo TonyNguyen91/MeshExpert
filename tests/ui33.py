@@ -1,4 +1,4 @@
-# Browser test (v1.3.1): new default settings (SLA print plate, drawing colour / bold text, drawing effects, 3D view shading)
+# Browser test (v1.3.2): new default settings (SLA print plate, drawing colour / bold text, drawing effects, 3D view shading)
 # and one Auto Arrange button, the same on 6 Views and Exploded View, right next to 2D Type.
 # Run: python3 ui33.py <fixtures folder> [path to index.html]
 import sys,os
@@ -16,7 +16,7 @@ with sync_playwright() as p:
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
     pg.on('dialog',lambda d: d.accept())
     pg.goto('file://'+os.path.abspath(PAGE))
-    ok('Version 1.3.1 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.3.1')
+    ok('Version 1.3.2 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.3.2')
     v=lambda i: pg.evaluate("i=>document.getElementById(i).value",i)
     c=lambda i: pg.evaluate("i=>document.getElementById(i).checked",i)
     # SLA print plate

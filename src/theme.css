@@ -1,0 +1,118 @@
+/* MeshExpert theme on Pico CSS. Pico (vendor/pico.min.css) is wrapped in @layer pico by build.py, and
+   these rules are outside any layer, so they win over Pico without extra specificity. */
+:root {
+  color-scheme: dark;
+  --pico-font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  --pico-font-size: 13px;
+  --pico-line-height: 1.4;
+  --pico-border-radius: 5px;
+  --pico-spacing: .5rem;
+  --pico-typography-spacing-vertical: .5rem;
+  --pico-form-element-spacing-vertical: .3rem;
+  --pico-form-element-spacing-horizontal: .55rem;
+  --pico-transition: 0s;          /* no fades: the app's controls switch state at once, as before */
+  --pico-background-color: #14181d;
+  --pico-color: #dfe6ee;
+  --pico-muted-color: #8b98a8;
+  --pico-muted-border-color: #323c48;
+  --pico-border-color: #323c48;
+  --pico-card-background-color: #1c2229;
+  --pico-card-sectioning-background-color: #232b34;
+  --pico-card-border-color: #323c48;
+  --pico-card-box-shadow: none;
+  --pico-primary: #f0a030;
+  --pico-primary-background: #f0a030;
+  --pico-primary-border: #f0a030;
+  --pico-primary-hover: #ffb547;
+  --pico-primary-hover-background: #ffb547;
+  --pico-primary-hover-border: #ffb547;
+  --pico-primary-inverse: #1a1205;
+  --pico-primary-focus: rgba(240, 160, 48, .28);
+  --pico-primary-underline: rgba(240, 160, 48, .5);
+  --pico-primary-hover-underline: #ffb547;
+  --pico-secondary: #8b98a8;
+  --pico-secondary-background: #2c3642;
+  --pico-secondary-border: #3a4655;
+  --pico-secondary-hover: #dfe6ee;
+  --pico-secondary-hover-background: #35414f;
+  --pico-secondary-hover-border: #4a5a6c;
+  --pico-secondary-inverse: #dfe6ee;
+  --pico-secondary-focus: rgba(139, 152, 168, .25);
+  --pico-form-element-background-color: #11151a;
+  --pico-form-element-selected-background-color: #2c3642;
+  --pico-form-element-border-color: #323c48;
+  --pico-form-element-color: #dfe6ee;
+  --pico-form-element-placeholder-color: #6f7f92;
+  --pico-form-element-active-background-color: #11151a;
+  --pico-form-element-active-border-color: #f0a030;
+  --pico-form-element-focus-color: #f0a030;
+  --pico-range-border-color: #2c3642;
+  --pico-range-active-border-color: #3a4655;
+  --pico-range-thumb-color: #f0a030;
+  --pico-range-thumb-active-color: #ffb547;
+  --pico-switch-background-color: #2c3642;
+  --pico-switch-checked-background-color: #f0a030;
+  --pico-table-border-color: #323c48;
+  --pico-table-row-stripped-background-color: rgba(139, 152, 168, .05);
+  --pico-tooltip-background-color: #232b34;
+  --pico-tooltip-color: #dfe6ee;
+  --pico-dropdown-background-color: #1c2229;
+  --pico-dropdown-border-color: #323c48;
+  --pico-dropdown-color: #dfe6ee;
+  --pico-dropdown-hover-background-color: #2c3642;
+  --pico-modal-overlay-background-color: rgba(8, 10, 13, .55);
+  --pico-box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+  --pico-h1-color: #dfe6ee; --pico-h2-color: #dfe6ee; --pico-h3-color: #dfe6ee;
+  --pico-h4-color: #dfe6ee; --pico-h5-color: #dfe6ee; --pico-h6-color: #dfe6ee;
+
+  /* names the app's own CSS uses; they follow the Pico tokens above */
+  --bg: var(--pico-background-color);
+  --panel: var(--pico-card-background-color);
+  --panel2: var(--pico-card-sectioning-background-color);
+  --line: var(--pico-muted-border-color);
+  --text: var(--pico-color);
+  --muted: var(--pico-muted-color);
+  --accent: var(--pico-primary);
+  --accent-ink: var(--pico-primary-inverse);
+  --bad: #ff6b5e;
+  --ok: #5fd08a;
+  --surface-input: var(--pico-form-element-background-color);
+  --surface-deep: #171c22;
+  --surface-btn: var(--pico-secondary-background);
+  --surface-btn-dim: #1b2128;
+  --popover: #1a2028;           /* floating panels: opaque so the 3D view does not show through */
+}
+
+/* ---------- base elements ---------- */
+html { color-scheme: dark; }
+body { font-family: var(--pico-font-family); }
+* { scrollbar-width: thin; scrollbar-color: #3a4655 transparent; }
+h1, h2, h3, h4, h5, h6 { margin: 0; font-weight: 600; }
+label { display: inline-flex; align-items: center; gap: .35rem; margin: 0; font-weight: 400; color: var(--pico-color); }
+input, select, textarea { width: auto; }
+/* checkboxes and radios keep the native look (accent colour) - Pico's restyled ones read badly on this dark UI */
+input[type=checkbox], input[type=radio] { appearance: auto; -webkit-appearance: auto; width: 14px; height: 14px; margin: 0; padding: 0; accent-color: var(--accent); }
+td, th { padding: .2rem .4rem; }
+table { margin: 0; }
+button {
+  --pico-background-color: var(--pico-secondary-background);
+  --pico-border-color: var(--pico-secondary-border);
+  --pico-color: var(--pico-secondary-inverse);
+  --pico-box-shadow: none;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { --pico-background-color: var(--pico-secondary-hover-background); --pico-border-color: var(--pico-primary); }
+button:disabled { opacity: .4; cursor: default; }
+button.primary, button.on {
+  --pico-background-color: var(--pico-primary-background);
+  --pico-border-color: var(--pico-primary-border);
+  --pico-color: var(--pico-primary-inverse);
+  font-weight: 600;
+}
+button.primary:hover:not(:disabled), button.on:hover:not(:disabled) {
+  --pico-background-color: var(--pico-primary-hover-background);
+  --pico-border-color: var(--pico-primary-hover-border);
+}

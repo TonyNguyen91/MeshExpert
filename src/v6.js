@@ -112,6 +112,38 @@
       V6S.fine.set(key, g); return g;
     } catch (e) { return base; }
   }
+  // vertices that share a position (quantised to q) get the index of the first one. Hash first; an exact
+  // check on the quantised position rejects a clash, and clashing vertices are matched by a string key.
+  function v6Weld(W, nv, q) {
+    const id = new Int32Array(nv), H = new Map(), S2 = new Map();
+    const same = function (v, ix, iy, iz) { return Math.round(W[3 * v] / q) === ix && Math.round(W[3 * v + 1] / q) === iy && Math.round(W[3 * v + 2] / q) === iz; };
+    for (let i = 0; i < nv; i++) {
+      const ix = Math.round(W[3 * i] / q), iy = Math.round(W[3 * i + 1] / q), iz = Math.round(W[3 * i + 2] / q);
+      const h = Math.imul(ix | 0, 73856093) ^ Math.imul(iy | 0, 19349663) ^ Math.imul(iz | 0, 83492791);
+      const v = H.get(h);
+      if (v === undefined) { H.set(h, i); id[i] = i; }
+      else if (same(v, ix, iy, iz)) id[i] = v;
+      else { const k = ix + ',' + iy + ',' + iz; let w = S2.get(k); if (w === undefined) { w = i; S2.set(k, i); } id[i] = w; }
+    }
+    return id;
+  }
+  // prepared bodies are kept between previews (same body, same geometry, same display transform and shading settings)
+  const v6PrepC = new Map();
+  function v6FreeGL(p) {
+    const g = p.gl;
+    if (p.vao && g && !g.isContextLost()) { g.deleteVertexArray(p.vao); g.deleteBuffer(p.vb); g.deleteBuffer(p.nb); }
+    p.vao = null; p.gl = null;
+  }
+  function v6PrepCached(b, geo, o) {
+    const key = b.id + (geo.P === b.geo.positions ? '|b' : '|f');
+    const mk = dispMatrix(b).join() + '|' + o.ang + '|' + o.light + '|' + b.color.join();
+    const e = v6PrepC.get(key);
+    if (e && e.P === geo.P && e.I === geo.I && e.E === geo.E && e.mk === mk) { e.p.b = b; return e.p; }
+    if (e) v6FreeGL(e.p);
+    const p = v6Prep(b, geo, o);
+    v6PrepC.set(key, { P: geo.P, I: geo.I, E: geo.E, mk: mk, p: p });
+    return p;
+  }
   function v6Prep(b, geo, o) {
     const m = dispMatrix(b), P = geo.P, I = geo.I, nv = P.length / 3, nt = I.length / 3;
     const W = new Float64Array(P.length);
@@ -122,11 +154,7 @@
     let lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
     for (let i = 0; i < nv; i++) for (let k = 0; k < 3; k++) { const v = W[3 * i + k]; if (v < lo[k]) lo[k] = v; if (v > hi[k]) hi[k] = v; }
     // weld by position so that edges between separately stored faces still find both triangles
-    const q = 1e-5 * (1 + V.len(V.sub(hi, lo))), id = new Int32Array(nv), map = new Map();
-    for (let i = 0; i < nv; i++) {
-      const k = Math.round(W[3 * i] / q) + ',' + Math.round(W[3 * i + 1] / q) + ',' + Math.round(W[3 * i + 2] / q);
-      let v = map.get(k); if (v === undefined) { v = i; map.set(k, v); } id[i] = v;
-    }
+    const q = 1e-5 * (1 + V.len(V.sub(hi, lo))), id = v6Weld(W, nv, q);
     const N = new Float64Array(nt * 3), A = new Float64Array(nt);
     for (let t = 0; t < nt; t++) {
       const a = 3 * I[3 * t], c = 3 * I[3 * t + 1], d = 3 * I[3 * t + 2];
@@ -134,35 +162,45 @@
       const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz) || 1;
       N[3 * t] = nx / l; N[3 * t + 1] = ny / l; N[3 * t + 2] = nz / l; A[t] = l;
     }
-    const em = new Map(), E = [];      // [va, vb, t1, t2 (-1 none), count]
+    // edges in flat arrays: va, vb, t1, t2 (-1 when only one triangle), count; fixed = pairs, sil = (va, vb, t1, t2) quadruples
+    const em = new Map(), cap = 3 * nt, eA = new Int32Array(cap), eB = new Int32Array(cap), eT1 = new Int32Array(cap), eT2 = new Int32Array(cap), eN = new Int32Array(cap);
+    let ne = 0;
     for (let t = 0; t < nt; t++) for (let c = 0; c < 3; c++) {
       const a = id[I[3 * t + c]], bb = id[I[3 * t + (c + 1) % 3]]; if (a === bb) continue;
       const k = a < bb ? a * nv + bb : bb * nv + a, e = em.get(k);
-      if (e === undefined) { em.set(k, E.length); E.push([a, bb, t, -1, 1]); } else { const r = E[e]; if (r[3] < 0) r[3] = t; r[4]++; }
+      if (e === undefined) { em.set(k, ne); eA[ne] = a; eB[ne] = bb; eT1[ne] = t; eT2[ne] = -1; eN[ne] = 1; ne++; }
+      else { if (eT2[e] < 0) eT2[e] = t; eN[e]++; }
     }
     const brep = !!(geo.E && geo.E.length), cosA = Math.cos(o.ang * Math.PI / 180), fixed = [], sil = [];
-    if (brep) for (let i = 0; i < geo.E.length; i += 2) fixed.push([geo.E[i], geo.E[i + 1]]);
-    for (const e of E) {
-      if (e[3] < 0 || e[4] > 2) { if (!brep) fixed.push([e[0], e[1]]); continue; }
-      const t1 = e[2], t2 = e[3], c = N[3 * t1] * N[3 * t2] + N[3 * t1 + 1] * N[3 * t2 + 1] + N[3 * t1 + 2] * N[3 * t2 + 2];
-      if (!brep && c < cosA) fixed.push([e[0], e[1]]); else sil.push(e);
+    if (brep) for (let i = 0; i < geo.E.length; i += 2) fixed.push(geo.E[i], geo.E[i + 1]);
+    for (let e = 0; e < ne; e++) {
+      if (eT2[e] < 0 || eN[e] > 2) { if (!brep) fixed.push(eA[e], eB[e]); continue; }
+      const t1 = eT1[e], t2 = eT2[e], c = N[3 * t1] * N[3 * t2] + N[3 * t1 + 1] * N[3 * t2 + 1] + N[3 * t1 + 2] * N[3 * t2 + 2];
+      if (!brep && c < cosA) fixed.push(eA[e], eB[e]); else sil.push(eA[e], eB[e], t1, t2);
     }
     // per-corner normals: flat (as the 3D view) or smooth inside the edge angle (studio light)
     const NN = new Float32Array(nt * 9), smooth = o.light === 'studio', cosS = Math.cos(Math.max(o.ang, 20) * Math.PI / 180);
-    let inc = null;
-    if (smooth) { inc = new Map(); for (let t = 0; t < nt; t++) for (let c = 0; c < 3; c++) { const v = id[I[3 * t + c]]; let l = inc.get(v); if (!l) { l = []; inc.set(v, l); } l.push(t); } }
+    let off = null, inc = null;
+    if (smooth) {   // triangles around each welded vertex, in flat arrays
+      off = new Int32Array(nv + 1); inc = new Int32Array(3 * nt);
+      for (let k = 0; k < 3 * nt; k++) off[id[I[k]] + 1]++;
+      for (let v = 0; v < nv; v++) off[v + 1] += off[v];
+      const at = off.slice(0, nv);
+      for (let t = 0; t < nt; t++) for (let c = 0; c < 3; c++) inc[at[id[I[3 * t + c]]]++] = t;
+    }
     for (let t = 0; t < nt; t++) for (let c = 0; c < 3; c++) {
       let nx = N[3 * t], ny = N[3 * t + 1], nz = N[3 * t + 2];
       if (smooth) {
         nx = ny = nz = 0;
-        for (const u of inc.get(id[I[3 * t + c]])) {
+        const v0 = id[I[3 * t + c]];
+        for (let j = off[v0], je = off[v0 + 1]; j < je; j++) { const u = inc[j];
           if (N[3 * t] * N[3 * u] + N[3 * t + 1] * N[3 * u + 1] + N[3 * t + 2] * N[3 * u + 2] < cosS) continue;
           nx += N[3 * u] * A[u]; ny += N[3 * u + 1] * A[u]; nz += N[3 * u + 2] * A[u];
         }
       }
       NN[9 * t + 3 * c] = nx; NN[9 * t + 3 * c + 1] = ny; NN[9 * t + 3 * c + 2] = nz;
     }
-    return { b: b, P: P, W: W, I: I, N: N, NN: NN, fixed: fixed, sil: sil, lo: lo, hi: hi, color: [b.color[0] / 255, b.color[1] / 255, b.color[2] / 255] };
+    return { b: b, P: P, W: W, I: I, N: N, NN: NN, fixed: fixed, sil: sil, lo: lo, hi: hi, cen: [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2], color: [b.color[0] / 255, b.color[1] / 255, b.color[2] / 255] };
   }
 
   function v6GL() {
@@ -171,8 +209,8 @@
     const g = c.getContext('webgl2', { antialias: false, preserveDrawingBuffer: false });
     if (!g) throw new Error(L('Trình duyệt không có WebGL2', 'WebGL2 is not available'));
     const sh = function (type, src) { const s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s); if (!g.getShaderParameter(s, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(s)); return s; };
-    const vs = '#version 300 es\nprecision highp float;layout(location=0) in vec3 aP;layout(location=1) in vec3 aN;uniform vec3 uR,uU,uD;uniform vec4 uBox;uniform vec2 uZ;out vec3 vN;\n' +
-      'void main(){float x=dot(aP,uR),y=dot(aP,uU),z=dot(aP,uD);vN=vec3(dot(aN,uR),dot(aN,uU),-dot(aN,uD));' +
+    const vs = '#version 300 es\nprecision highp float;layout(location=0) in vec3 aP;layout(location=1) in vec3 aN;uniform vec3 uR,uU,uD,uO;uniform vec4 uBox;uniform vec2 uZ;out vec3 vN;\n' +
+      'void main(){vec3 q=aP+uO;float x=dot(q,uR),y=dot(q,uU),z=dot(q,uD);vN=vec3(dot(aN,uR),dot(aN,uU),-dot(aN,uD));' +
       'gl_Position=vec4((x-uBox.x)/uBox.z*2.0-1.0,(y-uBox.y)/uBox.w*2.0-1.0,(z-uZ.x)/uZ.y*2.0-1.0,1.0);}';
     const fs = '#version 300 es\nprecision highp float;in vec3 vN;uniform int uMode,uLight;uniform vec3 uC;out vec4 o;\n' +
       'void main(){if(uMode==0){float v=floor(gl_FragCoord.z*16777215.0);float r=floor(v/65536.0);float gg=floor((v-r*65536.0)/256.0);float b=v-r*65536.0-gg*256.0;o=vec4(r,gg,b,255.0)/255.0;return;}' +
@@ -184,7 +222,7 @@
       'o=vec4(min(c,vec3(1.0)),1.0);}';
     const p = g.createProgram(); g.attachShader(p, sh(g.VERTEX_SHADER, vs)); g.attachShader(p, sh(g.FRAGMENT_SHADER, fs)); g.linkProgram(p);
     if (!g.getProgramParameter(p, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(p));
-    const U = {}; ['uR', 'uU', 'uD', 'uBox', 'uZ', 'uMode', 'uLight', 'uC'].forEach(function (n) { U[n] = g.getUniformLocation(p, n); });
+    const U = {}; ['uR', 'uU', 'uD', 'uO', 'uBox', 'uZ', 'uMode', 'uLight', 'uC'].forEach(function (n) { U[n] = g.getUniformLocation(p, n); });
     v6gl = { g: g, p: p, U: U, max: Math.min(g.getParameter(g.MAX_RENDERBUFFER_SIZE), g.getParameter(g.MAX_VIEWPORT_DIMS)[0], g.getParameter(g.MAX_TEXTURE_SIZE)) };
     return v6gl;
   }
@@ -194,7 +232,9 @@
     const bodies = v6Bodies();
     if (!bodies.length) throw new Error(L('Không có body nào đang hiện', 'No visible body'));
     const preps = [];
-    for (const b of bodies) preps.push(v6Prep(b, await v6Geo(b, o, sc), o));
+    for (const b of bodies) preps.push(v6PrepCached(b, await v6Geo(b, o, sc), o));
+    const alive = new Set(S.bodies.map(function (b) { return b.id; }));
+    for (const [k, e] of v6PrepC) if (!alive.has(e.p.b.id)) { v6FreeGL(e.p); v6PrepC.delete(k); }
     const ax = [v6MV([1, 0, 0]), v6MV([0, 1, 0]), v6MV([0, 0, 1])];
     const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
     for (const p of preps) for (let i = 0; i < p.W.length; i += 3) for (let k = 0; k < 3; k++) {
@@ -207,15 +247,18 @@
   function v6Upload(G, sc6) {
     const g = G.g, c = sc6.ctr;
     for (const p of sc6.preps) {
-      const nt = p.I.length / 3, F = new Float32Array(nt * 9);
-      for (let t = 0; t < nt; t++) for (let k = 0; k < 3; k++) { const v = 3 * p.I[3 * t + k]; F[9 * t + 3 * k] = p.W[v] - c[0]; F[9 * t + 3 * k + 1] = p.W[v + 1] - c[1]; F[9 * t + 3 * k + 2] = p.W[v + 2] - c[2]; }
-      p.n = nt * 3; p.vao = g.createVertexArray(); g.bindVertexArray(p.vao);
+      p.off = [p.cen[0] - c[0], p.cen[1] - c[1], p.cen[2] - c[2]];   // body centre relative to the scene centre (uniform uO)
+      if (p.vao && p.gl === g) continue;                               // still on the GPU from an earlier preview
+      const nt = p.I.length / 3, F = new Float32Array(nt * 9), cc = p.cen;
+      for (let t = 0; t < nt; t++) for (let k = 0; k < 3; k++) { const v = 3 * p.I[3 * t + k]; F[9 * t + 3 * k] = p.W[v] - cc[0]; F[9 * t + 3 * k + 1] = p.W[v + 1] - cc[1]; F[9 * t + 3 * k + 2] = p.W[v + 2] - cc[2]; }
+      p.n = nt * 3; p.gl = g; p.vao = g.createVertexArray(); g.bindVertexArray(p.vao);
       p.vb = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, p.vb); g.bufferData(g.ARRAY_BUFFER, F, g.STATIC_DRAW); g.enableVertexAttribArray(0); g.vertexAttribPointer(0, 3, g.FLOAT, false, 0, 0);
       p.nb = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, p.nb); g.bufferData(g.ARRAY_BUFFER, p.NN, g.STATIC_DRAW); g.enableVertexAttribArray(1); g.vertexAttribPointer(1, 3, g.FLOAT, false, 0, 0);
     }
     g.bindVertexArray(null);
   }
-  function v6Release(G, sc6) { const g = G.g; for (const p of sc6.preps) if (p.vao) { g.deleteVertexArray(p.vao); g.deleteBuffer(p.vb); g.deleteBuffer(p.nb); p.vao = null; } }
+  // GPU buffers stay with their prepared body (see v6PrepCached / v6FreeGL), so nothing is released after a preview
+  function v6Release(G, sc6) { }
   // projected extents (mm, relative to the scene centre) of some bodies along r / u
   function v6Ranges(preps, c, r, u) {
     let r0 = Infinity, r1 = -Infinity, u0 = Infinity, u1 = -Infinity;
@@ -248,13 +291,17 @@
     // top / bottom extreme
     const xp = (function () {
       const c = sc6.ctr; let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-      const P = function (W, i) { const x = W[i] - c[0], y = W[i + 1] - c[1], z = W[i + 2] - c[2]; return [(x * r[0] + y * r[1] + z * r[2] - R0) * S2, vh - (x * u[0] + y * u[1] + z * u[2] - U0) * S2]; };
-      for (const p of preps) for (let i = 0; i < p.W.length; i += 3) { const q = P(p.W, i); if (q[0] < x0) x0 = q[0]; if (q[0] > x1) x1 = q[0]; if (q[1] < y0) y0 = q[1]; if (q[1] > y1) y1 = q[1]; }
+      for (const p of preps) for (let i = 0; i < p.W.length; i += 3) {
+        const x = p.W[i] - c[0], y = p.W[i + 1] - c[1], z = p.W[i + 2] - c[2];
+        const qx = (x * r[0] + y * r[1] + z * r[2] - R0) * S2, qy = vh - (x * u[0] + y * u[1] + z * u[2] - U0) * S2;
+        if (qx < x0) x0 = qx; if (qx > x1) x1 = qx; if (qy < y0) y0 = qy; if (qy > y1) y1 = qy;
+      }
       const t = 0.002 * Math.max(x1 - x0, y1 - y0) + 0.3, X = { x0: x0, x1: x1, y0: y0, y1: y1, L: [Infinity, -Infinity], R: [Infinity, -Infinity], T: [Infinity, -Infinity], B: [Infinity, -Infinity] };
       const mm = function (a, v) { if (v < a[0]) a[0] = v; if (v > a[1]) a[1] = v; };
       for (const p of preps) for (let i = 0; i < p.W.length; i += 3) {
-        const q = P(p.W, i);
-        if (q[0] <= x0 + t) mm(X.L, q[1]); if (q[0] >= x1 - t) mm(X.R, q[1]); if (q[1] <= y0 + t) mm(X.T, q[0]); if (q[1] >= y1 - t) mm(X.B, q[0]);
+        const x = p.W[i] - c[0], y = p.W[i + 1] - c[1], z = p.W[i + 2] - c[2];
+        const qx = (x * r[0] + y * r[1] + z * r[2] - R0) * S2, qy = vh - (x * u[0] + y * u[1] + z * u[2] - U0) * S2;
+        if (qx <= x0 + t) mm(X.L, qy); if (qx >= x1 - t) mm(X.R, qy); if (qy <= y0 + t) mm(X.T, qx); if (qy >= y1 - t) mm(X.B, qx);
       }
       return isFinite(x0) ? X : null;
     })();
@@ -270,7 +317,7 @@
       g.clearColor(1, 1, 1, mode === 0 ? 1 : 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT); g.uniform1i(U.uMode, mode); g.uniform1i(U.uLight, light);
       for (const p of preps) {
         g.uniform3fv(U.uC, o.col === 'white' ? [1, 1, 1] : o.col === 'one' ? o.one : p.color);
-        g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n);
+        g.uniform3fv(U.uO, p.off); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n);
       }
     };
     const px = new Uint8Array(vw * vh * 4);
@@ -285,7 +332,7 @@
     let ids = null;
     if (o.idm) {
       g.clearColor(0, 0, 0, 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT); g.uniform1i(U.uMode, 1); g.uniform1i(U.uLight, 2);
-      preps.forEach(function (p, i) { const k = i + 1; g.uniform3fv(U.uC, [(k & 255) / 255, ((k >> 8) & 255) / 255, 0]); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n); });
+      preps.forEach(function (p, i) { const k = i + 1; g.uniform3fv(U.uC, [(k & 255) / 255, ((k >> 8) & 255) / 255, 0]); g.uniform3fv(U.uO, p.off); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n); });
       g.readPixels(0, 0, vw, vh, g.RGBA, g.UNSIGNED_BYTE, px);
       ids = new Uint16Array(vw * vh);
       for (let y = 0; y < vh; y++) { const ro = (vh - 1 - y) * vw * 4, wo = y * vw; for (let x = 0; x < vw; x++) { const k = ro + 4 * x; ids[wo + x] = px[k] | (px[k + 1] << 8); } }
@@ -299,7 +346,7 @@
         g.bindFramebuffer(g.FRAMEBUFFER, f); g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, t, 0); g.framebufferRenderbuffer(g.FRAMEBUFFER, g.DEPTH_ATTACHMENT, g.RENDERBUFFER, d2);
         g.viewport(0, 0, vw, vh); g.useProgram(G.p); g.enable(g.DEPTH_TEST); g.clearColor(0, 0, 0, 0); g.clearDepth(1); g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT);
         g.uniform1i(U.uMode, mode); g.uniform1i(U.uLight, lt);
-        preps.forEach(function (p, i) { if (colOf) g.uniform3fv(U.uC, colOf(i)); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n); });
+        preps.forEach(function (p, i) { if (colOf) g.uniform3fv(U.uC, colOf(i)); g.uniform3fv(U.uO, p.off); g.bindVertexArray(p.vao); g.drawArrays(g.TRIANGLES, 0, p.n); });
         g.bindVertexArray(null); g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(f); g.deleteRenderbuffer(d2);
         return t;
       };
@@ -344,11 +391,12 @@
       };
       const drawE = o.edge || o.col === 'white';
       for (const p of preps) {
-        for (const e of p.fixed) { if (drawE) seg(proj(p.W, e[0]), proj(p.W, e[1])); if (seen) { snap(p, e[0]); snap(p, e[1]); } }
+        for (let k = 0; k < p.fixed.length; k += 2) { const ea = p.fixed[k], eb = p.fixed[k + 1]; if (drawE) seg(proj(p.W, ea), proj(p.W, eb)); if (seen) { snap(p, ea); snap(p, eb); } }
         const N = p.N;
-        for (const e of p.sil) {
-          const a = N[3 * e[2]] * d[0] + N[3 * e[2] + 1] * d[1] + N[3 * e[2] + 2] * d[2], b2 = N[3 * e[3]] * d[0] + N[3 * e[3] + 1] * d[1] + N[3 * e[3] + 2] * d[2];
-          if (a * b2 < 0 || (a === 0) !== (b2 === 0)) { if (drawE) seg(proj(p.W, e[0]), proj(p.W, e[1])); if (seen) { snap(p, e[0]); snap(p, e[1]); } }
+        for (let k = 0; k < p.sil.length; k += 4) {
+          const ea = p.sil[k], eb = p.sil[k + 1], t1 = p.sil[k + 2], t2 = p.sil[k + 3];
+          const a = N[3 * t1] * d[0] + N[3 * t1 + 1] * d[1] + N[3 * t1 + 2] * d[2], b2 = N[3 * t2] * d[0] + N[3 * t2 + 1] * d[1] + N[3 * t2 + 2] * d[2];
+          if (a * b2 < 0 || (a === 0) !== (b2 === 0)) { if (drawE) seg(proj(p.W, ea), proj(p.W, eb)); if (seen) { snap(p, ea); snap(p, eb); } }
         }
       }
       const lw = lwPx * s2;
@@ -1502,7 +1550,7 @@
     if (!v6Act || !V6S.prev) return;
     const sig = S.bodies.map(function (b) { return b.id + ':' + b.name + ':' + b.material + ':' + b.density + ':' + (b.visible ? 1 : 0) + (S.sel.has(b) ? 1 : 0) + ':' + b.color.join(','); }).join('|');
     if (v6Sig && sig !== v6Sig) {
-      const geoSig = function (s) { return s.split('|').map(function (x) { const p = x.split(':'); return p[0] + p[4] + p[5]; }).join('|'); };
+      const geoSig = function (s) { return s.split('|').map(function (x) { const p = x.split(':'); return p[0] + p[4].charAt(0) + p[5]; }).join('|'); };
       if (geoSig(sig) !== geoSig(v6Sig)) v6Preview(); else { v6PartRow(); v6Paint(); }
     }
     v6Sig = sig;
