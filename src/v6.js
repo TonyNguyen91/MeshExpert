@@ -17,12 +17,12 @@
   const V6_MAXPX = 150e6, V6_MAXVIEW = 64e6;
   // the 6-view sheet and the exploded view are two separate drawings: each keeps its own panel values (cfg) and its own
   // placements (st: model turn, view / iso / part / totals positions); both are saved with the session (.mrtl)
-  const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, tot: null, notes: { '6v': [], exp: [] }, nsel: null, nsels: [], clip: null, odo: {}, psel: null, rects: { '6v': [], exp: [] }, rsel: null, rt: null, hl: null,
+  const V6S = { mode: '6v', R: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pos: null, iso: null, off: {}, prot: {}, psels: [], box: null, tot: null, notes: { '6v': [], exp: [] }, nsel: null, nsels: [], clip: null, odo: {}, psel: null, rects: { '6v': [], exp: [] }, rsel: null, rt: null, hl: null,
     prev: null, vc: new Map(), vg: new Map(), gen: 0, fine: new Map(), seq: 1, cfg: null, st: { '6v': {}, exp: {} }, def: null, grp: {}, comb: null, dims: { '6v': [], exp: [] }, src: null, hide: [], dt: null, dsel: null, vsel: null, vz: 1, vp: [0, 0], lay: null, est: 0 };
   const V6_PREVPX = 12e6;
   const V6_REST = 3000;     // ms of rest after zoom / pan before the sheet is drawn sharp again   // the preview never renders the sheet above this many pixels (zooming further only scales)
   let v6Act = false;   // the Drawing Workspace is open and shows the sheet
-  const V6_PAIRS = [['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
+  const V6_PAIRS = [['v6PtR', 'v6Pt'], ['v6PiR', 'v6Pi'], ['v6PlR', 'v6Pl'], ['v6FxOwR', 'v6FxOw'], ['v6DpiR', 'v6Dpi'], ['v6WR', 'v6W'], ['v6HR', 'v6H'], ['v6LwR', 'v6Lw'], ['v6AngR', 'v6Ang'], ['v6QR', 'v6Q'], ['v6AzR', 'v6Az'], ['v6ElR', 'v6El'], ['v6ExR', 'v6Ex'],
     ['v6ZmR', 'v6Zm'], ['v6FsR', 'v6Fs'], ['v6NsR', 'v6Ns'], ['v6IsoKR', 'v6IsoK'], ['v6RsR', 'v6Rs'], ['v6RwR', 'v6Rw'],
     ['v6FxTR', 'v6FxT'], ['v6FxWR', 'v6FxW'], ['v6FxBR', 'v6FxB'], ['v6FxBsR', 'v6FxBs'],
     ['v6FxAR', 'v6FxA'], ['v6FxAsR', 'v6FxAs'], ['v6FxSR', 'v6FxS'], ['v6FxSaR', 'v6FxSa'], ['v6FxSeR', 'v6FxSe'], ['v6FxCR', 'v6FxC']];
@@ -48,7 +48,7 @@
       edge: $('v6Edge').checked, hidden: $('v6Hid').checked, ang: v6Num('v6Ang', 30), dim: !exp && ($('v6DimW').checked || $('v6DimD').checked || $('v6DimH').checked), dimW: $('v6DimW').checked, dimD: $('v6DimD').checked, dimH: $('v6DimH').checked, unit: $('v6Unit').value,
       lbl: !exp && $('v6Lbl').checked, scn: $('v6ScN').checked, scale: scale, zoom: v6Num('v6Zm', 100) / 100,
       fs: v6Num('v6Fs', 2.6), fb: $('v6Fb').checked, W: W, H: H, cut: cut, dpi: dpi,
-      fx: { t: v6Num('v6FxT', 5), w: v6Num('v6FxW', 0.01), bw: v6Num('v6FxB', 5), bs: v6Num('v6FxBs', 4) / 100, id: $('v6FxId').checked, ar: v6Num('v6FxA', 0.2), as: v6Num('v6FxAs', 0) / 100, ss: v6Num('v6FxS', 0) / 100, sa: v6Num('v6FxSa', 0), se: v6Num('v6FxSe', 5), cs: v6Num('v6FxC', 0) / 100 },
+      fx: { t: v6Num('v6FxT', 5), w: v6Num('v6FxW', 0.01), bw: v6Num('v6FxB', 5), bs: v6Num('v6FxBs', 4) / 100, id: $('v6FxId').checked, ow: v6Num('v6FxOw', 0.2), oc: v6Hex($('v6FxOc').value), ar: v6Num('v6FxA', 0.2), as: v6Num('v6FxAs', 0) / 100, ss: v6Num('v6FxS', 0) / 100, sa: v6Num('v6FxSa', 0), se: v6Num('v6FxSe', 5), cs: v6Num('v6FxC', 0) / 100 },
       lw: v6Num('v6Lw', 0.25), ss: +$('v6SS').value || 1, fmt: fmt, q: v6Num('v6Q', 92) / 100, bg: fmt === 'jpg' ? 'w' : $('v6Bg').value };
   }
   // bodies of the drawing: the sheet's source bodies (Drawing Workspace), drawn from the geometry the sheet was last
@@ -439,12 +439,29 @@
     return r >= 1 ? t(r) + ':1' : '1:' + t(1 / r);
   }
   // exploded: each part's centre in the iso picture (mm from the assembly centre) after pulling it out from the centre
+  // a part turned on its own (V6S.prot[id] = [turn, tilt, roll] in degrees, about the screen's vertical axis, the
+  // screen's horizontal axis and the viewing direction, through the part's centre): drawn as if the view turned the
+  // other way round it, so the part's own picture is made with these directions
+  function v6PartDirs(D, a) {
+    if (!a || (!a[0] && !a[1] && !a[2])) return D;
+    const rad = Math.PI / 180, rot = function (v, ax, t) {      // v turned by t about the unit axis ax (Rodrigues)
+      const c = Math.cos(t), s2 = Math.sin(t), k = V.dot(ax, v), x = V.cross(ax, v);
+      return [v[0] * c + x[0] * s2 + ax[0] * k * (1 - c), v[1] * c + x[1] * s2 + ax[1] * k * (1 - c), v[2] * c + x[2] * s2 + ax[2] * k * (1 - c)];
+    };
+    // the part turns by Q = roll(d) . tilt(r) . turn(u) (screen axes); the view directions turn by Q^-1
+    let r = D.r, u = D.u, d = D.d;
+    const inv = [[D.d, -a[2]], [D.r, -a[1]], [D.u, -a[0]]];
+    for (const q of inv) { const t = q[1] * rad; if (!t) continue; r = rot(r, q[0], t); u = rot(u, q[0], t); d = rot(d, q[0], t); }
+    return { r: r, u: u, d: d };
+  }
   function v6ExpPlan(o, sc6) {
     const D = v6Dirs(v6IsoSpec(o.az, o.el)), C = sc6.ctr, items = [], G = v6GrpOf(sc6.preps.map(function (p) { return p.b.id; }));
     for (const p of sc6.preps) {
       if (G.hide.has(p.b.id)) continue;
-      const rg = v6Ranges([p], C, D.r, D.u), mid = V.mul(V.add(p.lo, p.hi), 0.5), sh = V.mul(V.sub(mid, C), o.spread);
-      items.push({ p: p, id: p.b.id, n: G.n[p.b.id] || 1, w: rg[1] - rg[0], h: rg[3] - rg[2], cx: (rg[0] + rg[1]) / 2 + V.dot(sh, D.r), cy: (rg[2] + rg[3]) / 2 + V.dot(sh, D.u) });
+      const Dp = v6PartDirs(D, V6S.prot[p.b.id]), rg = v6Ranges([p], C, Dp.r, Dp.u), mid = V.mul(V.add(p.lo, p.hi), 0.5), sh = V.mul(V.sub(mid, C), o.spread);
+      // the part's centre stays where the unturned part has it; its picture is centred on it by the turned extents
+      const m0 = V.sub(mid, C), fx = V.dot(m0, D.r) - V.dot(m0, Dp.r), fy = V.dot(m0, D.u) - V.dot(m0, Dp.u);
+      items.push({ p: p, id: p.b.id, n: G.n[p.b.id] || 1, D: Dp, w: rg[1] - rg[0], h: rg[3] - rg[2], cx: (rg[0] + rg[1]) / 2 + fx + V.dot(sh, D.r), cy: (rg[2] + rg[3]) / 2 + fy + V.dot(sh, D.u) });
     }
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     for (const it of items) { x0 = Math.min(x0, it.cx - it.w / 2); x1 = Math.max(x1, it.cx + it.w / 2); y0 = Math.min(y0, it.cy - it.h / 2); y1 = Math.max(y1, it.cy + it.h / 2); }
@@ -476,7 +493,7 @@
       if (o.exp) {
         for (const it of plan.items) {
           const sl = 'p:' + it.id;
-          out.parts.push(Object.assign(mark(v6View(G, sc6, [it.p], plan.D, sc * k, ss, M.lw * k, at(oi, sl)), sl), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
+          out.parts.push(Object.assign(mark(v6View(G, sc6, [it.p], it.D || plan.D, sc * k, ss, M.lw * k, at(oi, sl)), sl), { id: it.id, n: it.n, b: it.p.b, cx: it.cx, cy: it.cy }));
           if (quick) await quick.tick(out);
         }
       } else {
@@ -692,13 +709,17 @@
       const x = f.x * W, y = f.y * H, w = f.w * W, h = f.h * H, col = f.color || '#e53935', lw = Math.max(1, (f.lw || 0.5) * M.ppmm * k), fp = (f.ts || 5) * M.ppmm * k;
       c2.save(); c2.strokeStyle = col; c2.lineWidth = lw; c2.setLineDash([]); c2.lineJoin = 'miter';
       c2.beginPath(); c2.moveTo(x, y); c2.lineTo(x + w, y); c2.lineTo(x + w, y + h); c2.lineTo(x, y + h); c2.closePath(); c2.stroke();
-      let tw = 0;
-      if (f.title) { c2.font = v6Font(fp, true); c2.fillStyle = col; c2.textAlign = 'left'; c2.textBaseline = 'bottom'; c2.fillText(f.title, x + 0.2 * fp, y - lw / 2 - 0.25 * fp); tw = c2.measureText(f.title).width; }
+      let tb = null;
+      if (f.title) {
+        c2.font = v6Font(fp, true); c2.fillStyle = col; c2.textAlign = 'left';
+        const T = v6RectTitle(f, x, y, w, h, lw, fp, c2.measureText(f.title).width);
+        c2.textBaseline = T.base; c2.fillText(f.title, T.x, T.y); tb = T.box;
+      }
       c2.restore();
       const m = Math.max(lw, 3), hs = V6S.hs || 7;
       hits.push({ kind: 'rect', id: f.id, r: { x: x - m, y: y - m, w: w + 2 * m, h: 2 * m } }, { kind: 'rect', id: f.id, r: { x: x - m, y: y + h - m, w: w + 2 * m, h: 2 * m } },
         { kind: 'rect', id: f.id, r: { x: x - m, y: y - m, w: 2 * m, h: h + 2 * m } }, { kind: 'rect', id: f.id, r: { x: x + w - m, y: y - m, w: 2 * m, h: h + 2 * m } });
-      if (f.title) hits.push({ kind: 'rect', id: f.id, title: true, r: { x: x, y: y - lw / 2 - 1.3 * fp, w: tw + 0.4 * fp, h: 1.3 * fp } });
+      if (tb) hits.push({ kind: 'rect', id: f.id, title: true, r: tb });
       hits.push({ kind: 'rectR', id: f.id, r: { x: x + w - hs, y: y + h - hs, w: 2 * hs, h: 2 * hs } });
     }
     return hits;
@@ -945,10 +966,10 @@
     items.forEach(function (it) { it.w = it.x1 - it.x0; it.h = it.y1 - it.y0; it.cx = (it.x0 + it.x1) / 2; it.cy = (it.y0 + it.y1) / 2; });
     // frames (full-size px) and what has to stay free
     const frames = (V6S.rects.exp || []).map(function (fr) {
-      const lw = Math.max(1, (fr.lw || 0.5) * M.ppmm), tp = fr.title ? 1.4 * (fr.ts || 5) * M.ppmm : 0;
-      return { id: fr.id, x0: fr.x * W, y0: fr.y * H, x1: (fr.x + fr.w) * W, y1: (fr.y + fr.h) * H, lw: lw, tp: tp, list: [] };
+      const lw = Math.max(1, (fr.lw || 0.5) * M.ppmm), tp = fr.title ? 1.4 * (fr.ts || 5) * M.ppmm : 0, at = fr.tp || 'otl';
+      return { id: fr.id, x0: fr.x * W, y0: fr.y * H, x1: (fr.x + fr.w) * W, y1: (fr.y + fr.h) * H, lw: lw, tp: tp, out: at[0] === 'o', top: at[1] === 't', list: [] };
     });
-    const out = [];
+    const out = [], placed = [];
     for (const it of items) {
       let bf = null, ba = 0;
       for (const fr of frames) {
@@ -958,13 +979,13 @@
       if (bf) bf.list.push(it); else out.push(it);
     }
     for (const fr of frames) if (fr.list.length) {
-      const r = v6Rows(fr.list, { x0: fr.x0 + fr.lw, y0: fr.y0 + fr.lw, x1: fr.x1 - fr.lw, y1: fr.y1 - fr.lw });
+      const ti = fr.out ? 0 : fr.tp;                    // a name inside the frame keeps its strip free
+      const r = v6Rows(fr.list, { x0: fr.x0 + fr.lw, y0: fr.y0 + fr.lw + (fr.top ? ti : 0), x1: fr.x1 - fr.lw, y1: fr.y1 - fr.lw - (fr.top ? 0 : ti) });
       r.out.forEach(v6ExpPut);
     }
     if (out.length) {
-      const c = 0.6 * f, obs = frames.map(function (fr) { return { x0: fr.x0 - c, y0: fr.y0 - fr.tp - c, x1: fr.x1 + c, y1: fr.y1 + c }; });
-      const th = R.hits.find(function (h) { return h.kind === 'tot'; });
-      if (th) { const tw = th.r.w / k, thh = th.r.h / k, bx = W - 1.5 * f, by = H - 1.2 * f - (o.scn ? 1.7 * f : 0); obs.push({ x0: bx - tw - c, y0: by - thh - c, x1: W, y1: H }); }
+      const c = 0.6 * f, obs = frames.map(function (fr) { const to = fr.out ? fr.tp : 0; return { x0: fr.x0 - c, y0: fr.y0 - (fr.top ? to : 0) - c, x1: fr.x1 + c, y1: fr.y1 + (fr.top ? 0 : to) + c }; });
+      // the total-mass box takes no room here: it goes into a free corner afterwards (below)
       if (o.scn) obs.push({ x0: W * 0.55, y0: H - 2.6 * f, x1: W, y1: H });
       const xs = [0, W], ys = [0, H];
       for (const b of obs) { xs.push(b.x0, b.x1); ys.push(b.y0, b.y1); }
@@ -983,18 +1004,40 @@
         }
       }
       // nothing free is big enough: the whole sheet, above the totals strip
-      if (!best) best = v6Rows(out, { x0: 0, y0: 0, x1: W, y1: H - (o.scn ? 2.6 * f : 0) - (th ? th.r.h / k + 1.2 * f : 0) });
+      if (!best) best = v6Rows(out, { x0: 0, y0: 0, x1: W, y1: H - (o.scn ? 2.6 * f : 0) });
       best.out.forEach(v6ExpPut);
     }
+    v6TotPlace(R, o, placed, frames, W, H, f, k);
     function v6ExpPut(q) {
       const it = q.it, pt = R.parts.find(function (x) { return x.id === it.id; }), P = R.plan;
+      placed.push({ x0: q.cx - it.w / 2, y0: q.cy - it.h / 2, x1: q.cx + it.w / 2, y1: q.cy + it.h / 2 });
       if (!pt || !it.pc) return;
       const px = q.cx + (it.pc[0] - it.cx), py = q.cy + (it.pc[1] - it.cy);
       const ax = W / 2 + (pt.cx - P.bx) * R.sc, ay = H / 2 - (pt.cy - P.by) * R.sc;
       V6S.off[it.id] = [(px - ax) / W, (py - ay) / H];
     }
-    V6S.tot = null;
     return true;
+  }
+  // the total-mass box (lower right corner at V6S.tot, sheet fractions): the first corner of the sheet where it covers
+  // no part, frame or scale note (bottom right, bottom left, top right, top left, then the middles of the long sides);
+  // when every place is taken, the one it covers least
+  function v6TotPlace(R, o, placed, frames, W, H, f, k) {
+    const th = R.hits.find(function (h) { return h.kind === 'tot'; });
+    V6S.tot = null;
+    if (!th) return;
+    const tw = th.r.w / k, thh = th.r.h / k, mx = 1.5 * f, myB = 1.2 * f + (o.scn ? 1.7 * f : 0), myT = 1.2 * f, g = 0.4 * f;
+    const obs = placed.concat(frames.map(function (fr) { return { x0: fr.x0, y0: fr.y0 - (fr.out && fr.top ? fr.tp : 0), x1: fr.x1, y1: fr.y1 + (fr.out && !fr.top ? fr.tp : 0) }; }));
+    if (o.scn) obs.push({ x0: W * 0.55, y0: H - 2.6 * f, x1: W, y1: H });
+    const cand = [[W - mx, H - myB], [mx + tw, H - myB], [W - mx, myT + thh], [mx + tw, myT + thh], [(W + tw) / 2, H - myB], [(W + tw) / 2, myT + thh]];
+    let best = null;
+    for (let i = 0; i < cand.length; i++) {
+      const c = cand[i], A = { x0: c[0] - tw - g, y0: c[1] - thh - g, x1: c[0] + g, y1: c[1] + g };
+      let cov = 0;
+      for (const b of obs) cov += Math.max(0, Math.min(A.x1, b.x1) - Math.max(A.x0, b.x0)) * Math.max(0, Math.min(A.y1, b.y1) - Math.max(A.y0, b.y0));
+      if (!best || cov < best.cov - 1e-6) best = { cov: cov, i: i, c: c };
+      if (cov <= 0) break;
+    }
+    if (best.i) V6S.tot = [best.c[0] / W, best.c[1] / H];
   }
   // default place of the iso picture: the free corner right of the Top view (or top right)
   function v6IsoDefault(o, R, pos) {
@@ -1234,7 +1277,7 @@
         else if (cand.has(h.id)) box(h, hover && hover.id === h.id ? '#ff8a00' : '#f0a030', hover && hover.id === h.id ? 'rgba(255,150,0,.32)' : 'rgba(240,160,48,.18)');
       }
     } else for (const h of q.hits) {
-      if ((h.kind === 'note' && (h.id === V6S.nsel || V6S.nsels.indexOf(h.id) >= 0)) || ((h.kind === 'part' || h.kind === 'label') && h.id === V6S.psel)) box(h, '#f0a030');
+      if ((h.kind === 'note' && (h.id === V6S.nsel || V6S.nsels.indexOf(h.id) >= 0)) || ((h.kind === 'part' || h.kind === 'label') && (h.id === V6S.psel || V6S.psels.indexOf(h.id) >= 0))) box(h, '#f0a030');
       else if (hover && h === hover) box(h, '#2f8cff');
     }
     if (V6S.comb === null) for (const h of q.hits) {
@@ -1253,6 +1296,12 @@
       for (const x of V6S.snapG.x) { c2.moveTo(x * W2, 0); c2.lineTo(x * W2, H2); }
       for (const y of V6S.snapG.y) { c2.moveTo(0, y * H2); c2.lineTo(W2, y * H2); }
       c2.stroke(); c2.restore();
+    }
+    if (V6S.box && V6S.box.moved) {           // the pick box: blue left to right (wholly inside), green dashed right to left (touched)
+      const B = V6S.box, cross = B.x1 < B.x0;
+      c2.save(); c2.setLineDash(cross ? [6 * u, 4 * u] : []); c2.lineWidth = 1.5 * u;
+      c2.strokeStyle = cross ? '#52d06a' : '#4f9bff'; c2.fillStyle = cross ? 'rgba(82,208,106,0.12)' : 'rgba(79,155,255,0.12)';
+      c2.fillRect(B.x0, B.y0, B.x1 - B.x0, B.y1 - B.y0); c2.strokeRect(B.x0, B.y0, B.x1 - B.x0, B.y1 - B.y0); c2.restore();
     }
     if (V6S.rt && V6S.rt.a) {
       const a = V6S.rt.a, b = V6S.rt.b || a;
@@ -1283,11 +1332,45 @@
     const x = ((e.clientX - r.left) * Ly.dpr - Ly.ox) / Ly.s, y = ((e.clientY - r.top) * Ly.dpr - Ly.oy) / Ly.s, m = 6 * Ly.dpr / Ly.s;
     let best = null;
     for (const h of q.hits) if (x >= h.r.x - m && x <= h.r.x + h.r.w + m && y >= h.r.y - m && y <= h.r.y + h.r.h + m) {
+      // a part only where its picture shows the body (the empty corners of its box are empty sheet)
+      if (h.kind === 'part' && !v6OnPart(q, h, x, y, m)) continue;
       // notes and labels over pictures
       const rank = { isoR: 4, rectR: 4, note: 3, tot: 3, dim: 3, odim: 3, rect: 2.5, label: 2, part: 1, iso: 1, view: 0 };
       if (!best || rank[h.kind] >= rank[best.kind]) best = h;
     }
     return { h: best, x: x, y: y };
+  }
+  // is the sheet point (x, y) on the body of a part picture (body-number pixels, m sheet px of slack)?
+  function v6OnPart(q, h, x, y, m) {
+    const pt = (q.parts || []).find(function (p) { return p.id === h.id; }), tr = h.r.tr, M = pt && pt.map;
+    if (!M || !M.ids || !tr) return true;
+    const w = pt.cv.width, hh = pt.cv.height, ids = M.ids;
+    if (ids.length !== w * hh) return true;
+    const px = (x - tr.x0) / tr.s, py = (y - tr.y0) / tr.s, rr = Math.max(1, Math.ceil(m / tr.s)), st = Math.max(1, rr >> 2);
+    for (let j = -rr; j <= rr; j += st) for (let i = -rr; i <= rr; i += st) {
+      const X = Math.round(px + i), Y = Math.round(py + j);
+      if (X >= 0 && Y >= 0 && X < w && Y < hh && ids[Y * w + X]) return true;
+    }
+    return false;
+  }
+  // picked parts (exploded view): V6S.psels, the last one picked is V6S.psel (the panel shows it)
+  function v6PSel() {
+    const ids = V6S.psels.slice(); if (V6S.psel !== null && V6S.psel !== undefined && V6S.psel >= 0 && ids.indexOf(V6S.psel) < 0) ids.push(V6S.psel);
+    return ids;
+  }
+  function v6PClear() { V6S.psel = null; V6S.psels = []; }
+  // the box dragged over empty sheet (sheet px): left to right takes what lies wholly inside, right to left what it touches
+  function v6BoxPick(B) {
+    const q = V6S.prev; if (!q || !q.hits) return;
+    const cross = B.x1 < B.x0, l = Math.min(B.x0, B.x1), r = Math.max(B.x0, B.x1), t = Math.min(B.y0, B.y1), b = Math.max(B.y0, B.y1);
+    const inBox = function (R) { return cross ? !(R.x + R.w < l || R.x > r || R.y + R.h < t || R.y > b) : R.x >= l && R.x + R.w <= r && R.y >= t && R.y + R.h <= b; };
+    for (const h of q.hits) {
+      if (!inBox(h.r)) continue;
+      if (h.kind === 'part' && V6S.psels.indexOf(h.id) < 0) V6S.psels.push(h.id);
+      if (h.kind === 'note' && V6S.nsels.indexOf(h.id) < 0) V6S.nsels.push(h.id);
+    }
+    if (V6S.psels.length) V6S.psel = V6S.psels[V6S.psels.length - 1];
+    if (V6S.nsels.length) { V6S.nsel = V6S.nsels[V6S.nsels.length - 1]; v6NoteCtl(v6Note(V6S.nsel)); }
   }
   // ---------- zoom / pan of the preview
   function v6ZoomUI() { $('v6Vz').value = $('v6VzR').value = Math.round(V6S.vz * 100); }
@@ -1337,21 +1420,35 @@
     if (h.kind === 'note') { n = v6Note(h.id); t.value = n.text; t.rows = Math.max(2, n.text.split('\n').length); ms.style.display = 'none'; }
     else if (h.kind === 'rect') { fr = v6Rect(h.id); if (!fr) return; t.value = fr.title || ''; t.rows = 1; ms.style.display = 'none'; }
     else { b = S.bodies.find(function (x) { return x.id === h.id; }); if (!b) return; t.value = b.name; t.rows = 1; v6MatOpts(ms); ms.value = MATS.some(function (m) { return m[0] === b.material; }) ? b.material : ''; ms.style.display = ''; }
+    // several parts picked (and this one among them): one material for all of them, no name
+    let bs = null;
+    if (b && V6S.mode === 'exp') {
+      const ids = v6PSel();
+      if (ids.length > 1 && ids.indexOf(b.id) >= 0) bs = ids.map(function (id) { return S.bodies.find(function (x) { return x.id === id; }); }).filter(Boolean);
+    }
+    t.style.display = bs ? 'none' : '';
+    $('v6EdN').style.display = bs ? '' : 'none';
+    if (bs) $('v6EdN').textContent = L('Vật liệu cho ' + bs.length + ' linh kiện', 'Material for ' + bs.length + ' parts');
     ed.style.display = 'block';
     ed.style.left = Math.max(0, Math.min(br.width - 220, sr.x - br.left)) + 'px';
     ed.style.top = Math.max(0, Math.min(br.height - 110, sr.y + sr.h - br.top + 4)) + 'px';
-    t.focus(); t.select();
-    V6S.edit = { n: n, b: b, f: fr };
+    if (bs) ms.focus(); else { t.focus(); t.select(); }
+    V6S.edit = { n: n, b: b, f: fr, bs: bs };
   }
   function v6EditDone(ok) {
     const E = V6S.edit; $('v6Ed').style.display = 'none'; V6S.edit = null;
     if (!E || !ok) return;
     if (E.f) { E.f.title = $('v6EdT').value.replace(/\n/g, ' ').trim(); v6Paint(); return; }
     if (E.n) { const v = $('v6EdT').value; if (v.trim()) E.n.text = v; else { const L2 = V6S.notes[V6S.mode]; L2.splice(L2.indexOf(E.n), 1); V6S.nsel = null; V6S.nsels = []; } v6Paint(); }
+    else if (E.bs) { for (const b of E.bs) v6SetMat(b, $('v6EdM').value); v6PartRow(); v6Paint(); v6Preview(); }
     else if (E.b) { v6SetName(E.b, $('v6EdT').value.replace(/\n/g, ' ')); v6SetMat(E.b, $('v6EdM').value); v6PartRow(); v6Paint(); v6Preview(); }
   }
   $('v6EdOk').addEventListener('click', function () { v6EditDone(true); });
   $('v6EdNo').addEventListener('click', function () { v6EditDone(false); });
+  $('v6EdM').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); v6EditDone(true); } else if (e.key === 'Escape') { e.preventDefault(); v6EditDone(false); }
+    e.stopPropagation();
+  });
   $('v6EdT').addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && (!V6S.edit || !V6S.edit.n || !e.shiftKey)) { e.preventDefault(); v6EditDone(true); }
     else if (e.key === 'Escape') { e.preventDefault(); v6EditDone(false); }
@@ -1377,12 +1474,24 @@
       V6S.dsel = h && h.kind === 'dim' ? h.id : null;
       if (h && h.kind === 'dim') { V6S.drag = { h: h, x: t.x, y: t.y, dim: h.id }; v6Paint(h); e.preventDefault(); return; }
       if (h && h.kind === 'odim') { V6S.nsel = null; V6S.nsels = []; V6S.drag = { h: h, x: t.x, y: t.y }; v6Paint(h); e.preventDefault(); return; }
-      if (!h) V6S.pan = { x: e.clientX, y: e.clientY, vp: V6S.vp.slice() };
       if (V6S.edit) v6EditDone(true);
-      // notes: each click on a note adds it to the picked set, a click on anything else (or empty space) clears it
+      // empty sheet: everything picked is dropped (Shift / Ctrl keep it), and a drag draws a box that picks
+      // parts and notes (the middle mouse button, or Space + drag, moves the sheet)
+      if (!h) {
+        if (!e.shiftKey && !e.ctrlKey && !e.metaKey) { v6PClear(); V6S.nsel = null; V6S.nsels = []; }
+        V6S.box = { x0: t.x, y0: t.y, x1: t.x, y1: t.y };
+        v6RotUI();
+      }
+      // notes: each click on a note adds it to the picked set, a click on anything else clears it
       if (h && h.kind === 'note') { V6S.nsel = h.id; if (V6S.nsels.indexOf(h.id) < 0) V6S.nsels.push(h.id); }
-      else { V6S.nsel = null; V6S.nsels = []; }
-      if (h && (h.kind === 'part' || h.kind === 'label')) V6S.psel = h.id; else if (h) V6S.psel = null;
+      else if (h) { V6S.nsel = null; V6S.nsels = []; }
+      // parts: each click adds the part to the picked set (Ctrl+click takes it out again); anything else clears the set
+      if (h && (h.kind === 'part' || h.kind === 'label')) {
+        const i = V6S.psels.indexOf(h.id);
+        if ((e.ctrlKey || e.metaKey) && (i >= 0 || V6S.psel === h.id)) { if (i >= 0) V6S.psels.splice(i, 1); V6S.psel = V6S.psels.length ? V6S.psels[V6S.psels.length - 1] : null; }
+        else { if (i < 0) V6S.psels.push(h.id); V6S.psel = h.id; }
+        v6RotUI();
+      } else if (h) { v6PClear(); v6RotUI(); }
       if (h && h.kind === 'note') v6NoteCtl(v6Note(h.id));
       v6PartRow(); v6Paint(h);
       v6PickToList(h);
@@ -1401,10 +1510,16 @@
         e.preventDefault(); return;
       }
       V6S.drag = { tot: tot0.slice(), h: h, x: t.x, y: t.y, pos: JSON.parse(JSON.stringify(pos0)), iso: iso0 && iso0.slice(), off: (V6S.off[h.id] || [0, 0]).slice(), note: h.kind === 'note' ? [v6Note(h.id).x, v6Note(h.id).y] : null,
-        notes: h.kind === 'note' ? v6NSel().map(function (n) { return [n, n.x, n.y]; }) : null };
+        notes: h.kind === 'note' ? v6NSel().map(function (n) { return [n, n.x, n.y]; }) : null,
+        parts: h.kind === 'part' || h.kind === 'label' ? v6PSel().map(function (id) { return [id, (V6S.off[id] || [0, 0]).slice()]; }) : null };
       e.preventDefault();
     });
     pc.addEventListener('dblclick', function (e) { const t = v6Hit(e); if (t && t.h && (t.h.kind === 'note' || t.h.kind === 'label' || t.h.kind === 'part' || t.h.kind === 'rect')) v6Edit(t.h); else if (t && !t.h) v6Fit(); });
+    // middle button or Space + left button: move the sheet
+    let v6Space = false;
+    window.addEventListener('keydown', function (e) { if (e.code === 'Space' && v6Act && !/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target && e.target.tagName) || '')) { v6Space = true; if (!V6S.pan) pc.style.cursor = 'grab'; e.preventDefault(); } });
+    window.addEventListener('keyup', function (e) { if (e.code === 'Space') { v6Space = false; if (!V6S.pan) pc.style.cursor = 'default'; } });
+    pc.addEventListener('mousedown', function (e) { if (e.button === 0 && v6Space) { V6S.pan = { x: e.clientX, y: e.clientY, vp: V6S.vp.slice() }; e.preventDefault(); e.stopImmediatePropagation(); } }, true);
     pc.addEventListener('wheel', function (e) {
       if (!V6S.prev) return;
       e.preventDefault();
@@ -1455,6 +1570,7 @@
       if (!V6S.prev) return;
       if (V6S.pan) { V6S.vp = [V6S.pan.vp[0] + e.clientX - V6S.pan.x, V6S.pan.vp[1] + e.clientY - V6S.pan.y]; pc.style.cursor = 'grabbing'; v6PaintFast(); return; }
       const t = v6Hit(e); if (!t) return;
+      if (V6S.box) { V6S.box.x1 = t.x; V6S.box.y1 = t.y; V6S.box.moved = V6S.box.moved || Math.abs(t.x - V6S.box.x0) + Math.abs(t.y - V6S.box.y0) > 3 * V6S.lay.dpr / V6S.lay.s; pc.style.cursor = 'crosshair'; v6PaintFast(); return; }
       if (V6S.rt) { if (V6S.rt.a) { V6S.rt.b = [t.x, t.y]; v6PaintFast(); } if (e.target === pc) pc.style.cursor = 'crosshair'; return; }
       if (V6S.dt && !V6S.drag) {
         if (e.target !== pc) return;
@@ -1473,7 +1589,7 @@
       if (!V6S.drag) {
         if (e.target !== pc) return;
         const h = t.h;
-        pc.style.cursor = V6S.comb !== null ? (h && v6CombCands().has(h.id) ? 'copy' : 'default') : !h ? 'grab' : h.kind === 'isoR' || h.kind === 'rectR' ? 'nwse-resize' : h.kind === 'odim' ? (h.t === 'h' ? 'ns-resize' : 'ew-resize') : h.kind === 'view' ? (h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize') : 'move';
+        pc.style.cursor = V6S.comb !== null ? (h && v6CombCands().has(h.id) ? 'copy' : 'default') : !h ? 'default' : h.kind === 'isoR' || h.kind === 'rectR' ? 'nwse-resize' : h.kind === 'odim' ? (h.t === 'h' ? 'ns-resize' : 'ew-resize') : h.kind === 'view' ? (h.n === 'front' ? 'move' : (h.n === 'top' || h.n === 'bottom') ? 'ns-resize' : 'ew-resize') : 'move';
         if (h !== V6S.hov) { V6S.hov = h; v6PaintFast(); }
         return;
       }
@@ -1487,7 +1603,7 @@
         else P[h.n] += dx;
         V6S.pos = P;
       } else if (h.kind === 'iso') V6S.iso = [D.iso[0] + dx, D.iso[1] + dy];
-      else if (h.kind === 'part' || h.kind === 'label') V6S.off[h.id] = [D.off[0] + dx, D.off[1] + dy];
+      else if (h.kind === 'part' || h.kind === 'label') { for (const q of (D.parts || [[h.id, D.off]])) V6S.off[q[0]] = [q[1][0] + dx, q[1][1] + dy]; }   // the picked parts move together
       else if (h.kind === 'note') { for (const q of D.notes) { q[0].x = q[1] + dx; q[0].y = q[2] + dy; } }
       else if (h.kind === 'odim') { if (!V6S.odo) V6S.odo = {}; const px = h.t === 'h' ? t.y - h.base : h.base - t.x; V6S.odo[h.key] = Math.round(Math.max(h.min, px) / h.pk * 100) / 100; }
       else if (h.kind === 'tot') V6S.tot = [D.tot[0] + dx, D.tot[1] + dy];
@@ -1497,7 +1613,12 @@
       v6PaintSoon(h);
     });
     window.addEventListener('mouseup', function () {
-      if (V6S.pan) { V6S.pan = null; pc.style.cursor = 'grab'; }
+      if (V6S.pan) { V6S.pan = null; pc.style.cursor = 'default'; }
+      if (V6S.box) {
+        const B = V6S.box; V6S.box = null; pc.style.cursor = 'default';
+        if (B.moved) { v6BoxPick(B); v6RotUI(); v6PartRow(); if (typeof dwRefresh === 'function') dwRefresh(false); }
+        v6Paint(V6S.hov); return;
+      }
       if (V6S.rt && V6S.rt.a) { v6RectMake(V6S.rt.a, V6S.rt.b); return; }
       const D = V6S.drag; if (!D) return;
       V6S.drag = null; V6S.snapG = null;
@@ -1514,6 +1635,7 @@
         e.preventDefault(); e.stopPropagation(); return;
       }
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (e.key === 'Escape' && (v6PSel().length || V6S.nsels.length)) { v6PClear(); V6S.nsel = null; V6S.nsels = []; v6RotUI(); v6PartRow(); v6Paint(); e.preventDefault(); return; }
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'c' || e.key === 'C') && v6NSel().length) { v6NoteCopy(); e.preventDefault(); e.stopPropagation(); return; }
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'v' || e.key === 'V') && V6S.clip && V6S.clip.length) { v6NotePaste(); e.preventDefault(); e.stopPropagation(); return; }
       if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -1590,7 +1712,14 @@
     if (by) { if (size) f.h = Math.max(0.01, f.h + by.d); else f.y += by.d; G.y.push(by.at); }
     if (G.x.length || G.y.length) V6S.snapG = G;
   }
-  function v6RectCtl() { const f = v6Rect(V6S.rsel); if (!f) return; $('v6Rc').value = f.color || '#e53935'; $('v6Rs').value = $('v6RsR').value = f.ts || 5; $('v6Rw').value = $('v6RwR').value = f.lw || 0.5; }
+  function v6RectCtl() { const f = v6Rect(V6S.rsel); if (!f) return; $('v6Rc').value = f.color || '#e53935'; $('v6Rs').value = $('v6RsR').value = f.ts || 5; $('v6Rw').value = $('v6RwR').value = f.lw || 0.5; $('v6Rp').value = f.tp || 'otl'; if (typeof dwSyncRibbon === 'function' && typeof DW !== 'undefined') dwSyncRibbon(); }
+  // where a frame's name sits: o / i = outside / inside the frame, t / b = top / bottom, l / r = left / right
+  function v6RectTitle(f, x, y, w, h, lw, fp, tw) {
+    const tp = f.tp || 'otl', out = tp[0] === 'o', top = tp[1] === 't', left = tp[2] === 'l', pad = 0.2 * fp;
+    const tx = left ? x + pad : x + w - pad - tw, up = out === top;           // up: the text stands on the line (baseline at the bottom)
+    const ty = top ? (out ? y - lw / 2 - 0.25 * fp : y + lw / 2 + 0.25 * fp) : (out ? y + h + lw / 2 + 0.25 * fp : y + h - lw / 2 - 0.25 * fp);
+    return { x: tx, y: ty, base: up ? 'bottom' : 'top', box: { x: tx - pad, y: up ? ty - 1.3 * fp + 0.25 * fp : ty - 0.25 * fp, w: tw + 2 * pad, h: 1.3 * fp } };
+  }
   function v6RectTool(on) {
     V6S.rt = on ? { a: null, b: null } : null;
     if (on) { V6S.dt = null; v6CombEnd(); }
@@ -1603,7 +1732,7 @@
     let x = Math.min(a[0], b[0]) / Ly.W, y = Math.min(a[1], b[1]) / Ly.H, w = Math.abs(b[0] - a[0]) / Ly.W, h = Math.abs(b[1] - a[1]) / Ly.H;
     if (Math.abs(b[0] - a[0]) * Ly.s / Ly.dpr < 8 || Math.abs(b[1] - a[1]) * Ly.s / Ly.dpr < 8) { w = 0.3; h = 0.25; x = Math.min(x, 0.98 - w); y = Math.min(y, 0.98 - h); }
     const L2 = V6S.rects[V6S.mode] || (V6S.rects[V6S.mode] = []);
-    const f = { id: V6S.seq++, x: x, y: y, w: w, h: h, color: $('v6Rc').value, title: L('Cụm ', 'Group ') + (L2.length + 1), ts: v6Num('v6Rs', 5), lw: v6Num('v6Rw', 0.5) };
+    const f = { id: V6S.seq++, x: x, y: y, w: w, h: h, color: $('v6Rc').value, title: L('Cụm ', 'Group ') + (L2.length + 1), ts: v6Num('v6Rs', 5), lw: v6Num('v6Rw', 0.5), tp: $('v6Rp').value || 'otl' };
     L2.push(f); V6S.rsel = f.id; V6S.nsel = null; V6S.psel = null; v6Paint();
     const ht = (V6S.prev.hits || []).find(function (q) { return q.kind === 'rect' && q.id === f.id && q.title; });
     if (ht) v6Edit(ht);
@@ -1611,8 +1740,8 @@
   function v6DelRect() { const L2 = V6S.rects[V6S.mode] || [], f = v6Rect(V6S.rsel); if (f) L2.splice(L2.indexOf(f), 1); V6S.rsel = null; v6Paint(); }
   $('v6AddR').addEventListener('click', function () { v6RectTool(!V6S.rt); });
   $('v6DelR').addEventListener('click', v6DelRect);
-  ['v6Rc', 'v6Rs', 'v6RsR', 'v6Rw', 'v6RwR'].forEach(function (id) {
-    const f = function () { const r = v6Rect(V6S.rsel); if (!r) return; r.color = $('v6Rc').value; r.ts = v6Num('v6Rs', 5); r.lw = v6Num('v6Rw', 0.5); v6Paint(); };
+  ['v6Rc', 'v6Rs', 'v6RsR', 'v6Rw', 'v6RwR', 'v6Rp'].forEach(function (id) {
+    const f = function () { const r = v6Rect(V6S.rsel); if (!r) return; r.color = $('v6Rc').value; r.ts = v6Num('v6Rs', 5); r.lw = v6Num('v6Rw', 0.5); r.tp = $('v6Rp').value || 'otl'; v6Paint(); };
     $(id).addEventListener('input', f); $(id).addEventListener('change', f);
   });
   // a part picked on the exploded sheet lights up in the body lists (and the other way round, see dwBodyPick)
@@ -1624,11 +1753,36 @@
     if (u === DW.bsel && u === V6S.hl) return;
     DW.bsel = u; V6S.hl = u; dwTreeSel();
   }
+  // ---------- turning the picked parts on their own (exploded view): Turn / Tilt / Roll sliders (degrees) and 90° steps
+  const V6_ROT = ['v6Pt', 'v6Pi', 'v6Pl'];
+  function v6RotUI() {
+    const ids = V6S.mode === 'exp' ? v6PSel() : [], a = ids.length ? V6S.prot[V6S.psel !== null && V6S.psel >= 0 ? V6S.psel : ids[0]] || [0, 0, 0] : [0, 0, 0];
+    V6_ROT.forEach(function (id, i) { if (document.activeElement !== $(id)) { $(id).value = Math.round(a[i] * 10) / 10; } $(id + 'R').value = a[i]; $(id).disabled = $(id + 'R').disabled = !ids.length; });
+    if (typeof dwSyncRibbon === 'function' && typeof DW !== 'undefined') dwSyncRibbon();
+  }
+  // wrap an angle into -180..180
+  const v6Wrap = function (v) { v = ((v + 180) % 360 + 360) % 360 - 180; return Math.abs(v) < 1e-9 ? 0 : v; };
+  function v6RotSet(axis, v, add) {
+    const ids = v6PSel(); if (!ids.length || V6S.mode !== 'exp') return;
+    for (const id of ids) {
+      const a = (V6S.prot[id] || [0, 0, 0]).slice();
+      a[axis] = v6Wrap(add ? a[axis] + v : v);
+      if (!a[0] && !a[1] && !a[2]) delete V6S.prot[id]; else V6S.prot[id] = a;
+    }
+    v6RotUI(); v6Preview();
+  }
+  function v6RotReset() { for (const id of v6PSel()) delete V6S.prot[id]; v6RotUI(); v6Preview(); }
+  V6_ROT.forEach(function (id, i) {
+    $(id).addEventListener('input', function () { const v = parseFloat(this.value); if (isFinite(v)) v6RotSet(i, v, false); });
+  });
   // part row in the panel: rename / material of the selected part, straight onto the body
   v6MatOpts($('v6PMat'));
   $('v6PName').addEventListener('change', function () { const b = S.bodies.find(function (x) { return x.id === V6S.psel; }); if (b) { v6SetName(b, this.value); v6PartRow(); v6Paint(); } });
   $('v6PName').addEventListener('keydown', function (e) { if (e.key === 'Enter') this.blur(); e.stopPropagation(); });
-  $('v6PMat').addEventListener('change', function () { const b = S.bodies.find(function (x) { return x.id === V6S.psel; }); if (b) { v6SetMat(b, this.value); v6PartRow(); v6Paint(); } });
+  $('v6PMat').addEventListener('change', function () {           // every picked part takes the material
+    const v = this.value, bs = v6PSel().map(function (id) { return S.bodies.find(function (x) { return x.id === id; }); }).filter(Boolean);
+    if (bs.length) { bs.forEach(function (b) { v6SetMat(b, v); }); v6PartRow(); v6Paint(); }
+  });
   // the body list / Properties changed a name, material or what is shown: follow
   let v6Sig = '';
   setInterval(function () {
@@ -1685,7 +1839,7 @@
   }
 
   document.querySelectorAll('#pop_v6 input, #pop_v6 select').forEach(function (el) {
-    if (/^v6(Ns|NsR|Nb|PName|PMat)$/.test(el.id)) return;
+    if (/^v6(Ns|NsR|Nb|PName|PMat|Pt|PtR|Pi|PiR|Pl|PlR|Rp)$/.test(el.id)) return;
     el.addEventListener('input', v6Preview); el.addEventListener('change', v6Preview);
   });
   V6_PAIRS.forEach(function (p) {
@@ -1719,7 +1873,7 @@
   });
   ['v6ScA', 'v6ScB'].forEach(function (id) { $(id).addEventListener('input', v6ScSync); });
   // ---------- the two drawings (6 view / Exploded view): own settings, switched in the panel, saved with the session
-  function v6Ctls() { return Array.from(document.querySelectorAll('#pop_v6 input, #pop_v6 select')).filter(function (el) { return el.type !== 'range' && !/^v6(Ns|Nb|Nf|Na|Ni|Nu|Nc|Rc|Rs|Rw|PName|PMat)$/.test(el.id); }); }
+  function v6Ctls() { return Array.from(document.querySelectorAll('#pop_v6 input, #pop_v6 select')).filter(function (el) { return el.type !== 'range' && !/^v6(Ns|Nb|Nf|Na|Ni|Nu|Nc|Rc|Rs|Rw|Rp|PName|PMat|Pt|Pi|Pl)$/.test(el.id); }); }
   function v6Key(el) { return el.id || (el.dataset.v ? 'v:' + el.dataset.v : ''); }
   function v6Snap() { const c = {}; v6Ctls().forEach(function (el) { const k = v6Key(el); if (k) c[k] = el.type === 'checkbox' ? el.checked : el.value; }); return c; }
   // settings saved before the overall size had three switches: the one Dimensions switch sets all three
@@ -1729,14 +1883,14 @@
     v6Ctls().forEach(function (el) { const k = v6Key(el); if (!k || !(k in c)) return; if (el.type === 'checkbox') el.checked = !!c[k]; else el.value = c[k]; });
     V6_PAIRS.forEach(function (p) { $(p[0]).value = $(p[1]).value; }); v6ScSync();
   }
-  function v6StGet() { return { R: V6S.R, pos: V6S.pos, iso: V6S.iso, off: V6S.off, tot: V6S.tot, grp: V6S.grp, odo: V6S.odo }; }
-  function v6StSet(t) { t = t || {}; V6S.R = t.R || [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; V6S.pos = t.pos || null; V6S.iso = t.iso || null; V6S.off = t.off || {}; V6S.tot = t.tot || null; V6S.grp = t.grp || {}; V6S.odo = t.odo || {}; }
+  function v6StGet() { return { R: V6S.R, pos: V6S.pos, iso: V6S.iso, off: V6S.off, prot: V6S.prot, tot: V6S.tot, grp: V6S.grp, odo: V6S.odo }; }
+  function v6StSet(t) { t = t || {}; V6S.R = t.R || [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; V6S.pos = t.pos || null; V6S.iso = t.iso || null; V6S.off = t.off || {}; V6S.prot = t.prot || {}; V6S.tot = t.tot || null; V6S.grp = t.grp || {}; V6S.odo = t.odo || {}; }
   function v6SetMode(m) {
     if (V6S.edit) v6EditDone(false);
     V6S.dt = null; V6S.dsel = null; V6S.vsel = null;
     V6S.comb = null;
     if (m !== V6S.mode) { V6S.cfg[V6S.mode] = v6Snap(); V6S.st[V6S.mode] = v6StGet(); V6S.mode = m; v6Apply(V6S.cfg[m]); v6StSet(V6S.st[m]); }
-    V6S.nsel = null; V6S.nsels = []; V6S.psel = null; V6S.rsel = null; V6S.rt = null; v6Sync(); v6Preview();
+    V6S.nsel = null; V6S.nsels = []; V6S.psel = null; V6S.psels = []; V6S.rsel = null; V6S.rt = null; v6Sync(); v6Preview();
   }
   document.querySelectorAll('#v6Seg button').forEach(function (b) { b.addEventListener('click', function () { v6SetMode(b.dataset.k); }); });
   V6S.def = v6Snap(); V6S.cfg = { '6v': v6Snap(), exp: v6Snap() };
@@ -1753,7 +1907,7 @@
     d = JSON.parse(JSON.stringify(d || v6Blank()));
     const cf = d.cfg || {}, sd = d.st || {};
     V6S.cfg = { '6v': Object.assign({}, V6S.def, v6CfgMig(cf['6v'])), exp: Object.assign({}, V6S.def, v6CfgMig(cf.exp)) };
-    for (const m of ['6v', 'exp']) { const t = sd[m] || {}; V6S.st[m] = { R: t.R, pos: t.pos, iso: t.iso, tot: t.tot, off: t.off || {}, grp: t.grp || {}, odo: t.odo || {} }; }
+    for (const m of ['6v', 'exp']) { const t = sd[m] || {}; V6S.st[m] = { R: t.R, pos: t.pos, iso: t.iso, tot: t.tot, off: t.off || {}, prot: t.prot || {}, grp: t.grp || {}, odo: t.odo || {} }; }
     const nt = d.notes || {};
     V6S.notes = { '6v': nt['6v'] || [], exp: nt.exp || [] };
     const rc = d.rects || {}; V6S.rects = { '6v': rc['6v'] || [], exp: rc.exp || [] };
@@ -1761,17 +1915,18 @@
     V6S.hide = Array.isArray(d.hide) ? d.hide.slice() : [];
     V6S.seq = Math.max(d.seq || 1, 1 + Math.max.apply(null, [0].concat(V6S.notes['6v'], V6S.notes.exp, V6S.rects['6v'], V6S.rects.exp, V6S.dims['6v']).map(function (n) { return n.id || 0; })));
     V6S.mode = d.mode === 'exp' ? 'exp' : '6v'; v6Apply(V6S.cfg[V6S.mode]); v6StSet(V6S.st[V6S.mode]);
-    V6S.nsel = null; V6S.nsels = []; V6S.psel = null; V6S.rsel = null; V6S.rt = null; V6S.prev = null; V6S.comb = null; V6S.dt = null; V6S.dsel = null; V6S.vsel = null; v6Sync(); v6Preview();
+    V6S.nsel = null; V6S.nsels = []; V6S.psel = null; V6S.psels = []; V6S.rsel = null; V6S.rt = null; V6S.prev = null; V6S.comb = null; V6S.dt = null; V6S.dsel = null; V6S.vsel = null; v6Sync(); v6Preview();
   }
   // body references (hand placements, combined groups) through f: id -> other key (undefined = drop)
   function v6MapIds(d, f) {
     d = JSON.parse(JSON.stringify(d));
     for (const m of ['6v', 'exp']) {
       const t = (d.st || {})[m]; if (!t) continue;
-      const off = {}, grp = {};
+      const off = {}, grp = {}, prot = {};
       for (const k in (t.off || {})) { const n = f(k); if (n !== undefined) off[n] = t.off[k]; }
+      for (const k in (t.prot || {})) { const n = f(k); if (n !== undefined) prot[n] = t.prot[k]; }
       for (const k in (t.grp || {})) { const n = f(k); if (n !== undefined) grp[n] = t.grp[k].map(function (x) { return f(String(x)); }).filter(function (x) { return x !== undefined; }); }
-      t.off = off; t.grp = grp;
+      t.off = off; t.grp = grp; t.prot = prot;
     }
     return d;
   }
