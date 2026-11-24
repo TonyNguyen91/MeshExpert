@@ -91,7 +91,7 @@
     return t;
   }
   // a = {vw, vh, raw (top-down depth 0..1), rgba (top-down colour picture), dr (depth range mm), S2 (px per model mm),
-  // ppx (px per paper mm), draw(mode, light, colourOf) -> GPU texture of the bodies drawn that way, nb (bodies)}
+  // ppx (px per paper mm), tId / tN: GPU pictures of the body numbers / normals (bottom-up), nb (bodies)}
   // returns the new top-down colour picture (Uint8Array), or null when nothing is switched on
   function v6Fx(G, a, fx) {
     if (!v6FxOn(fx)) return null;
@@ -102,9 +102,8 @@
     const bind = function (p, unit, name, t) { g.activeTexture(g.TEXTURE0 + unit); g.bindTexture(g.TEXTURE_2D, t); g.uniform1i(U(p, name), unit); };
     try {
       const idOn = fx.id && a.nb > 1, nOn = fx.ss > 0 || fx.cs > 0;
-      const tId = idOn ? a.draw(1, 2, function (i) { const k = i + 1; return [(k & 255) / 255, ((k >> 8) & 255) / 255, 0]; }) : null;
-      const tN = nOn ? a.draw(2, 0, null) : null;
-      if (tId) made.push(tId); if (tN) made.push(tN);
+      // body-number and normal pictures: drawn by the caller in its geometry pass and owned by it
+      const tId = idOn ? a.tId : null, tN = nOn ? a.tN : null;
       const tD = tex(vw, vh, g.R32F, g.RED, g.FLOAT, a.raw);
       const tC = tex(vw, vh, g.RGBA8, g.RGBA, g.UNSIGNED_BYTE, a.rgba);
       const thr = Math.max(1e-3, fx.t), wl = Math.min(24 / 1.8, fx.w * a.ppx);

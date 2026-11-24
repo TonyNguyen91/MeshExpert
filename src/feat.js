@@ -79,7 +79,39 @@
     catch (e) { if (String(e && (e.message || e.code || e)).indexOf('anifold') >= 0 && !/Manifold library/.test(String(e.message))) throw MF_ERR(); throw e; }
     finally { for (const s of made) { try { s.delete(); } catch (e2) { /* already freed */ } } }
   }
+  // booleans of two meshes run in a worker of their own (Manifold loaded there), so the page keeps moving meanwhile;
+  // if that worker cannot start, the page runs Manifold itself as before
+  let mfW = null, mfWok = true, mfSeq = 1, mfUsedW = false;
+  const mfJobs = {};
+  function mfWorker() {
+    if (mfW || !mfWok) return mfW;
+    try {
+      const src = ManifoldModule.toString() + ';const MF_B64=' + JSON.stringify(MANIFOLD_WASM_B64) + ';let lib=null;' +
+        'async function getLib(){if(lib)return lib;const bin=Uint8Array.from(atob(MF_B64),function(c){return c.charCodeAt(0);});const w=await ManifoldModule({wasmBinary:bin,locateFile:function(f){return f;}});w.setup();lib=w;return w;}' +
+        'onmessage=async function(e){const m=e.data,made=[];let w=null;try{w=await getLib();' +
+        'const toM=function(x){const mesh=new w.Mesh({numProp:3,vertProperties:new Float32Array(x.positions),triVerts:new Uint32Array(x.indices)});mesh.merge();let s;try{s=new w.Manifold(mesh);}catch(er){throw {mf:1};}made.push(s);return s;};' +
+        'const A=toM(m.a),B=toM(m.b),R=m.op==="union"?A.add(B):m.op==="subtract"?A.subtract(B):A.intersect(B);made.push(R);' +
+        'const out=R.getMesh(),n=out.numProp,V0=out.vertProperties,nv=V0.length/n,P=new Float32Array(3*nv);for(let i=0;i<nv;i++){P[3*i]=V0[n*i];P[3*i+1]=V0[n*i+1];P[3*i+2]=V0[n*i+2];}' +
+        'const I=new Uint32Array(out.triVerts);postMessage({id:m.id,r:{positions:P,indices:I}},[P.buffer,I.buffer]);}' +
+        'catch(er){const msg=String(er&&(er.message||er.code||er));postMessage({id:m.id,err:msg,mf:!!(er&&er.mf)||msg.indexOf("anifold")>=0,init:!w});}' +
+        'finally{for(const s of made){try{s.delete();}catch(e2){}}}};';
+      mfW = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+      mfW.onmessage = function (e) { const m = e.data, j = mfJobs[m.id]; if (!j) return; delete mfJobs[m.id]; j(m); };
+      mfW.onerror = function () { mfWok = false; mfW = null; for (const id in mfJobs) { const j = mfJobs[id]; delete mfJobs[id]; j({ err: 'worker', init: true }); } };
+    } catch (e) { mfWok = false; mfW = null; }
+    return mfW;
+  }
   async function boolRun(a, b, op) {
+    const wk = mfWorker();
+    if (wk) {
+      const m = await new Promise(function (res) { const id = mfSeq++; mfJobs[id] = res; wk.postMessage({ id: id, a: { positions: a.positions, indices: a.indices }, b: { positions: b.positions, indices: b.indices }, op: op }); });
+      if (m.r) { mfUsedW = true; m.r.engine = 'manifold'; return m.r; }
+      if (!m.init) { if (m.mf) throw MF_ERR(); throw new Error(m.err); }
+      mfWok = false; mfW = null;                       // Manifold did not start in the worker: the page tries it below
+    }
+    return boolRunPage(a, b, op);
+  }
+  async function boolRunPage(a, b, op) {
     const w = await manifoldLib();
     if (!w) return run('bool', { a: a, b: b, op: op }, function (p) { setProgress(p); });
     return withMF(function (w2, toM, fromM, keep) {
