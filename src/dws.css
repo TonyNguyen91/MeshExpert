@@ -139,14 +139,23 @@
   #dwsRibbon .zsw { display: flex; align-items: center; gap: 6px; height: 17px; font: 11px "Segoe UI", Arial, sans-serif; color: #cfcfcf; padding-left: 2px; }
   #dwsRibbon .zsw input[type=color] { width: 30px; height: 17px; }
 
-  /* groups folded into a drop-down button (ribFit adds .dd when the ribbon runs out of room) */
-  #dwsRibbon .rgrp > .rddb { display: none; }
-  #dwsRibbon .rgrp.dd > .rddb { display: flex; }
-  #dwsRibbon .rgrp.dd > .rbody { display: none; }
-  #dwsRibbon .rgrp.dd > .rddb { min-width: 48px; } #dwsRibbon .rgrp.dd > .rddb > .dda { font-size: 10px; line-height: 10px; color: #8fa6bf; }
-  #dwsRibbon .rgrp.dd.open > .rddb { background: var(--surface-input, #1b222c); border-color: var(--accent); }
-  #dwsRibbon .rgrp.dd.open > .rbody { display: flex; position: fixed; z-index: 2000; height: auto; flex: none; align-items: flex-start; gap: 6px;
-    background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; box-shadow: 0 10px 28px rgba(0,0,0,.55); }
+  /* Drawing tab: compact groups, everything on show */
+  #dwsRibbon .rpage.dwp .rgrp { padding: 3px 5px 0; }
+  #dwsRibbon .rpage.dwp .rbody { gap: 4px; }
+  #dwsRibbon .rpage.dwp .rcol { gap: 2px; }
+  #dwsRibbon .rpage.dwp .dwsRow { min-height: 20px; }
+  #dwsRibbon .rpage.dwp .dwsRow.sp { height: 20px; }
+  #dwsRibbon .rpage.dwp .dwsRow.ibar { gap: 3px; }
+  #dwsRibbon .rpage.dwp .dwsRow.mass span { font-size: 10.5px; color: #9fb0c3; white-space: nowrap; max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
+  #dwsRibbon .rpage.dwp select { max-width: 92px; }
+  #dwsRibbon .rpage.dwp .dwsRow.sel2 select { max-width: 56px; }
+  #dwsRibbon .rpage.dwp .dwsTxt { width: 96px; }
+  #dwsRibbon .rpage.dwp .dwsRow.sm input[type=range] { width: 42px; } #dwsRibbon .rpage.dwp .dwsRow.sm input[type=number] { width: 34px; }
+  #dwsRibbon .rpage.dwp .dwsWhen > .rcol { display: flex; }
+  #dwsRibbon button.sb.io { width: 24px; height: 20px; min-width: 0; padding: 0; justify-content: center; }
+  #dwsRibbon button.sb.gl { font: 600 12px/1 "Segoe UI", Arial, sans-serif; color: #dbe6f1; }
+  #dwsRibbon button.sb.gl i { font-style: italic; } #dwsRibbon button.sb.gl u { text-decoration: underline; }
+  #dwsRibbon button.sb.io.on { border-color: var(--accent); color: var(--accent); background: rgba(240,160,48,.12); }
 
   /* Export tab: Info + Export */
   #dwsRibbon .dwsInfo { width: 390px; font-size: 10.5px; line-height: 13px; white-space: normal; padding: 0 4px; }
@@ -169,3 +178,11 @@
     background: linear-gradient(#4a4a4a, #3a3a3a); border: 1px solid #1d1d1d; border-radius: 3px; color: #e6e6e6; font: 600 11px "Segoe UI", Arial, sans-serif; cursor: pointer; }
   #dwsRibbon .zdef:hover { background: linear-gradient(#5a5a5a, #464646); color: #fff; }
   #dwsRibbon .zdef:active { background: #d9761e; border-color: #7a3c06; }
+  #dwsRibbon .rpage.dwp .rcol { min-width: 0; }
+  #dwsRibbon .rcol.sl { display: grid; grid-template-columns: auto auto auto; column-gap: 4px; row-gap: 2px; align-items: center; align-content: start; }
+  #dwsRibbon .rcol.sl > .dwsRow { display: contents; }
+  #dwsRibbon .rcol.sl > .dwsRow > span { white-space: nowrap; }
+  #dwsRibbon .dwsRow.off > * { opacity: .4; }
+  #dwsRibbon .rcol.sl { grid-auto-rows: 21px; }
+  #dwsRibbon .rpage.dwp input[type=number], #dwsRibbon .rpage.dwp .dwsTxt { height: 19px; min-height: 0; padding: 0 3px; margin: 0; font-size: 11.5px; line-height: 17px; }
+  #dwsRibbon .rpage.dwp select { height: 19px; min-height: 0; padding-top: 0; padding-bottom: 0; margin: 0; font-size: 11.5px; line-height: 17px; }

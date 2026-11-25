@@ -1,8 +1,8 @@
 # Browser test (v1.6.0): Drawing Workspace layout and picking.
 # - defaults: Part Outline 0.05 mm, DPI 600; Effects tab: Default button, no export buttons
 # - first opening: sheets Dimension (6 Views) and Exploded (Exploded View)
-# - Export tab: only Info + Export; the other export settings are in the Drawing tab of both drawing types, which never
-#   overflows (groups fold into drop-down buttons)
+# - Export tab: only Info + Export; Drawing tab (both types): every command on the ribbon, nothing folded, no
+#   horizontal overflow; no Explode / Scale & Layout groups (their controls moved to Assembly / Sheet)
 # - exploded view: every picked part lights orange, a click on empty sheet clears it
 # Run: python3 ui36.py <fixtures folder> [path to index.html]
 import sys,os
@@ -16,7 +16,7 @@ with sync_playwright() as p:
     ctx=b.new_context(viewport={'width':1366,'height':800},offline=True,accept_downloads=True); pg=ctx.new_page()
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e))); pg.on('dialog',lambda d: d.accept())
     pg.goto('file://'+os.path.abspath(PAGE))
-    ok('Version 1.6.0',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.0')
+    ok('Version 1.6.1',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.1')
     ok('Defaults: outline 0.05, DPI 600',pg.evaluate("[document.getElementById('v6FxOw').value,document.getElementById('v6Dpi').value]")==['0.05','600'])
     pg.set_input_files('#file',[S+'/steps.stl',S+'/boss.stl',S+'/m_peg.stl',S+'/cyl.stl']); pg.wait_for_function("__mrt.S.bodies.length==4"); pg.wait_for_timeout(300)
     pg.click('#b_dws'); pg.wait_for_function("(__mrt.v6().nprev||0)>=1",timeout=60000); pg.wait_for_timeout(500)
@@ -34,25 +34,29 @@ with sync_playwright() as p:
     pg.click('#dwsRibbon .rpage.on [data-act=fxDef]'); pg.wait_for_timeout(200)
     v=pg.evaluate("['v6FxOw','v6FxOwR','v6FxAs','v6FxT'].map(i=>document.getElementById(i).value).concat([document.getElementById('v6FxId').checked])")
     ok('Default button resets effects',v==['0.05','0.05','0','5',True],v)
-    # drawing tab in both modes has the moved groups, no horizontal overflow
+    # drawing tab: every group open on the ribbon (nothing folded), Explode / Scale & Layout groups gone but their controls kept
     pg.click('#dwsTabs [data-k=draw]'); pg.wait_for_timeout(300)
-    need=['Sheet','Hướng nhìn','Hiển thị','Nét & chữ','Ghi chú','Ảnh xuất']
+    want={'6v':(['Sheet','Hình chiếu','Chú thích','Hướng nhìn','Hiển thị & nét','Ghi chú','Ảnh xuất','Bố trí & loại bản vẽ'],['Explode','Tỉ lệ & bố trí'],['v6Scale','v6Paper','v6Dpi','v6Lw','v6Nf','v6Az','v6IsoK']),
+          'exp':(['Sheet','Cụm lắp','Xoay linh kiện','Linh kiện','Khung','Hướng nhìn','Hiển thị & nét','Ghi chú','Ảnh xuất','Bố trí & loại bản vẽ'],['Explode','Tỉ lệ & bố trí'],['v6Ex','v6Az','v6Pt','v6PMat','v6Rs','v6Dpi','v6Nf'])}
     for m in ['6v','exp']:
         if m=='exp': pg.evaluate("__mrt.dwType('exp')"); pg.wait_for_timeout(800)
         t=pg.evaluate("Array.from(document.querySelectorAll('#dwsRibbon .rpage.on > .rgrp > .rtitle')).map(e=>e.textContent)")
-        ok('Drawing '+m+': has the moved groups',all(n in t for n in need),t)
-        o=pg.evaluate("(()=>{const p=document.querySelector('#dwsRibbon .rpage.on');return [p.scrollWidth,p.clientWidth,p.style.transform]})()")
-        ok('Drawing '+m+': fits (no overflow, no shrink)',o[0]<=o[1]+1 and not o[2],o)
-    # open a folded group, change DPI from it
-    g=pg.evaluate("(()=>{const g=Array.from(document.querySelectorAll('#dwsRibbon .rpage.on .rgrp.dd')).find(g=>g.querySelector('[data-bind=v6Dpi]'));return !!g})()")
-    ok('Picture group folded at 1366 px',g)
-    pg.locator('#dwsRibbon .rpage.on .rgrp.dd:has([data-bind=v6Dpi]) .rddb').click(); pg.wait_for_timeout(200)
-    vis=pg.locator('#dwsRibbon .rpage.on .rgrp.dd.open [data-bind=v6Dpi]').is_visible()
-    ok('Drop-down opens',vis)
-    pg.locator('#dwsRibbon .rpage.on .rgrp.dd.open input[type=number][data-bind=v6Dpi]').fill('300'); pg.keyboard.press('Tab')
-    ok('DPI changed through the drop-down',pg.evaluate("document.getElementById('v6Dpi').value")=='300')
-    pg.mouse.click(700,500); pg.wait_for_timeout(100)
-    ok('Click outside closes it',pg.evaluate("document.querySelectorAll('#dwsRibbon .rgrp.open').length")==0)
+        ok('Drawing '+m+': groups',t==want[m][0],t)
+        ok('Drawing '+m+': removed groups gone',not any(x in t for x in want[m][1]))
+        vis=pg.evaluate("ks=>ks.map(k=>{const e=document.querySelector('#dwsRibbon .rpage.on [data-bind='+k+']');return !!e&&e.offsetWidth>0})",want[m][2])
+        ok('Drawing '+m+': controls shown on the ribbon',all(vis),vis)
+        btn=pg.evaluate("Array.from(document.querySelectorAll('#dwsRibbon .rpage.on button')).filter(b=>b.offsetWidth===0&&!b.closest('.dwsWhen')).length")
+        ok('Drawing '+m+': no hidden buttons, no drop-downs',btn==0 and pg.evaluate("document.querySelectorAll('#dwsRibbon .rddb,#dwsRibbon .rgrp.dd').length")==0,btn)
+        o=pg.evaluate("(()=>{const p=document.querySelector('#dwsRibbon .rpage.on');return [p.scrollWidth,p.clientWidth]})()")
+        ok('Drawing '+m+': no horizontal overflow',o[0]<=o[1]+1 or pg.evaluate("!!document.querySelector('#dwsRibbon .rpage.on').style.transform"),o)
+    pg.set_viewport_size({'width':1920,'height':900}); pg.wait_for_timeout(600)
+    for m in ['exp','6v']:
+        if m=='6v': pg.evaluate("__mrt.dwType('6v')"); pg.wait_for_timeout(800)
+        f=pg.evaluate("(()=>{const p=document.querySelector('#dwsRibbon .rpage.on');return [p.style.transform,document.querySelectorAll('#dwsRibbon .rpage.on .rgrp.ic,#dwsRibbon .rpage.on .rgrp.ib').length]})()")
+        ok('1920 px, '+m+': everything at full size with its text',f==['',0],f)
+    pg.set_viewport_size({'width':1366,'height':800}); pg.wait_for_timeout(600)
+    pg.evaluate("__mrt.dwType('exp')"); pg.wait_for_timeout(800)
+    pg.evaluate("(()=>{const e=document.getElementById('v6Dpi');e.value=300;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));})()")
     # exploded: highlight all picked
     pg.evaluate("""()=>{window.idle=function(){return new Promise(r=>{let n=__mrt.v6().nprev||0,t=0;const i=setInterval(()=>{const m=__mrt.v6().nprev||0;if(m!==n){n=m;t=0;}else if(++t>12){clearInterval(i);r();}},100);});};}""")
     e=pg.evaluate("(()=>{const e=document.getElementById('v6Ex');e.value=120;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));})()"); pg.evaluate("idle()")

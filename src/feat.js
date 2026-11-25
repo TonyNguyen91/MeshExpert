@@ -908,14 +908,9 @@
     const pg = rb && rb.querySelector('.rpage.on'); if (!pg) return;
     const over = function () { return pg.scrollWidth > pg.clientWidth + 1; };
     pg.style.transform = ''; rb.style.height = '';
-    rb.classList.remove('f1', 'f2', 'f5'); pg.querySelectorAll('.rgrp').forEach(function (g) { g.classList.remove('ic', 'ib', 'dd', 'open'); });
+    rb.classList.remove('f1', 'f2', 'f5'); pg.querySelectorAll('.rgrp').forEach(function (g) { g.classList.remove('ic', 'ib'); });
     if (over()) rb.classList.add('f1');
     if (over()) rb.classList.add('f2');
-    // groups marked .cl fold into one drop-down button each, highest data-cp first (no horizontal scrolling)
-    if (over()) {
-      const cl = Array.from(pg.querySelectorAll('.rgrp.cl')).sort(function (a, b) { return (+b.dataset.cp || 0) - (+a.dataset.cp || 0); });
-      for (const g of cl) { if (!over()) break; g.classList.add('dd'); }
-    }
     // widest groups first: small buttons lose their text, then big buttons
     for (const cls of ['ic', 'ib']) {
       if (!over()) break;
