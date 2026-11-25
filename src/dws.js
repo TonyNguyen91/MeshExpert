@@ -22,7 +22,8 @@
   function dwDocName() { const d = dwDoc(); return d.name || 'Drawing of "' + dwModelName() + '"'; }
   function dwNewDoc(state) {
     const st = state || v6Blank(), sh = { id: dwUid('s'), name: 'Sheet 1', work: dwClone(st) };
-    return { v: DW_VER, id: dwUid('d'), name: null, created: Date.now(), modified: Date.now(), active: sh.id, sheets: [sh] };
+    // fresh: never opened in the Drawing Workspace (the first opening makes the sheets Dimension and Exploded)
+    return { v: DW_VER, id: dwUid('d'), name: null, created: Date.now(), modified: Date.now(), active: sh.id, sheets: [sh], fresh: true };
   }
   function dwDoc() { if (!DW.doc) DW.doc = dwNewDoc(v6Grab()); return DW.doc; }
   function dwSheet(id) { return dwDoc().sheets.find(function (s) { return s.id === id; }); }
@@ -118,7 +119,7 @@
   function dwDump() {
     const d = dwDoc(); dwCapture();
     const f = function (k) { return dwUidOf(k); };
-    return { v: DW_VER, id: d.id, name: d.name, created: d.created, modified: d.modified, active: d.active,
+    return { v: DW_VER, id: d.id, name: d.name, created: d.created, modified: d.modified, active: d.active, fresh: d.fresh || undefined,
       sheets: d.sheets.map(function (s) { return { id: s.id, name: s.name, work: v6MapIds(s.work, f) }; }) };
   }
   // d = meta.drawDoc of a session, or null: a new document whose Sheet 1 is the drawing now on the engine (sessions
@@ -130,7 +131,7 @@
     if (d && d.sheets && d.sheets.length) {
       const f = (d.v || 1) < 2 ? v6IdxToId() : function (k) { return dwIdOf(k); };
       const docSrc = Array.isArray(d.src) ? d.src : null;
-      DW.doc = { v: DW_VER, id: d.id || dwUid('d'), name: d.name || null, created: d.created || Date.now(), modified: d.modified || Date.now(), active: d.active,
+      DW.doc = { v: DW_VER, id: d.id || dwUid('d'), name: d.name || null, created: d.created || Date.now(), modified: d.modified || Date.now(), active: d.active, fresh: !!d.fresh,
         sheets: d.sheets.map(function (s) {
           const w = v6MapIds(s.work || s.saved || v6Blank(), f);
           const keep = Array.isArray(w.src) ? w.src : (d.v || 1) >= 2 ? docSrc : null;
@@ -145,8 +146,18 @@
     if (DW.open) { dwTabSet(dwCur().work.mode); dwRefresh(true); }
   }
   // ---------- open / close
+  // the first time the workspace opens on a model: two sheets, Dimension (6 Views) and Exploded (Exploded View)
+  function dwFirstSheets() {
+    const d = dwDoc(); if (!d.fresh) return;
+    delete d.fresh;
+    const w = v6Grab(), a = dwClone(w), b = dwClone(w);
+    a.mode = '6v'; b.mode = 'exp';
+    const s1 = { id: dwUid('s'), name: 'Dimension', work: a }, s2 = { id: dwUid('s'), name: 'Exploded', work: b };
+    d.sheets = [s1, s2]; d.active = s1.id; d.modified = Date.now();
+    v6Put(s1.work); dwHistReset(s1);
+  }
   function dwOpen() {
-    dwDoc();
+    dwDoc(); dwFirstSheets();
     DW.open = true; document.body.classList.add('dws-on');
     closeMenu();
     v6Activate(true); dwTabSet(V6S.mode); dwRefresh(true);
@@ -196,6 +207,9 @@
     dimt: '<path d="M4 6v12M20 6v12M4 12h16" stroke="#9cc4ee" stroke-width="1.5"/><path d="M7 10l-3 2 3 2M17 10l3 2-3 2" stroke="#f0a030" stroke-width="1.5"/><circle cx="4" cy="6" r="1.6" fill="#f0a030"/><circle cx="20" cy="6" r="1.6" fill="#f0a030"/>',
     undo: '<path d="M9 7L4 12l5 5" stroke="#9cc4ee" stroke-width="1.8"/><path d="M4 12h10a6 6 0 0 1 0 12" stroke="#9cc4ee" stroke-width="1.8"/>',
     frame: '<rect x="3" y="7" width="18" height="13" stroke="#e57373" stroke-width="1.8"/><path d="M5 4h8" stroke="#e8eef5" stroke-width="1.8"/>',
+    pic: '<rect x="3" y="5" width="18" height="14" rx="1.5" fill="#1f2a36" stroke="#9cc4ee"/><circle cx="8.5" cy="10" r="1.8" fill="#f0a030"/><path d="M5 17l5-5 3 3 2.5-2.5L19 17z" fill="#4f86c4"/>',
+    look: '<circle cx="12" cy="12" r="7.5" fill="#4f86c4" stroke="#2b557f"/><path d="M12 4.5a7.5 7.5 0 0 1 0 15z" fill="#2b557f"/>',
+    lines: '<path d="M4 7h16" stroke="#e8eef5" stroke-width="2.4"/><path d="M4 12h16" stroke="#9cc4ee" stroke-width="1.6"/><path d="M4 17h16" stroke="#9cc4ee"/>',
     drawing: '<path d="M3 2h13l5 5v15H3z" fill="#e8eef5" stroke="#9cc4ee"/><rect x="5.5" y="5" width="4.5" height="3.5" fill="#3d6fa8"/><rect x="5.5" y="10" width="4.5" height="4.5" fill="#4f86c4"/><rect x="11.5" y="10" width="3.5" height="4.5" fill="#3d6fa8"/>'
   };
   function dwIco(k, n) { n = n || 16; return '<svg viewBox="0 0 24 24" width="' + n + '" height="' + n + '" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">' + (DW_IC[k] || '') + '</svg>'; }
@@ -207,6 +221,11 @@
   function dwSB(attr, ic, vi, en, tv, te) { return '<button class="sb" ' + attr + dwTip(tv || vi, te || en) + '>' + dwIco(ic, 16) + dwT(vi, en) + '</button>'; }
   function dwGrp(vi, en, body) { return '<div class="rgrp"><div class="rbody">' + body + '</div><div class="rtitle" data-en="' + dwEsc(en) + '">' + dwEsc(vi) + '</div></div>'; }
   function dwCol(body) { return '<div class="rcol">' + body + '</div>'; }
+  // a group that folds into one drop-down button when the ribbon runs out of room (ribFit: highest pri folds first)
+  function dwGrpC(vi, en, ic, pri, body) {
+    return '<div class="rgrp cl" data-cp="' + pri + '"><button class="bb rddb"' + dwTip(vi, en) + '>' + dwIco(ic, 30) + '<span class="dda">▾</span></button>' +
+      '<div class="rbody">' + body + '</div><div class="rtitle" data-en="' + dwEsc(en) + '">' + dwEsc(vi) + '</div></div>';
+  }
   function dwSel(bind, tv, te) { return '<select data-bind="' + bind + '"' + dwTip(tv, te) + '></select>'; }
   function dwSlider(vi, en, rng, num, tv, te) {
     return '<div class="dwsRow"' + dwTip(tv, te) + '>' + dwT(vi, en) + '<input type="range" data-bind="' + rng + '"><input type="number" data-bind="' + num + '"></div>';
@@ -224,20 +243,23 @@
       dwSB('data-click="#v6Tip"', 'tip', 'Lật 90°', 'Flip 90°', 'Lật ' + what[0] + ' 90° quanh trục ngang', 'Tip ' + what[1] + ' 90° about the horizontal axis'));
   }
   function dwDisplayGrp() {
-    return dwGrp('Hiển thị', 'Display', dwCol(dwSB('data-chk="#v6Edge"', 'edge', 'Nét cạnh', 'Show Edges') + dwSB('data-chk="#v6Hid"', 'hid', 'Nét khuất', 'Hidden Lines') +
+    return dwGrpC('Hiển thị', 'Display', 'look', 75, dwCol(dwSB('data-chk="#v6Edge"', 'edge', 'Nét cạnh', 'Show Edges') + dwSB('data-chk="#v6Hid"', 'hid', 'Nét khuất', 'Hidden Lines') +
         dwChk('#v6Fine', 'B-rep mịn', 'Fine B-rep', 'Khối B-rep chia lưới mịn theo độ phân giải bản vẽ', 'B-rep solids meshed finely for the drawing resolution')) +
       dwCol('<div class="dwsRow">' + dwSel('v6Col', 'Màu: tô bóng / một màu / trắng (nét vẽ)', 'Colour: shaded / one colour / white (line drawing)') + '<input type="color" data-bind="v6One"' + dwTip('Màu khi chọn Một màu', 'Colour for One colour') + '></div>' +
         '<div class="dwsRow">' + dwSel('v6Light', 'Ánh sáng', 'Lighting') + '</div>' +
         dwSliderS('Góc', 'Angle', 'v6AngR', 'v6Ang', 'Cạnh lưới gãy hơn góc này thì vẽ nét (°)', 'Mesh edges sharper than this are drawn (°)')));
   }
+  // Export tab: what the picture will be (Info) and the export commands
   function dwOutGrp() {
-    return dwGrp('Xuất', 'Export', dwCol(dwSB('data-act="png"', 'png', 'PNG', 'PNG', 'Xuất Sheet này thành ảnh PNG', 'Export this sheet as PNG') + dwSB('data-act="jpg"', 'jpg', 'JPG', 'JPG', 'Xuất Sheet này thành ảnh JPG', 'Export this sheet as JPG') +
-        dwSB('data-act="pdf"', 'pdf', 'PDF', 'PDF', 'Xuất Sheet này thành PDF (nét vector)', 'Export this sheet as PDF (vector lines)')) +
-      dwCol(dwSB('data-act="eachPng"', 'png', 'PNG từng Sheet', 'PNG per Sheet', 'Mỗi Sheet một file PNG riêng, tên file = tên Sheet', 'One PNG file per sheet, named after the sheet') +
-        dwSB('data-act="eachJpg"', 'jpg', 'JPG từng Sheet', 'JPG per Sheet', 'Mỗi Sheet một file JPG riêng, tên file = tên Sheet', 'One JPG file per sheet, named after the sheet') +
-        dwSB('data-act="eachPdf"', 'pdf', 'PDF từng Sheet', 'PDF per Sheet', 'Mỗi Sheet một file PDF riêng, tên file = tên Sheet', 'One PDF file per sheet, named after the sheet')) +
-      dwCol(dwSB('data-act="pdfAll"', 'pdf', 'PDF gộp', 'All in 1 PDF', 'Xuất mọi Sheet vào một file PDF theo thứ tự Drawing Tree', 'All sheets into one PDF, in Drawing Tree order') +
-        dwSB('data-click="#v6Copy"', 'copy', 'Chép ảnh', 'Copy', 'Chép ảnh Sheet vào clipboard (cỡ vừa để gửi mail, không theo thiết lập xuất)', 'Copy the sheet picture to the clipboard (e-mail size, not the export settings)'))).replace('class="rgrp"', 'class="rgrp keep"');
+    const sec = function (vi, en, body) { return '<div class="dwsXs"><div class="dwsXh">' + dwT(vi, en) + '</div><div class="dwsXb">' + body + '</div></div>'; };
+    return dwGrp('Xuất', 'Export', sec('Sheet này', 'This Sheet', dwBB('data-act="png"', 'png', 'PNG', 'PNG', 'Xuất Sheet này thành ảnh PNG', 'Export this sheet as PNG') +
+        dwBB('data-act="jpg"', 'jpg', 'JPG', 'JPG', 'Xuất Sheet này thành ảnh JPG', 'Export this sheet as JPG') +
+        dwBB('data-act="pdf"', 'pdf', 'PDF', 'PDF', 'Xuất Sheet này thành PDF (nét vector)', 'Export this sheet as PDF (vector lines)')) +
+      sec('Từng Sheet', 'Per Sheet', dwBB('data-act="eachPng"', 'png', 'PNG', 'PNG', 'Mỗi Sheet một file PNG riêng, tên file = tên Sheet', 'One PNG file per sheet, named after the sheet') +
+        dwBB('data-act="eachJpg"', 'jpg', 'JPG', 'JPG', 'Mỗi Sheet một file JPG riêng, tên file = tên Sheet', 'One JPG file per sheet, named after the sheet') +
+        dwBB('data-act="eachPdf"', 'pdf', 'PDF', 'PDF', 'Mỗi Sheet một file PDF riêng, tên file = tên Sheet', 'One PDF file per sheet, named after the sheet')) +
+      sec('Tất cả Sheet', 'All Sheets', dwBB('data-act="pdfAll"', 'pdf', 'PDF gộp', 'All in 1 PDF', 'Xuất mọi Sheet vào một file PDF theo thứ tự Drawing Tree', 'All sheets into one PDF, in Drawing Tree order')) +
+      sec('Clipboard', 'Clipboard', dwBB('data-click="#v6Copy"', 'copy', 'Chép ảnh', 'Copy', 'Chép ảnh Sheet vào clipboard (cỡ vừa để gửi mail, không theo thiết lập xuất)', 'Copy the sheet picture to the clipboard (e-mail size, not the export settings)'))).replace('class="rgrp"', 'class="rgrp keep dwsX"');
   }
   // Effects tab, in the style of ZBrush sub-palettes: each effect is a small palette with a title bar and an on / off
   // switch; its levels are ZBrush sliders (name on the left, value on the right inside the bar; drag anywhere on it,
@@ -263,76 +285,77 @@
       dwZp('Độ cong', 'Curvature', 'v6FxC', dwZs('v6FxC', 'v6FxCR', 'Đậm', 'Intensity', 'Gờ sáng, rãnh tối theo độ cong bề mặt (%, 0 = tắt)', 'Ridges lighter, grooves darker by the surface curvature (%, 0 = off)')) +
       dwZp('Viền part', 'Part Outline', '#v6FxId', dwZs('v6FxOw', 'v6FxOwR', 'Nét', 'Width', 'Bề dày viền quanh từng part (mm trên giấy): đường bao của part và chỗ hai body gặp nhau', 'Width of the line round every part (mm on paper): its silhouette and where two bodies meet') +
         '<div class="zsw">' + dwT('Màu viền', 'Colour') + '<input type="color" data-bind="v6FxOc"' + dwTip('Màu viền part', 'Part outline colour') + '></div>') +
-      '</div>' + dwOutGrp();
+      dwZp('Mặc định', 'Default', null, '<button class="zdef" data-act="fxDef"' + dwTip('Đưa mọi hiệu ứng về thiết lập mặc định', 'Put every effect back to its default setting') + '>' + dwIco('reset', 22) + dwT('Mặc định', 'Default') + '</button>', 'zdefp') +
+      '</div>';
   }
   // Ribbon layout: each drawing tab holds only what belongs to that drawing type, left to right in working order
   // (make the views -> place them -> annotate); the Export tab holds what both share, in the same order
   // (sheet -> view -> look -> lines & text -> notes -> output).
   function dwRibbonHtml() {
     const v = function (k, vi, en) { return dwSB('data-chk=".v6v[data-v=' + k + ']"', 'front', vi, en, 'Bật / tắt view ' + vi, 'Show / hide the ' + en); };
-    const six = dwGrp('Tạo view', 'View Creation', dwCol(v('front', 'Trước', 'Front View') + v('top', 'Trên', 'Top View') + v('bottom', 'Dưới', 'Bottom View')) +
+    const six = dwGrpC('Tạo view', 'View Creation', 'front', 30, dwCol(v('front', 'Trước', 'Front View') + v('top', 'Trên', 'Top View') + v('bottom', 'Dưới', 'Bottom View')) +
         dwCol(v('left', 'Trái', 'Left View') + v('right', 'Phải', 'Right View') + v('back', 'Sau', 'Rear View')) +
         dwBB('data-chk="#v6Iso"', 'iso', 'Isometric', 'Isometric', 'Bật / tắt hình chiếu iso', 'Show / hide the isometric view')) +
-      dwGrp('Isometric', 'Isometric', dwCol(dwSlider('Xoay', 'Turn', 'v6AzR', 'v6Az', 'Góc xoay hình iso quanh trục đứng (°) — bật Isometric để dùng', 'Iso view angle about the vertical axis (°) — switch Isometric on to use') +
+      dwGrpC('Isometric', 'Isometric', 'iso', 35, dwCol(dwSlider('Xoay', 'Turn', 'v6AzR', 'v6Az', 'Góc xoay hình iso quanh trục đứng (°) — bật Isometric để dùng', 'Iso view angle about the vertical axis (°) — switch Isometric on to use') +
           dwSlider('Nghiêng', 'Tilt', 'v6ElR', 'v6El', 'Góc nghiêng hình iso nhìn từ trên xuống (°) — bật Isometric để dùng', 'Iso view angle looking down (°) — switch Isometric on to use') +
           dwSlider('Cỡ', 'Size', 'v6IsoKR', 'v6IsoK', 'Cỡ hình iso (%) — bật Isometric để dùng', 'Size of the iso picture (%) — switch Isometric on to use'))) +
-      dwGrp('Tỉ lệ & bố trí', 'Scale & Layout', dwCol('<div class="dwsRow">' + dwT('Tỉ lệ', 'Scale') + dwSel('v6Scale', 'Tỉ lệ bản vẽ', 'Drawing scale') + '</div>' +
+      dwGrpC('Tỉ lệ & bố trí', 'Scale & Layout', 'scale', 25, dwCol('<div class="dwsRow">' + dwT('Tỉ lệ', 'Scale') + dwSel('v6Scale', 'Tỉ lệ bản vẽ', 'Drawing scale') + '</div>' +
           dwWhen('scale=c', '<div class="dwsRow"' + dwTip('Tỉ lệ tùy chọn a : b', 'Custom scale a : b') + '><input type="range" data-bind="v6ScR"><input type="number" data-bind="v6ScA"><span>:</span><input type="number" data-bind="v6ScB"></div>') +
           '')) +
-      dwGrp('Chú thích', 'Annotation', dwCol(dwSB('data-chk="#v6Lbl"', 'name', 'Tên view', 'View Names') + dwSB('data-chk="#v6ScN"', 'scale', 'Ghi tỉ lệ', 'Scale Note')) + dwCol(dwSB('data-chk="#v6DimW"', 'dim', 'Dài', 'Length', 'Kích thước bao: chiều dài (kéo đường kích thước để dời)', 'Overall size: length (drag the dimension line to move it)') + dwSB('data-chk="#v6DimD"', 'dim', 'Rộng', 'Width', 'Kích thước bao: chiều rộng (kéo đường kích thước để dời)', 'Overall size: width (drag the dimension line to move it)') + dwSB('data-chk="#v6DimH"', 'dim', 'Cao', 'Height', 'Kích thước bao: chiều cao (kéo đường kích thước để dời)', 'Overall size: height (drag the dimension line to move it)')) +
+      dwGrpC('Chú thích', 'Annotation', 'dim', 20, dwCol(dwSB('data-chk="#v6Lbl"', 'name', 'Tên view', 'View Names') + dwSB('data-chk="#v6ScN"', 'scale', 'Ghi tỉ lệ', 'Scale Note')) + dwCol(dwSB('data-chk="#v6DimW"', 'dim', 'Dài', 'Length', 'Kích thước bao: chiều dài (kéo đường kích thước để dời)', 'Overall size: length (drag the dimension line to move it)') + dwSB('data-chk="#v6DimD"', 'dim', 'Rộng', 'Width', 'Kích thước bao: chiều rộng (kéo đường kích thước để dời)', 'Overall size: width (drag the dimension line to move it)') + dwSB('data-chk="#v6DimH"', 'dim', 'Cao', 'Height', 'Kích thước bao: chiều cao (kéo đường kích thước để dời)', 'Overall size: height (drag the dimension line to move it)')) +
         dwBB('data-act="dim"', 'dimt', 'Dimension', 'Dimension', 'Ghi kích thước: chọn 2 điểm trên một view rồi bấm chỗ đặt đường kích thước (ngang / dọc / theo hướng tuỳ chỗ đặt). Esc để thôi', 'Dimension: pick 2 points on a view, then click where the line goes (horizontal / vertical / aligned from where you place it). Esc to stop'));
-    const exp = dwGrp('Explode', 'Explode', dwCol(dwSlider('Explode', 'Explode', 'v6ExR', 'v6Ex', 'Kéo để tách các linh kiện ra khỏi tâm cụm (0 = cụm lắp nguyên, %)', 'Drag to pull the parts out from the centre (0 = assembled, %)') +
+    const exp = dwGrpC('Explode', 'Explode', 'explode', 30, dwCol(dwSlider('Explode', 'Explode', 'v6ExR', 'v6Ex', 'Kéo để tách các linh kiện ra khỏi tâm cụm (0 = cụm lắp nguyên, %)', 'Drag to pull the parts out from the centre (0 = assembled, %)') +
           dwSB('data-act="resetExp"', 'reset', 'Bỏ vị trí kéo tay', 'Reset Explode', 'Đưa các linh kiện về vị trí tách tự động', 'Put the parts back where the automatic explode places them')) +
         dwBB('data-act="comb"', 'comb', 'Combine', 'Combine', 'Gộp các linh kiện cùng khối lượng vào linh kiện đang chọn trên bản vẽ (hoặc chuột phải lên linh kiện)', 'Combine parts of the same mass into the part picked on the sheet (or right-click a part)') +
         dwBB('data-act="sep"', 'sep', 'Tách ra', 'Separate', 'Tách nhóm của linh kiện đang chọn', 'Split the group of the picked part')) +
-      dwGrp('Góc nhìn', 'View Angle', dwCol(dwSlider('Xoay', 'Turn', 'v6AzR', 'v6Az', 'Góc nhìn cả cụm quanh trục đứng (°)', 'View angle about the vertical axis (°)') +
+      dwGrpC('Góc nhìn', 'View Angle', 'iso', 35, dwCol(dwSlider('Xoay', 'Turn', 'v6AzR', 'v6Az', 'Góc nhìn cả cụm quanh trục đứng (°)', 'View angle about the vertical axis (°)') +
           dwSlider('Nghiêng', 'Tilt', 'v6ElR', 'v6El', 'Góc nhìn cả cụm từ trên xuống (°)', 'Angle looking down (°)'))) +
       // turning single parts: right after the view angle of the whole assembly (one turns everything, the other only
       // the parts picked on the sheet); acts on every picked part
-      dwGrp('Xoay linh kiện', 'Part Rotation', dwCol(dwSliderS('Xoay', 'Turn', 'v6PtR', 'v6Pt', 'Xoay các linh kiện đang chọn quanh trục đứng của màn hình (°). Bấm linh kiện trên bản vẽ để chọn, bấm thêm để chọn nhiều', 'Turn the picked parts about the screen\'s vertical axis (°). Click parts on the sheet to pick them, click more to pick several') +
+      dwGrpC('Xoay linh kiện', 'Part Rotation', 'rotR', 40, dwCol(dwSliderS('Xoay', 'Turn', 'v6PtR', 'v6Pt', 'Xoay các linh kiện đang chọn quanh trục đứng của màn hình (°). Bấm linh kiện trên bản vẽ để chọn, bấm thêm để chọn nhiều', 'Turn the picked parts about the screen\'s vertical axis (°). Click parts on the sheet to pick them, click more to pick several') +
           dwSliderS('Nghiêng', 'Tilt', 'v6PiR', 'v6Pi', 'Nghiêng các linh kiện đang chọn quanh trục ngang của màn hình (°)', 'Tilt the picked parts about the screen\'s horizontal axis (°)') +
           dwSliderS('Lăn', 'Roll', 'v6PlR', 'v6Pl', 'Xoay các linh kiện đang chọn trong mặt giấy (°)', 'Roll the picked parts in the plane of the paper (°)')) +
         dwCol(dwSB('data-act="rotTurn"', 'rotR', 'Xoay 90°', 'Turn 90°', 'Xoay các linh kiện đang chọn thêm 90° quanh trục đứng', 'Turn the picked parts 90° more about the vertical axis') +
           dwSB('data-act="rotTip"', 'tip', 'Lật 90°', 'Tilt 90°', 'Lật các linh kiện đang chọn thêm 90° quanh trục ngang', 'Tilt the picked parts 90° more about the horizontal axis') +
           dwSB('data-act="rotReset"', 'reset', 'Về hướng gốc', 'Reset', 'Đưa các linh kiện đang chọn về hướng như cả cụm', 'Put the picked parts back to the assembly\'s orientation'))) +
-      dwGrp('Thông tin', 'Information', dwCol(dwSB('data-chk="#v6PN"', 'name', 'Tên linh kiện', 'Component Name') + dwSB('data-chk="#v6PM"', 'mass', 'Vật liệu + khối lượng', 'Material + Mass') +
+      dwGrpC('Thông tin', 'Information', 'name', 45, dwCol(dwSB('data-chk="#v6PN"', 'name', 'Tên linh kiện', 'Component Name') + dwSB('data-chk="#v6PM"', 'mass', 'Vật liệu + khối lượng', 'Material + Mass') +
         dwSB('data-chk="#v6Tot"', 'mass', 'Tổng khối lượng', 'Total Mass', 'Tổng khối lượng theo vật liệu (góc dưới phải, kéo để dời)', 'Total mass per material (bottom right, drag to move)')) +
         dwCol('<div class="dwsRow"' + dwTip('Tên body của linh kiện đang chọn trên bản vẽ (đổi cả trong 3D)', 'Name of the body of the part picked on the sheet (renames it in 3D too)') + '>' + dwT('Tên', 'Name') + '<input type="text" data-bind="v6PName" class="dwsTxt"></div>' +
           '<div class="dwsRow">' + dwT('Vật liệu', 'Material') + dwSel('v6PMat', 'Vật liệu của linh kiện đang chọn', 'Material of the picked part') + '</div>' +
           '<div class="dwsRow"><span data-text="v6PMass"></span></div>')) +
-      dwGrp('Khung', 'Frames', dwBB('data-act="rect"', 'frame', 'Khung', 'Frame', 'Kẻ khung chữ nhật chia khu vực một cụm: kéo trên bản vẽ (bấm một điểm = khung mặc định). Kéo cạnh / tên để dời, kéo góc để đổi cỡ (tự thẳng hàng với khung khác), bấm đúp tên để sửa, chuột phải để sửa / xoá. Esc để thôi', 'Draw a rectangle around the parts of one group: drag on the sheet (a click gives a default frame). Drag an edge / the name to move, the corner to resize (snaps to the other frames), double-click the name to edit, right-click to rename / delete. Esc to stop') +
+      dwGrpC('Khung', 'Frames', 'frame', 50, dwBB('data-act="rect"', 'frame', 'Khung', 'Frame', 'Kẻ khung chữ nhật chia khu vực một cụm: kéo trên bản vẽ (bấm một điểm = khung mặc định). Kéo cạnh / tên để dời, kéo góc để đổi cỡ (tự thẳng hàng với khung khác), bấm đúp tên để sửa, chuột phải để sửa / xoá. Esc để thôi', 'Draw a rectangle around the parts of one group: drag on the sheet (a click gives a default frame). Drag an edge / the name to move, the corner to resize (snaps to the other frames), double-click the name to edit, right-click to rename / delete. Esc to stop') +
         dwCol('<div class="dwsRow">' + dwT('Màu', 'Colour') + '<input type="color" data-bind="v6Rc"' + dwTip('Màu khung đang chọn (và khung mới)', 'Colour of the picked frame (and new frames)') + '></div>' +
           '<div class="dwsRow">' + dwT('Tên ở', 'Name at') + dwSel('v6Rp', 'Vị trí tên khung đang chọn (và khung mới): trong / ngoài khung, góc trên / dưới, trái / phải', 'Where the name of the picked frame (and of new frames) sits: inside / outside, top / bottom, left / right') + '</div>') +
         dwCol(dwSliderS('Tên', 'Name', 'v6RsR', 'v6Rs', 'Cỡ chữ tên khung (mm)', 'Size of the frame name (mm)') +
           dwSliderS('Nét', 'Line', 'v6RwR', 'v6Rw', 'Bề dày nét khung (mm)', 'Frame line width (mm)')));
-    const set = dwGrp('Sheet', 'Sheet', dwBB('data-act="newSheet"', 'sheet', 'Sheet mới', 'New Sheet', 'Tạo Sheet mới (lấy đủ Source Bodies)', 'Add a new sheet (with every source body)') +
+    // shared by both drawing types (formerly the Export tab): sheet -> orientation -> look -> lines & text -> notes -> picture
+    const sheet = dwGrpC('Sheet', 'Sheet', 'sheet', 60, dwBB('data-act="newSheet"', 'sheet', 'Sheet mới', 'New Sheet', 'Tạo Sheet mới (lấy đủ Source Bodies)', 'Add a new sheet (with every source body)') +
         dwCol('<div class="dwsRow">' + dwSel('v6Paper', 'Khổ giấy', 'Paper size') + '</div><div class="dwsRow">' + dwSel('v6Ori', 'Hướng giấy', 'Orientation') + '</div>' +
           dwWhen('paper=px', dwSliderS('W', 'W', 'v6WR', 'v6W', 'Bề rộng ảnh (px)', 'Picture width (px)') + dwSliderS('H', 'H', 'v6HR', 'v6H', 'Chiều cao ảnh (px)', 'Picture height (px)')) +
-          dwSB('data-act="fit"', 'fit', 'Vừa khung', 'Fit', 'Cả tờ giấy vừa khung nhìn (bấm đúp chỗ trống cũng được)', 'Whole sheet in view (or double-click an empty spot)'))) +
-      dwGrp('Hướng nhìn', 'Orientation', dwRotCol(['mô hình / cả cụm', 'the model / assembly']) +
+          dwSB('data-act="fit"', 'fit', 'Vừa khung', 'Fit', 'Cả tờ giấy vừa khung nhìn (bấm đúp chỗ trống cũng được)', 'Whole sheet in view (or double-click an empty spot)')));
+    const common = dwGrpC('Hướng nhìn', 'Orientation', 'rotR', 70, dwRotCol(['mô hình / cả cụm', 'the model / assembly']) +
         dwCol(dwSliderS('Cỡ', 'Size', 'v6ZmR', 'v6Zm', 'Cỡ hình khi tỉ lệ là Vừa khổ (%)', 'Picture size with Fit scale (%)'))) +
       dwDisplayGrp() +
-      dwGrp('Nét & chữ', 'Lines & Text', dwCol(dwSliderS('Nét', 'Line', 'v6LwR', 'v6Lw', 'Bề dày nét (mm)', 'Line width (mm)') +
+      dwGrpC('Nét & chữ', 'Lines & Text', 'lines', 80, dwCol(dwSliderS('Nét', 'Line', 'v6LwR', 'v6Lw', 'Bề dày nét (mm)', 'Line width (mm)') +
           dwSliderS('Chữ', 'Text', 'v6FsR', 'v6Fs', 'Cỡ chữ của kích thước, tên view, tên linh kiện (mm)', 'Size of dimension, view and part texts (mm)') +
           '<div class="dwsRow">' + dwSel('v6Unit', 'Đơn vị ghi kích thước', 'Units of the dimensions') + '</div>') +
         dwCol(dwChk('#v6Fb', 'Chữ đậm', 'Bold Text', 'Chữ kích thước, tên view, tên linh kiện đậm', 'Bold dimension, view and part texts'))) +
-      dwGrp('Ghi chú', 'Notes', dwBB('data-click="#v6AddT"', 'text', 'Thêm chữ', 'Add Text', 'Thêm ghi chú chữ (kéo để dời, bấm đúp để sửa, chuột phải: căn lề / kiểu chữ / xoá, Delete để xoá)', 'Add a text note (drag to move, double-click to edit, right-click: alignment / style / delete, Delete to remove)') +
+      dwGrpC('Ghi chú', 'Notes', 'text', 85, dwBB('data-click="#v6AddT"', 'text', 'Thêm chữ', 'Add Text', 'Thêm ghi chú chữ (kéo để dời, bấm đúp để sửa, chuột phải: căn lề / kiểu chữ / xoá, Delete để xoá)', 'Add a text note (drag to move, double-click to edit, right-click: alignment / style / delete, Delete to remove)') +
         dwCol('<div class="dwsRow">' + dwSel('v6Nf', 'Font chữ của ghi chú đang chọn', 'Font of the selected note') + '</div>' +
           dwSliderS('Cỡ', 'Size', 'v6NsR', 'v6Ns', 'Cỡ chữ của ghi chú đang chọn (mm)', 'Size of the selected note (mm)') +
           '<div class="dwsRow">' + dwT('Màu', 'Colour') + '<input type="color" data-bind="v6Nc"' + dwTip('Màu chữ của ghi chú đang chọn', 'Colour of the selected note') + '></div>') +
         dwCol(dwChk('#v6Nb', 'Đậm', 'Bold', 'Ghi chú đang chọn in đậm', 'Selected note in bold') +
           dwChk('#v6Ni', 'Nghiêng', 'Italic', 'Ghi chú đang chọn in nghiêng', 'Selected note in italics') +
           dwChk('#v6Nu', 'Gạch chân', 'Underline', 'Gạch chân ghi chú đang chọn', 'Underline the selected note'))) +
-      dwGrp('Ảnh xuất', 'Picture', dwCol(dwSliderS('DPI', 'DPI', 'v6DpiR', 'v6Dpi', 'Độ phân giải ảnh / PDF', 'Resolution of the picture / PDF') +
+      dwGrpC('Ảnh xuất', 'Picture', 'pic', 90, dwCol(dwSliderS('DPI', 'DPI', 'v6DpiR', 'v6Dpi', 'Độ phân giải ảnh / PDF', 'Resolution of the picture / PDF') +
           '<div class="dwsRow sel2">' + dwSel('v6SS', 'Khử răng cưa: dựng ảnh lớn hơn rồi thu nhỏ', 'Anti-aliasing: draw larger, then scale down') + dwSel('v6Bg', 'Nền ảnh PNG', 'PNG background') + '</div>' +
-          dwSliderS('JPG', 'JPG', 'v6QR', 'v6Q', 'Chất lượng JPG (%)', 'JPG quality (%)'))) +
-      dwGrp('Thông tin', 'Info', '<div class="rcol dwsInfo" id="dwsInfo"></div>') +
-      dwOutGrp();
+          dwSliderS('JPG', 'JPG', 'v6QR', 'v6Q', 'Chất lượng JPG (%)', 'JPG quality (%)')));
+    const set = dwGrp('Thông tin', 'Info', '<div class="rcol dwsInfo" id="dwsInfo"></div>').replace('class="rgrp"', 'class="rgrp keep"') + dwOutGrp();
     // the same Auto Arrange button on both drawing types, right next to 2D Type (6 Views: views spaced evenly; Exploded: parts spread evenly, frames respected)
     const typ = dwGrp('Bố trí & loại bản vẽ', 'Arrange & Type', dwBB('data-click="#v6Auto"', 'arrange', 'Xếp tự động', 'Auto Arrange', '6 Views: căn các hình chiếu cách đều nhau và cách đều viền, giữ nguyên cỡ hình. Exploded: giãn đều các linh kiện, trong khung thì xếp trong khung, ngoài khung thì xếp ở chỗ trống', '6 Views: space the views evenly between each other and the border, keeping their size. Exploded: spread the parts evenly, inside their frame or in the free space') +
       '<button class="bb dwsType" data-act="type2d"' + dwTip('Chọn loại bản vẽ của Sheet: 6 Views hoặc Exploded View (hỏi trước khi đổi)', 'Pick the drawing type of the sheet: 6 Views or Exploded View (asks before switching)') + '>' +
       dwIco('drawing', 30) + '<span>2D Type</span><small class="dwsTypeL"></small></button>').replace('class="rgrp"', 'class="rgrp keep dwsTypeG"');
-    return '<div class="rpage" data-k="6v">' + six + typ + '</div><div class="rpage" data-k="exp">' + exp + typ + '</div><div class="rpage" data-k="set">' + set + '</div><div class="rpage zbp" data-k="fx">' + dwFxHtml() + '</div>';
+    return '<div class="rpage" data-k="6v">' + sheet + six + common + typ + '</div><div class="rpage" data-k="exp">' + sheet + exp + common + typ + '</div><div class="rpage" data-k="set">' + set + '</div><div class="rpage zbp" data-k="fx">' + dwFxHtml() + '</div>';
   }
   // ---------- building the workspace
   (function () {
@@ -383,6 +406,16 @@
     rect: function () { v6RectTool(!V6S.rt); },
     jpg: function () { dwExport(null, 'jpg').catch(showError); },
     resetExp: function () { V6S.off = {}; v6Preview(); },
+    // Effects tab: every effect back to the value it has when the app starts
+    fxDef: function () {
+      ['v6FxT', 'v6FxW', 'v6FxB', 'v6FxBs', 'v6FxA', 'v6FxAs', 'v6FxS', 'v6FxSa', 'v6FxSe', 'v6FxC', 'v6FxOw', 'v6FxOc', 'v6FxId'].forEach(function (id) {
+        const el = $(id); if (el.type === 'checkbox') el.checked = el.defaultChecked; else el.value = el.defaultValue;
+        const r = $(id + 'R'); if (r) r.value = el.value;
+        dwFire(el);
+      });
+      document.querySelectorAll('#dwsRibbon .zon').forEach(function (b) { delete b.dataset.prev; });
+      flash(L('Hiệu ứng về mặc định', 'Effects back to default'));
+    },
     rotTurn: function () { v6RotSet(0, 90, true); },
     rotTip: function () { v6RotSet(1, 90, true); },
     rotReset: function () { v6RotReset(); },
@@ -395,6 +428,24 @@
       v6Uncomb(V6S.psel);
     }
   };
+  // folded groups (ribFit): the group button opens its controls in a drop-down under it
+  function dwDdClose(except) { document.querySelectorAll('#dwsRibbon .rgrp.dd.open').forEach(function (g) { if (g !== except) g.classList.remove('open'); }); }
+  function dwDdOpen(g) {
+    dwDdClose(g);
+    if (g.classList.contains('open')) { g.classList.remove('open'); return; }
+    g.classList.add('open');
+    const bt = g.querySelector('.rddb').getBoundingClientRect(), rb = $('dwsRibbon').getBoundingClientRect(), bd = g.querySelector('.rbody');
+    bd.style.top = Math.round(rb.bottom + 2) + 'px'; bd.style.left = Math.round(bt.left) + 'px';
+    const w = bd.offsetWidth; if (bt.left + w > window.innerWidth - 4) bd.style.left = Math.max(4, window.innerWidth - 4 - w) + 'px';
+  }
+  $('dwsRibbon').addEventListener('click', function (e) {
+    const d = e.target.closest('.rddb'); if (!d) return;
+    const g = d.closest('.rgrp'); if (g.classList.contains('dd')) dwDdOpen(g);
+    e.stopPropagation();
+  }, true);
+  document.addEventListener('pointerdown', function (e) { if (!e.target.closest || !e.target.closest('#dwsRibbon .rgrp.dd.open')) dwDdClose(); }, true);
+  window.addEventListener('keydown', function (e) { if (e.key === 'Escape') dwDdClose(); });
+  window.addEventListener('resize', function () { dwDdClose(); });
   $('dwsRibbon').addEventListener('click', function (e) {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.act && DW_ACT[b.dataset.act]) DW_ACT[b.dataset.act](b);

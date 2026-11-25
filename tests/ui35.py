@@ -121,7 +121,7 @@ with sync_playwright() as p:
     # Effects tab
     pg.click('#dwsTabs [data-k=fx]'); pg.wait_for_timeout(300)
     n=pg.evaluate("document.querySelectorAll('#dwsRibbon .rpage.on .zpal').length"); nz=pg.evaluate("document.querySelectorAll('#dwsRibbon .rpage.on .zbs').length")
-    ok('Effects: ZBrush-style palettes and sliders',n==6 and nz>=11,[n,nz])
+    ok('Effects: ZBrush-style palettes and sliders (+ Default)',n==7 and nz>=11,[n,nz])
     z=pg.locator('#dwsRibbon .rpage.on .zbs[data-zb=v6FxAs]').bounding_box()
     pg.mouse.click(z['x']+z['width']*0.5,z['y']+z['height']/2); pg.wait_for_timeout(100)
     ok('Clicking the middle of the AO slider sets 50',pg.evaluate("document.getElementById('v6FxAs').value")=='50',pg.evaluate("document.getElementById('v6FxAs').value"))

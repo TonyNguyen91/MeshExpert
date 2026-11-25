@@ -138,3 +138,34 @@
   #dwsRibbon .zcol { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
   #dwsRibbon .zsw { display: flex; align-items: center; gap: 6px; height: 17px; font: 11px "Segoe UI", Arial, sans-serif; color: #cfcfcf; padding-left: 2px; }
   #dwsRibbon .zsw input[type=color] { width: 30px; height: 17px; }
+
+  /* groups folded into a drop-down button (ribFit adds .dd when the ribbon runs out of room) */
+  #dwsRibbon .rgrp > .rddb { display: none; }
+  #dwsRibbon .rgrp.dd > .rddb { display: flex; }
+  #dwsRibbon .rgrp.dd > .rbody { display: none; }
+  #dwsRibbon .rgrp.dd > .rddb { min-width: 48px; } #dwsRibbon .rgrp.dd > .rddb > .dda { font-size: 10px; line-height: 10px; color: #8fa6bf; }
+  #dwsRibbon .rgrp.dd.open > .rddb { background: var(--surface-input, #1b222c); border-color: var(--accent); }
+  #dwsRibbon .rgrp.dd.open > .rbody { display: flex; position: fixed; z-index: 2000; height: auto; flex: none; align-items: flex-start; gap: 6px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; box-shadow: 0 10px 28px rgba(0,0,0,.55); }
+
+  /* Export tab: Info + Export */
+  #dwsRibbon .dwsInfo { width: 390px; font-size: 10.5px; line-height: 13px; white-space: normal; padding: 0 4px; }
+  #dwsRibbon .dwsInfo #v6Info { display: flex; flex-direction: column; gap: 0; }
+  #dwsRibbon .dwsInfo .ir { display: flex; gap: 8px; min-width: 0; height: 12.5px; line-height: 12.5px; font-size: 10.5px; }
+  #dwsRibbon .dwsInfo .ir b, #dwsRibbon .dwsInfo .ir span { line-height: 12.5px; font-size: 10.5px; }
+  #dwsRibbon .dwsInfo .ir b { flex: none; width: 84px; color: #8fa6bf; font-weight: 600; }
+  #dwsRibbon .dwsInfo .ir span { flex: 1; min-width: 0; color: #dbe6f1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #dwsRibbon .dwsX .rbody { gap: 0; align-items: stretch; }
+  #dwsRibbon .dwsXs { display: flex; flex-direction: column; padding: 0 8px; border-left: 1px solid var(--line); }
+  #dwsRibbon .dwsXs:first-child { border-left: none; padding-left: 2px; }
+  #dwsRibbon .dwsXh { font-size: 9.5px; color: #8fa6bf; text-transform: uppercase; letter-spacing: .5px; text-align: center; margin-bottom: 1px; white-space: nowrap; line-height: 12px; }
+  #dwsRibbon .dwsXb { display: flex; gap: 2px; }
+  #dwsRibbon .dwsXb button.bb { min-width: 52px; height: 48px; padding-top: 2px; padding-bottom: 2px; gap: 1px; justify-content: center; } #dwsRibbon .dwsXb button.bb svg { width: 24px; height: 24px; }
+
+  /* Effects tab: Default */
+  #dwsRibbon .zpal.zdefp { width: 92px; }
+  #dwsRibbon .zpal.zdefp .zpb { flex: 1; justify-content: center; }
+  #dwsRibbon .zdef { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 100%; height: 44px; padding: 2px;
+    background: linear-gradient(#4a4a4a, #3a3a3a); border: 1px solid #1d1d1d; border-radius: 3px; color: #e6e6e6; font: 600 11px "Segoe UI", Arial, sans-serif; cursor: pointer; }
+  #dwsRibbon .zdef:hover { background: linear-gradient(#5a5a5a, #464646); color: #fff; }
+  #dwsRibbon .zdef:active { background: #d9761e; border-color: #7a3c06; }

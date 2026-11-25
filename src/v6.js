@@ -33,7 +33,7 @@
   function v6Opt() {
     const views = {};
     document.querySelectorAll('.v6v').forEach(function (c) { views[c.dataset.v] = c.checked; });
-    const dpi = Math.max(72, Math.min(1200, v6Num('v6Dpi', 300))), paper = $('v6Paper').value, exp = V6S.mode === 'exp';
+    const dpi = Math.max(72, Math.min(1200, v6Num('v6Dpi', 600))), paper = $('v6Paper').value, exp = V6S.mode === 'exp';
     let W, H;
     if (paper === 'px') { W = Math.round(v6Num('v6W', 4000)); H = Math.round(v6Num('v6H', 2800)); }
     else { let mm = V6_PAPER[paper].slice(); if ($('v6Ori').value === 'P') mm = [mm[1], mm[0]]; W = Math.round(mm[0] / 25.4 * dpi); H = Math.round(mm[1] / 25.4 * dpi); }
@@ -48,7 +48,7 @@
       edge: $('v6Edge').checked, hidden: $('v6Hid').checked, ang: v6Num('v6Ang', 30), dim: !exp && ($('v6DimW').checked || $('v6DimD').checked || $('v6DimH').checked), dimW: $('v6DimW').checked, dimD: $('v6DimD').checked, dimH: $('v6DimH').checked, unit: $('v6Unit').value,
       lbl: !exp && $('v6Lbl').checked, scn: $('v6ScN').checked, scale: scale, zoom: v6Num('v6Zm', 100) / 100,
       fs: v6Num('v6Fs', 2.6), fb: $('v6Fb').checked, W: W, H: H, cut: cut, dpi: dpi,
-      fx: { t: v6Num('v6FxT', 5), w: v6Num('v6FxW', 0.01), bw: v6Num('v6FxB', 5), bs: v6Num('v6FxBs', 4) / 100, id: $('v6FxId').checked, ow: v6Num('v6FxOw', 0.2), oc: v6Hex($('v6FxOc').value), ar: v6Num('v6FxA', 0.2), as: v6Num('v6FxAs', 0) / 100, ss: v6Num('v6FxS', 0) / 100, sa: v6Num('v6FxSa', 0), se: v6Num('v6FxSe', 5), cs: v6Num('v6FxC', 0) / 100 },
+      fx: { t: v6Num('v6FxT', 5), w: v6Num('v6FxW', 0.01), bw: v6Num('v6FxB', 5), bs: v6Num('v6FxBs', 4) / 100, id: $('v6FxId').checked, ow: v6Num('v6FxOw', 0.05), oc: v6Hex($('v6FxOc').value), ar: v6Num('v6FxA', 0.2), as: v6Num('v6FxAs', 0) / 100, ss: v6Num('v6FxS', 0) / 100, sa: v6Num('v6FxSa', 0), se: v6Num('v6FxSe', 5), cs: v6Num('v6FxC', 0) / 100 },
       lw: v6Num('v6Lw', 0.25), ss: +$('v6SS').value || 1, fmt: fmt, q: v6Num('v6Q', 92) / 100, bg: fmt === 'jpg' ? 'w' : $('v6Bg').value };
   }
   // bodies of the drawing: the sheet's source bodies (Drawing Workspace), drawn from the geometry the sheet was last
@@ -546,19 +546,23 @@
   }
 
   // ---------- the sheet: pictures, dimensions, names, notes, drawn at k x full size; returns hit boxes
-  // orange mask of one body over a preview picture, made from its body-number pixels and kept until the next render
-  function v6HlMask(v, uid) {
-    const M = v.map; if (!M || !M.ids) return null;
-    const k = M.uids.indexOf(uid) + 1; if (!k) return null;
-    if (v.hlU === uid) return v.hlC;
+  // orange mask of some bodies over a preview picture (uids: list of body ids, or 'all' = every body of the picture),
+  // made from its body-number pixels and kept until the next render
+  function v6HlMask(v, uids) {
+    const M = v.map; if (!M || !M.ids || !uids || !uids.length) return null;
+    const ks = new Uint8Array(M.uids.length + 1); let n = 0;
+    M.uids.forEach(function (u, i) { if (uids === 'all' || uids.indexOf(u) >= 0) { ks[i + 1] = 1; n++; } });
+    if (!n) return null;
+    const key = uids === 'all' ? '*' : uids.join(',');
+    if (v.hlU === key) return v.hlC;
     const w = v.cv.width, h = v.cv.height, ids = M.ids;
     let cv = null;
     if (ids.length === w * h) {
       const im = new ImageData(w, h), d = im.data; let any = false;
-      for (let i = 0; i < ids.length; i++) if (ids[i] === k) { const j = 4 * i; d[j] = 255; d[j + 1] = 130; d[j + 2] = 20; d[j + 3] = 150; any = true; }
+      for (let i = 0; i < ids.length; i++) if (ks[ids[i]]) { const j = 4 * i; d[j] = 255; d[j + 1] = 130; d[j + 2] = 20; d[j + 3] = 150; any = true; }
       if (any) { cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.getContext('2d').putImageData(im, 0, 0); }
     }
-    v.hlU = uid; v.hlC = cv;
+    v.hlU = key; v.hlC = cv;
     return cv;
   }
   function v6Font(px, bold) { return (bold ? 'bold ' : '') + Math.round(px) + 'px "Segoe UI", Arial, sans-serif'; }
@@ -570,12 +574,17 @@
   function v6Compose(c2, o, R, k) {
     const W = o.W * k, H = o.H * k, M = v6Metrics(o), font = M.font * k, lw = M.lw * k, hits = [], frames = {};
     c2.imageSmoothingEnabled = true; c2.imageSmoothingQuality = 'high';
-    const put = function (v, cx, cy, f) {
+    // lit orange: on 6 views the body picked in a list; on the exploded sheet every picked part (whole part)
+    const pk = R === V6S.prev && o.exp ? v6PSel() : [];
+    const put = function (v, cx, cy, f, hu) {
       f = f || 1;
       if (v.sc && v.k) f *= (R.sc * k) / (v.sc * v.k) * (v.ik ? (R.isoK || 1) / v.ik : 1);   // a picture made for another scale
       const w = v.w * f, h = v.h * f, x = cx - w / 2, y = cy - h / 2, pad = v.pad / v.ss * f;
       c2.drawImage(v.cv, x - pad, y - pad, v.cv.width / v.ss * f, v.cv.height / v.ss * f);
-      if (V6S.hl && R === V6S.prev) { const m = v6HlMask(v, V6S.hl); if (m) c2.drawImage(m, x - pad, y - pad, v.cv.width / v.ss * f, v.cv.height / v.ss * f); }
+      if (R === V6S.prev) {
+        const us = hu !== undefined ? hu : V6S.hl ? [V6S.hl] : null;
+        const m = us && v6HlMask(v, us); if (m) c2.drawImage(m, x - pad, y - pad, v.cv.width / v.ss * f, v.cv.height / v.ss * f);
+      }
       const tr = { x0: x - pad, y0: y - pad, s: f / v.ss };
       if (c2.__rec && v.vec) dwRecEdges(c2, v.vec, tr);
       return { x: x, y: y, w: w, h: h, tr: tr };
@@ -661,7 +670,7 @@
       for (const pt of R.parts) {
         const off = V6S.off[pt.id] || [0, 0];
         const cx = W / 2 + (pt.cx - P.bx) * sc + off[0] * W, cy = H / 2 - (pt.cy - P.by) * sc + off[1] * H;
-        const f = put(pt, cx, cy); hits.push({ kind: 'part', id: pt.id, r: f });
+        const f = put(pt, cx, cy, undefined, pk.indexOf(pt.id) >= 0 ? 'all' : null); hits.push({ kind: 'part', id: pt.id, r: f });
         const lines = [];
         if (o.pn) lines.push([pt.b.name + (pt.n > 1 ? '  x' + pt.n : ''), true]);
         if (o.pm) { const m = v6Mat(pt.b), g = v6Mass(pt.b); if (m || g) lines.push([[m, g].filter(Boolean).join('  ·  '), false]); }
@@ -1121,14 +1130,15 @@
   }
   function v6Info(o, P, est) {
     const wm = o.W / o.dpi * 25.4, hm = o.H / o.dpi * 25.4, mp = (o.W * o.H / 1e6).toFixed(1);
-    let s = '<b>' + L('Khổ', 'Paper') + ':</b> ' + wm.toFixed(0) + ' × ' + hm.toFixed(0) + ' mm  |  ' + (wm / 25.4).toFixed(2) + ' × ' + (hm / 25.4).toFixed(2) + ' in<br>' +
-      '<b>' + L('Ảnh', 'Picture') + ':</b> ' + o.W + ' × ' + o.H + ' px · ' + o.dpi + ' dpi · ' + mp + ' Mpx' + (o.cut ? L(' (đã giới hạn)', ' (capped)') : '') + '<br>';
+    const row = function (k, v) { return '<div class="ir"><b>' + k + '</b><span>' + v + '</span></div>'; };
+    let s = row(L('Khổ', 'Paper'), wm.toFixed(0) + ' × ' + hm.toFixed(0) + ' mm  |  ' + (wm / 25.4).toFixed(2) + ' × ' + (hm / 25.4).toFixed(2) + ' in') +
+      row(L('Ảnh', 'Picture'), o.W + ' × ' + o.H + ' px · ' + o.dpi + ' dpi · ' + mp + ' Mpx' + (o.cut ? L(' (đã giới hạn)', ' (capped)') : ''));
     if (P) {
       const e = P.sc6.ext;
-      s += '<b>' + L('Mô hình', 'Model') + ':</b> ' + e.map(function (v) { return v.toFixed(1); }).join(' × ') + ' mm  |  ' + e.map(function (v) { return (v / 25.4).toFixed(2); }).join(' × ') + ' in<br>' +
-        '<b>' + L('Tỉ lệ', 'Scale') + ':</b> ' + v6Ratio(P.sc, o) + (o.scale > 0 ? '' : L(' (vừa khổ)', ' (fit)')) + '<br>';
+      s += row(L('Mô hình', 'Model'), e.map(function (v) { return v.toFixed(1); }).join(' × ') + ' mm  |  ' + e.map(function (v) { return (v / 25.4).toFixed(2); }).join(' × ') + ' in') +
+        row(L('Tỉ lệ', 'Scale'), v6Ratio(P.sc, o) + (o.scale > 0 ? '' : L(' (vừa khổ)', ' (fit)')));
     }
-    s += '<b>' + L('Dung lượng dự kiến', 'Expected size') + ':</b> <span id="v6Est">' + (est ? '≈ ' + v6Size(est) + ' (' + o.fmt.toUpperCase() + ')' : '…') + '</span>';
+    s += row(L('Dung lượng', 'Expected size'), '<span id="v6Est">' + (est ? '≈ ' + v6Size(est) + ' (' + o.fmt.toUpperCase() + ')' : '…') + '</span>');
     $('v6Info').innerHTML = s;
   }
 
@@ -1749,7 +1759,7 @@
     if (typeof DW === 'undefined' || !DW.doc || V6S.mode !== 'exp') return;
     let u = null;
     if (h && (h.kind === 'part' || h.kind === 'label')) { const pt = V6S.prev.parts.find(function (x) { return x.id === h.id; }); u = pt && pt.b.uid; }
-    else if (h) u = null; else return;
+    else if (h || !v6PSel().length) u = null; else return;
     if (u === DW.bsel && u === V6S.hl) return;
     DW.bsel = u; V6S.hl = u; dwTreeSel();
   }
