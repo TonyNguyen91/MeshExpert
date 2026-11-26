@@ -16,7 +16,7 @@ with sync_playwright() as p:
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
     pg.on('dialog',lambda d: d.accept())
     pg.goto('file://'+os.path.abspath(PAGE))
-    ok('Version 1.6.1 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.1')
+    ok('Version 1.6.2 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.2')
     v=lambda i: pg.evaluate("i=>document.getElementById(i).value",i)
     c=lambda i: pg.evaluate("i=>document.getElementById(i).checked",i)
     # SLA print plate

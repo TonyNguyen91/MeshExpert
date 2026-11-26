@@ -574,7 +574,7 @@
   // half-edge h = 3 * t + c runs from I[h] to the next corner of triangle t.
   // Returns adj[h] = the half-edge on the other side of that edge (-1 on a border), pairing the faces of each
   // shell correctly where more than two triangles meet on one edge.
-  function edgeAdjacency(P, I, nv, onGroup) {
+  function edgeAdjacency(P, I, nv, onGroup, multiOut) {
     const nh = I.length;
     const nxt = function (h) { return h % 3 === 2 ? h - 2 : h + 1; };
     const start = new Uint32Array(nv + 1);
@@ -641,11 +641,91 @@
         while (j < e && hiOf(arr[j]) === k) j++;
         if (j - i === 1) border++;
         else if (j - i === 2) pair(arr[i], arr[i + 1]);
-        else { multi++; if (onGroup) onGroup(arr, i, j); else radial(i, j); }
+        else { multi++; if (onGroup) onGroup(arr, i, j); else { radial(i, j); if (multiOut) multiOut.push(arr.slice(i, j)); } }
         i = j;
       }
     }
     return { adj: adj, border: border, multi: multi };
+  }
+
+  // Closed shells, the way slicer software (Voxeldance, Magics) separates them. Triangles are joined across every
+  // edge that has exactly two faces. Where more faces meet on one edge, a closed shell uses that edge as often in one
+  // direction as in the other: if every piece found so far is already in balance there, the pieces only cross or
+  // touch each other on that edge and nothing is joined (two bodies pushed into each other, whose faces lie at
+  // almost the same angle, stay apart). Otherwise the faces are paired by angle around the edge. Pieces still out of
+  // balance afterwards join the largest piece out of balance the other way, smallest first.
+  // Returns { label: Int32Array(nt), count, info }.
+  function shellLabels(P, I, nv) {
+    const nt = I.length / 3, groups = [];
+    const info = edgeAdjacency(P, I, nv, null, groups);
+    const adj = info.adj, par = new Int32Array(nt), multi = new Uint8Array(3 * nt);
+    for (const g of groups) for (let k = 0; k < g.length; k++) multi[g[k]] = 1;
+    for (let t = 0; t < nt; t++) par[t] = t;
+    const find = function (a) { while (par[a] !== a) { par[a] = par[par[a]]; a = par[a]; } return a; };
+    const join = function (a, b) { a = find(a); b = find(b); if (a !== b) par[b] = a; return a !== b; };
+    for (let h = 0; h < 3 * nt; h++) if (adj[h] > h && !multi[h]) join((h / 3) | 0, (adj[h] / 3) | 0);
+    if (!groups.length) return finish();
+    const dir = function (h) { return I[h] < I[h % 3 === 2 ? h - 2 : h + 1] ? 1 : -1; };
+    const balance = function (g) {
+      const bal = new Map();
+      for (let k = 0; k < g.length; k++) { const r = find((g[k] / 3) | 0); bal.set(r, (bal.get(r) || 0) + dir(g[k])); }
+      return bal;
+    };
+    const open = [];
+    for (const g of groups) {
+      let even = true;
+      balance(g).forEach(function (v) { if (v !== 0) even = false; });
+      if (!even) open.push(g);
+    }
+    // angle between the two faces of a pair, around their edge (0: they lie on top of each other)
+    const wedge = function (h, o) {
+      const a = I[h], b = I[h % 3 === 2 ? h - 2 : h + 1], p = I[h - h % 3 + (h % 3 + 2) % 3], q = I[o - o % 3 + (o % 3 + 2) % 3];
+      let dx = P[3 * b] - P[3 * a], dy = P[3 * b + 1] - P[3 * a + 1], dz = P[3 * b + 2] - P[3 * a + 2];
+      const dl = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1; dx /= dl; dy /= dl; dz /= dl;
+      const perp = function (v) {
+        let x = P[3 * v] - P[3 * a], y = P[3 * v + 1] - P[3 * a + 1], z = P[3 * v + 2] - P[3 * a + 2];
+        const t = x * dx + y * dy + z * dz; x -= t * dx; y -= t * dy; z -= t * dz;
+        const l = Math.sqrt(x * x + y * y + z * z) || 1; return [x / l, y / l, z / l];
+      };
+      const u = perp(p), w = perp(q);
+      return Math.acos(Math.max(-1, Math.min(1, u[0] * w[0] + u[1] * w[1] + u[2] * w[2])));
+    };
+    // pairs by angle are trusted unless two different pieces would meet at a sliver of less than about 1 degree (or
+    // two faces lying on top of each other): then the surfaces cross there almost flat, the order around the edge is
+    // down to rounding, and only the balance below can tell which face goes with which. All edges are judged before
+    // anything is joined, so one doubtful edge cannot hide another.
+    const NARROW = 0.0175, sure = open.map(function (g) {
+      for (let k = 0; k < g.length; k++) {
+        const h = g[k], o = adj[h];
+        if (o > h && find((h / 3) | 0) !== find((o / 3) | 0) && wedge(h, o) < NARROW) return false;
+      }
+      return true;
+    });
+    open.forEach(function (g, i) { if (sure[i]) for (let k = 0; k < g.length; k++) { const h = g[k]; if (adj[h] > h) join((h / 3) | 0, (adj[h] / 3) | 0); } });
+    const size = new Int32Array(nt);
+    for (let t = 0; t < nt; t++) size[find(t)]++;
+    let changed = true, rounds = 0;
+    while (changed && rounds++ < 64) {
+      changed = false;
+      for (const g of groups) {
+        for (;;) {
+          const bal = balance(g);
+          let sm = -1, smPos = false, big = -1;
+          bal.forEach(function (v, r) { if (v !== 0 && (sm < 0 || size[r] < size[sm] || (size[r] === size[sm] && r < sm))) { sm = r; smPos = v > 0; } });
+          if (sm < 0) break;
+          bal.forEach(function (v, r) { if (r !== sm && v !== 0 && (v > 0) !== smPos && (big < 0 || size[r] > size[big] || (size[r] === size[big] && r < big))) big = r; });
+          if (big < 0) break;
+          par[sm] = big; size[big] += size[sm]; changed = true;
+        }
+      }
+    }
+    return finish();
+    function finish() {
+      const label = new Int32Array(nt), idOf = new Int32Array(nt).fill(-1);
+      let n = 0;
+      for (let t = 0; t < nt; t++) { const r = find(t); if (idOf[r] < 0) idOf[r] = n++; label[t] = idOf[r]; }
+      return { label: label, count: n, info: info };
+    }
   }
 
   function splitAdv(mesh, opt) {
@@ -665,10 +745,12 @@
       adj = info.adj;
       for (let h = 0; h < 3 * nt; h++) if (adj[h] > h) union((h / 3) | 0, (adj[h] / 3) | 0);
     } else {
-      info = edgeAdjacency(P, I, nv, null);
+      const sh = shellLabels(P, I, nv), shell = sh.label;
+      info = sh.info;
       adj = info.adj;
       if (mode === 'shell') {
-        for (let h = 0; h < 3 * nt; h++) if (adj[h] > h) union((h / 3) | 0, (adj[h] / 3) | 0);
+        const first = new Int32Array(sh.count).fill(-1);
+        for (let t = 0; t < nt; t++) { const c = shell[t]; if (first[c] < 0) first[c] = t; else union(first[c], t); }
       } else {
         // unit normals; a zero-area triangle borrows the normal of the neighbour on its longest edge
         const N = new Float32Array(3 * nt), flat = [];
@@ -697,7 +779,7 @@
           const o = adj[h];
           if (o <= h) continue;
           const t1 = (h / 3) | 0, t2 = (o / 3) | 0;
-          if (t1 === t2) continue;
+          if (t1 === t2 || shell[t1] !== shell[t2]) continue;      // never join two different shells
           const a = 3 * t1, b = 3 * t2, sg = I[h] !== I[o] ? 1 : -1;
           const n1x = N[a], n1y = N[a + 1], n1z = N[a + 2], n2x = sg * N[b], n2y = sg * N[b + 1], n2z = sg * N[b + 2];
           let cut = false;

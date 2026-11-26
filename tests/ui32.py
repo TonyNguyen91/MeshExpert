@@ -17,7 +17,7 @@ with sync_playwright() as p:
     pg=ctx.new_page()
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e))); pg.on('console',lambda m: errs.append(m.text) if m.type=='error' or 'zs ' in m.text else None)
     pg.goto('file://'+os.path.abspath(PAGE))
-    ok('Version 1.6.1 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.1' and 'v1.6.1' in pg.title())
+    ok('Version 1.6.2 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.2' and 'v1.6.2' in pg.title())
     pg.set_input_files('#file',[S+'/steps.stl']); pg.wait_for_function("__mrt.S.bodies.length==1"); pg.wait_for_timeout(500)
     # a 3/4 view from above, the plate filling the window
     pg.evaluate("(()=>{const c=__mrt.cam(),a=0.6,e=0.9;const r=[Math.cos(a),Math.sin(a),0],w=[-Math.sin(a)*Math.sin(e),Math.cos(a)*Math.sin(e),Math.cos(e)];const u=[w[1]*r[2]-w[2]*r[1],w[2]*r[0]-w[0]*r[2],w[0]*r[1]-w[1]*r[0]];c.R=[...r,...u,...w];})()")

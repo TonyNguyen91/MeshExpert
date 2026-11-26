@@ -77,6 +77,21 @@ m = mk([...box(0, 0, 0, 1, 1, 1), ...box(0, 0, 1, 1, 1, 2), ...box(1, 1, 2, 2, 2
 for (const md of ['vertex', 'edge', 'shell']) { r = run(m, md); ok('no triangle lost (' + md + ')', total(r) === m.indices.length / 3, r.bodies.length + ' bodies'); }
 ok('mixed: vertex 2 / edge 3 / shell 4', n(m, 'vertex') === 2 && n(m, 'edge') === 3 && n(m, 'shell') === 4);
 
+// two closed prisms that share one edge and cross each other there at a small angle, the way bodies pushed into
+// each other and welded come out of slicer software: 'shell' must still give the two prisms
+(function () {
+  function prism(a1, a2, L) {
+    const pt = function (deg, x) { const r = deg * Math.PI / 180; return [x, Math.cos(r), Math.sin(r)]; };
+    const O0 = [0, 0, 0], O1 = [L, 0, 0], A0 = pt(a1, 0), A1 = pt(a1, L), B0 = pt(a2, 0), B1 = pt(a2, L);
+    const t = [[O0, B0, A0], [O1, A1, B1], [O0, A0, A1], [O0, A1, O1], [A0, B0, B1], [A0, B1, A1], [B0, O0, O1], [B0, O1, B1]];
+    const a = []; for (const f of t) for (const p of f) a.push(...p); return a;
+  }
+  for (const c of [[0, 170, 190, 360.3], [0, 170, 190, 359.7], [0, 177, 177.3, 360.05], [0, 120, 240, 361]]) {
+    const m = mk([...prism(c[0], c[1], 3), ...prism(c[2], c[3], 3)]), r = run(m, 'shell');
+    ok('prisms crossing on an edge ' + c.join('/') + ': shell 2, closed', r.bodies.length === 2 && r.bodies.every(closed), tris(r));
+  }
+})();
+
 // random piles of bricks that touch on faces, edges and corners, every face finely tessellated so that many
 // vertices and edges coincide: 'shell' must give back exactly the bricks
 (function () {
