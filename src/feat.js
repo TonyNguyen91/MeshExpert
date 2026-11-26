@@ -777,7 +777,7 @@
   ['boolean', 'fillet', 'chamfer', 'moveface', 'replace', 'shell', 'draft'].forEach(function (c) { const el = $('b_' + c); if (el) el.addEventListener('click', function () { openDlg(c); }); });
 
   // ---------- shortcuts (Settings ⚙) ----------
-  const CMDS = [['move', 'Di chuyển', 'Move', 'M'], ['rotate', 'Xoay', 'Rotate', 'R'], ['scale', 'Tỉ lệ', 'Scale', 'S'], ['sketch', 'Sketch', 'Sketch', 'Shift+S'],
+  const CMDS = [['move', 'Di chuyển / Xoay', 'Move / Rotate', 'M'], ['scale', 'Tỉ lệ', 'Scale', 'S'], ['sketch', 'Sketch', 'Sketch', 'Shift+S'],
     ['extrude', 'Extrude', 'Extrude', 'E'], ['revolve', 'Revolve', 'Revolve', 'Shift+R'], ['boolean', 'Boolean', 'Boolean', 'B'], ['fillet', 'Fillet', 'Fillet', 'Shift+F'],
     ['chamfer', 'Chamfer', 'Chamfer', 'Shift+C'], ['moveface', 'Move face', 'Move face', 'Shift+M'], ['replace', 'Replace face', 'Replace face', ''], ['shell', 'Shell', 'Shell', 'Shift+L'],
     ['draft', 'Draft', 'Draft', 'Shift+D'], ['normal', 'Normal view (nhìn thẳng hướng gần nhất)', 'Normal view (nearest straight view)', 'N'], ['hide', 'Ẩn / hiện body, sketch đang chọn', 'Hide / show the selected bodies, sketch', 'Y']];

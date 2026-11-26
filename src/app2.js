@@ -941,7 +941,8 @@
       ctx.setLineDash([]);
     }
     // transform gizmo
-    if (gizmoActive()) {
+    if (gizmoActive() && S.tool === 'move') drawXform();
+    else if (gizmoActive()) {
       const sel = selBodies().filter(function (b) { return b.visible; });
       const dg = drag && drag.type === 'giz' ? drag : null, hov = dg ? dg.axis : S.hov;
       // while rotating or scaling the handle stays where the drag started; while moving it travels with the bodies
@@ -987,6 +988,91 @@
     }
   }
   const GIZ_ARC = { r: 0.8, a0: 0.14, a1: Math.PI / 2 - 0.1, n: 20 };
+  // Move / Rotate handle (one command): an arrow per axis (drag along it), a square per plane (drag inside it, the
+  // square of plane XY is coloured as Z, its normal), a double-headed curved arrow between each pair of axes (turn
+  // about the third axis) and the centre dot (drag freely in the screen plane). Handle ids: -1 centre, 0..2 axis,
+  // 3..5 plane with that normal, 6..8 turn about that axis.
+  const GIZ_SQ = [0.2, 0.42], GIZ_XR = { r: 0.82, a0: 0.24, a1: Math.PI / 2 - 0.24 };
+  function drawXform() {
+    const sel = selBodies().filter(function (b) { return b.visible; });
+    const dg = drag && drag.type === 'giz' ? drag : null, hov = dg ? dg.hid : S.hov;
+    const pv = dg ? (dg.kind === 'rot' ? dg.pv3 : V.add(dg.pv3, dg.d || [0, 0, 0])) : $('pivot').value !== 'c' ? pivotPoint(sel) : boxCenter(unionBox(sel, true));
+    const p = project(pv), Lw = 150 * 2 * cam.zoom / H, w = viewer(), ends = [], arcs = [], quads = [], edge = [];
+    for (let i = 0; i < 3; i++) {
+      ends.push(project(V.add(pv, V.mul(GX(i), Lw))));
+      const q = [];
+      for (let k = 0; k <= GIZ_ARC.n; k++) q.push(project(ringPt(pv, i, Lw * GIZ_XR.r, GIZ_XR.a0 + (GIZ_XR.a1 - GIZ_XR.a0) * k / GIZ_ARC.n)));
+      arcs.push(q); edge.push(Math.abs(V.dot(w, GX(i))) < 0.3);
+      const j = (i + 1) % 3, k = (i + 2) % 3, a = GIZ_SQ[0] * Lw, b = GIZ_SQ[1] * Lw;
+      quads.push(Math.abs(V.dot(w, GX(i))) < 0.12 ? null : [[a, a], [b, a], [b, b], [a, b]].map(function (c) { return project(V.add(pv, V.add(V.mul(GX(j), c[0]), V.mul(GX(k), c[1])))); }));
+    }
+    S.giz = { p: p, ends: ends, Lw: Lw, pv: pv, arcs: arcs, quads: quads, hitAng: 0 };
+    if (dg && dg.kind === 'rot' && dg.moved) { drawRotation(dg, pv, Lw); return; }
+    const show = function (id) { return !dg || dg.hid === id; };   // while dragging only the grabbed handle stays
+    // plane squares
+    for (let i = 0; i < 3; i++) {
+      const q = quads[i]; if (!q || !show(3 + i)) continue;
+      const on = hov === 3 + i;
+      ctx.beginPath(); ctx.moveTo(q[0][0], q[0][1]); for (let k = 1; k < 4; k++) ctx.lineTo(q[k][0], q[k][1]); ctx.closePath();
+      ctx.fillStyle = 'rgba(' + AXRGB[i] + ',' + (on ? 0.6 : 0.32) + ')'; ctx.fill();
+      ctx.lineJoin = 'round'; ctx.strokeStyle = rim(on); ctx.lineWidth = on ? 4 : 3.2; ctx.stroke(); ctx.strokeStyle = AXC[i]; ctx.lineWidth = on ? 2 : 1.5; ctx.stroke();
+    }
+    // turning arrows, a head at each end
+    for (let i = 0; i < 3; i++) {
+      if (!show(6 + i)) continue;
+      const q = arcs[i], n = q.length, on = hov === 6 + i;
+      ctx.globalAlpha = edge[i] && !on ? 0.45 : 1;               // seen edge-on: faded, still grabbable
+      gpoly(q.slice(2, n - 2), AXC[i], on ? 5 : 3.4, on);
+      arrow2(q[n - 4], q[n - 1], AXC[i], on ? 19 : 16, on ? 9 : 7.5, rim(on));
+      arrow2(q[3], q[0], AXC[i], on ? 19 : 16, on ? 9 : 7.5, rim(on));
+      ctx.globalAlpha = 1;
+    }
+    // axis arrows
+    ctx.font = 'bold 13px Arial';
+    for (let i = 0; i < 3; i++) {
+      if (!show(i)) continue;
+      const e = ends[i], on = hov === i, far = Math.hypot(e[0] - p[0], e[1] - p[1]) > 16, tip = [e[0] + (e[0] - p[0]) * 0.1, e[1] + (e[1] - p[1]) * 0.1];
+      gline(p, e, AXC[i], on ? 4.5 : 3, on);
+      if (far) arrow2(p, tip, AXC[i], on ? 21 : 18, on ? 9.5 : 8, rim(on)); else { dot2(e, rim(on), 9); dot2(e, AXC[i], 6.5); }
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(8,10,14,0.88)'; ctx.strokeText(AXN[i], e[0] + 13, e[1] - 10); ctx.fillStyle = AXC[i]; ctx.fillText(AXN[i], e[0] + 13, e[1] - 10);
+    }
+    dot2(p, hov === -1 ? '#f0a030' : 'rgba(8,10,14,0.88)', hov === -1 ? 10 : 8); dot2(p, '#ffffff', 6); dot2(p, '#14181d', 3);
+  }
+  function hitXform(px, py) {
+    const g = S.giz;
+    if (Math.hypot(px - g.p[0], py - g.p[1]) < 9) return -1;
+    let best = null, bd = 6;
+    for (let i = 0; i < 3; i++) {                            // axis arrows
+      const e = g.ends[i], ax = e[0] - g.p[0], ay = e[1] - g.p[1], l2 = ax * ax + ay * ay, tip = [e[0] + ax * 0.1, e[1] + ay * 0.1];
+      let d = Math.hypot(px - tip[0], py - tip[1]) - 8;
+      if (l2 > 1) { const t = Math.max(0, Math.min(1.1, ((px - g.p[0]) * ax + (py - g.p[1]) * ay) / l2)); if (t > 0.15) d = Math.min(d, Math.hypot(px - g.p[0] - t * ax, py - g.p[1] - t * ay)); }
+      if (d < bd) { bd = d; best = i; }
+    }
+    if (best !== null) return best;
+    for (let i = 0; i < 3; i++) {                            // plane squares (point inside the projected square)
+      const q = g.quads[i]; if (!q) continue;
+      let inside = false;
+      for (let a = 0, b = 3; a < 4; b = a++) if ((q[a][1] > py) !== (q[b][1] > py) && px < (q[b][0] - q[a][0]) * (py - q[a][1]) / (q[b][1] - q[a][1]) + q[a][0]) inside = !inside;
+      if (inside) return 3 + i;
+    }
+    let hd = 9;                                              // turning arrows; remember where along the arrow it was grabbed
+    for (let i = 0; i < 3; i++) {
+      const q = g.arcs[i];
+      for (let k = 0; k + 1 < q.length; k++) {
+        const ax = q[k + 1][0] - q[k][0], ay = q[k + 1][1] - q[k][1], l2 = ax * ax + ay * ay;
+        const t = l2 > 1e-9 ? Math.max(0, Math.min(1, ((px - q[k][0]) * ax + (py - q[k][1]) * ay) / l2)) : 0;
+        const d = Math.hypot(px - q[k][0] - t * ax, py - q[k][1] - t * ay);
+        if (d < hd) { hd = d; best = 6 + i; g.hitAng = GIZ_XR.a0 + (GIZ_XR.a1 - GIZ_XR.a0) * (k + t) / GIZ_ARC.n; }
+      }
+    }
+    return best;
+  }
+  // where the cursor ray meets the plane through the handle centre with normal axis i
+  function planeHit(dr, px, py) {
+    const n = GX(dr.axis), ray = screenRay(px, py), dn = V.dot(ray.d, n);
+    if (Math.abs(dn) < 1e-6) return null;
+    return V.add(ray.o, V.mul(ray.d, V.dot(V.sub(dr.pv3, ray.o), n) / dn));
+  }
 
   // ================= picking =================
   function ensureBVH(g) { return g.bvh || (g.bvh = core.buildBVH(g.positions, g.indices)); }
@@ -1264,7 +1350,7 @@
   function resetBox(id) { const el = $(id); if (el.dataset.vi !== undefined) el.innerHTML = lang === 'en' ? el.dataset.en : el.dataset.vi; }
   function toolHint(t) {
     return {
-      move: L('Kéo mũi tên X / Y / Z để di chuyển, chấm giữa để di chuyển tự do (giữ Shift: bước 1 mm), hoặc nhập số ở bảng nhỏ', 'Drag an X / Y / Z arrow to move, the centre dot to move freely (hold Shift: 1 mm steps), or type values in the small panel'),
+      move: L('Kéo mũi tên để dời dọc trục, ô vuông để dời trong mặt phẳng, cung để xoay quanh trục cùng màu, chấm giữa để dời tự do (giữ Shift: số nguyên mm / độ), hoặc nhập số ở bảng nhỏ', 'Drag an arrow to move along its axis, a square to move in its plane, an arc to turn about the axis of its colour, the centre dot to move freely (hold Shift: whole mm / degrees), or type numbers in the small panel'),
       rotate: L('Kéo một mũi tên cong để xoay quanh trục cùng màu (giữ Shift: bước 1°), hoặc nhập số ở bảng nhỏ', 'Drag a curved arrow to rotate about the axis of the same colour (hold Shift: 1° steps), or type values in the small panel'),
       scale: L('Kéo tay nắm X / Y / Z để đổi tỉ lệ theo trục, chấm giữa để đổi đồng đều (giữ Shift: tỉ lệ nguyên), hoặc nhập số ở bảng nhỏ', 'Drag an X / Y / Z handle to scale along that axis, the centre dot to scale uniformly (hold Shift: whole factors), or type values in the small panel'),
       dist: L('Bấm 1 cạnh để lấy chiều dài, hoặc bấm 2 đối tượng (đỉnh, mặt phẳng, mặt trụ = trục, điểm) để đo khoảng cách. Giữ Alt để lấy điểm tự do', 'Click one edge for its length, or two things (corner, plane, cylinder = its axis, point) for the distance. Hold Alt for a free point'),
@@ -1280,6 +1366,7 @@
     }[t] || '';
   }
   function setTool(t) {
+    if (t === 'rotate') t = 'move';                          // Move and Rotate are one command (one handle)
     if (S.cmp && S.cmp.split) t = 'select';
     S.tool = t; S.tmp = [];
     document.querySelectorAll('[data-tool]').forEach(function (b) { b.classList.toggle('on', b.dataset.tool === t); });
@@ -1289,7 +1376,7 @@
     $('tpAxes').style.display = xf ? 'flex' : 'none'; $('tpGeo').style.display = geoT ? 'flex' : 'none'; S.axPick = null; S.geoPick = []; S.geoPlane = null; if (geoT) geoToolUI(t);
     $('tpMate').style.display = t === 'mate' ? 'flex' : 'none'; S.mate = null; S.pivPick = false;
     if (t === 'dist' || t === 'angle' || t === 'radius' || t === 'thick') { openPop('measure', true); updateMeasPanel(); }
-    $('tpMove').style.display = t === 'move' ? 'flex' : 'none'; $('tpRot').style.display = t === 'rotate' ? 'flex' : 'none';
+    $('tpMove').style.display = t === 'move' ? 'flex' : 'none'; $('tpRot').style.display = t === 'move' ? 'flex' : 'none';
     $('tpScale').style.display = t === 'scale' ? 'flex' : 'none'; $('tpPivot').style.display = xf ? 'flex' : 'none';
     ucPickStop(); canvas.style.cursor = toolCursor(); S.hov = null; S.hovCom = null; S.hovEnt = null; S.skHov = null;
     if ((t === 'move' || t === 'rotate' || t === 'scale') && !S.sel.size) flash(L('Hãy tick chọn body trước', 'Tick a body first'));
@@ -1325,7 +1412,7 @@
   // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
   // version of the app: shown next to the name, in the Drawing Workspace header and the window title; raised with every
   // published fix (patch number) or feature set (minor number)
-  const APP_VER = '1.6.3';
+  const APP_VER = '1.6.4';
   (function () { const v = 'v' + APP_VER; $('appVer').textContent = v; document.title = 'MeshExpert ' + v; })();
   const BL_DEF = { cn: 200, ct: 58, cm: 58 };
   let blCols = Object.assign({}, BL_DEF);
@@ -1618,6 +1705,7 @@
   function hitGizmo(px, py) {
     const g = S.giz;
     if (!g) return null;
+    if (S.tool === 'move') return hitXform(px, py);
     if (S.tool === 'rotate') {                              // the curved arrows; remember where along the arrow it was grabbed
       let hit = null, hd = 10;
       for (let i = 0; i < 3; i++) {
@@ -1656,15 +1744,20 @@
     const rv = V.sub(ringPt([0, 0, 0], i, 1, dr.th0), [0, 0, 0]), vel = V.cross(GX(i), rv), r = right(), u = up();
     let sx = V.dot(vel, r), sy = -V.dot(vel, u), sl = Math.hypot(sx, sy);
     if (sl < 0.3) { const f = V.cross(GX(i), w), sg = V.dot(rv, w) >= 0 ? 1 : -1; sx = sg * V.dot(f, r); sy = -sg * V.dot(f, u); sl = Math.hypot(sx, sy) || 1; }
-    dr.sdir = [sx / sl, sy / sl]; dr.spx = dr.Lw * GIZ_ARC.r * H / (2 * cam.zoom) * Math.max(sl, 0.5);
+    dr.sdir = [sx / sl, sy / sl]; dr.spx = dr.Lw * GIZ_XR.r * H / (2 * cam.zoom) * Math.max(sl, 0.5);
   }
   function gizmoDrag(dr, px, py, shift) {
     const dx = px - dr.x0, dy = py - dr.y0, i = dr.axis, a2 = dr.a2, al = Math.hypot(a2[0], a2[1]);
     let A, txt;
     if (!dr.moved) { pushUndo(); dr.moved = true; }
-    if (S.tool === 'move') {
+    if (dr.kind === 'free' || dr.kind === 'ax' || dr.kind === 'pl') {
       let d;
-      if (i < 0) {
+      if (dr.kind === 'pl') {
+        const j = (i + 1) % 3, k = (i + 2) % 3, q = planeHit(dr, px, py), m = q && dr.h0 ? V.sub(q, dr.h0) : [0, 0, 0];
+        let u = V.dot(m, GX(j)), v = V.dot(m, GX(k));
+        if (shift) { u = Math.round(u); v = Math.round(v); }
+        d = V.add(V.mul(GX(j), u), V.mul(GX(k), v)); txt = 'Δ' + AXN[j] + ' = ' + f2(u) + ' mm · Δ' + AXN[k] + ' = ' + f2(v) + ' mm';
+      } else if (i < 0) {
         const k = 2 * cam.zoom / H; d = V.add(V.mul(right(), dx * k), V.mul(up(), -dy * k));
         if (shift) d = d.map(Math.round);
         txt = 'Δ = ' + f2(d[0]) + ', ' + f2(d[1]) + ', ' + f2(d[2]) + ' mm';
@@ -1674,8 +1767,8 @@
         d = V.mul(GX(i), s); txt = 'Δ' + AXN[i] + ' = ' + f2(s) + ' mm';
       }
       $('mvX').value = +f2(V.dot(d, GX(0)), 3); $('mvY').value = +f2(V.dot(d, GX(1)), 3); $('mvZ').value = +f2(V.dot(d, GX(2)), 3);   // in the handle frame
-      A = M.trans(d);
-    } else if (S.tool === 'rotate') {
+      dr.d = d; A = M.trans(d);
+    } else if (dr.kind === 'rot') {
       let ang;
       if (dr.mode === 'plane') {
         const th = planeAngle(dr, px, py);
@@ -1730,10 +1823,12 @@
       if (h !== null) {
         const list = selBodies(), start = new Map();
         for (const b of list) start.set(b, b.matrix.slice());
-        drag = { type: 'giz', axis: h, x0: p[0], y0: p[1], start: start, list: list, p: S.giz.p, Lw: S.giz.Lw, pv3: S.giz.pv, cam: cam,
-          a2: h < 0 ? [1, 0] : [S.giz.ends[h][0] - S.giz.p[0], S.giz.ends[h][1] - S.giz.p[1]],
-          pivot: S.tool === 'move' ? [0, 0, 0] : pivotPoint(list), moved: false };
-        if (S.tool === 'rotate') rotStart(drag, p[0], p[1]);
+        const kind = S.tool === 'scale' ? 'scale' : h < 0 ? 'free' : h < 3 ? 'ax' : h < 6 ? 'pl' : 'rot', ax = h < 0 ? -1 : h % 3;
+        drag = { type: 'giz', axis: ax, hid: h, kind: kind, x0: p[0], y0: p[1], start: start, list: list, p: S.giz.p, Lw: S.giz.Lw, pv3: S.giz.pv, cam: cam,
+          a2: ax < 0 ? [1, 0] : [S.giz.ends[ax][0] - S.giz.p[0], S.giz.ends[ax][1] - S.giz.p[1]],
+          pivot: kind === 'free' || kind === 'ax' || kind === 'pl' ? [0, 0, 0] : pivotPoint(list), moved: false };
+        if (kind === 'rot') rotStart(drag, p[0], p[1]);
+        if (kind === 'pl') drag.h0 = planeHit(drag, p[0], p[1]);
         canvas.style.cursor = 'grabbing';
       } else drag = { type: 'click', x0: p[0], y0: p[1], cam: cam };
       if (S.sk) { drag = skDown(p[0], p[1]) || { type: 'click', x0: p[0], y0: p[1] }; drag.cam = cam; }
@@ -2027,7 +2122,7 @@
     if (body) {
       items.push([L('Zoom vào body tick', 'Zoom to ticked'), function () { fitTo(selBodies().filter(function (b) { return b.visible; })); }, 'zoom'],
         [L('Ẩn', 'Hide'), function () { $('bHideSel').click(); }, 'hide'], [L('Chỉ hiện body tick', 'Show only ticked'), function () { $('bIsolate').click(); }, 'iso1'], null,
-        [L('Di chuyển', 'Move'), function () { setTool('move'); }, 'move'], [L('Xoay', 'Rotate'), function () { setTool('rotate'); }, 'rot'], [L('Tỉ lệ', 'Scale'), function () { setTool('scale'); }, 'scale'],
+        [L('Di chuyển / Xoay', 'Move / Rotate'), function () { setTool('move'); }, 'move'], [L('Tỉ lệ', 'Scale'), function () { setTool('scale'); }, 'scale'],
         [L('Về vị trí lúc import', 'Back to import position'), homeSelected, 'home'], null,
         [L('Nhân bản', 'Duplicate'), function () { $('bDup').click(); }, 'dup']);
       if (n === 1) items.push([L('Đổi tên', 'Rename'), function () { renameBody(body); }, 'ren']);
@@ -2899,5 +2994,5 @@
 /*MODEL*/
   applyLang(); updateHistBtns(); sceneChanged(true); sesShow();
   requestAnimationFrame(frame);
-  window.__mrt = { run: run, pool: function () { return { size: POOL_N, live: pool.length, ok: poolOK }; }, S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib || mfUsedW ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: GIZ_ARC, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, dwType: function (m) { dwTabSet(m); }, dwLoad: function (d) { dwLoad(d); }, v6Paint: function () { v6Paint(); }, v6Png: function () { return v6Full('png').then(function (r) { return new Promise(function (ok) { const fr = new FileReader(); fr.onload = function () { ok(fr.result); }; fr.readAsDataURL(r.blob); }); }); }, holesOf: holesOf, dlgRole: dlgRole, zs: function () { return ZS; }, zsSet: function (k, v) { zsSet(k, v); }, zsTab: function (k) { zsTab(k); }, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
+  window.__mrt = { run: run, pool: function () { return { size: POOL_N, live: pool.length, ok: poolOK }; }, S: S, core: core, geoAt: function (x, y) { return geoAt(x, y); }, skPlaneEnt: function (x, y) { return skPlaneEnt(x, y); }, originGeos: function () { return originGeos(); }, originLn: function () { return originLn(); }, ray: function (x, y) { return screenRay(x, y); }, boolEngine: function () { return mfLib || mfUsedW ? 'manifold' : mfTried ? 'built-in' : 'not started'; }, boolRun: boolRun, project: project, arc: { r: GIZ_XR.r, a0: GIZ_XR.a0, a1: GIZ_XR.a1, n: GIZ_ARC.n }, rdSetBody: rdSetBody, rdChanged: rdChanged, brepSolid: brepSolid, brCall: brCall, v6: function () { return V6S; }, v6Dump: function () { return v6Dump(); }, v6Load: function (d) { v6Load(d); }, v6Mode: function (m) { v6SetMode(m); }, v6Totals: function () { return v6Totals(v6Bodies()); }, v6Scr: function (r) { return v6Scr(r); }, v6Comb: function (id) { v6CombStart(id); }, dw: function () { return DW; }, dwu: function () { return DWU; }, dwPdf: function (ids) { return dwExportPdf(ids || [DW.doc.active], 'test').then(function (b) { return b.arrayBuffer(); }).then(function (a) { return Array.from(new Uint8Array(a)); }); }, dwOpen: function () { dwOpen(); }, setGeo: function (b, P, I) { setGeo(b, makeGeo(P, I)); refresh(); sceneChanged(false); }, delBodies: function (list) { select(list, false); deleteSelected(); }, openMenu: function (x, y, b) { openMenu(x, y, b); }, v6DimVal: function (id) { return v6DimVal(id); }, dwClose: function () { dwClose(); }, dwAct: function (k) { DW_ACT[k](); }, dwType: function (m) { dwTabSet(m); }, dwLoad: function (d) { dwLoad(d); }, v6Paint: function () { v6Paint(); }, v6Png: function () { return v6Full('png').then(function (r) { return new Promise(function (ok) { const fr = new FileReader(); fr.onload = function () { ok(fr.result); }; fr.readAsDataURL(r.blob); }); }); }, holesOf: holesOf, dlgRole: dlgRole, zs: function () { return ZS; }, zsSet: function (k, v) { zsSet(k, v); }, zsTab: function (k) { zsTab(k); }, cam: function () { return mainCam; }, projectWith: function (c, p) { const s0 = cam; cam = c; const q = project(p); cam = s0; return q; } }; // for debugging from the console
 })();

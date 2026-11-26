@@ -272,7 +272,7 @@
   }
   // title bar of the small tool panel: drag it anywhere, ✕ closes it (back to Select), double-click puts it back
   function tpHead(t) {
-    const n = { move: ['Di chuyển', 'Move'], rotate: ['Xoay', 'Rotate'], scale: ['Tỉ lệ', 'Scale'], mate: ['Ghép mặt / trục', 'Mate'], gpoint: ['Point', 'Point'], gline: ['Line', 'Line'], gplane: ['Plane', 'Plane'], gaxis: ['Axis', 'Axis'] }[t];
+    const n = { move: ['Di chuyển / Xoay', 'Move / Rotate'], rotate: ['Xoay', 'Rotate'], scale: ['Tỉ lệ', 'Scale'], mate: ['Ghép mặt / trục', 'Mate'], gpoint: ['Point', 'Point'], gline: ['Line', 'Line'], gplane: ['Plane', 'Plane'], gaxis: ['Axis', 'Axis'] }[t];
     if (n) $('tpTitle').textContent = L(n[0], n[1]);
     tpClamp();
   }

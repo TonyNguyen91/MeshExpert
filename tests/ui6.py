@@ -83,7 +83,7 @@ with sync_playwright() as p:
 
     # ---- rotate gizmo ----
     pg.keyboard.press('Shift+7'); pg.evaluate("document.getElementById('bFit').click()"); pg.wait_for_timeout(150)
-    pg.click(row(1)); pg.click('[data-tool=rotate]'); pg.wait_for_timeout(200); g=giz()
+    pg.click(row(1)); pg.click('[data-tool=move]'); pg.wait_for_timeout(200); g=giz()
     ok('rotate gizmo has 3 curved arrows',g is not None and len(g['arcs'])==3 and len(g['arcs'][0])>8)
     def turn(axis,frm,to,shift=False,shot=None):
         g=giz(); a=g['arcs'][axis]; s=a[frm]; e=a[to]
@@ -100,7 +100,7 @@ with sync_playwright() as p:
     m0=mat(0); hov,st=turn(2,3,13,shot='g5.png'); m1=mat(0)
     ang=math.degrees(math.atan2(m1[1],m1[0]))          # rotation about Z of the body matrix
     arc=pg.evaluate("__mrt.arc"); exp=math.degrees((arc['a1']-arc['a0'])*10/arc['n'])
-    ok('hovering a curved arrow lights it up',hov==2,hov)
+    ok('hovering a curved arrow lights it up (handle 6 + axis)',hov==8,hov)
     ok('dragging along the Z arrow turns the body about Z by the angle travelled',abs(ang-exp)<1.0 and abs(m1[10]-1)<1e-9,[round(ang,2),round(exp,2),st])
     c=pg.evaluate("(()=>{const b=__mrt.S.bodies[0];const m=b.matrix;return [m[0]*110+m[4]*10+m[8]*10+m[12],m[1]*110+m[5]*10+m[9]*10+m[13],m[2]*110+m[6]*10+m[10]*10+m[14]]})()")
     ok('the body turns about its own centre',abs(c[0]-110)<1e-6 and abs(c[1]-10)<1e-6 and abs(c[2]-10)<1e-6,c)
@@ -108,11 +108,11 @@ with sync_playwright() as p:
     hov,st=turn(0,12,4,shift=True); m2=mat(0); angx=math.degrees(math.atan2(m2[6],m2[5]))
     ok('Shift: whole degrees, other direction, about X',abs(angx-round(angx))<1e-6 and angx<-20 and '°' in st,[angx,st])
     pg.click('#bUndo'); pg.wait_for_timeout(100)
-    # dial seen edge-on (front view: Z arrow lies flat): still turns, by sliding
+    # turning arrow seen edge-on (front view: the Z arc lies flat on top of the X arrow): the axis arrow takes the click
     pg.keyboard.press('Shift+1'); pg.wait_for_timeout(150); g=giz(); a=g['arcs'][2]
     flat=max(q[1] for q in a)-min(q[1] for q in a)
     hov,st=turn(2,3,13); m3=mat(0); angz=math.degrees(math.atan2(m3[1],m3[0]))
-    ok('edge-on dial: arrow is flat on screen, dragging still rotates the right way',flat<2 and hov==2 and angz>10,[round(flat,2),round(angz,2),st])
+    ok('edge-on turning arrow lies on the X arrow: the X arrow wins (moves along X)',flat<2 and hov==0 and 'ΔX' in st,[round(flat,2),hov,st])
     pg.click('#bUndo'); pg.keyboard.press('Shift+7'); pg.wait_for_timeout(150)
     # more than half a turn in one drag keeps counting
     g=giz(); cen=g['p']; a=g['arcs'][2]; s=a[8]; r=math.hypot(s[0]-cen[0],s[1]-cen[1]); a0=math.atan2(s[1]-cen[1],s[0]-cen[0])

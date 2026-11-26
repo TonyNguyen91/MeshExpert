@@ -25,7 +25,7 @@ with sync_playwright() as p:
     pg.mouse.move(x+250,y+200); pg.mouse.down(); pg.mouse.move(5000,5000,steps=4); pg.mouse.up()
     d=pos(); ok('Kept inside the view, not squeezed',d[0]+pg.evaluate("document.getElementById('tpop').offsetWidth")<=1456-280 and d[1]<819 and d[2]==a[2],d)
     pg.click('[data-tool=move]'); pg.wait_for_timeout(100)
-    ok('Title follows the tool',pg.inner_text('#tpTitle')=='Di chuyển')
+    ok('Title follows the tool',pg.inner_text('#tpTitle')=='Di chuyển / Xoay')
     pg.click('#tpX'); pg.wait_for_timeout(100)
     ok('X closes the panel and goes back to Select',not pg.is_visible('#tpop') and pg.evaluate("__mrt.S.tool")=='select')
     pg.click('[data-tool=gline]'); pg.wait_for_timeout(100)

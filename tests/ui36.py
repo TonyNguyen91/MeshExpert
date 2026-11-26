@@ -16,7 +16,7 @@ with sync_playwright() as p:
     ctx=b.new_context(viewport={'width':1366,'height':800},offline=True,accept_downloads=True); pg=ctx.new_page()
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e))); pg.on('dialog',lambda d: d.accept())
     pg.goto('file://'+os.path.abspath(PAGE))
-    ok('Version 1.6.3',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.3')
+    ok('Version 1.6.4',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.4')
     ok('Defaults: outline 0.05, DPI 600',pg.evaluate("[document.getElementById('v6FxOw').value,document.getElementById('v6Dpi').value]")==['0.05','600'])
     pg.set_input_files('#file',[S+'/steps.stl',S+'/boss.stl',S+'/m_peg.stl',S+'/cyl.stl']); pg.wait_for_function("__mrt.S.bodies.length==4"); pg.wait_for_timeout(300)
     pg.click('#b_dws'); pg.wait_for_function("(__mrt.v6().nprev||0)>=1",timeout=60000); pg.wait_for_timeout(500)

@@ -16,7 +16,7 @@ with sync_playwright() as p:
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
     pg.on('dialog',lambda d: d.accept())
     pg.goto('file://'+os.path.abspath(PAGE))
-    ok('Version 1.6.3 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.3')
+    ok('Version 1.6.4 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.4')
     v=lambda i: pg.evaluate("i=>document.getElementById(i).value",i)
     c=lambda i: pg.evaluate("i=>document.getElementById(i).checked",i)
     # SLA print plate
@@ -28,7 +28,7 @@ with sync_playwright() as p:
     z=pg.evaluate("__mrt.zs()")
     want={'on':True,'mat':'clay','tint':100,'light':100,'amb':20,'yaw':0,'pitch':0,'smooth':35,'cav':6,'ridge':8,'ao':15,'aoR':21,'sh':12,'shL':16,'shSoft':100}
     ok('3D view defaults',all(z[k]==want[k] for k in want),z)
-    pg.click('#bSet'); pg.click('#zsReset'); pg.wait_for_timeout(100)
+    pg.click('#bSet'); pg.click('#setTabs button[data-k=view]'); pg.click('#zsReset'); pg.wait_for_timeout(100)
     z=pg.evaluate("__mrt.zs()")
     ok('Back to defaults gives the same values',all(z[k]==want[k] for k in want),z)
     pg.click('#setClose')

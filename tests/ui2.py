@@ -53,7 +53,7 @@ with sync_playwright() as p:
     ex,ey=g['e'][0]; dx,dy=ex-g['p'][0],ey-g['p'][1]
     pg.mouse.move(ex,ey); pg.mouse.down(); pg.mouse.move(ex+dx/2,ey+dy/2,steps=4); pg.mouse.move(ex+dx,ey+dy,steps=4); st=pg.inner_text('#status'); pg.mouse.up()
     m1=pg.evaluate("[...__mrt.S.sel][0].matrix.slice(12,15)"); print('gizmo move',st,[round(a-b,3) for a,b in zip(m1,m0)])
-    pg.click('[data-tool=rotate]'); pg.wait_for_timeout(150)
+    pg.click('[data-tool=move]'); pg.wait_for_timeout(150)
     g=pg.evaluate("(()=>{const g=__mrt.S.giz;const r=document.getElementById('gl').getBoundingClientRect();return {p:[g.p[0]+r.left,g.p[1]+r.top],e:g.ends.map(e=>[e[0]+r.left,e[1]+r.top])}})()")
     ex,ey=g['e'][2]; pg.mouse.move(ex,ey); pg.mouse.down(); pg.mouse.move(ex+30,ey,steps=4); st=pg.inner_text('#status'); pg.mouse.up(); print('gizmo rot',st)
     # copy/paste

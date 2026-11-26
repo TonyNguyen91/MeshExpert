@@ -1,4 +1,4 @@
-# Browser test (v1.6.3): SLA panel as a temporary workspace, light theme, Settings ▸ General, drawing tree icons.
+# Browser test (v1.6.4): SLA panel as a temporary workspace, light theme, Settings ▸ General, drawing tree icons.
 # Run: python3 ui37.py <fixtures folder> [path to index.html]
 import sys,os
 from playwright.sync_api import sync_playwright
@@ -11,7 +11,7 @@ with sync_playwright() as p:
     ctx=b.new_context(viewport={'width':1600,'height':900},offline=True); pg=ctx.new_page()
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e))); pg.on('dialog',lambda d: d.accept())
     pg.goto('file://'+os.path.abspath(PAGE))
-    ok('Version 1.6.3',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.3')
+    ok('Version 1.6.4',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.4')
     pg.set_input_files('#file',[S+'/steps.stl',S+'/boss.stl',S+'/m_peg.stl',S+'/cyl.stl']); pg.wait_for_function("__mrt.S.bodies.length==4"); pg.wait_for_timeout(300)
     # ---- SLA
     M="JSON.stringify(__mrt.S.bodies.map(b=>b.matrix.map(v=>+v.toFixed(6))))"
