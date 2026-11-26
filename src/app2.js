@@ -343,7 +343,7 @@
     return {
       bodies: S.bodies.map(function (b) {
         return { id: b.id, name: b.name, geo: b.geo, orig: b.orig, matrix: b.matrix.slice(), matrix0: b.matrix0.slice(), color: b.color.slice(), opacity: b.opacity,
-          visible: vis && vis.has(b) ? vis.get(b) : b.visible, material: b.material, density: b.density, solid: b.solid || null };
+          visible: vis && vis.has(b) ? vis.get(b) : b.visible, material: b.material, density: b.density, solid: b.solid || null, uid: b.uid };
       }),
       sel: selBodies().map(function (b) { return b.id; }), measures: JSON.parse(JSON.stringify(S.measures)), sketches: JSON.stringify(S.sketches), skSel: S.skSel, geos: JSON.stringify(S.geos), geoSeq: S.geoSeq
     };
@@ -358,6 +358,7 @@
     const old = S.bodies;
     for (const b of old) freeAna(b);
     S.bodies = s.bodies.map(function (o) { return Object.assign({ off: [0, 0, 0], ana: null, stats: null }, o, { matrix: o.matrix.slice(), matrix0: o.matrix0.slice(), color: o.color.slice() }); });
+    dwFixUids();
     for (const b of old) releaseGeo(b.geo);
     S.sel = new Set(S.bodies.filter(function (b) { return s.sel.indexOf(b.id) >= 0; }));
     S.measures = JSON.parse(JSON.stringify(s.measures)); S.tmp = []; S.col = null;
@@ -1412,7 +1413,7 @@
   // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
   // version of the app: shown next to the name, in the Drawing Workspace header and the window title; raised with every
   // published fix (patch number) or feature set (minor number)
-  const APP_VER = '1.6.4';
+  const APP_VER = '1.6.5';
   (function () { const v = 'v' + APP_VER; $('appVer').textContent = v; document.title = 'MeshExpert ' + v; })();
   const BL_DEF = { cn: 200, ct: 58, cm: 58 };
   let blCols = Object.assign({}, BL_DEF);

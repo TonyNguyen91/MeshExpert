@@ -1,4 +1,4 @@
-# Browser test (v1.6.4): Move / Rotate is one command: axis arrows, plane squares, turning arcs, Shift = whole numbers.
+# Browser test (v1.6.5): Move / Rotate is one command: axis arrows, plane squares, turning arcs, Shift = whole numbers.
 # Run: python3 ui38.py <fixtures folder> [path to index.html]
 import sys,os,json,math
 from playwright.sync_api import sync_playwright
@@ -13,7 +13,7 @@ with sync_playwright() as p:
     pg.goto('file://'+PAGE)
     pg.set_input_files('#file',[F+'/boss.stl']); pg.wait_for_function("__mrt.S.bodies.length==1"); pg.wait_for_timeout(300)
     pg.evaluate("__mrt.S.sel.add(__mrt.S.bodies[0])"); pg.click('[data-tool=move]'); pg.wait_for_timeout(300)
-    ok('Version 1.6.4',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.4')
+    ok('Version 1.6.5',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.5')
     ok('Rotate button gone, one Move / Rotate tool',pg.locator('[data-tool=rotate]').count()==0)
     r=pg.evaluate("(()=>{const c=document.querySelector('#view canvas, canvas').getBoundingClientRect();return [c.left,c.top]})()")
     G=lambda: pg.evaluate("(()=>{const g=__mrt.S.giz;return {p:g.p,ends:g.ends,quads:g.quads,arcs:g.arcs.map(a=>a[10])}})()")

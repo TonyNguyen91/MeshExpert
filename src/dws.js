@@ -602,6 +602,7 @@
   // ---------- tree + sheet bar
   function dwRefresh(force) {
     if (!DW.open && !force) return;
+    dwFixUids();
     const d = dwDoc(), cur = dwCur();
     const views = dwViewsOf(cur), hide = dwHideOf(cur), lost = (V6S.prev && V6S.prev.lostDims) || [];
     const sig = [lang, dwDocName(), d.active, JSON.stringify(DW.fold), V6S.vsel, views.join(','), hide.join(','), lost.join(','), S.bodies.map(function (b) { return b.uid + b.name + (b.solid ? 1 : 0); }).join(',')]

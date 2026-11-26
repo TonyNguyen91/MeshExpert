@@ -4,6 +4,12 @@
   // (state.hide). A body deleted in 3D simply leaves every sheet; a new body shows up in every sheet.
   const DWU = { hist: new Map() };
   function dwNewUid() { return 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  // every body needs its own uid (the drawing picks, hides and places bodies by it): give one to a body that has none
+  // or shares it with an earlier body (undo steps made before v1.6.5 did not keep it)
+  function dwFixUids() {
+    const seen = new Set();
+    for (const b of S.bodies) { if (!b.uid || seen.has(b.uid)) b.uid = dwNewUid(); seen.add(b.uid); }
+  }
   function dwBodyByUid(uid) { return S.bodies.find(function (b) { return b.uid === uid; }) || null; }
   // drawing state keys (placements, groups) use body ids at run time and body uids in the file
   function dwIdOf(uid) { const b = dwBodyByUid(uid); return b ? b.id : undefined; }

@@ -21,7 +21,7 @@ with sync_playwright() as p:
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
     pg.on('dialog',lambda d: d.accept())
     pg.goto('file://'+os.path.abspath(PAGE))
-    ok('Version 1.6.4 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.4')
+    ok('Version 1.6.5 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.5')
     ok('3D view asks for the high-performance graphics card',pg.evaluate("document.getElementById('gl').getContext('webgl2').getContextAttributes().powerPreference")=='high-performance')
     pg.set_input_files('#file',[S+'/refA.stl',S+'/scanB.stl',S+'/m_box.stl',S+'/m_peg.stl']); pg.wait_for_function("__mrt.S.bodies.length==4"); pg.wait_for_timeout(300)
     pool=pg.evaluate("__mrt.pool()")
