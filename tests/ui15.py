@@ -49,7 +49,7 @@ with sync_playwright() as p:
     before=pg.evaluate("__mrt.S.bodies.map(b=>Array.from(b.matrix))")
     pg.click('[data-pop=sla]'); pg.wait_for_timeout(100)
     # this test was written for the earlier plate defaults (no guard blocks, spread 0, gap 2 mm, margin 5 mm)
-    pg.evaluate("(()=>{const g=document.getElementById('slaGuardOn');g.checked=false;for(const [k,v] of [['slaSpread',0],['slaSpreadR',0],['slaGap',2],['slaGapR',2],['slaMargin',5]])document.getElementById(k).value=v;})()")
+    pg.evaluate("(()=>{const g=document.getElementById('slaGuardOn');g.checked=false;for(const [k,v] of [['slaW',400],['slaD',400],['slaSpread',0],['slaSpreadR',0],['slaGap',2],['slaGapR',2],['slaMargin',5]])document.getElementById(k).value=v;})()")
     pg.evaluate("(()=>{const S=__mrt.S;S.sel.clear();})()"); pg.click('#slaGo'); idle()
     ok('Nothing selected: the plate tools move nothing',pg.evaluate("__mrt.S.bodies.map(b=>Array.from(b.matrix))")==before)
     pg.evaluate("(()=>{const S=__mrt.S;S.sel.clear();S.bodies.slice(1).forEach(b=>S.sel.add(b));})()")

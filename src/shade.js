@@ -414,4 +414,17 @@
     document.querySelectorAll('#setdlg .setPg').forEach(function (d) { d.style.display = d.dataset.k === k ? '' : 'none'; });
   }
   document.querySelectorAll('#setTabs button').forEach(function (b) { b.addEventListener('click', function () { zsTab(b.dataset.k); }); });
-  zsBuildPanel(); zsTab('view');
+  zsBuildPanel(); zsTab('gen');
+  // ---- Settings ▸ General: light / dark look, zoom direction (both remembered) ----
+  function themeSet(t) {
+    const light = t === 'light', h = document.documentElement;
+    h.classList.toggle('light', light); h.setAttribute('data-theme', light ? 'light' : 'dark');
+    document.querySelectorAll('#themeSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.t === (light ? 'light' : 'dark')); });
+    try { localStorage.setItem('mx.theme', light ? 'light' : 'dark'); } catch (e) { }
+    if (V6S && V6S.prev) try { v6Paint(); } catch (e) { }
+    dirty = true;
+  }
+  document.querySelectorAll('#themeSeg button').forEach(function (b) { b.addEventListener('click', function () { themeSet(b.dataset.t); }); });
+  themeSet(isLight() ? 'light' : 'dark');
+  try { $('cZoomInv').checked = localStorage.getItem('mx.zoomInv') === '1'; } catch (e) { }
+  $('cZoomInv').addEventListener('change', function () { try { localStorage.setItem('mx.zoomInv', this.checked ? '1' : '0'); } catch (e) { } });

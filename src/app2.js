@@ -332,6 +332,10 @@
     return false;
   }
 
+  // light / dark look (Settings ▸ General): the 3D view's background follows it
+  function isLight() { return document.documentElement.classList.contains('light'); }
+  function VIEW_BG() { return isLight() ? [0.865, 0.89, 0.915] : [0.085, 0.105, 0.13]; }
+
   // ================= undo / redo =================
   const hist = { undo: [], redo: [] };
   function snapshot() {
@@ -602,7 +606,7 @@
     const saved = cam;
     if (gl) {
       gl.viewport(0, 0, pw, ph); gl.disable(gl.SCISSOR_TEST);
-      gl.clearColor(0.085, 0.105, 0.13, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.clearColor(VIEW_BG()[0], VIEW_BG()[1], VIEW_BG()[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.useProgram(prog);
       gl.uniform1f(U.uBright, +$('ucBright').value / 100);
       gl.uniform1f(U.uClipOn, clipOn() ? 1 : 0);
@@ -626,7 +630,7 @@
         const opaque = [], trans = [];
         for (const b of S.bodies) if (b.visible && !S.ghostHide.has(b)) (alphaOf(b) >= 0.999 ? opaque : trans).push(b);
         const post = zsPostOn() && zsPrepass(opaque, pw, ph);
-        if (post) { gl.clearColor(0.085, 0.105, 0.13, 1); setCamUniforms(); }
+        if (post) { gl.clearColor(VIEW_BG()[0], VIEW_BG()[1], VIEW_BG()[2], 1); setCamUniforms(); }
         for (const b of opaque) drawBody(b, edges, false);
         drawRdSel();
         if (post) zsComposite(pw, ph);
@@ -1321,7 +1325,7 @@
   // body list columns: drag the edge of a header cell to widen / narrow it (double-click: default width)
   // version of the app: shown next to the name, in the Drawing Workspace header and the window title; raised with every
   // published fix (patch number) or feature set (minor number)
-  const APP_VER = '1.6.2';
+  const APP_VER = '1.6.3';
   (function () { const v = 'v' + APP_VER; $('appVer').textContent = v; document.title = 'MeshExpert ' + v; })();
   const BL_DEF = { cn: 200, ct: 58, cm: 58 };
   let blCols = Object.assign({}, BL_DEF);

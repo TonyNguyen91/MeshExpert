@@ -176,6 +176,8 @@
     fit: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="#9cc4ee" stroke-width="1.8"/><rect x="8" y="8" width="8" height="8" fill="#4f86c4" stroke="#2b557f"/>',
     props: '<rect x="4" y="4" width="16" height="16" rx="2" fill="#1f2a36" stroke="#9cc4ee"/><path d="M7 9h6M7 13h10M7 17h8" stroke="#e8eef5"/><circle cx="16" cy="9" r="1.6" fill="#f0a030"/>',
     front: '<rect x="6" y="6" width="12" height="12" fill="#4f86c4" stroke="#2b557f"/>',
+    body: '<path d="M12 3.2l7.6 4.3L12 11.8 4.4 7.5z" fill="#b7d3f2"/><path d="M4.4 7.5L12 11.8v9L4.4 16.5z" fill="#5f93cf"/><path d="M19.6 7.5L12 11.8v9l7.6-4.3z" fill="#346599"/><path d="M12 3.2l7.6 4.3v9L12 20.8l-7.6-4.3v-9z" stroke="#1f4570" stroke-width="1.1"/><path d="M4.4 7.5L12 11.8l7.6-4.3M12 11.8v9" stroke="#1f4570" stroke-width=".8" stroke-opacity=".7"/>',
+    bodyB: '<path d="M12 3.2l7.6 4.3L12 11.8 4.4 7.5z" fill="#ffd391"/><path d="M4.4 7.5L12 11.8v9L4.4 16.5z" fill="#f0a030"/><path d="M19.6 7.5L12 11.8v9l7.6-4.3z" fill="#b8730f"/><path d="M12 3.2l7.6 4.3v9L12 20.8l-7.6-4.3v-9z" stroke="#6e4405" stroke-width="1.1"/><path d="M4.4 7.5L12 11.8l7.6-4.3M12 11.8v9" stroke="#6e4405" stroke-width=".8" stroke-opacity=".7"/>',
     iso: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" fill="#4f86c4" stroke="#2b557f"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" stroke="#cfe0f5"/>',
     arrange: '<rect x="3" y="4" width="7" height="6" fill="#4f86c4" stroke="#2b557f"/><rect x="14" y="4" width="7" height="6" fill="#4f86c4" stroke="#2b557f"/><rect x="3" y="14" width="7" height="6" fill="#4f86c4" stroke="#2b557f"/><path d="M14 17h7M17.5 13.5v7" stroke="#f0a030" stroke-width="1.8"/>',
     rotR: '<path d="M18 8a7 7 0 1 0 1.5 6" stroke="#9cc4ee" stroke-width="1.8"/><path d="M19 3v5h-5" stroke="#f0a030" stroke-width="1.8"/>',
@@ -213,6 +215,12 @@
     drawing: '<path d="M3 2h13l5 5v15H3z" fill="#e8eef5" stroke="#9cc4ee"/><rect x="5.5" y="5" width="4.5" height="3.5" fill="#3d6fa8"/><rect x="5.5" y="10" width="4.5" height="4.5" fill="#4f86c4"/><rect x="11.5" y="10" width="3.5" height="4.5" fill="#3d6fa8"/>'
   };
   function dwIco(k, n) { n = n || 16; return '<svg viewBox="0 0 24 24" width="' + n + '" height="' + n + '" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">' + (DW_IC[k] || '') + '</svg>'; }
+  // the eye of a body in the sheet tree: open = shown in this sheet, crossed out = hidden (drawn in the text colour)
+  function dwEye(on) {
+    return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M2.5 12s3.5-6.2 9.5-6.2S21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z"/>' +
+      (on ? '<circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>' : '<path d="M4 20L20 4"/>') + '</svg>';
+  }
   // ribbon pieces: vi text + data-en (applyLang swaps them)
   function dwEsc(t) { return String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
   function dwT(vi, en) { return '<span data-en="' + dwEsc(en) + '">' + dwEsc(vi) + '</span>'; }
@@ -626,8 +634,8 @@
       node('grp', '<span class="nm">' + dwEsc(L('Body của Sheet', 'Bodies of the sheet')) + ' (' + S.bodies.length + (hide.length ? ', ' + L('ẩn ', 'hidden ') + hide.length : '') + ')</span>', { grp: 'body' });
       S.bodies.forEach(function (b) {
         const u = b.uid, hid = hide.indexOf(u) >= 0;
-        const bn = node('child body' + (DW.bsel === u ? ' on' : '') + (hid ? ' hid' : ''), dwIco('front', 13) + '<span class="nm"></span>' +
-          '<button class="eye" type="button" title="' + dwEsc(hid ? L('Hiện trong Sheet này', 'Show in this sheet') : L('Ẩn trong Sheet này', 'Hide in this sheet')) + '">' + (hid ? '◌' : '◉') + '</button>', { uid: u });
+        const bn = node('child body' + (DW.bsel === u ? ' on' : '') + (hid ? ' hid' : ''), dwIco(b.solid ? 'bodyB' : 'body', 15) + '<span class="nm"></span>' +
+          '<button class="eye' + (hid ? ' off' : '') + '" type="button" title="' + dwEsc(hid ? L('Hiện trong Sheet này', 'Show in this sheet') : L('Ẩn trong Sheet này', 'Hide in this sheet')) + '">' + dwEye(!hid) + '</button>', { uid: u });
         bn.querySelector('.nm').textContent = b.name + (b.solid ? ' · B-rep' : '');
       });
       if (lost.length) node('child warn', '<span class="nm">⚠ ' + lost.length + ' ' + dwEsc(L('kích thước mất tham chiếu', 'dimension(s) lost their reference')) + '</span>');

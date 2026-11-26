@@ -16,11 +16,11 @@ with sync_playwright() as p:
     errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
     pg.on('dialog',lambda d: d.accept())
     pg.goto('file://'+os.path.abspath(PAGE))
-    ok('Version 1.6.2 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.2')
+    ok('Version 1.6.3 shown',pg.evaluate("document.getElementById('appVer').textContent")=='v1.6.3')
     v=lambda i: pg.evaluate("i=>document.getElementById(i).value",i)
     c=lambda i: pg.evaluate("i=>document.getElementById(i).checked",i)
     # SLA print plate
-    sla={'slaW':'400','slaD':'400','slaSpread':'30','slaSpreadR':'30','slaGap':'10','slaGapR':'10','slaLift':'5','slaTilt':'15','slaGX':'20','slaGY':'20','slaGT':'2','slaGD':'30','slaMargin':'30'}
+    sla={'slaW':'450','slaD':'450','slaSpread':'30','slaSpreadR':'30','slaGap':'10','slaGapR':'10','slaLift':'5','slaTilt':'15','slaGX':'20','slaGY':'20','slaGT':'2','slaGD':'30','slaMargin':'30'}
     got={k:v(k) for k in sla}
     ok('SLA plate defaults',got==sla,got)
     ok('SLA: tilt off, guard blocks on',not c('slaTiltOn') and c('slaGuardOn'))

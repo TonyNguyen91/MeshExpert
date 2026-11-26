@@ -1253,7 +1253,7 @@
     const c2 = pc.getContext('2d'), o = q.o, L = v6Layout(o), dpr = L.dpr, s = L.kd / q.k;
     const sx = L.x0 * dpr, sy = L.y0 * dpr, sw = L.cw * dpr, sh = L.ch * dpr;
     V6S.lay = { ox: sx, oy: sy, s: s, dpr: dpr, W: o.W * q.k, H: o.H * q.k };
-    c2.setTransform(1, 0, 0, 1, 0, 0); c2.fillStyle = '#3a434f'; c2.fillRect(0, 0, pc.width, pc.height);
+    c2.setTransform(1, 0, 0, 1, 0, 0); c2.fillStyle = isLight() ? '#c9d0d9' : '#3a434f'; c2.fillRect(0, 0, pc.width, pc.height);
     c2.save(); c2.shadowColor = 'rgba(0,0,0,.5)'; c2.shadowBlur = 10 * dpr; c2.shadowOffsetY = 2 * dpr; c2.fillStyle = '#fff'; c2.fillRect(sx, sy, sw, sh); c2.restore();
     c2.save(); c2.beginPath(); c2.rect(sx, sy, sw, sh); c2.clip();
     if (o.bg !== 'w') {

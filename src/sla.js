@@ -5,7 +5,7 @@
   S.sla = { last: null, armed: true };
   const slaNum = function (id, d) { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
   function slaOpt() {
-    return { W: Math.max(10, slaNum('slaW', 400)), D: Math.max(10, slaNum('slaD', 400)), lift: Math.max(0, slaNum('slaLift', 5)), margin: Math.max(0, slaNum('slaMargin', 30)), gap: Math.max(0, slaNum('slaGap', 10)), spread: Math.max(0, Math.min(100, slaNum('slaSpread', 30))),
+    return { W: Math.max(10, slaNum('slaW', 450)), D: Math.max(10, slaNum('slaD', 450)), lift: Math.max(0, slaNum('slaLift', 5)), margin: Math.max(0, slaNum('slaMargin', 30)), gap: Math.max(0, slaNum('slaGap', 10)), spread: Math.max(0, Math.min(100, slaNum('slaSpread', 30))),
       tilt: $('slaTiltOn').checked ? Math.max(10, Math.min(45, slaNum('slaTilt', 15))) : 0, guard: $('slaGuardOn').checked, gx: Math.max(0.5, slaNum('slaGX', 20)), gy: Math.max(0.5, slaNum('slaGY', 20)), gt: Math.max(0.2, slaNum('slaGT', 2)), gd: Math.max(0, slaNum('slaGD', 30)) };
   }
   // world vertices of a body, thinned out for very large meshes
@@ -174,6 +174,40 @@
     window.addEventListener('mouseup', function () { if (dr) { dr = null; try { localStorage.setItem('mx.slaPop', JSON.stringify({ l: p.style.left, t: p.style.top })); } catch (e) { } } });
     hd.addEventListener('dblclick', function (e) { if (e.target.closest('button')) return; p.style.left = ''; p.style.top = ''; try { localStorage.removeItem('mx.slaPop'); } catch (er) { } });
   })();
+  // ---------- the SLA panel is a temporary workspace ----------
+  // Opening it remembers where every body is (and the undo history); inside, bodies may be oriented, laid out and moved
+  // anywhere. Closing it puts every body back where it was, removes the guard blocks and drops the undo steps made
+  // inside, so the model is exactly as before the panel was opened.
+  S.sla.env = null;
+  function slaEnter() {
+    if (S.sla.env) return;
+    const pos = new Map();
+    for (const b of S.bodies) if (!slaIsGuard(b)) pos.set(b.id, { matrix: b.matrix.slice(), matrix0: b.matrix0.slice(), off: (b.off || [0, 0, 0]).slice() });
+    S.sla.env = { pos: pos, undo: hist.undo.slice(), redo: hist.redo.slice(), cam: { R: mainCam.R.slice(), t: mainCam.target.slice(), z: mainCam.zoom, c: mainCam.center.slice(), r: mainCam.radius } };
+    S.sla.last = null; S.sla.armed = true;
+    $('slaRes').textContent = '';
+    { const o = slaOpt(); let zt = 10; for (const b of S.bodies) if (b.visible) zt = Math.max(zt, tightBox(b).max[2]); fitCam(mainCam, { min: [-10, -16, 0], max: [o.W + 10, o.D + 10, zt] }); }
+    dirty = true;
+  }
+  function slaLeave() {
+    const env = S.sla.env; if (!env) return;
+    S.sla.env = null;
+    for (const b of S.bodies.filter(slaIsGuard)) removeBody(b);
+    const moved = [];
+    for (const b of S.bodies) {
+      const q = env.pos.get(b.id); if (!q) continue;
+      b.matrix = q.matrix.slice(); b.matrix0 = q.matrix0.slice(); b.off = q.off.slice(); moved.push(b);
+    }
+    hist.undo.length = 0; Array.prototype.push.apply(hist.undo, env.undo);
+    hist.redo.length = 0; Array.prototype.push.apply(hist.redo, env.redo);
+    updateHistBtns();
+    S.sla.last = null; $('slaRes').textContent = '';
+    if (S.tool === 'move' || S.tool === 'rotate') setTool('select');
+    commitTransform(moved);
+    mainCam.R = env.cam.R; mainCam.target = env.cam.t; mainCam.zoom = env.cam.z; mainCam.center = env.cam.c; mainCam.radius = env.cam.r;
+    dirty = true;
+  }
+  new MutationObserver(function () { if ($('pop_sla').classList.contains('on')) slaEnter(); else slaLeave(); }).observe($('pop_sla'), { attributes: true, attributeFilter: ['class'] });
   // only the selected (ticked) bodies take part in the SLA plate tools
   function slaBodies() { return selBodies().filter(function (b) { return b.visible && !slaIsGuard(b); }); }
   function slaApply(orient, undo) {
@@ -247,16 +281,16 @@
     if ((!$('pop_sla').classList.contains('on') && !S.sla.table) || S.sk) return;
     const o = slaOpt(), P = function (x, y) { return project([x, y, 0]); };
     const ln = function (a, b, c, w, dash) { const p = P(a[0], a[1]), q = P(b[0], b[1]); ctx.strokeStyle = c; ctx.lineWidth = w; ctx.setLineDash(dash || []); ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke(); ctx.setLineDash([]); };
-    const st = o.W > 200 || o.D > 200 ? 50 : 20;
-    for (let x = st; x < o.W; x += st) ln([x, 0], [x, o.D], 'rgba(156,196,238,.18)', 1);
-    for (let y = st; y < o.D; y += st) ln([0, y], [o.W, y], 'rgba(156,196,238,.18)', 1);
-    if (o.margin > 0) { const m = o.margin; ln([m, m], [o.W - m, m], 'rgba(240,160,48,.35)', 1, [4, 4]); ln([o.W - m, m], [o.W - m, o.D - m], 'rgba(240,160,48,.35)', 1, [4, 4]); ln([o.W - m, o.D - m], [m, o.D - m], 'rgba(240,160,48,.35)', 1, [4, 4]); ln([m, o.D - m], [m, m], 'rgba(240,160,48,.35)', 1, [4, 4]); }
-    ln([0, 0], [o.W, 0], '#9cc4ee', 1.6); ln([o.W, 0], [o.W, o.D], '#9cc4ee', 1.6); ln([o.W, o.D], [0, o.D], '#9cc4ee', 1.6); ln([0, o.D], [0, 0], '#9cc4ee', 1.6);
+    const st = o.W > 200 || o.D > 200 ? 50 : 20, lt = isLight(), cg = lt ? 'rgba(52,96,150,.22)' : 'rgba(156,196,238,.18)', ce = lt ? '#3f74ad' : '#9cc4ee', cb = lt ? '#1f9a3c' : '#52d06a';
+    for (let x = st; x < o.W; x += st) ln([x, 0], [x, o.D], cg, 1);
+    for (let y = st; y < o.D; y += st) ln([0, y], [o.W, y], cg, 1);
+    if (o.margin > 0) { const m = o.margin; ln([m, m], [o.W - m, m], (lt ? 'rgba(210,120,10,.6)' : 'rgba(240,160,48,.35)'), 1, [4, 4]); ln([o.W - m, m], [o.W - m, o.D - m], (lt ? 'rgba(210,120,10,.6)' : 'rgba(240,160,48,.35)'), 1, [4, 4]); ln([o.W - m, o.D - m], [m, o.D - m], (lt ? 'rgba(210,120,10,.6)' : 'rgba(240,160,48,.35)'), 1, [4, 4]); ln([m, o.D - m], [m, m], (lt ? 'rgba(210,120,10,.6)' : 'rgba(240,160,48,.35)'), 1, [4, 4]); }
+    ln([0, 0], [o.W, 0], ce, 1.6); ln([o.W, 0], [o.W, o.D], ce, 1.6); ln([o.W, o.D], [0, o.D], ce, 1.6); ln([0, o.D], [0, 0], ce, 1.6);
     ln([o.W / 2 - 8, o.D / 2], [o.W / 2 + 8, o.D / 2], '#f0a030', 1.4); ln([o.W / 2, o.D / 2 - 8], [o.W / 2, o.D / 2 + 8], '#f0a030', 1.4);
     // blade along X at the front edge, arrow along +Y
-    ln([0, -6], [o.W, -6], '#52d06a', 3);
+    ln([0, -6], [o.W, -6], cb, 3);
     const a = P(o.W / 2, -6), b = P(o.W / 2, Math.min(o.D * 0.18, 60));
-    ctx.strokeStyle = '#52d06a'; ctx.fillStyle = '#52d06a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    ctx.strokeStyle = cb; ctx.fillStyle = cb; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
     const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l;
     ctx.beginPath(); ctx.moveTo(b[0] + ux * 9, b[1] + uy * 9); ctx.lineTo(b[0] - uy * 5, b[1] + ux * 5); ctx.lineTo(b[0] + uy * 5, b[1] - ux * 5); ctx.fill();
     const t = P(o.W + 4, -6); ctx.font = '11px Arial'; ctx.fillText(L('Dao gạt → Y', 'Blade → Y'), t[0] + 4, t[1] + 4);

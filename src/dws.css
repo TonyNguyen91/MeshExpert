@@ -56,8 +56,10 @@
   .dwsNode.child.hid .nm { opacity: .5; text-decoration: line-through; }
   .dwsNode.child.miss .nm { color: #e57373; }
   .dwsNode.warn { color: var(--accent); cursor: default; }
-  .dwsNode .eye { padding: 0 4px; line-height: 14px; font-size: 11px; background: transparent; border-color: transparent; }
-  .dwsNode .eye:hover { border-color: var(--line); }
+  .dwsNode .eye { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 20px; padding: 0; margin: -2px 0 -2px auto; line-height: 0; background: transparent; border: 1px solid transparent; border-radius: 4px; color: #8fb4dc; }
+  .dwsNode .eye:hover:not(:disabled) { border-color: var(--line); background: var(--surface-btn); color: var(--text); }
+  .dwsNode .eye.off { color: #6b7a8c; }
+  .dwsNode.body > svg { flex: none; }
   .dwsNode .st.upd, .dwsTab .st.upd { color: var(--accent); } .dwsNode .st.miss, .dwsNode .st.fail, .dwsTab .st.miss, .dwsTab .st.fail { color: #e57373; }
   #dwsState b.upd { color: var(--accent); } #dwsState b.miss, #dwsState b.fail { color: #e57373; }
   .dwsModal { position: absolute; inset: 0; background: rgba(8,10,13,.55); display: none; align-items: center; justify-content: center; z-index: 5; }
